@@ -1,0 +1,22 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+pytest = "*"
+mock = "*"
+"flake8" = "*"
+coverage = "*"
+
+
+[packages]
+
+
+
+[requires]
+
+python_version = "2.7"

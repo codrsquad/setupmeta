@@ -1,0 +1,18 @@
+Definitions:
+------------
+          author: (auto-adjust ) Zoran Simic
+              \_: (simple.py:8 ) Zoran Simic zoran@simicweb.com
+    author_email: (auto-adjust ) zoran@simicweb.com
+     classifiers: (setup.py    ) [u'Development Status :: 5 - Production/Stable', u'Programming Language :: Python']
+     description: (setup.py    ) Very simple package
+    download_url: (auto-fill   ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
+              \_: (simple.py:10) https://github.com/zsimic/simple/archive/{version}.tar.gz
+        keywords: (simple.py:7 ) simple, scenario
+         license: (simple.py:6 ) Apache 2.0
+long_description: (README.rst  ) 281 chars [Simple setup scenario =====================  This is your typical small project, with just: - one ``simple.py`` m...]
+            name: (explicit    ) simple
+        packages: (auto-fill   ) ['simple']
+     script_args: (explicit    ) ['explain']
+     script_name: (explicit    ) setup.py
+             url: (simple.py:9 ) https://github.com/zsimic/simple
+         version: (simple.py:5 ) 1.0.0

@@ -1,0 +1,43 @@
+sudo: false
+language: python
+python:
+  - 2.7
+  - 3.6
+
+#install: pip install -U tox-travis
+#install: pip install tox-travis coveralls
+#install: "make"
+
+#script: tox
+
+#script:
+#    - tox
+#    - if [ $TRAVIS_TEST_RESULT -eq 0 ]; then coveralls; fi
+
+#script:
+#  - |
+#    if [[ "$TRAVIS_PYTHON_VERSION" != "2.6" ]] ; then make test-readme; fi
+#  - make ci
+
+cache: pip
+#jobs:
+#  include:
+#    - stage: test
+#      script:
+#        - |
+#          if [[ "$TRAVIS_PYTHON_VERSION" != "2.6" ]] ; then make test-readme; fi
+#        - make ci
+#    - stage: coverage
+#      python: 3.6
+#      script: codecov
+
+#deploy:
+#  provider: pypi
+#  distributions: sdist
+#  user: zsimic
+#  password:
+#    secure: PLEASE_REPLACE_ME
+#  on:
+#    tags: true
+#    repo: zsimic/hsetup
+#    python: 3.6

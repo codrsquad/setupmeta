@@ -1,0 +1,6 @@
+No README.rst here, long description is still found in this "README" however
+
+Other peculiarities of this example:
+- 'version' is mentioned several times
+- 'url' is computed from mentioned 'repo'
+- 'download_url' is a relative path
