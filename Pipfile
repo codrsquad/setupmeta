@@ -11,6 +11,7 @@ pytest = "*"
 mock = "*"
 "flake8" = "*"
 coverage = "*"
+pytest-runner = "*"
 
 
 [packages]

@@ -7,9 +7,11 @@ Ideally, this should be in setuptools.setup()
 import glob
 import inspect
 import io
+import logging
 import os
 import re
 import setuptools
+import shutil
 import sys
 
 
@@ -72,6 +74,7 @@ def is_setup_py(path):
 
 class DefinitionEntry:
     """ Record of where a definition was found and where it came from """
+
     def __init__(self, key, value, source):
         """
         :param str key: Key (for setuptools.setup()) being defined
@@ -399,7 +402,7 @@ class Attributes:
             yield field_email, m.group(2)
 
 
-class StandardDistribution(setuptools.dist.Distribution, object):
+class StandardDistribution(setuptools.dist.Distribution):
     """ Our Distribution implementation that makes this possible """
 
     def __init__(self, attrs):
@@ -408,8 +411,7 @@ class StandardDistribution(setuptools.dist.Distribution, object):
         attrs = self._attributes.to_dict()
         customize_commands(attrs)
 
-        # sys.stderr.write("%s\n\n" % attrs)
-        super(StandardDistribution, self).__init__(attrs)
+        setuptools.dist.Distribution.__init__(self, attrs)
 
 
 def customize_commands(attrs):
@@ -418,20 +420,20 @@ def customize_commands(attrs):
     if cmdclass is None:
         cmdclass = {}
         attrs['cmdclass'] = cmdclass
-    add_command(cmdclass, ExplainCommand)
-
-
-def add_command(cmdclass, klass):
-    """ Add command with 'name' if not already defined """
-    name = klass.__name__.lower().replace('command', '')
-    if name not in cmdclass:
-        cmdclass[name] = klass
+    for name, obj in globals().items():
+        if inspect.isclass(obj) and issubclass(obj, setuptools.Command):
+            name = obj.__name__.lower().replace('command', '')
+            if obj.__doc__:
+                desc = obj.__doc__.strip()
+                if desc:
+                    obj.description = desc[0].lower() + desc[1:]
+            if name not in cmdclass:
+                cmdclass[name] = obj
 
 
 class ExplainCommand(setuptools.Command):
     """ Show a report of where key/values setup(attr) come from """
 
-    description = 'show which setup attrs come from where'
     user_options = []
 
     def initialize_options(self):
@@ -441,7 +443,6 @@ class ExplainCommand(setuptools.Command):
         """ Not needed """
 
     def run(self):
-        """ List entry points """
         definitions = self.distribution._attributes.definitions
         principal = []
         helpers = []
@@ -474,6 +475,34 @@ class ExplainCommand(setuptools.Command):
         return result
 
 
+class UploadCommand(setuptools.Command):
+    """ Build and publish the package """
+
+    user_options = []
+
+    def initialize_options(self):
+        """ Not needed """
+
+    def finalize_options(self):
+        """ Not needed """
+
+    def run(self):
+        try:
+            print('Removing previous builds...')
+            dist = self.distribution.full_path('dist')
+            shutil.rmtree(dist)
+        except OSError:
+            pass
+
+        print('Building Source and Wheel (universal) distribution...')
+        os.system('%s setup.py sdist bdist_wheel --universal' % sys.executable)
+
+        print('Uploading the package to PyPi via Twine...')
+        os.system('twine upload dist/*')
+
+        sys.exit()
+
+
 def setup(**attrs):
     """ Drop-in replacement for setuptools.setup() """
     setup_py = attrs.pop('_setup_py', None)
@@ -494,8 +523,15 @@ if __name__ == "__main__":
     import urllib
 
     parser = argparse.ArgumentParser(description="Install/upgrade setupmeta")
-    parser.add_argument('--url', help="Where to get setupmeta from (default: %s)" % __url__)
-    parser.add_argument('target', nargs='?', help="Folder to install or upgrade (default: .)")
+    parser.add_argument(
+        '--url',
+        help="URL to get setupmeta from (default: %s)" % __url__
+    )
+    parser.add_argument(
+        'target',
+        nargs='?',
+        help="Folder to install/upgrade (default: .)"
+    )
     args = parser.parse_args()
 
     if not args.url:

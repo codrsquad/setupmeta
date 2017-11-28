@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0daed8b9a18941951126ec53a898412716195d0a036c3946be12f55894d3ff62"
+            "sha256": "c85ff1370389a5515b4e710cc77b67e7fbbd1fc7aaed62f7b9c2425e4790762a"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -30,6 +30,13 @@
     },
     "default": {},
     "develop": {
+        "attrs": {
+            "hashes": [
+                "sha256:e7d51b70f19a4da5fe6b3c9938983e0af3b91e230edc504bd73c443d98037063",
+                "sha256:c78f53e32d7cf36d8597c8a2c7e3c0ad210f97b9509e152e4c37fa80869f823c"
+            ],
+            "version": "==17.3.0"
+        },
         "configparser": {
             "hashes": [
                 "sha256:5308b47021bc2340965c371f0f058cc6971a04502638d4244225c49d80db273a"
@@ -104,7 +111,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "mccabe": {
@@ -127,6 +134,12 @@
                 "sha256:05f61c71aaefc02d8e37c0a3eeb9815ff526ea28b3b76324769e6158d7f95be1"
             ],
             "version": "==3.1.1"
+        },
+        "pluggy": {
+            "hashes": [
+                "sha256:7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff"
+            ],
+            "version": "==0.6.0"
         },
         "py": {
             "hashes": [
@@ -151,10 +164,17 @@
         },
         "pytest": {
             "hashes": [
-                "sha256:241d7e7798d79192a123ceaf64c602b4d233eacf6d6e42ae27caa97f498b7dc6",
-                "sha256:6d5bd4f7113b444c55a3bbb5c738a3dd80d43563d063fc42dcb0aaefbdd78b81"
+                "sha256:72186b294cc88322a4427225fdb9240c95e3f01cc53c1ea4f4f79ffe39ff1955",
+                "sha256:6db1c070aa412c30647b6aeb13c55670f900cf00fbafa003cdde560c3f4a8d76"
             ],
-            "version": "==3.2.5"
+            "version": "==3.3.0"
+        },
+        "pytest-runner": {
+            "hashes": [
+                "sha256:71e581622a1fad23cf12c1c1bd23e826e3358ab10b28c6e7e1a88f2f4489bf2f",
+                "sha256:0f7c3a3cf5aead13f54baaa01ceb49e5ae92aba5d3ff1928e81e189c40bc6703"
+            ],
+            "version": "==3.0"
         },
         "six": {
             "hashes": [

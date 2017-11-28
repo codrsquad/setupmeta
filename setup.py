@@ -9,12 +9,12 @@ Programming Language :: Python
 from setupmeta import setup
 
 setup_requirements = [
-    'pytest-runner',
+    # 'pytest-runner',
     # TODO(zsimic): put setup requirements (distutils extensions, etc.) here
 ]
 
 test_requirements = [
-    'pytest',
+    # 'pytest',
     # TODO: put package test requirements here
 ]
 
@@ -23,7 +23,7 @@ setup(
     name='setupmeta',
     author='Zoran Simic zoran@simicweb.com',
     keywords='anti copy-paste, convenient, setup.py',
-    test_suite='tests',
-    tests_require=test_requirements,
-    setup_requires=setup_requirements,
+    # test_suite='tests',
+    # tests_require=test_requirements,
+    # setup_requires=setup_requirements,
 )
