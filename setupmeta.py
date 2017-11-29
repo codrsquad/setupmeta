@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
 This module aims to disrupt copy-paste technology in setup.py
-Ideally, this should be in setuptools.setup()
+
+Ideally something like this should be done by setuptools.setup() itself
 """
 
 import glob
 import inspect
 import io
-import logging
 import os
 import re
 import setuptools
@@ -19,6 +19,8 @@ __version__ = '1.0.0'
 __license__ = 'Apache 2.0'
 __url__ = "https://github.com/zsimic/setupmeta"
 __release__ = 'archive/{version}.tar.gz'        # Relative download_url path
+__author__ = 'Zoran Simic zoran@simicweb.com'
+__keywords__ = 'anti copy-paste, convenient, setup.py'
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = 'explicit'
@@ -31,20 +33,6 @@ R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
 R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*:\s+(.+?)(\s*#.+)?$')
-
-# Whitelist fields to extract from modules
-# Don't include everything blindly...
-SIMPLE_FIELDS = """
-description download_url license keywords platforms url version
-author author_email
-contact contact_email
-maintainer maintainer_email
-"""
-
-SIMPLE_FIELDS = set(filter(bool, map(str.strip, SIMPLE_FIELDS.split())))
-
-# These are not real attrs and don't need to be passed through
-HELPER_FIELDS = set('repo release'.split())
 
 USER_HOME = os.path.expanduser('~')
 
@@ -64,12 +52,45 @@ def short(text, max_chars=64):
     return text
 
 
-def is_setup_py(path):
-    """ Is 'path' pointing to a setup.py module? """
-    if not path:
-        return False
-    # Accept also setup.pyc
-    return os.path.basename(path).startswith('setup.py')
+class Meta:
+    """
+    Meta things
+    """
+
+    # Whitelist fields to extract from modules
+    # Don't include everything blindly...
+    simple = set(filter(bool, map(str.strip, """
+        description download_url license keywords platforms url version
+        author author_email
+        contact contact_email
+        maintainer maintainer_email
+    """.split())))
+
+    # These are not real attrs and don't need to be passed through
+    helper = set('repo release'.split())
+
+    @classmethod
+    def is_simple(cls, name):
+        """ Is field with 'name' meaningful to consider for setup()? """
+        return name in cls.simple
+
+    @classmethod
+    def is_helper(cls, name):
+        """ Is field with 'name' meaningful to consider for setup()? """
+        return name in cls.helper
+
+    @classmethod
+    def is_known(cls, name):
+        """ Is field with 'name' meaningful to consider for setup()? """
+        return name in cls.simple or name in cls.helper
+
+    @staticmethod
+    def is_setup_py(path):
+        """ Is 'path' pointing to a setup.py module? """
+        if not path:
+            return False
+        # Accept also setup.pyc
+        return os.path.basename(path).startswith('setup.py')
 
 
 class DefinitionEntry:
@@ -134,7 +155,7 @@ class Definition(object):
     @property
     def is_meaningful(self):
         """ Should this definition make it to the final setup attrs? """
-        return self.key not in HELPER_FIELDS and bool(self.value)
+        return not Meta.is_helper(self.key) and bool(self.value)
 
     def explain(self, form, max_chars=200):
         """ Representation used for 'explain' command """
@@ -153,11 +174,20 @@ class Attributes:
         :param dict attrs: 'attrs' as received in original setup() call
         """
         self.attrs = attrs or {}
+
         setup_py = self.attrs.pop('_setup_py', None)
+        if not setup_py:
+            for frame in inspect.stack():
+                module = inspect.getmodule(frame[0])
+                if Meta.is_setup_py(module.__file__):
+                    setup_py = module.__file__
+                    break
+
         if setup_py:
             self.project_dir = os.path.dirname(os.path.abspath(setup_py))
+
         else:
-            self.project_dir = None
+            self.project_dir = os.getcwd()
 
         self.definitions = {}                       # type: dict(Definition)
         self.name = self.attrs.get('name')          # type: str
@@ -302,7 +332,7 @@ class Attributes:
         description = None
         for line in lines:
             line_number += 1
-            if is_setup_py(source):
+            if Meta.is_setup_py(source):
                 if line.strip() and not description:
                     description = line.strip()
                     self.add_definition('description', description, source)
@@ -311,7 +341,7 @@ class Attributes:
                 self.find_classifier(line)
             self.scan_line(line, R_DOC_VALUE, source, line_number)
 
-        if is_setup_py(source) and self.classifiers:
+        if Meta.is_setup_py(source) and self.classifiers:
             self.add_definition('classifiers', self.classifiers, source)
 
     def scan_line(self, line, regex, source, line_number):
@@ -320,7 +350,7 @@ class Attributes:
             return
         key = m.group(1)
         value = m.group(2)
-        if key in SIMPLE_FIELDS or key in HELPER_FIELDS:
+        if Meta.is_known(key):
             precise_source = "%s:%s" % (source, line_number)
             self.add_definition(key, value, precise_source)
 
@@ -447,7 +477,7 @@ class ExplainCommand(setuptools.Command):
         principal = []
         helpers = []
         for definition in definitions.values():
-            if definition.key in HELPER_FIELDS:
+            if Meta.is_helper(definition.key):
                 helpers.append(definition)
             else:
                 principal.append(definition)
@@ -505,16 +535,8 @@ class UploadCommand(setuptools.Command):
 
 def setup(**attrs):
     """ Drop-in replacement for setuptools.setup() """
-    setup_py = attrs.pop('_setup_py', None)
-    if not setup_py:
-        for frame in inspect.stack():
-            module = inspect.getmodule(frame[0])
-            if is_setup_py(module.__file__):
-                setup_py = module.__file__
-                break
-
     distclass = attrs.pop('distclass', StandardDistribution)
-    setuptools.setup(distclass=distclass, _setup_py=setup_py, **attrs)
+    setuptools.setup(distclass=distclass, **attrs)
 
 
 if __name__ == "__main__":
