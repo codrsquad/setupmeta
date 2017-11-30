@@ -21,7 +21,7 @@ import shutil
 import sys
 
 
-__version__ = '1.0.0'
+__version__ = '0.0.1'
 __license__ = 'Apache 2.0'
 __url__ = "https://github.com/zsimic/setupmeta"
 __author__ = 'Zoran Simic zoran@simicweb.com'
@@ -56,6 +56,21 @@ def short(text, max_chars=64):
             return summary
         return "%s [%s...]" % (summary, text[:cutoff])
     return text
+
+
+def to_str(text):
+    """ Support python2 and 3 """
+    if isinstance(text, bytes):
+        return text.decode('utf-8')
+    return text
+
+
+def clean_file(path):
+    """ Clean up file with 'path' """
+    try:
+        os.unlink(path)
+    except Exception as e:
+        print("Could not clean up %s: %s" % (short(path), e))
 
 
 def project_path(relative_path):
@@ -582,28 +597,88 @@ def setup(**attrs):
 if __name__ == "__main__":
     # Convenience: auto-upgrade self
     import argparse
-    import urllib
+    try:
+        from urllib.request import urlopen
+    except ImportError:
+        from urllib2 import urlopen
 
     parser = argparse.ArgumentParser(description="Install/upgrade setupmeta")
     parser.add_argument(
-        '--url',
-        help="URL to get setupmeta from (default: %s)" % __url__
+        '-u', '--url',
+        default=__url__,
+        help="URL to get setupmeta from (default: %(default)s)"
+    )
+    parser.add_argument(
+        '-n', '--dryrun',
+        action='store_true',
+        help="Don't actually install, simply check for updates"
     )
     parser.add_argument(
         'target',
+        default='.',
         nargs='?',
-        help="Folder to install/upgrade (default: .)"
+        help="Folder to install/upgrade (default: %(default)s)"
     )
     args = parser.parse_args()
 
-    if not args.url:
+    args.target = os.path.abspath(os.path.expanduser(args.target))
+    if not os.path.isdir(args.target):
+        sys.exit("'%s' is not a valid directory" % args.target)
+
+    if not args.url.endswith('setupmeta.py'):
         args.url = __url__.replace("github.com", "raw.githubusercontent.com")
         args.url = "%s/master/setupmeta.py" % args.url
-    if not args.target:
-        args.target = os.getcwd()
-    f = urllib.urlopen(args.url)
-    contents = f.read()
-    print("%s: %s" % (type(contents), len(contents)))
-    temp_target = os.path.join(args.target, 'setupmeta.py.tmp')
-    with open(temp_target, 'w') as fh:
-        fh.write(contents)
+
+    PROJECT_DIR = args.target
+    script = 'setupmeta.py'
+    sp = project_path(script)
+    ts = '%s.tmp' % script
+    if os.path.islink(sp):
+        sys.exit("%s is a symlink, can't upgrade" % short(sp))
+
+    try:
+        fh = urlopen(args.url)
+        contents = to_str(fh.read())
+
+        with open(project_path(ts), 'w') as fh:
+            fh.write(contents)
+
+    except Exception as e:
+        print("Could not fetch %s: %s" % (args.url, e))
+        sys.exit(1)
+
+    # Sanity check what we got
+    tm = SimpleModule(ts)
+    nv = tm.value('version')
+    if not nv or not tm.value('url'):
+        sys.exit("Invalid url %s, please check %s" % (
+            args.url,
+            short(tm.full_path))
+        )
+
+    current, _ = file_contents(script)
+    tc, _ = file_contents(ts)
+    if current == tc:
+        print("Already up to date, version %s" % __version__)
+        clean_file(tm.full_path)
+        sys.exit(0)
+
+    print("New version %s available (you have: %s)" % (
+        tm.value('version'),
+        __version__
+    ))
+
+    if args.dryrun:
+        print("New version left in %s" % short(tm.full_path))
+        sys.exit(0)
+
+    shutil.copy(tm.full_path, sp)
+    clean_file(tm.full_path)
+
+    action = 'Seeded' if not current else 'Upgraded'
+    print("%s %s with setupmeta %s" % (
+        action,
+        short(PROJECT_DIR),
+        tm.value('version'))
+    )
+    sys.exit(0)
