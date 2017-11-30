@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 """
-This module aims to disrupt copy-paste technology in setup.py
+This file comes from https://github.com/zsimic/setupmeta, do not edit
 
-Ideally something like this should be done by setuptools.setup() itself
+Due to current limitations of setuptools,
+this file has to be copied to your project folder.
+See url above for how to get it / update it.
+
+With setuptools 38.2.3+, it's becoming possible to
+have this functionality come in via setup_requires=['setupmeta']
+instead of direct copy in project folder.
 """
 
 import glob
@@ -18,12 +24,11 @@ import sys
 __version__ = '1.0.0'
 __license__ = 'Apache 2.0'
 __url__ = "https://github.com/zsimic/setupmeta"
-__release__ = 'archive/{version}.tar.gz'        # Relative download_url path
 __author__ = 'Zoran Simic zoran@simicweb.com'
-__keywords__ = 'anti copy-paste, convenient, setup.py'
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = 'explicit'
+READMES = ['README.rst', 'README.md', 'README*']
 
 # Accept reasonable variations of name + some separator + email
 R_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
@@ -34,7 +39,8 @@ R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+)[\'"]\s*(#.+)?$')
 # Finds simple docstring entries like: author: Zoran Simic
 R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*:\s+(.+?)(\s*#.+)?$')
 
-USER_HOME = os.path.expanduser('~')
+USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
+PROJECT_DIR = os.getcwd()               # Determined project directory
 
 
 def short(text, max_chars=64):
@@ -52,13 +58,48 @@ def short(text, max_chars=64):
     return text
 
 
+def project_path(relative_path):
+    """ Full path corresponding to 'relative_path' """
+    return os.path.join(PROJECT_DIR, relative_path)
+
+
+def file_contents(*relative_paths):
+    """ Return contents of first file found in 'relative_paths', globs OK
+
+    :param list(str) relative_paths: Ex: "README.rst", "README*"
+    :return str|None, str|None: Contents and path where they came from, if any
+    """
+    candidates = []
+    for path in relative_paths:
+        # De-dupe and respect order (especially for globbed paths)
+        if '*' in path:
+            for expanded in glob.glob(project_path(path)):
+                relative_path = os.path.basename(expanded)
+                if relative_path not in candidates:
+                    candidates.append(relative_path)
+            continue
+        if path not in candidates:
+            candidates.append(path)
+    for relative_path in candidates:
+        try:
+            with io.open(project_path(relative_path), encoding='utf-8') as fh:
+                return ''.join(fh.readlines()).strip(), relative_path
+
+        except Exception:
+            pass
+
+    return None, None
+
+
 class Meta:
     """
     Meta things
     """
 
-    # Whitelist fields to extract from modules
+    # Whitelist simple fields to extract from modules
     # Don't include everything blindly...
+    # A "simple field" is a variable assignment with a string constant
+    # of the form: __var__ = 'constant value'
     simple = set(filter(bool, map(str.strip, """
         description download_url license keywords platforms url version
         author author_email
@@ -66,26 +107,13 @@ class Meta:
         maintainer maintainer_email
     """.split())))
 
-    # These are not real attrs and don't need to be passed through
-    helper = set('repo release'.split())
-
-    @classmethod
-    def is_simple(cls, name):
-        """ Is field with 'name' meaningful to consider for setup()? """
-        return name in cls.simple
-
-    @classmethod
-    def is_helper(cls, name):
-        """ Is field with 'name' meaningful to consider for setup()? """
-        return name in cls.helper
-
     @classmethod
     def is_known(cls, name):
         """ Is field with 'name' meaningful to consider for setup()? """
-        return name in cls.simple or name in cls.helper
+        return name in cls.simple
 
     @staticmethod
-    def is_setup_py(path):
+    def is_setup_py_path(path):
         """ Is 'path' pointing to a setup.py module? """
         if not path:
             return False
@@ -109,6 +137,11 @@ class DefinitionEntry:
     def __repr__(self):
         return "%s=%s from %s" % (self.key, short(self.value), self.source)
 
+    @property
+    def is_explicit(self):
+        """ Did this entry come explicitly from setup(**attrs)? """
+        return self.source == EXPLICIT
+
     def explain(self, form, prefix, max_chars):
         """ Representation used for 'explain' command """
         preview = short(self.value, max_chars=max_chars)
@@ -117,6 +150,7 @@ class DefinitionEntry:
 
 class Definition(object):
     """ Record definitions for a given key, and where they were found """
+
     def __init__(self, key):
         """
         :param str key: Key being defined
@@ -138,12 +172,28 @@ class Definition(object):
     def __lt__(self, other):
         return isinstance(other, Definition) and self.key < other.key
 
-    def add(self, value, source, override=False):
+    @property
+    def is_explicit(self):
+        """ Did this entry come explicitly from setup(**attrs)? """
+        return any(s.is_explicit for s in self.sources)
+
+    def add_entries(self, entries):
+        for entry in entries:
+            if not self.value:
+                self.value = entry.value
+            self.sources.append(entry)
+
+    def add(self, value, source, override=False, listify=None):
         """
         :param value: Value to add (first value wins, unless override used)
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
+        :param str|None listify: Turn value into list
         """
+        if isinstance(source, list):
+            return self.add_entries(source)
+        if listify and value:
+            value = value.split(listify)
         if override or not self.value:
             self.value = value
         entry = DefinitionEntry(self.key, value, source)
@@ -155,7 +205,7 @@ class Definition(object):
     @property
     def is_meaningful(self):
         """ Should this definition make it to the final setup attrs? """
-        return not Meta.is_helper(self.key) and bool(self.value)
+        return bool(self.value) or self.is_explicit
 
     def explain(self, form, max_chars=200):
         """ Representation used for 'explain' command """
@@ -166,104 +216,14 @@ class Definition(object):
         return result
 
 
-class Attributes:
-    """ Find usable definitions throughout a project """
+class Settings:
+    """ Collection of key/value pairs with info on where they came from """
 
-    def __init__(self, attrs):
-        """
-        :param dict attrs: 'attrs' as received in original setup() call
-        """
-        self.attrs = attrs or {}
-
-        setup_py = self.attrs.pop('_setup_py', None)
-        if not setup_py:
-            for frame in inspect.stack():
-                module = inspect.getmodule(frame[0])
-                if Meta.is_setup_py(module.__file__):
-                    setup_py = module.__file__
-                    break
-
-        if setup_py:
-            self.project_dir = os.path.dirname(os.path.abspath(setup_py))
-
-        else:
-            self.project_dir = os.getcwd()
-
+    def __init__(self):
         self.definitions = {}                       # type: dict(Definition)
-        self.name = self.attrs.get('name')          # type: str
-        self.packages = self.attrs.get('packages')  # type: list(str)
-        self.version = None                         # type: str
-        self.classifiers = []                       # type: list(str)
-
-        # Not part of usual attrs, gives extra anti copy-paste protection
-        self.repo = None                            # type: str
-
-        # Add definitions from setup()'s attrs (highest priority)
-        for key, value in self.attrs.items():
-            self.add_definition(key, value, EXPLICIT)
-
-        # Auto-fill packages if need be
-        if not self.packages:
-            self.packages = []
-            if self.name:
-                self.packages.append(self.name)
-                self.auto_fill('packages', self.packages)
-
-        # Get long description from README (in this order)
-        readme_paths = ['README.rst', 'README.md', 'README*']
-        self.add_full_contents('long_description', readme_paths)
-
-        if 'PYGRADLE_PROJECT_VERSION' in os.environ:
-            # Convenience: support https://github.com/linkedin/pygradle
-            self.add_definition(
-                'version',
-                os.environ['PYGRADLE_PROJECT_VERSION'],
-                'pygradle'
-            )
-
-        # Scan the usual/conventional places
-        if self.project_dir:
-            for package in self.packages:
-                if os.path.isdir(self.full_path(package)):
-                    self.scan_module(os.path.join(package, '__version__.py'))
-                    self.scan_module(os.path.join(package, '__init__.py'))
-                else:
-                    self.scan_module('%s.py' % package)
-            self.scan_module('setup.py')
-
-        # Bonus auto-fills format
-        self.version = self.value('version')
-        self.repo = self.value('repo')
-        if self.repo and self.name:
-            # Convenience: deduct github project url from repo
-            parts = self.repo.split('/')
-            if len(parts) == 4 and 'github.com' == parts[2]:
-                self.repo = os.path.join(self.repo, self.name)
-
-        url = self.repo or self.value('url')
-        release = self.value('download_url') or self.value('release')
-
-        if release and url and '://' not in release:
-            # Convenience: support download_url relative to url
-            release = os.path.join(url, release)
-
-        if url:
-            # Convenience: allow {name} in url
-            url = url.format(name=self.name)
-
-        if release:
-            # Convenience: allow {name} and {version} in download_url
-            release = release.format(name=self.name, version=self.version)
-
-        self.auto_fill('url', url)
-        self.auto_fill('download_url', release)
-
-        self.auto_adjust('author', self.extract_email)
-        self.auto_adjust('contact', self.extract_email)
-        self.auto_adjust('maintainer', self.extract_email)
 
     def __repr__(self):
-        project_dir = short(self.project_dir)
+        project_dir = short(PROJECT_DIR)
         return "%s definitions, %s" % (len(self.definitions), project_dir)
 
     def value(self, key):
@@ -277,31 +237,64 @@ class Attributes:
         """ Resolved attributes to pass to setuptools """
         result = {}
         for definition in self.definitions.values():
-            if definition.key in self.attrs or definition.is_meaningful:
+            if definition.is_meaningful:
                 result[definition.key] = definition.value
         return result
 
-    def add_definition(self, key, value, source, override=False):
+    def add_definition(self, key, value, source, override=False, listify=None):
         """
         :param str key: Key being defined
         :param value: Value to add (first value wins, unless override used)
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
+        :param str|None listify: Turn value into list
         """
         definition = self.definitions.get(key)
         if definition is None:
             definition = Definition(key)
             self.definitions[key] = definition
-        definition.add(value, source, override=override)
+        definition.add(value, source, override=override, listify=listify)
 
-    def scan_module(self, source):
-        """ Look for definitions in modules
+    def merge(self, *others):
+        """ Merge settings from 'others' """
+        for other in others:
+            for definition in other.definitions.values():
+                self.add_definition(
+                    definition.key,
+                    definition.value,
+                    definition.sources
+                )
+
+    def explain(self, max_chars=160):
+        result = ""
+        if not self.definitions:
+            return result
+        longest_key = min(24, max(len(key) for key in self.definitions))
+        sources = sum((d.sources for d in self.definitions.values()), [])
+        longest_source = min(32, max(len(s.source) for s in sources))
+        form = "%%%ss: (%%%ss) %%s\n" % (longest_key, -longest_source)
+        max_chars -= longest_key + longest_source + 4
+        for definition in sorted(self.definitions.values()):
+            result += definition.explain(form, max_chars=max_chars)
+        return result
+
+
+class SimpleModule(Settings):
+    """ Simple settings extracted from a module, such as __about__.py """
+
+    def __init__(self, relative_path):
+        """
         :param str path: Relative path to python module to scan for definitions
         """
-        full_path = self.full_path(source)
-        if not full_path or not os.path.isfile(full_path):
+        Settings.__init__(self)
+        self.relative_path = relative_path
+        self.full_path = project_path(relative_path)
+        self.exists = os.path.isfile(self.full_path)
+
+        if not self.exists:
             return
-        with io.open(full_path, encoding='utf-8') as fh:
+
+        with io.open(self.full_path, encoding='utf-8') as fh:
             docstring_marker = None
             docstring_start = None
             docstring = []
@@ -314,7 +307,6 @@ class Attributes:
                         docstring_marker = None
                         self.scan_docstring(
                             docstring,
-                            source,
                             line_number=docstring_start - 1
                         )
                         continue
@@ -325,84 +317,159 @@ class Attributes:
                     docstring_marker = line[:3]
                     docstring.append(line[3:])
                     continue
-                self.scan_line(line, R_PY_VALUE, source, line_number)
+                self.scan_line(line, R_PY_VALUE, line_number)
 
-    def scan_docstring(self, lines, source, line_number=0):
+    @property
+    def is_setup_py(self):
+        """ Is this a setup.py module? """
+        return Meta.is_setup_py_path(self.relative_path)
+
+    def add_pair(self, key, value, line, **kwargs):
+        source = self.relative_path
+        if line:
+            source = "%s:%s" % (source, line)
+        self.add_definition(key, value, source, **kwargs)
+
+    def scan_docstring(self, lines, line_number=0):
         """ Scan docstring for definitions """
         description = None
         for line in lines:
             line_number += 1
-            if Meta.is_setup_py(source):
-                if line.strip() and not description:
-                    description = line.strip()
-                    self.add_definition('description', description, source)
-                    continue
-                # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-                self.find_classifier(line)
-            self.scan_line(line, R_DOC_VALUE, source, line_number)
+            if self.is_setup_py and line.strip() and not description:
+                description = line.strip()
+                self.add_pair('description', description, line_number)
+                continue
+            self.scan_line(line, R_DOC_VALUE, line_number)
 
-        if Meta.is_setup_py(source) and self.classifiers:
-            self.add_definition('classifiers', self.classifiers, source)
-
-    def scan_line(self, line, regex, source, line_number):
+    def scan_line(self, line, regex, line_number):
         m = regex.match(line)
         if not m:
             return
         key = m.group(1)
         value = m.group(2)
         if Meta.is_known(key):
-            precise_source = "%s:%s" % (source, line_number)
-            self.add_definition(key, value, precise_source)
+            self.add_pair(key, value, line_number)
 
-    def find_classifier(self, line):
-        """ Look for classifier definition in 'line' """
-        if ' :: ' in line:
-            self.classifiers.append(line.strip())
 
-    def full_path(self, relative_path):
-        """ Full path corresponding to 'relative_path' """
-        if not self.project_dir:
-            return None
-        return os.path.join(self.project_dir, relative_path)
+class SetupMeta(Settings):
+    """ Find usable definitions throughout a project SetupPy SetupMeta """
 
-    def add_full_contents(self, key, paths):
+    def __init__(self, attrs):
+        """
+        :param dict attrs: 'attrs' as received in original setup() call
+        """
+        Settings.__init__(self)
+        self.attrs = attrs or {}
+
+        # _setup_py_path passed in by tests, or special usages
+        setup_py_path = self.attrs.pop('_setup_py_path', None)
+
+        # Add definitions from setup()'s attrs (highest priority)
+        for key, value in self.attrs.items():
+            self.add_definition(key, value, EXPLICIT)
+
+        if not setup_py_path:
+            # Determine path to setup.py module from call stack
+            for frame in inspect.stack():
+                module = inspect.getmodule(frame[0])
+                if Meta.is_setup_py_path(module.__file__):
+                    setup_py_path = module.__file__
+                    break
+
+        if setup_py_path:
+            global PROJECT_DIR
+            PROJECT_DIR = os.path.dirname(os.path.abspath(setup_py_path))
+
+        packages = self.attrs.get('packages', [])
+        py_modules = self.attrs.get('py_modules', [])
+
+        if not packages and not py_modules and self.name:
+            # Try to auto-determine a good default from 'self.name'
+            if os.path.isdir(project_path(self.name)):
+                packages = [self.name]
+                self.auto_fill('packages', packages)
+            if os.path.isfile(project_path('%s.py' % self.name)):
+                py_modules = [self.name]
+                self.auto_fill('py_modules', py_modules)
+
+        # Get long description from README (in this order)
+        self.add_full_contents('long_description', *READMES)
+
+        # https://pypi.python.org/pypi?%3Aaction=list_classifiers
+        self.add_full_contents('classifiers', 'classifiers.txt', listify='\n')
+
+        # Entry points are more handily described in their own file
+        self.add_full_contents('entry_points', 'entry_points.ini')
+
+        if 'PYGRADLE_PROJECT_VERSION' in os.environ:
+            # Convenience: support https://github.com/linkedin/pygradle
+            self.add_definition(
+                'version',
+                os.environ['PYGRADLE_PROJECT_VERSION'],
+                'pygradle'
+            )
+
+        # Scan the usual/conventional places
+        for package in packages:
+            self.merge(
+                SimpleModule(os.path.join(self.name, '__about__.py')),
+                SimpleModule(os.path.join(self.name, '__version__.py')),
+                SimpleModule(os.path.join(self.name, '__init__.py')),
+            )
+
+        for py_module in py_modules:
+            self.merge(SimpleModule('%s.py' % py_module))
+
+        self.merge(SimpleModule('setup.py'))
+
+        url = self.value('url')
+        download_url = self.value('download_url')
+
+        if url and self.name:
+            parts = url.split('/')
+            if len(parts) == 4 and 'github.com' == parts[2]:
+                # Convenience: auto-complete url with package name
+                url = os.path.join(url, self.name)
+
+        if download_url and url and '://' not in download_url:
+            # Convenience: auto-complete relative download_url
+            download_url = os.path.join(url, download_url)
+
+        if url:
+            # Convenience: allow {name} in url
+            url = url.format(name=self.name)
+
+        if download_url:
+            # Convenience: allow {name} and {version} in download_url
+            download_url = download_url.format(
+                name=self.name,
+                version=self.version
+            )
+
+        self.auto_fill('url', url)
+        self.auto_fill('download_url', download_url)
+
+        self.auto_adjust('author', self.extract_email)
+        self.auto_adjust('contact', self.extract_email)
+        self.auto_adjust('maintainer', self.extract_email)
+
+    @property
+    def name(self):
+        return self.value('name')
+
+    @property
+    def version(self):
+        return self.value('version')
+
+    def add_full_contents(self, key, *paths, **kwargs):
         """ Add full contents of 1st file found in 'paths' under 'key'
 
         :param str key: Key being defined
-        :param list(str) paths: Paths to examine
+        :param list(str) paths: Paths to examine (globs OK)
         """
-        if not self.project_dir:
-            return
-        candidates = []
-        for path in paths:
-            # De-dupe and respect order (especially for globbed paths)
-            if '*' in path:
-                full_path = self.full_path(path)
-                for expanded in glob.glob(full_path):
-                    relative_path = os.path.basename(expanded)
-                    if relative_path not in candidates:
-                        candidates.append(relative_path)
-                continue
-            if path not in candidates:
-                candidates.append(path)
-        for path in candidates:
-            value = self.file_contents(path)
-            if value:
-                self.add_definition(key, value, path)
-                return
-
-    def file_contents(self, relative_path):
-        """
-        :param str relative_path: Path of file to examine
-        :return str|None: Contents, if any
-        """
-        try:
-            full_path = self.full_path(relative_path)
-            with io.open(full_path, encoding='utf-8') as fh:
-                return ''.join(fh.readlines()).strip()
-
-        except Exception:
-            return None
+        value, path = file_contents(*paths)
+        if value:
+            self.add_definition(key, value, path, **kwargs)
 
     def auto_fill(self, field, value):
         """ Auto-fill 'field' with 'value' """
@@ -436,9 +503,9 @@ class StandardDistribution(setuptools.dist.Distribution):
     """ Our Distribution implementation that makes this possible """
 
     def __init__(self, attrs):
-        self._attributes = Attributes(attrs)
+        self._setupmeta = SetupMeta(attrs)
 
-        attrs = self._attributes.to_dict()
+        attrs = self._setupmeta.to_dict()
         customize_commands(attrs)
 
         setuptools.dist.Distribution.__init__(self, attrs)
@@ -473,36 +540,9 @@ class ExplainCommand(setuptools.Command):
         """ Not needed """
 
     def run(self):
-        definitions = self.distribution._attributes.definitions
-        principal = []
-        helpers = []
-        for definition in definitions.values():
-            if Meta.is_helper(definition.key):
-                helpers.append(definition)
-            else:
-                principal.append(definition)
-        sys.stdout.write(self.report(principal, "Definitions"))
-        if helpers:
-            sys.stdout.write("\n")
-            sys.stdout.write(self.report(helpers, "Helpers"))
-
-    def report(self, definitions, title):
-        result = ""
-        result += "%s:\n" % title
-        result += "%s-\n" % ('-' * len(title))
-        if definitions:
-            longest_key = min(24, max(len(d.key) for d in definitions))
-            sources = sum((d.sources for d in definitions), [])
-            longest_source = min(32, max(len(s.source) for s in sources))
-            form = "%%%ss: (%%%ss) %%s\n" % (longest_key, -longest_source)
-            try:
-                max_chars = int(os.environ.get('COLUMNS'))
-            except Exception:
-                max_chars = 160
-            max_chars -= longest_key + longest_source + 4
-            for definition in sorted(definitions):
-                result += definition.explain(form, max_chars=max_chars)
-        return result
+        print("Definitions:")
+        print("------------")
+        print(self.distribution._setupmeta.explain())
 
 
 class UploadCommand(setuptools.Command):
@@ -519,7 +559,7 @@ class UploadCommand(setuptools.Command):
     def run(self):
         try:
             print('Removing previous builds...')
-            dist = self.distribution.full_path('dist')
+            dist = project_path('dist')
             shutil.rmtree(dist)
         except OSError:
             pass

@@ -50,11 +50,30 @@ def run(setup_py, command):
         return out.getvalue()
 
 
+def verify_contains(expected, output):
+    expected = expected.split('\n')
+    remaining = output.split('\n')
+    missing = []
+    for line in expected:
+        if line in remaining:
+            remaining.remove(line)
+            continue
+        missing.append(line)
+    if missing:
+        missing = '\n'.join(missing)
+        remaining = '\n'.join(remaining)
+        msg = "Missing lines:\n%s\n\nfrom remaining output:\n%s" % (
+            missing,
+            remaining
+        )
+        assert False, msg
+
+
 def test_scenario(scenario):
     """ Check that 'scenario' yields expected explain output """
     output = run(resouce('scenarios', scenario, 'setup.py'), 'explain')
     expected = file_contents('scenarios', scenario, 'explain.txt')
-    assert expected in output
+    verify_contains(expected, output)
 
 
 def chk(output, message):

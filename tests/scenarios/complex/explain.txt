@@ -3,13 +3,15 @@ Definitions:
           author: (auto-adjust             ) Zoran Simic
               \_: (setup.py:4              ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust             ) zoran@simicweb.com
-     classifiers: (setup.py                ) [u'Programming Language :: Python']
+     classifiers: (explicit                ) Programming Language :: Python
+              \_: (classifiers.txt         ) [u'Programming Language :: Python']
          contact: (complex/__init__.py:11  ) Zoran Simic
    contact_email: (complex/__init__.py:12  ) me@myplace.com
-     description: (setup.py                ) Complex scenario
+     description: (setup.py:2              ) Complex scenario
     download_url: (auto-fill               ) https://github.com/zsimic/complex/archive/1.2.3.tar.gz
               \_: (setup.py:6              ) archive/{version}.tar.gz
-long_description: (README                  ) 231 chars [No README.rst here, long description is still found in this "README" however  Other peculiarities of ...]
+    entry_points: (entry_points.ini        ) [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
+long_description: (README                  ) 247 chars [No README.rst here, long description is still found in this "README" however  Other peculiarities of ...]
       maintainer: (auto-adjust             ) Zoran Simic
               \_: (complex/__version__.py:2) Zoran Simic me@myplace.com
               \_: (complex/__init__.py:8   ) Zoran Simic me2@myplace.com
@@ -21,7 +23,3 @@ maintainer_email: (auto-adjust             ) me@myplace.com
              url: (auto-fill               ) https://github.com/zsimic/complex
          version: (complex/__version__.py:1) 1.2.3
               \_: (complex/__init__.py:5   ) 0.0.1
-
-Helpers:
---------
-repo: (setup.py:5) https://github.com/zsimic

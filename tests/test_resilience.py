@@ -5,11 +5,10 @@ Test edge cases
 import os
 
 import setupmeta
-from conftest import resouce
 
 
-def bogus_project():
-    return setupmeta.Attributes(dict(_setup_py=resouce('foo/bar')))
+def bogus_project(**attrs):
+    return setupmeta.SetupMeta(dict(_setup_py_path='foo/bar', **attrs))
 
 
 def test_shortening():
@@ -30,6 +29,12 @@ def test_shortening():
 
 
 def test_representation():
+    assert not setupmeta.Meta.is_setup_py_path(None)
+    assert not setupmeta.Meta.is_setup_py_path('')
+    assert not setupmeta.Meta.is_setup_py_path('foo.py')
+    assert setupmeta.Meta.is_setup_py_path('/foo/setup.py')
+    assert setupmeta.Meta.is_setup_py_path('/foo/setup.pyc')
+
     e = setupmeta.DefinitionEntry('foo', 'bar', 'inlined')
     assert str(e) == 'foo=bar from inlined'
 
@@ -55,22 +60,27 @@ def test_representation():
     assert not alpha1 > beta
 
 
-def test_empty_attrs():
-    attrs = bogus_project()
-    assert not attrs.attrs
-    assert not attrs.classifiers
-    assert not attrs.definitions
-    assert not attrs.name
-    assert not attrs.packages
-    assert os.path.basename(attrs.project_dir) == 'foo'
-    assert not attrs.repo
-    assert not attrs.version
-    assert str(attrs).startswith('0 definitions, ')
+def test_empty():
+    meta = bogus_project()
+    assert not meta.attrs
+    assert not meta.definitions
+    assert not meta.name
+    assert not meta.version
+    assert str(meta).startswith('0 definitions, ')
+    assert not meta.explain()
 
 
 def test_pygradle_version():
     os.environ['PYGRADLE_PROJECT_VERSION'] = '1.2.3'
-    attrs = bogus_project()
-    assert len(attrs.definitions) == 1
-    assert attrs.value('version') == '1.2.3'
+    meta = bogus_project(name='pygradle_project')
+    assert len(meta.definitions) == 2
+    assert meta.value('name') == 'pygradle_project'
+    assert meta.value('version') == '1.2.3'
+
+    name = meta.definitions['name']
+    version = meta.definitions['version']
+
+    assert name.is_explicit
+    assert not version.is_explicit
+
     del os.environ['PYGRADLE_PROJECT_VERSION']

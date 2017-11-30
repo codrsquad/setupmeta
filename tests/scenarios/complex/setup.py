@@ -1,11 +1,9 @@
 """
 Complex scenario
 
-author: Zoran Simic zoran@simicweb.com
-repo: https://github.com/zsimic     # url will be deduced from this
-download_url: archive/{version}.tar.gz
-
-Programming Language :: Python
+author: Zoran Simic zoran@simicweb.com      # will be auto-adjusted
+url: https://github.com/zsimic              # url will be auto-completed
+download_url: archive/{version}.tar.gz      # will be auto-completed too
 """
 
 from setupmeta import setup
@@ -13,4 +11,7 @@ from setupmeta import setup
 
 setup(
     name='complex',
+
+    # This will overshadow classifiers.txt
+    classifiers='Programming Language :: Python',
 )
