@@ -654,41 +654,40 @@ def self_upgrade(*argv):
         print("Could not fetch %s: %s" % (args.url, e))
         sys.exit(1)
 
-    # Sanity check what we got
     tm = SimpleModule(ts)
-    nv = tm.value('version')
-    if not nv or not tm.value('url'):
-        sys.exit("Invalid url %s, please check %s" % (
-            args.url,
-            short(tm.full_path, c=0))
-        )
+    try:
+        nv = tm.value('version')
+        if not nv or not tm.value('url'):
+            # Sanity check what we downloaded
+            sys.exit("Invalid url %s, please check %s" % (
+                args.url,
+                short(tm.full_path, c=0))
+            )
 
-    current, _ = file_contents(script)
-    tc, _ = file_contents(ts)
-    if current == tc:
-        print("Already up to date, version %s" % __version__)
+        current, _ = file_contents(script)
+        tc, _ = file_contents(ts)
+        if current == tc:
+            print("Already up to date, v%s" % __version__)
+            sys.exit(0)
+
+        if current:
+            if args.dryrun:
+                print("Would upgrade to v%s (without --dryrun)" % nv)
+                sys.exit(0)
+            shutil.copy(tm.full_path, sp)
+            print("Upgraded to v%s" % nv)
+            sys.exit(0)
+
+        if args.dryrun:
+            print("Would seed to v%s (without --dryrun)" % nv)
+            sys.exit(0)
+
+        shutil.copy(tm.full_path, sp)
+        print("Seeded with v%s" % nv)
+        sys.exit(0)
+
+    finally:
         clean_file(tm.full_path)
-        sys.exit(0)
-
-    print("New version %s available (you have: %s)" % (
-        tm.value('version'),
-        __version__
-    ))
-
-    if args.dryrun:
-        print("Dryrun: new version left in %s" % short(tm.full_path, c=0))
-        sys.exit(0)
-
-    shutil.copy(tm.full_path, sp)
-    clean_file(tm.full_path)
-
-    action = 'Seeded' if not current else 'Upgraded'
-    print("%s %s with setupmeta %s" % (
-        action,
-        short(PROJECT_DIR, c=0),
-        tm.value('version'))
-    )
-    sys.exit(0)
 
 
 if __name__ == "__main__":

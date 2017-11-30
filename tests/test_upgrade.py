@@ -39,7 +39,7 @@ def test_upgrade():
         run_setupmeta(['--help'], "Install/upgrade")
 
         # Bogus target
-        run_setupmeta(['foo/bar'], "foo/bar' is not a valid directory")
+        run_setupmeta(['foo/bar'], "not a valid directory")
 
         # Bogus invalid url
         run_setupmeta([tmpdir, '-ufoo'], "Could not fetch foo")
@@ -49,7 +49,7 @@ def test_upgrade():
         run_setupmeta([tmpdir, '-u', url], "Invalid url", "please check")
 
         # dryrun
-        run_setupmeta([tmpdir, '-n'], "Dryrun: new version left in ")
+        run_setupmeta([tmpdir, '-n'], "Would seed", "--dryrun")
 
         # 1st run: seed setupmeta
         run_setupmeta([tmpdir], "Seeded ")
@@ -60,6 +60,9 @@ def test_upgrade():
         # simulate file changed
         with open(os.path.join(tmpdir, 'setupmeta.py'), 'a') as fh:
             fh.write('added one line')
+
+        # dryrun
+        run_setupmeta([tmpdir, '-n'], "Would upgrade", "--dryrun")
 
         # 3rd run: we're not up to date anymore
         run_setupmeta([tmpdir], "Upgraded ")
