@@ -10,7 +10,9 @@
 #   ./setupmeta.py ~/foo/       # To get/upgrade folder ~/foo
 
 TARGET=${1:-.}
-URL=https://raw.githubusercontent.com/zsimic/setupmeta/master/setupmeta.py
+if [ -z "$URL" ]; then
+    URL=https://raw.githubusercontent.com/zsimic/setupmeta/master/setupmeta.py
+fi
 
 if [ ! -d $TARGET ]; then
     echo "$TARGET is not a valid directory"
@@ -20,6 +22,11 @@ fi
 TARGET=${TARGET:-.}/setupmeta.py
 TEMP_TARGET=$TARGET.tmp
 COMMAND=""
+
+if [ -L $TARGET ]; then
+    echo "$TARGET is a symlink, can't upgrade"
+    exit 1
+fi
 
 if [ -x "$(command -v curl)" ]; then
     COMMAND="curl --fail-early -f -s $URL"
