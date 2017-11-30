@@ -43,15 +43,21 @@ USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
 PROJECT_DIR = os.getcwd()               # Determined project directory
 
 
-def short(text, max_chars=64):
+def setup(**attrs):
+    """ Drop-in replacement for setuptools.setup() """
+    distclass = attrs.pop('distclass', SetupmetaDistribution)
+    setuptools.setup(distclass=distclass, **attrs)
+
+
+def short(text, c=64):
     """ Short representation of 'text' """
     if not text:
         return text
     text = "%s" % text
     text = text.replace(USER_HOME, '~').replace('\n', ' ')
-    if len(text) > max_chars:
+    if c and len(text) > c:
         summary = "%s chars" % len(text)
-        cutoff = max_chars - len(summary) - 6
+        cutoff = c - len(summary) - 6
         if cutoff <= 0:
             return summary
         return "%s [%s...]" % (summary, text[:cutoff])
@@ -159,7 +165,7 @@ class DefinitionEntry:
 
     def explain(self, form, prefix, max_chars):
         """ Representation used for 'explain' command """
-        preview = short(self.value, max_chars=max_chars)
+        preview = short(self.value, c=max_chars)
         return form % (prefix, self.source, preview)
 
 
@@ -514,7 +520,7 @@ class SetupMeta(Settings):
             yield field_email, m.group(2)
 
 
-class StandardDistribution(setuptools.dist.Distribution):
+class SetupmetaDistribution(setuptools.dist.Distribution):
     """ Our Distribution implementation that makes this possible """
 
     def __init__(self, attrs):
@@ -588,24 +594,29 @@ class UploadCommand(setuptools.Command):
         sys.exit()
 
 
-def setup(**attrs):
-    """ Drop-in replacement for setuptools.setup() """
-    distclass = attrs.pop('distclass', StandardDistribution)
-    setuptools.setup(distclass=distclass, **attrs)
+def default_upgrade_url(url=__url__):
+    """ Default upgrade url, friendly for test customizations """
+    url = url.replace("github.com", "raw.githubusercontent.com")
+    if 'raw.github' in url and not url.endswith('setupmeta.py'):
+        url = os.path.join(url, "master/setupmeta.py")
+    return url
 
 
-if __name__ == "__main__":
-    # Convenience: auto-upgrade self
+def self_upgrade(*argv):
+    """ Install/upgrade setupmeta """
+
+    global PROJECT_DIR
     import argparse
+
     try:
         from urllib.request import urlopen
     except ImportError:
         from urllib2 import urlopen
 
-    parser = argparse.ArgumentParser(description="Install/upgrade setupmeta")
+    parser = argparse.ArgumentParser(description=self_upgrade.__doc__.strip())
     parser.add_argument(
         '-u', '--url',
-        default=__url__,
+        default=default_upgrade_url(),
         help="URL to get setupmeta from (default: %(default)s)"
     )
     parser.add_argument(
@@ -619,22 +630,18 @@ if __name__ == "__main__":
         nargs='?',
         help="Folder to install/upgrade (default: %(default)s)"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(*argv)
 
     args.target = os.path.abspath(os.path.expanduser(args.target))
     if not os.path.isdir(args.target):
         sys.exit("'%s' is not a valid directory" % args.target)
-
-    if not args.url.endswith('setupmeta.py'):
-        args.url = __url__.replace("github.com", "raw.githubusercontent.com")
-        args.url = "%s/master/setupmeta.py" % args.url
 
     PROJECT_DIR = args.target
     script = 'setupmeta.py'
     sp = project_path(script)
     ts = '%s.tmp' % script
     if os.path.islink(sp):
-        sys.exit("%s is a symlink, can't upgrade" % short(sp))
+        sys.exit("%s is a symlink, can't upgrade" % short(sp, c=0))
 
     try:
         fh = urlopen(args.url)
@@ -653,7 +660,7 @@ if __name__ == "__main__":
     if not nv or not tm.value('url'):
         sys.exit("Invalid url %s, please check %s" % (
             args.url,
-            short(tm.full_path))
+            short(tm.full_path, c=0))
         )
 
     current, _ = file_contents(script)
@@ -669,7 +676,7 @@ if __name__ == "__main__":
     ))
 
     if args.dryrun:
-        print("New version left in %s" % short(tm.full_path))
+        print("Dryrun: new version left in %s" % short(tm.full_path, c=0))
         sys.exit(0)
 
     shutil.copy(tm.full_path, sp)
@@ -678,7 +685,11 @@ if __name__ == "__main__":
     action = 'Seeded' if not current else 'Upgraded'
     print("%s %s with setupmeta %s" % (
         action,
-        short(PROJECT_DIR),
+        short(PROJECT_DIR, c=0),
         tm.value('version'))
     )
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    self_upgrade()

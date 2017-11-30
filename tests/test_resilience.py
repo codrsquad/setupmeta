@@ -5,6 +5,10 @@ Test edge cases
 import os
 
 import setupmeta
+import conftest
+
+
+GH = 'https://raw.githubusercontent.com/zsimic/setupmeta/master/setupmeta.py'
 
 
 def bogus_project(**attrs):
@@ -15,11 +19,11 @@ def test_shortening():
     assert setupmeta.short(None) is None
     assert setupmeta.short("") == ""
 
-    assert setupmeta.short("hello there", max_chars=11) == "hello there"
-    assert setupmeta.short("hello there", max_chars=8) == "11 chars"
+    assert setupmeta.short("hello there", c=11) == "hello there"
+    assert setupmeta.short("hello there", c=8) == "11 chars"
 
     long_message = "hello there wonderful wild world"
-    assert setupmeta.short(long_message, max_chars=19) == "32 chars [hello...]"
+    assert setupmeta.short(long_message, c=19) == "32 chars [hello...]"
 
     path = os.path.expanduser('~/foo/bar')
     assert setupmeta.short(path) == '~/foo/bar'
@@ -28,13 +32,37 @@ def test_shortening():
     assert setupmeta.short(message) == 'found in ~/foo/bar'
 
 
-def test_representation():
+def test_edge_cases():
+    with conftest.capture_output() as (out, err):
+        setupmeta.clean_file(None)
+        assert "Could not clean up None" in out.getvalue()
+
+
+def test_stringify():
+    assert setupmeta.to_str(None) is None
+    assert setupmeta.to_str('') == ''
+    assert setupmeta.to_str(b'') == ''
+    assert setupmeta.to_str('hello') == 'hello'
+    assert setupmeta.to_str(b'hello') == 'hello'
+
+
+def test_urls():
+    url = 'https://github.com/zsimic/setupmeta'
+    assert setupmeta.default_upgrade_url(url=url) == GH
+
+    url = setupmeta.default_upgrade_url(url='file:///foo')
+    assert url == 'file:///foo'
+
+
+def test_meta():
     assert not setupmeta.Meta.is_setup_py_path(None)
     assert not setupmeta.Meta.is_setup_py_path('')
     assert not setupmeta.Meta.is_setup_py_path('foo.py')
     assert setupmeta.Meta.is_setup_py_path('/foo/setup.py')
     assert setupmeta.Meta.is_setup_py_path('/foo/setup.pyc')
 
+
+def test_representation():
     e = setupmeta.DefinitionEntry('foo', 'bar', 'inlined')
     assert str(e) == 'foo=bar from inlined'
 
