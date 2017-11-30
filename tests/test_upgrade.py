@@ -6,6 +6,7 @@ import setupmeta
 import conftest
 
 SETUPMETA = os.path.join(conftest.PROJECT, 'setupmeta.py')
+GH = 'https://raw.githubusercontent.com/zsimic/setupmeta/master/setupmeta.py'
 
 
 def run_self_upgrade(args):
@@ -72,3 +73,11 @@ def test_upgrade():
 
     finally:
         shutil.rmtree(tmpdir)
+
+
+def test_urls():
+    url = 'https://github.com/zsimic/setupmeta'
+    assert setupmeta.default_upgrade_url(url=url) == GH
+
+    url = setupmeta.default_upgrade_url(url='file:///foo')
+    assert url == 'file:///foo'

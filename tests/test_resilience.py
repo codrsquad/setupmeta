@@ -8,9 +8,6 @@ import setupmeta
 import conftest
 
 
-GH = 'https://raw.githubusercontent.com/zsimic/setupmeta/master/setupmeta.py'
-
-
 def bogus_project(**attrs):
     return setupmeta.SetupMeta(dict(_setup_py_path='foo/bar', **attrs))
 
@@ -44,14 +41,6 @@ def test_stringify():
     assert setupmeta.to_str(b'') == ''
     assert setupmeta.to_str('hello') == 'hello'
     assert setupmeta.to_str(b'hello') == 'hello'
-
-
-def test_urls():
-    url = 'https://github.com/zsimic/setupmeta'
-    assert setupmeta.default_upgrade_url(url=url) == GH
-
-    url = setupmeta.default_upgrade_url(url='file:///foo')
-    assert url == 'file:///foo'
 
 
 def test_meta():
