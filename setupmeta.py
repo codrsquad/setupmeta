@@ -641,7 +641,7 @@ def self_upgrade(*argv):
     sp = project_path(script)
     ts = '%s.tmp' % script
     if os.path.islink(sp):
-        sys.exit("%s is a symlink, can't upgrade" % short(sp, c=0))
+        sys.exit("'%s' is a symlink, can't upgrade" % short(sp, c=0))
 
     try:
         fh = urlopen(args.url)

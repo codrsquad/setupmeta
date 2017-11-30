@@ -15,7 +15,7 @@ if [ -z "$URL" ]; then
 fi
 
 if [ ! -d $TARGET ]; then
-    echo "$TARGET is not a valid directory"
+    echo "'$TARGET' is not a valid directory"
     exit 1
 fi
 
@@ -24,7 +24,7 @@ TEMP_TARGET=$TARGET.tmp
 COMMAND=""
 
 if [ -L $TARGET ]; then
-    echo "$TARGET is a symlink, can't upgrade"
+    echo "'$TARGET' is a symlink, can't upgrade"
     exit 1
 fi
 
@@ -64,14 +64,14 @@ fi
 if [ -f $TARGET ]; then
     diff $TEMP_TARGET $TARGET > /dev/null 2>&1
     if [ $? -eq 0 ]; then
-        echo "Already up to date (version $VERSION)"
+        echo "Already up to date, v$VERSION"
     else
         cp $TEMP_TARGET $TARGET
-        echo "Upgraded setupmeta to $VERSION"
+        echo "Upgraded to v$VERSION"
     fi
 else
     cp $TEMP_TARGET $TARGET
-    echo "Seeded $TARGET with version $VERSION"
+    echo "Seeded with v$VERSION"
 fi
 
 rm $TEMP_TARGET
