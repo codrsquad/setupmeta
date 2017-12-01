@@ -2,7 +2,7 @@ Development Status :: 4 - Beta
 
 Intended Audience :: Developers
 
-License :: OSI Approved :: Apache Software License
+License :: OSI Approved :: MIT License
 
 Programming Language :: Python
 

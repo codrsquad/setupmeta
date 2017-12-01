@@ -29,7 +29,7 @@ Get started
          classifiers: (classifiers.txt) 247 chars [Development Status :: 4 - Beta ...]
          description: (setup.py:2     ) Stop copy-paste technology in setup.py
             keywords: (setup.py:4     ) anti copy-paste, convenient, setup.py
-             license: (setupmeta.py:25) Apache 2.0
+             license: (setupmeta.py:25) MIT
     long_description: (README.rst     ) 7754 chars [Stop copy-pasting stuff in ``setup.py`` ...]
                 name: (explicit       ) setupmeta
           py_modules: (auto-fill      ) ['setupmeta']

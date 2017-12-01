@@ -8,7 +8,7 @@ Definitions:
     download_url: (auto-fill      ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
               \_: (simple.py:10   ) https://github.com/zsimic/simple/archive/{version}.tar.gz
         keywords: (simple.py:7    ) simple, scenario
-         license: (simple.py:6    ) Apache 2.0
+         license: (simple.py:6    ) MIT
 long_description: (README.rst     ) 281 chars [Simple setup scenario =====================  This is your typical small project, with just: - one ``simple.py`...]
             name: (explicit       ) simple
       py_modules: (auto-fill      ) ['simple']
