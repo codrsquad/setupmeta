@@ -208,17 +208,14 @@ class Definition(object):
                 self.value = entry.value
             self.sources.append(entry)
 
-    def add(self, value, source, override=False, listify=None):
+    def add(self, value, source, override=False):
         """
         :param value: Value to add (first value wins, unless override used)
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
-        :param str|None listify: Turn value into list
         """
         if isinstance(source, list):
             return self.add_entries(source)
-        if listify and value:
-            value = value.split(listify)
         if override or not self.value:
             self.value = value
         entry = DefinitionEntry(self.key, value, source)
@@ -266,19 +263,18 @@ class Settings:
                 result[definition.key] = definition.value
         return result
 
-    def add_definition(self, key, value, source, override=False, listify=None):
+    def add_definition(self, key, value, source, override=False):
         """
         :param str key: Key being defined
         :param value: Value to add (first value wins, unless override used)
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
-        :param str|None listify: Turn value into list
         """
         definition = self.definitions.get(key)
         if definition is None:
             definition = Definition(key)
             self.definitions[key] = definition
-        definition.add(value, source, override=override, listify=listify)
+        definition.add(value, source, override=override)
 
     def merge(self, *others):
         """ Merge settings from 'others' """
@@ -429,7 +425,7 @@ class SetupMeta(Settings):
         self.add_full_contents('long_description', *READMES)
 
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        self.add_full_contents('classifiers', 'classifiers.txt', listify='\n')
+        self.add_classifiers()
 
         # Entry points are more handily described in their own file
         self.add_full_contents('entry_points', 'entry_points.ini')
@@ -497,7 +493,7 @@ class SetupMeta(Settings):
     def version(self):
         return self.value('version')
 
-    def add_full_contents(self, key, *paths, **kwargs):
+    def add_full_contents(self, key, *paths):
         """ Add full contents of 1st file found in 'paths' under 'key'
 
         :param str key: Key being defined
@@ -505,7 +501,23 @@ class SetupMeta(Settings):
         """
         value, path = file_contents(*paths)
         if value:
-            self.add_definition(key, value, path, **kwargs)
+            self.add_definition(key, value, path)
+
+    def add_classifiers(self):
+        """ Add classifiers from classifiers.txt, if present """
+        value, path = file_contents('classifiers.txt')
+        if value:
+            classifiers = []
+            for line in value.strip().split('\n'):
+                if '#' in line:
+                    i = line.index('#')
+                    line = line[:i]
+                line = line.strip()
+                if line:
+                    classifiers.append(line)
+            if classifiers:
+                classifiers = '\n'.join(classifiers)
+                self.add_definition('classifiers', classifiers, path)
 
     def auto_fill(self, field, value):
         """ Auto-fill 'field' with 'value' """

@@ -4,7 +4,7 @@ Definitions:
               \_: (setup.py:4              ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust             ) zoran@simicweb.com
      classifiers: (explicit                ) Programming Language :: Python
-              \_: (classifiers.txt         ) [u'Programming Language :: Python']
+              \_: (classifiers.txt         ) Programming Language :: Python Intended Audience :: Developers
          contact: (complex/__init__.py:11  ) Zoran Simic
    contact_email: (complex/__init__.py:12  ) me@myplace.com
      description: (setup.py:2              ) Complex scenario

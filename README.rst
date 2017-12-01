@@ -26,11 +26,11 @@ Get started
               author: (auto-adjust    ) Zoran Simic
                   \_: (setupmeta.py:27) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust    ) zoran@simicweb.com
-         classifiers: (classifiers.txt) 276 chars [[u'Development Status :: 4 - Beta', ...]
+         classifiers: (classifiers.txt) 247 chars [Development Status :: 4 - Beta ...]
          description: (setup.py:2     ) Stop copy-paste technology in setup.py
             keywords: (setup.py:4     ) anti copy-paste, convenient, setup.py
              license: (setupmeta.py:25) Apache 2.0
-    long_description: (README.rst     ) 2267 chars [Stop copy-pasting stuff in ``setup.py`` ...]
+    long_description: (README.rst     ) 7754 chars [Stop copy-pasting stuff in ``setup.py`` ...]
                 name: (explicit       ) setupmeta
           py_modules: (auto-fill      ) ['setupmeta']
          script_args: (explicit       ) ['explain']

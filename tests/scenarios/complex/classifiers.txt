@@ -1,1 +1,4 @@
-Programming Language :: Python
+#
+Programming Language :: Python      # Some comment
+
+Intended Audience :: Developers
