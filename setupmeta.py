@@ -120,7 +120,7 @@ def load_list(relative_path):
 
 def load_pipfile(relative_path):
     """ Poor-man's parsing of a pipfile, can't afford to depend on pipfile """
-    pipfile = load_list('Pipfile')
+    pipfile = load_list(relative_path)
     if not pipfile:
         return None
     sections = {}
@@ -194,13 +194,51 @@ def toml_value(text):
         return False
     try:
         return int(text)
-    except Exception:
+    except ValueError:
         pass
     try:
         return float(text)
-    except Exception:
+    except ValueError:
         pass
     return text
+
+
+def get_old_spec(*relative_paths):
+    """ Read old-school requirements.txt type file """
+    contents, path = find_contents(*relative_paths, loader=load_list)
+    if contents:
+        return RequirementsEntry(contents, path)
+    return None
+
+
+def pip_spec(name, info):
+    """ Convert pipfile spec into an old-school pip-style spec """
+    if not info or info == "*":
+        return name
+    if not isinstance(info, dict):
+        return "%s%s" % (name, info)
+    version = info.get('version')
+    markers = info.get('markers')
+    if info.get('editable'):
+        # Old pips don't support this -e,
+        # and I'm not sure it's useful for setup.py
+        return None
+    result = [name]
+    if version and version != "*":
+        result.append(version)
+    if markers:
+        result.append(" ; %s" % markers)
+    return ''.join(result)
+
+
+def pipfile_spec(section):
+    """ Extract old-school pip-style reqs from pipfile 'section' """
+    result = []
+    for name, info in section.items():
+        spec = pip_spec(name, info)
+        if spec:
+            result.append(spec)
+    return sorted(result)
 
 
 class Meta:
@@ -392,7 +430,7 @@ class SimpleModule(Settings):
 
     def __init__(self, relative_path):
         """
-        :param str path: Relative path to python module to scan for definitions
+        :param str relative_path: Relative path to scan for definitions
         """
         Settings.__init__(self)
         self.relative_path = relative_path
@@ -474,49 +512,16 @@ class Requirements:
         pipfile = load_pipfile('Pipfile')
         if pipfile:
             self.install = RequirementsEntry(
-                self.pipfile_spec(pipfile.get('packages', {})),
+                pipfile_spec(pipfile.get('packages', {})),
                 'Pipfile'
             )
             self.test = RequirementsEntry(
-                self.pipfile_spec(pipfile.get('dev-packages', {})),
+                pipfile_spec(pipfile.get('dev-packages', {})),
                 'Pipfile'
             )
             return
-        self.install = self.get_old_spec('requirements.txt', 'pinned.txt')
-        self.test = self.get_old_spec('requirements-dev.txt')
-
-    def get_old_spec(self, *relative_paths):
-        contents, path = find_contents(*relative_paths, loader=load_list)
-        if contents:
-            return RequirementsEntry(contents, path)
-        return None
-
-    def pipfile_spec(self, section):
-        result = []
-        for name, info in section.items():
-            spec = self.pip_spec(name, info)
-            if spec:
-                result.append(spec)
-        return sorted(result)
-
-    def pip_spec(self, name, info):
-        if not info or info == "*":
-            return name
-        if not isinstance(info, dict):
-            return "%s%s" % (name, info)
-        version = info.get('version')
-        markers = info.get('markers')
-        if info.get('editable'):
-            # Old pips don't support this -e,
-            # and I'm not sure it's useful for setup.py
-            return None
-        else:
-            result = name
-            if version and version != "*":
-                result += version
-        if markers:
-            result += " ; " + markers
-        return result
+        self.install = get_old_spec('requirements.txt', 'pinned.txt')
+        self.test = get_old_spec('requirements-dev.txt')
 
 
 class SetupMeta(Settings):
@@ -588,12 +593,12 @@ class SetupMeta(Settings):
         # Scan the usual/conventional places
         for package in packages:
             self.merge(
-                SimpleModule(join(self.name, '__about__.py')),
-                SimpleModule(join(self.name, '__version__.py')),
-                SimpleModule(join(self.name, '__init__.py')),
-                SimpleModule(join('src', self.name, '__about__.py')),
-                SimpleModule(join('src', self.name, '__version__.py')),
-                SimpleModule(join('src', self.name, '__init__.py')),
+                SimpleModule(join(package, '__about__.py')),
+                SimpleModule(join(package, '__version__.py')),
+                SimpleModule(join(package, '__init__.py')),
+                SimpleModule(join('src', package, '__about__.py')),
+                SimpleModule(join('src', package, '__version__.py')),
+                SimpleModule(join('src', package, '__init__.py')),
             )
 
         for py_module in py_modules:
@@ -703,9 +708,9 @@ class SetupmetaDistribution(setuptools.dist.Distribution):
     """ Our Distribution implementation that makes this possible """
 
     def __init__(self, attrs):
-        self._setupmeta = SetupMeta(attrs)
+        self.setupmeta = SetupMeta(attrs)
 
-        attrs = self._setupmeta.to_dict()
+        attrs = self.setupmeta.to_dict()
         customize_commands(attrs)
 
         setuptools.dist.Distribution.__init__(self, attrs)
@@ -742,7 +747,7 @@ class ExplainCommand(setuptools.Command):
     def run(self):
         print("Definitions:")
         print("------------")
-        print(self.distribution._setupmeta.explain())
+        print(self.distribution.setupmeta.explain())
 
 
 class UploadCommand(setuptools.Command):
