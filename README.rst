@@ -64,64 +64,55 @@ How it works?
   [It has to live alongside your ``setup.py`` in order for the ``from setupmeta import setup`` call to work.
   I have plans to make this better (see Roadmap_ below), but for now this is the only way unfortunately]
 
-``setupmeta`` finds all the info that's usually provided to ``setuptools.setup()`` throughout your project and auto-fills it for you.
+``setupmeta`` tries to save you some copy-pasting activity in ``setup.py`` by digging information about your project, from your project.
 
-It does so by following these rules (which come from observing what many open-source projects usually do):
+It finds all the info that's usually provided to ``setuptools.setup()`` throughout your project and auto-fills it for you.
 
-- Everything that you explicitly provided in the ``setup()`` call is taken as-is (never changed), and internally labelled as ``explicit``.
+See the `quick reference`_ page.
 
-- It doesn't try to guess the ``name`` of your project, so you should at the minimum state the ``name`` of your project in ``setup.py``.
-  Everything else can be deduced from other parts of your project.
+I noticed that most open-source projects out there do the same thing over and over, like:
 
-- ``packages`` and ``package_dir`` is auto-filled accordingly if you have a ``<name>/__init__.py`` or ``src/<name>/__init__.py`` file
+- Read the entire contents of their README file and use it as ``long_description``
+  (copy-pasting the few lines of code to read the contents of said file)
 
-- ``py_modules`` is auto-filled if you have a ``<name>.py`` file
+- Reading, grepping, sometimes importing a small ``__version__.py`` or ``__about__.py`` file to get values like ``__version__`` out of it,
+  and then dutifully doing ``version=__version__`` or ``version=about['__version__']`` in their ``setup.py``
 
-- ``description`` is auto-filled with the 1st line of your ``setup.py`` docstring
+- All kinds of creative things to get the ``description``
 
-- ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``, then ``README*``, first one found wins)
+- Very few ``setup.py`` specimens out there even have a docstring
 
-- All the other usual keys are looked up (and used if present) in the following files:
-    - ``<package>/__about__.py`` (cryptography_ for example does this)
-    - ``<package>/__version__.py`` (requests_ for example)
-    - ``<package>/__init__.py`` (changes_, arrow_ for example)
-    - ``<package>.py`` (mccabe_ for example)
-    - ``setup.py``
+- Etc.
 
-- ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line (setupmeta will figure out the email part and auto-fill it properly)
+I didn't want to keep doing this anymore myself, so I decided to try and do something about it with this project.
 
-- Only simple key/value definitions are considered for auto-fill
-  (this stems from the observation of many open-source projects (this is how they tend to do it anyway):
+With setupmeta, you can achieve a short and sweet setup.py by proceeding like so:
 
-    - of the form ``__<key>__ = "<some-constant>"`` in python modules
+- Have a docstring in your ``setup.py``, 1st line will be your ``description``
 
-    - of the form ``<key>: <value>`` in docstrings
-
-
-Here's an example providing ``autor=..., author_email=..., url=..., version=...`` in say ``__init__.py``::
+- Add a few lines in that docstring of the form ``key: value`` for this that you don't want to state in your code itself, some examples for that could be::
 
     """
-    This is my cool module
+    Do things concisely
 
+    licence: MIT
+    keywords: cool, stuff
     author: Zoran Simic zoran@simicweb.com
     """
 
-    __url__ = "http://my-url"   # Comments are OK
+- In your ``__init__.py`` (or a dedicated ``__version__.py``, or ``__about__.py`` if you prefer), state things you would like to be importable from your code, example::
+
     __version__ = "1.0.0"
-    __foo__ = "foo" + "bar"
-    __bar___ = """ some multi-line """
+    __url__ = "https://github.com/me/myproject"
 
-Note that:
+- Your README will end up on pypi automatically as ``long_description``
 
-- ``author`` is defined in the docstring (it could be also done via ``__author__ = ...``, would have the same outcome)
+- If you want classifiers, put them in a file ``classifiers.txt``
 
-- ``__foo__`` is not considered as a simple key/value (it's not a pure constant), and would not be looked at
-
-- ``__bar__`` is not considered as a simple key/value (not parsing multi-lines), and would not be looked at
-
+- If you have entry_points, you can state them in a file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
 
 Installation
-------------
+============
 
 Grab the ``setupmeta.py`` script in your project folder, you can do so using one of the following ways::
 
@@ -172,6 +163,9 @@ with all sorts of validation etc.
 Roadmap
 =======
 
+Install via ``setup_requires`` instead of local copy of ``setupmeta.py``
+------------------------------------------------------------------------
+
 Due to setuptools limitations, I had to make this work by asking users to put a copy of ``setupmeta.py`` in their projects.
 In the future, I plan to make setupmeta be consumed via ``setup_requires=['setupmeta']`` instead of this.
 
@@ -185,10 +179,23 @@ When setuptools 36.7+ becomes commonplace, we'll be able to:
 - Use ``setup_requires=['setupmeta']`` in the original ``setup()`` call instead
 
 
+More commands
+-------------
+
+Add more convenience commands such as ``upload`` and a ``test`` that works for most popular cases
+
+
+Auto-fill requirements if ``Pipfile`` is present
+------------------------------------------------
+
+For pipenv_ users, make ``install_requires`` and ``test_requires`` be auto-filled as well
+
+
 .. _setuptools commit: https://github.com/pypa/setuptools/commit/bb71fd1bed9f5e5e239ef99be82ed57e9f9b1dda#diff-6b59155d3acbddf6010c0f20482d4eea
 
 .. _requests: https://github.com/requests/requests/tree/master/requests
 
+.. _pipenv: https://github.com/kennethreitz/pipenv
 .. _pipenv setup.py: https://github.com/kennethreitz/pipenv/blob/master/setup.py
 
 .. _cryptography: https://github.com/pyca/cryptography/tree/master/src/cryptography
@@ -198,3 +205,5 @@ When setuptools 36.7+ becomes commonplace, we'll be able to:
 .. _arrow: https://github.com/crsmithdev/arrow/blob/master/arrow/__init__.py
 
 .. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
+
+.. _quick reference: ./REFERENCE.rst

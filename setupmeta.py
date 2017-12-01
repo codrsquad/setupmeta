@@ -656,6 +656,8 @@ def self_upgrade(*argv):
     sp = project_path(script)
     ts = '%s.tmp' % script
     if os.path.islink(sp):
+        # Symlink is convenient when iterating on setupmeta itself:
+        # I symlink setupmeta.py to my own checkout of the main setupmeta...
         sys.exit("'%s' is a symlink, can't upgrade" % short(sp, c=0))
 
     try:
