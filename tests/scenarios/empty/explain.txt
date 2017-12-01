@@ -1,7 +1,0 @@
-Definitions:
-------------
-description: (setup.py:2) Empty setup.py
-       name: (explicit  ) empty
- py_modules: (auto-fill ) ['empty']
-script_args: (explicit  ) ['explain']
-script_name: (explicit  ) setup.py

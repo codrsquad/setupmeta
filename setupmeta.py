@@ -37,10 +37,13 @@ R_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
 R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
-R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*:\s+(.+?)(\s*#.+)?$')
+R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
 
 USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
 PROJECT_DIR = os.getcwd()               # Determined project directory
+
+# Used for poor-man's toml parsing (can't afford to import toml)
+CLOSERS = {'"': '"', "'": "'", '{': '}', '[': ']'}
 
 
 def setup(**attrs):
@@ -49,39 +52,17 @@ def setup(**attrs):
     setuptools.setup(distclass=distclass, **attrs)
 
 
-def short(text, c=64):
-    """ Short representation of 'text' """
-    if not text:
-        return text
-    text = "%s" % text
-    text = text.replace(USER_HOME, '~').replace('\n', ' ')
-    if c and len(text) > c:
-        summary = "%s chars" % len(text)
-        cutoff = c - len(summary) - 6
-        if cutoff <= 0:
-            return summary
-        return "%s [%s...]" % (summary, text[:cutoff])
-    return text
+def project_path(*relative_paths):
+    """ Full path corresponding to 'relative_paths' components """
+    return os.path.join(PROJECT_DIR, *relative_paths)
 
 
-def to_str(text):
-    """ Support python2 and 3 """
-    if isinstance(text, bytes):
-        return text.decode('utf-8')
-    return text
-
-
-def clean_file(path):
+def clean_file(full_path):
     """ Clean up file with 'path' """
     try:
-        os.unlink(path)
+        os.unlink(full_path)
     except Exception as e:
-        print("Could not clean up %s: %s" % (short(path), e))
-
-
-def project_path(relative_path):
-    """ Full path corresponding to 'relative_path' """
-    return os.path.join(PROJECT_DIR, relative_path)
+        print("Could not clean up %s: %s" % (short(full_path), e))
 
 
 def load_contents(relative_path):
@@ -98,17 +79,16 @@ def load_contents(relative_path):
         pass
 
 
-def load_list(relative_path):
-    """ List of non-comment, non-empty strings from file
+def extract_list(content):
+    """ List of non-comment, non-empty strings from 'content'
 
-    :param str relative_path: Relative path to file
+    :param str|unicode|None content: Text content
     :return list(str)|None: Contents, if any
     """
-    contents = load_contents(relative_path)
-    if not contents:
+    if not content:
         return None
     result = []
-    for line in contents.strip().split('\n'):
+    for line in content.strip().split('\n'):
         if '#' in line:
             i = line.index('#')
             line = line[:i]
@@ -118,24 +98,18 @@ def load_list(relative_path):
     return result
 
 
+def load_list(relative_path):
+    """ List of non-comment, non-empty strings from file
+
+    :param str relative_path: Relative path to file
+    :return list(str)|None: Contents, if any
+    """
+    return extract_list(load_contents(relative_path))
+
+
 def load_pipfile(relative_path):
     """ Poor-man's parsing of a pipfile, can't afford to depend on pipfile """
-    pipfile = load_list(relative_path)
-    if not pipfile:
-        return None
-    sections = {}
-    section = None
-    for line in pipfile:
-        if line.startswith('['):
-            section_name = line.strip('[]')
-            section = sections.get(section_name)
-            if section is None:
-                section = {}
-            sections[section_name] = section
-            continue
-        key, _, value = line.partition('=')
-        section[toml_key(key)] = toml_value(value)
-    return sections
+    return parsed_toml(load_list(relative_path))
 
 
 def find_contents(*relative_paths, **kwargs):
@@ -163,12 +137,135 @@ def find_contents(*relative_paths, **kwargs):
     return None, None
 
 
-def join(*paths):
-    return os.path.join(*paths)
+def short(text, c=64):
+    """ Short representation of 'text' """
+    if not text:
+        return text
+    text = to_str(text)
+    text = text.replace(USER_HOME, '~').replace('\n', ' ')
+    if c and len(text) > c:
+        summary = "%s chars" % len(text)
+        cutoff = c - len(summary) - 6
+        if cutoff <= 0:
+            return summary
+        return "%s [%s...]" % (summary, text[:cutoff])
+    return text
+
+
+if sys.version_info[0] < 3:
+    def to_str(text):
+        """ Pretty string representation of 'text' for python2 """
+        if isinstance(text, list):
+            text = [to_str(s) for s in text]
+            return to_str("%s" % text)
+        if isinstance(text, dict):
+            text = dict((to_str(k), to_str(v)) for (k, v) in text.items())
+            return to_str("%s" % text)
+        text = "%s" % text
+        if isinstance(text, unicode):
+            return text.encode('ascii', 'ignore')
+        return text
+
+else:
+    def to_str(text):
+        """ Pretty string representation of 'text' for python3 """
+        return str(text)
+
+
+def toml_key_value(line):
+    line = line and line.strip()
+    if not line:
+        return None, None
+    if '=' not in line:
+        return None, line
+    key, _, value = line.partition('=')
+    key = key.strip()
+    value = value.strip()
+    if not key or not value:
+        return None, None
+    key = toml_key(key)
+    if key is None:
+        return None, line
+    return key, value
+
+
+def toml_accumulated_value(acc, text):
+    if acc:
+        return "%s %s" % (acc, text)
+    return text
+
+
+def is_toml_section(line):
+    if not line or len(line) < 3:
+        return False
+    if line[0] == '[' and line[-1] == ']':
+        line = line[1:-1]
+        if len(line) >= 3 and line[0] == '[' and line[-1] == ']':
+            line = line[1:-1]
+        return toml_key(line) is not None
+
+
+def normalized_toml(lines):
+    """ Collapse toml multi-lines into one line """
+    if not lines:
+        return None
+    result = []
+    prev_key = None
+    acc = None
+    for line in lines:
+        key, value = toml_key_value(line)
+        if key or is_toml_section(line):
+            if acc:
+                if prev_key:
+                    result.append("%s=%s" % (prev_key, acc))
+                else:
+                    result.append(acc)
+                acc = None
+            prev_key = key
+            acc = toml_accumulated_value(acc, value)
+            continue
+        acc = toml_accumulated_value(acc, line)
+    if prev_key:
+        result.append("%s=%s" % (prev_key, acc))
+    return result
+
+
+def parsed_toml(text):
+    """ Can't afford to require toml """
+    if isinstance(text, dict):
+        return text
+    if text and not isinstance(text, list):
+        text = text.split('\n')
+    text = normalized_toml(text)
+    if not text:
+        return None
+    sections = {}
+    section = None
+    for line in text:
+        key, value = toml_key_value(line)
+        if key is None and value is None:
+            continue
+        if key is None and is_toml_section(value):
+            section_name = line.strip('[]')
+            section = sections.get(section_name)
+            if section is None:
+                section = {}
+                sections[section_name] = section
+            continue
+        section[key] = toml_value(value)
+    return sections
 
 
 def toml_key(text):
-    return text and text.strip().strip('"')
+    text = text and text.strip()
+    if not text or len(text) < 2:
+        return text
+    fc = text[0]
+    if fc == '"' or fc == "'":
+        if text[-1] != fc:
+            return None
+        return text[1:-1]
+    return text
 
 
 def toml_value(text):
@@ -323,6 +420,12 @@ class Definition(object):
         return isinstance(other, Definition) and self.key < other.key
 
     @property
+    def source(self):
+        """ Winning source """
+        if self.sources:
+            return self.sources[0].source
+
+    @property
     def is_explicit(self):
         """ Did this entry come explicitly from setup(**attrs)? """
         return any(s.is_explicit for s in self.sources)
@@ -428,17 +531,20 @@ class Settings:
 class SimpleModule(Settings):
     """ Simple settings extracted from a module, such as __about__.py """
 
-    def __init__(self, relative_path):
+    def __init__(self, *relative_paths):
         """
-        :param str relative_path: Relative path to scan for definitions
+        :param list(str) relative_paths: Relative path to scan for definitions
         """
         Settings.__init__(self)
-        self.relative_path = relative_path
-        self.full_path = project_path(relative_path)
+        self.relative_path = os.path.join(*relative_paths)
+        self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
-
         if not self.exists:
             return
+
+        regex = R_PY_VALUE
+        if self.relative_path.endswith('.properties'):
+            regex = R_DOC_VALUE
 
         with io.open(self.full_path, encoding='utf-8') as fh:
             docstring_marker = None
@@ -463,7 +569,7 @@ class SimpleModule(Settings):
                     docstring_marker = line[:3]
                     docstring.append(line[3:])
                     continue
-                self.scan_line(line, R_PY_VALUE, line_number)
+                self.scan_line(line, regex, line_number)
 
     @property
     def is_setup_py(self):
@@ -558,12 +664,12 @@ class SetupMeta(Settings):
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            mpath = join(project_path(self.name), '__init__.py')
+            mpath = project_path(self.name, '__init__.py')
             if os.path.isfile(mpath):
                 packages = [self.name]
                 self.auto_fill('packages', packages)
 
-            mpath = join('src', project_path(self.name), '__init__.py')
+            mpath = project_path('src', self.name, '__init__.py')
             if os.path.isfile(mpath):
                 packages = [self.name]
                 self.auto_fill('packages', packages)
@@ -589,16 +695,26 @@ class SetupMeta(Settings):
                 os.environ['PYGRADLE_PROJECT_VERSION'],
                 'pygradle'
             )
+        elif os.path.isfile(project_path('gradle.properties')):
+            # Convenience: calling pygradle setup.py outside of pygradle
+            props = SimpleModule('gradle.properties')
+            vdef = props.definitions.get('version')
+            if vdef:
+                self.add_definition(
+                    vdef.key,
+                    vdef.value,
+                    vdef.source
+                )
 
         # Scan the usual/conventional places
         for package in packages:
             self.merge(
-                SimpleModule(join(package, '__about__.py')),
-                SimpleModule(join(package, '__version__.py')),
-                SimpleModule(join(package, '__init__.py')),
-                SimpleModule(join('src', package, '__about__.py')),
-                SimpleModule(join('src', package, '__version__.py')),
-                SimpleModule(join('src', package, '__init__.py')),
+                SimpleModule(package, '__about__.py'),
+                SimpleModule(package, '__version__.py'),
+                SimpleModule(package, '__init__.py'),
+                SimpleModule('src', package, '__about__.py'),
+                SimpleModule('src', package, '__version__.py'),
+                SimpleModule('src', package, '__init__.py'),
             )
 
         for py_module in py_modules:
@@ -613,11 +729,11 @@ class SetupMeta(Settings):
             parts = url.split('/')
             if len(parts) == 4 and 'github.com' == parts[2]:
                 # Convenience: auto-complete url with package name
-                url = join(url, self.name)
+                url = os.path.join(url, self.name)
 
         if download_url and url and '://' not in download_url:
             # Convenience: auto-complete relative download_url
-            download_url = join(url, download_url)
+            download_url = os.path.join(url, download_url)
 
         if url:
             # Convenience: allow {name} in url
@@ -750,6 +866,33 @@ class ExplainCommand(setuptools.Command):
         print(self.distribution.setupmeta.explain())
 
 
+class EntryPointsCommand(setuptools.Command):
+    """ List entry points for pygradle consumption """
+
+    user_options = []
+
+    def initialize_options(self):
+        """ Not needed """
+
+    def finalize_options(self):
+        """ Not needed """
+
+    def run(self):
+        entry_points = self.distribution.setupmeta.value('entry_points')
+        entry_points = parsed_toml(entry_points)
+        if not entry_points:
+            return
+        console_scripts = entry_points.get('console_scripts')
+        if not console_scripts:
+            return
+        if isinstance(console_scripts, list):
+            for ep in console_scripts:
+                print(ep)
+            return
+        for key, value in console_scripts.items():
+            print("%s = %s" % (key, value))
+
+
 class UploadCommand(setuptools.Command):
     """ Build and publish the package """
 
@@ -782,7 +925,7 @@ def default_upgrade_url(url=__url__):
     """ Default upgrade url, friendly for test customizations """
     url = url.replace("github.com", "raw.githubusercontent.com")
     if 'raw.github' in url and not url.endswith('setupmeta.py'):
-        url = join(url, "master/setupmeta.py")
+        url = os.path.join(url, 'master/setupmeta.py')
     return url
 
 
@@ -821,37 +964,37 @@ def self_upgrade(*argv):
         sys.exit("'%s' is not a valid directory" % args.target)
 
     PROJECT_DIR = args.target
-    script = 'setupmeta.py'
-    sp = project_path(script)
-    ts = '%s.tmp' % script
-    if os.path.islink(sp):
+    csm = SimpleModule('setupmeta.py')  # current script module
+    rsmlp = 'setupmeta.tmp'             # remote script module local path
+    if os.path.islink(csm.full_path):
         # Symlink is convenient when iterating on setupmeta itself:
         # I symlink setupmeta.py to my own checkout of the main setupmeta...
-        sys.exit("'%s' is a symlink, can't upgrade" % short(sp, c=0))
+        short_path = short(csm.full_path, c=0)
+        sys.exit("'%s' is a symlink, can't upgrade" % short_path)
 
     try:
         fh = urlopen(args.url)
         contents = to_str(fh.read())
 
-        with open(project_path(ts), 'w') as fh:
+        with open(project_path(rsmlp), 'w') as fh:
             fh.write(contents)
 
     except Exception as e:
         print("Could not fetch %s: %s" % (args.url, e))
         sys.exit(1)
 
-    tm = SimpleModule(ts)
+    rsm = SimpleModule(rsmlp)           # remote script module
     try:
-        nv = tm.value('version')
-        if not nv or not tm.value('url'):
+        nv = rsm.value('version')
+        if not nv or not rsm.value('url'):
             # Sanity check what we downloaded
             sys.exit("Invalid url %s, please check %s" % (
                 args.url,
-                short(tm.full_path, c=0))
+                short(rsm.full_path, c=0))
             )
 
-        current = load_contents(script)
-        tc = load_contents(ts)
+        current = load_contents(csm.relative_path)
+        tc = load_contents(rsmlp)
         if current == tc:
             print("Already up to date, v%s" % __version__)
             sys.exit(0)
@@ -860,7 +1003,7 @@ def self_upgrade(*argv):
             if args.dryrun:
                 print("Would upgrade to v%s (without --dryrun)" % nv)
                 sys.exit(0)
-            shutil.copy(tm.full_path, sp)
+            shutil.copy(rsm.full_path, csm.full_path)
             print("Upgraded to v%s" % nv)
             sys.exit(0)
 
@@ -868,12 +1011,12 @@ def self_upgrade(*argv):
             print("Would seed to v%s (without --dryrun)" % nv)
             sys.exit(0)
 
-        shutil.copy(tm.full_path, sp)
+        shutil.copy(rsm.full_path, csm.full_path)
         print("Seeded with v%s" % nv)
         sys.exit(0)
 
     finally:
-        clean_file(tm.full_path)
+        clean_file(rsm.full_path)
 
 
 if __name__ == "__main__":

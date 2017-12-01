@@ -1,3 +1,5 @@
+Replay: explain
+running explain
 Definitions:
 ------------
           author: (auto-adjust             ) Zoran Simic
@@ -11,7 +13,7 @@ Definitions:
     download_url: (auto-fill               ) https://github.com/zsimic/complex/archive/1.2.3.tar.gz
               \_: (setup.py:6              ) archive/{version}.tar.gz
     entry_points: (entry_points.ini        ) [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
-long_description: (README                  ) 247 chars [No README.rst here, long description is still found in this "README" however  Other peculiarities of ...]
+long_description: (README                  ) 428 chars [No README.rst here, long description is still found in this "README" however  Other peculiarities of ...]
       maintainer: (auto-adjust             ) Zoran Simic
               \_: (complex/__version__.py:2) Zoran Simic me@myplace.com
               \_: (complex/__init__.py:8   ) Zoran Simic me2@myplace.com
@@ -21,5 +23,13 @@ maintainer_email: (auto-adjust             ) me@myplace.com
      script_args: (explicit                ) ['explain']
      script_name: (explicit                ) setup.py
              url: (auto-fill               ) https://github.com/zsimic/complex
+              \_: (setup.py:5              ) https://github.com/zsimic
          version: (complex/__version__.py:1) 1.2.3
               \_: (complex/__init__.py:5   ) 0.0.1
+
+
+Replay: entrypoints
+running entrypoints
+foo = complex.some_module:main_func
+bar = complex.some_module:bar
+

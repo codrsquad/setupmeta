@@ -1,0 +1,10 @@
+No README.rst here, long description is still found in this "README" however
+
+Other peculiarities of this example:
+- `version` is defined twice
+- there's an `author`, `contact`, and `maintainer`
+- `maintainer` is defined twice
+- `url` is auto-filled with package name
+- `download_url` is auto-filled from a relative path
+- `classifiers` is mention explicitly, as well as in `classifiers.txt` file
+- there's an `entry_points.ini`

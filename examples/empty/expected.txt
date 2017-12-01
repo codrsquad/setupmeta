@@ -1,0 +1,15 @@
+Replay: explain
+running explain
+Definitions:
+------------
+     description: (setup.py:2) Empty setup.py
+long_description: (README.md ) 245 chars [A bare bones project, defining almost nothing.  - `name` is the only thing defined in `setup.py` (and a description...]
+            name: (explicit  ) empty
+      py_modules: (auto-fill ) ['empty']
+     script_args: (explicit  ) ['explain']
+     script_name: (explicit  ) setup.py
+
+
+Replay: entrypoints
+running entrypoints
+

@@ -36,7 +36,7 @@ def test_edge_cases():
 
 
 def test_stringify():
-    assert setupmeta.to_str(None) is None
+    assert setupmeta.to_str(None) == 'None'
     assert setupmeta.to_str('') == ''
     assert setupmeta.to_str(b'') == ''
     assert setupmeta.to_str('hello') == 'hello'

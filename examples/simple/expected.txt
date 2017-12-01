@@ -1,3 +1,5 @@
+Replay: explain
+running explain
 Definitions:
 ------------
           author: (auto-adjust    ) Zoran Simic
@@ -9,10 +11,15 @@ Definitions:
               \_: (simple.py:10   ) https://github.com/zsimic/simple/archive/{version}.tar.gz
         keywords: (simple.py:7    ) simple, scenario
          license: (simple.py:6    ) MIT
-long_description: (README.rst     ) 281 chars [Simple setup scenario =====================  This is your typical small project, with just: - one ``simple.py`...]
+long_description: (README.rst     ) 346 chars [Simple setup scenario =====================  This is your typical small project, with: - one ``simple.py`` mod...]
             name: (explicit       ) simple
       py_modules: (auto-fill      ) ['simple']
      script_args: (explicit       ) ['explain']
      script_name: (explicit       ) setup.py
              url: (simple.py:9    ) https://github.com/zsimic/simple
          version: (simple.py:5    ) 1.0.0
+
+
+Replay: entrypoints
+running entrypoints
+
