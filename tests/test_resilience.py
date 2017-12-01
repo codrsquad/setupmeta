@@ -30,9 +30,9 @@ def test_shortening():
 
 
 def test_edge_cases():
-    with conftest.capture_output() as (out, err):
+    with conftest.capture_output() as logged:
         setupmeta.clean_file(None)
-        assert "Could not clean up None" in out.getvalue()
+        assert "Could not clean up None" in logged
 
 
 def test_stringify():

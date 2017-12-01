@@ -20,7 +20,7 @@ def mode(request):
 
 
 def run_self_upgrade(mode, args):
-    with conftest.capture_output() as (out, err):
+    with conftest.capture_output() as logged:
         exit_msg = ''
         try:
             if mode == 'bash':
@@ -39,9 +39,7 @@ def run_self_upgrade(mode, args):
         except SystemExit as e:
             # self_upgrade() calls sys.exit()
             exit_msg = "%s" % e
-        out = setupmeta.to_str(out.getvalue())
-        err = setupmeta.to_str(err.getvalue())
-        return out + err + exit_msg
+        return logged + exit_msg
 
 
 def do_run(mode, args, *expected):

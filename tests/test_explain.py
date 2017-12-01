@@ -41,13 +41,13 @@ def load_module(full_path):
 
 def run(setup_py, command):
     """ Run 'setup_py' with 'command' """
-    with capture_output() as (out, err):
+    with capture_output() as logged:
         os.environ['COLUMNS'] = '160'
         old_argv = sys.argv
         sys.argv = [setup_py, 'explain']
         load_module(setup_py)
         sys.argv = old_argv
-        return out.getvalue()
+        return logged.to_string()
 
 
 def verify_contains(expected, output):
