@@ -112,6 +112,10 @@ def file_contents(*relative_paths):
     return None, None
 
 
+def join(*paths):
+    return os.path.join(*paths)
+
+
 class Meta:
     """
     Meta things
@@ -406,9 +410,17 @@ class SetupMeta(Settings):
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            if os.path.isdir(project_path(self.name)):
+            mpath = join(project_path(self.name), '__init__.py')
+            if os.path.isfile(mpath):
                 packages = [self.name]
                 self.auto_fill('packages', packages)
+
+            mpath = join('src', project_path(self.name), '__init__.py')
+            if os.path.isfile(mpath):
+                packages = [self.name]
+                self.auto_fill('packages', packages)
+                self.auto_fill('package_dir', {'': 'src'})
+
             if os.path.isfile(project_path('%s.py' % self.name)):
                 py_modules = [self.name]
                 self.auto_fill('py_modules', py_modules)
@@ -433,9 +445,12 @@ class SetupMeta(Settings):
         # Scan the usual/conventional places
         for package in packages:
             self.merge(
-                SimpleModule(os.path.join(self.name, '__about__.py')),
-                SimpleModule(os.path.join(self.name, '__version__.py')),
-                SimpleModule(os.path.join(self.name, '__init__.py')),
+                SimpleModule(join(self.name, '__about__.py')),
+                SimpleModule(join(self.name, '__version__.py')),
+                SimpleModule(join(self.name, '__init__.py')),
+                SimpleModule(join('src', self.name, '__about__.py')),
+                SimpleModule(join('src', self.name, '__version__.py')),
+                SimpleModule(join('src', self.name, '__init__.py')),
             )
 
         for py_module in py_modules:
@@ -450,11 +465,11 @@ class SetupMeta(Settings):
             parts = url.split('/')
             if len(parts) == 4 and 'github.com' == parts[2]:
                 # Convenience: auto-complete url with package name
-                url = os.path.join(url, self.name)
+                url = join(url, self.name)
 
         if download_url and url and '://' not in download_url:
             # Convenience: auto-complete relative download_url
-            download_url = os.path.join(url, download_url)
+            download_url = join(url, download_url)
 
         if url:
             # Convenience: allow {name} in url
@@ -598,7 +613,7 @@ def default_upgrade_url(url=__url__):
     """ Default upgrade url, friendly for test customizations """
     url = url.replace("github.com", "raw.githubusercontent.com")
     if 'raw.github' in url and not url.endswith('setupmeta.py'):
-        url = os.path.join(url, "master/setupmeta.py")
+        url = join(url, "master/setupmeta.py")
     return url
 
 
