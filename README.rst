@@ -35,6 +35,7 @@ Get started
           py_modules: (auto-fill      ) ['setupmeta']
          script_args: (explicit       ) ['explain']
          script_name: (explicit       ) setup.py
+       tests_require: (Pipfile        ) ['coverage', 'flake8', 'mock', 'pytest', 'pytest-runner']
                  url: (setupmeta.py:26) https://github.com/zsimic/setupmeta
              version: (setupmeta.py:24) 0.0.1
 
@@ -126,21 +127,18 @@ Or using pip::
     pip install setupmeta
     setupmeta.py .
 
-If you already have setupmeta in another project of yours, you can also do::
+If you already have the script in some project, you can use it to "seed" another project like so::
 
-    setupmeta.py ~/path/to/my/other/project
+    ./setupmeta.py ~/my/other/project/
 
-If you already have the script in some project, you can use it to "seed" other projects like so::
 
-    ~/my-project/setupmeta.py ~/my-other-project/
+This will grab the latest version of the script and put it ``~/my/other/project/``, it's almost equivalent to (and you could do this also BTW)::
 
-This will grab the latest version of the script and put it ``~/my-other-project/``, it's almost equivalent to (and you could do this also BTW)::
+    cp ./setupmeta.py ~/my/other/project/setupmeta.py
 
-    cp ~/my-project/setupmeta.py ~/my-other-project/setupmeta.py
+The script can auto-upgrade itself, once you have a copy, you can get the latest version by running this (default target is current folder)::
 
-The script can auto-upgrade itself, once you have a copy, you can get the latest version via::
-
-    ./setupmeta.py .
+    ./setupmeta.py
 
 
 Commands
