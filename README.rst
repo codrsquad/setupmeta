@@ -193,17 +193,7 @@ For pipenv_ users, make ``install_requires`` and ``test_requires`` be auto-fille
 
 .. _setuptools commit: https://github.com/pypa/setuptools/commit/bb71fd1bed9f5e5e239ef99be82ed57e9f9b1dda#diff-6b59155d3acbddf6010c0f20482d4eea
 
-.. _requests: https://github.com/requests/requests/tree/master/requests
-
 .. _pipenv: https://github.com/kennethreitz/pipenv
 .. _pipenv setup.py: https://github.com/kennethreitz/pipenv/blob/master/setup.py
-
-.. _cryptography: https://github.com/pyca/cryptography/tree/master/src/cryptography
-
-.. _changes: https://github.com/michaeljoseph/changes/blob/master/changes/__init__.py
-
-.. _arrow: https://github.com/crsmithdev/arrow/blob/master/arrow/__init__.py
-
-.. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
 
 .. _quick reference: ./REFERENCE.rst

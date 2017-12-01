@@ -1,4 +1,4 @@
-setupmeta quick reference
+Quick reference
 =========================
 
 ``setupmeta`` finds all the info that's usually provided to ``setuptools.setup()`` throughout your project and auto-fills it for you.
@@ -7,7 +7,7 @@ Use ``python setup.py explain`` to get a recap for your project at any time.
 
 This is the exhaustive list of what it looks for (which come from observing what many open-source projects usually do):
 
-- Everything that you explicitly provided in the ``setup()`` call is taken as-is (never changed), and internally labelled as ``explicit``.
+- Everything that you explicitly provided in your original ``setup.py`` -> ``setup()`` call is taken as-is (never changed), and internally labelled as ``explicit``.
   So if you don't like something that setupmeta deduces, you can always explicitly state it.
 
 - You must provide ``name`` in your ``setup()`` call, ``name`` will NOT be guessed.
@@ -21,7 +21,7 @@ This is the exhaustive list of what it looks for (which come from observing what
 
 - ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``, then ``README*``, first one found wins)
 
-- ``classifiers`` is auto-filled from file ``classifiers.txt``
+- ``classifiers`` is auto-filled from file ``classifiers.txt`` (one classification per line, ignoring empty lines and python style comments)
 
 - ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
 
@@ -63,7 +63,7 @@ Here's an example providing ``autor=..., author_email=..., url=..., version=...`
     """
     This is my cool module
 
-    author: Zoran Simic zoran@simicweb.com
+    author: Zoran Simic zoran@simicweb.com      # Comments OK, email will be separated out correctly
     """
 
     __url__ = "http://my-url"   # Comments are OK
@@ -79,3 +79,14 @@ Note that:
 - ``__foo__`` is not considered as a simple key/value (it's not a pure constant), and would not be looked at
 
 - ``__bar__`` is not considered as a simple key/value (not parsing multi-lines), and would not be looked at
+
+
+.. _requests: https://github.com/requests/requests/tree/master/requests
+
+.. _cryptography: https://github.com/pyca/cryptography/tree/master/src/cryptography
+
+.. _changes: https://github.com/michaeljoseph/changes/blob/master/changes/__init__.py
+
+.. _arrow: https://github.com/crsmithdev/arrow/blob/master/arrow/__init__.py
+
+.. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
