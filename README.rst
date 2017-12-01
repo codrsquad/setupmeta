@@ -107,9 +107,12 @@ With setupmeta, you can achieve a short and sweet setup.py by proceeding like so
 
 - Your README will end up on pypi automatically as ``long_description``
 
+- If you are using pipenv_, your ``install_requires`` and ``tests_require`` will be auto-filled from your ``Pipfile``
+
 - If you want classifiers, put them in a file ``classifiers.txt``
 
 - If you have entry_points, you can state them in a file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
+
 
 Installation
 ============
@@ -184,11 +187,6 @@ More commands
 
 Add more convenience commands such as ``upload`` and a ``test`` that works for most popular cases
 
-
-Auto-fill requirements if ``Pipfile`` is present
-------------------------------------------------
-
-For pipenv_ users, make ``install_requires`` and ``test_requires`` be auto-filled as well
 
 
 .. _setuptools commit: https://github.com/pypa/setuptools/commit/bb71fd1bed9f5e5e239ef99be82ed57e9f9b1dda#diff-6b59155d3acbddf6010c0f20482d4eea

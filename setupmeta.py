@@ -84,7 +84,61 @@ def project_path(relative_path):
     return os.path.join(PROJECT_DIR, relative_path)
 
 
-def file_contents(*relative_paths):
+def load_contents(relative_path):
+    """ Return contents of file with 'relative_path'
+
+    :param str relative_path: Relative path to file
+    :return str|None: Contents, if any
+    """
+    try:
+        with io.open(project_path(relative_path), encoding='utf-8') as fh:
+            return ''.join(fh.readlines()).strip()
+
+    except Exception:
+        pass
+
+
+def load_list(relative_path):
+    """ List of non-comment, non-empty strings from file
+
+    :param str relative_path: Relative path to file
+    :return list(str)|None: Contents, if any
+    """
+    contents = load_contents(relative_path)
+    if not contents:
+        return None
+    result = []
+    for line in contents.strip().split('\n'):
+        if '#' in line:
+            i = line.index('#')
+            line = line[:i]
+        line = line.strip()
+        if line:
+            result.append(line)
+    return result
+
+
+def load_pipfile(relative_path):
+    """ Poor-man's parsing of a pipfile, can't afford to depend on pipfile """
+    pipfile = load_list('Pipfile')
+    if not pipfile:
+        return None
+    sections = {}
+    section = None
+    for line in pipfile:
+        if line.startswith('['):
+            section_name = line.strip('[]')
+            section = sections.get(section_name)
+            if section is None:
+                section = {}
+            sections[section_name] = section
+            continue
+        key, _, value = line.partition('=')
+        section[toml_key(key)] = toml_value(value)
+    return sections
+
+
+def find_contents(*relative_paths, **kwargs):
     """ Return contents of first file found in 'relative_paths', globs OK
 
     :param list(str) relative_paths: Ex: "README.rst", "README*"
@@ -102,18 +156,51 @@ def file_contents(*relative_paths):
         if path not in candidates:
             candidates.append(path)
     for relative_path in candidates:
-        try:
-            with io.open(project_path(relative_path), encoding='utf-8') as fh:
-                return ''.join(fh.readlines()).strip(), relative_path
-
-        except Exception:
-            pass
-
+        loader = kwargs.get('loader', load_contents)
+        contents = loader(relative_path)
+        if contents:
+            return contents, relative_path
     return None, None
 
 
 def join(*paths):
     return os.path.join(*paths)
+
+
+def toml_key(text):
+    return text and text.strip().strip('"')
+
+
+def toml_value(text):
+    text = text and text.strip()
+    if not text:
+        return text
+    if text.startswith('{'):
+        rdict = {}
+        for line in text.strip('{}').split(','):
+            key, _, value = line.partition('=')
+            rdict[toml_key(key)] = toml_value(value)
+        return rdict
+    if text.startswith('['):
+        rlist = []
+        for line in text.strip('[]').split(','):
+            rlist.append(toml_value(line))
+        return rlist
+    if text.startswith('"'):
+        return toml_key(text)
+    if text == 'true':
+        return True
+    if text == 'false':
+        return False
+    try:
+        return int(text)
+    except Exception:
+        pass
+    try:
+        return float(text)
+    except Exception:
+        pass
+    return text
 
 
 class Meta:
@@ -372,6 +459,66 @@ class SimpleModule(Settings):
             self.add_pair(key, value, line_number)
 
 
+class RequirementsEntry:
+    """ Keeps track of where requirements came from """
+
+    def __init__(self, reqs, source):
+        self.reqs = reqs
+        self.source = source
+
+
+class Requirements:
+    """ Allows to auto-fill requires from pipfile, or requirements.txt """
+
+    def __init__(self):
+        pipfile = load_pipfile('Pipfile')
+        if pipfile:
+            self.install = RequirementsEntry(
+                self.pipfile_spec(pipfile.get('packages', {})),
+                'Pipfile'
+            )
+            self.test = RequirementsEntry(
+                self.pipfile_spec(pipfile.get('dev-packages', {})),
+                'Pipfile'
+            )
+            return
+        self.install = self.get_old_spec('requirements.txt', 'pinned.txt')
+        self.test = self.get_old_spec('requirements-dev.txt')
+
+    def get_old_spec(self, *relative_paths):
+        contents, path = find_contents(*relative_paths, loader=load_list)
+        if contents:
+            return RequirementsEntry(contents, path)
+        return None
+
+    def pipfile_spec(self, section):
+        result = []
+        for name, info in section.items():
+            spec = self.pip_spec(name, info)
+            if spec:
+                result.append(spec)
+        return sorted(result)
+
+    def pip_spec(self, name, info):
+        if not info or info == "*":
+            return name
+        if not isinstance(info, dict):
+            return "%s%s" % (name, info)
+        version = info.get('version')
+        markers = info.get('markers')
+        if info.get('editable'):
+            # Old pips don't support this -e,
+            # and I'm not sure it's useful for setup.py
+            return None
+        else:
+            result = name
+            if version and version != "*":
+                result += version
+        if markers:
+            result += " ; " + markers
+        return result
+
+
 class SetupMeta(Settings):
     """ Find usable definitions throughout a project SetupPy SetupMeta """
 
@@ -485,6 +632,20 @@ class SetupMeta(Settings):
         self.auto_adjust('contact', self.extract_email)
         self.auto_adjust('maintainer', self.extract_email)
 
+        self.requirements = Requirements()
+        self.auto_fill_requires('install', 'install_requires')
+        self.auto_fill_requires('test', 'tests_require')
+
+    def auto_fill_requires(self, field, attr):
+        req = getattr(self.requirements, field)
+        if not req:
+            return
+        self.auto_fill(
+            attr,
+            req.reqs,
+            req.source,
+        )
+
     @property
     def name(self):
         return self.value('name')
@@ -499,31 +660,22 @@ class SetupMeta(Settings):
         :param str key: Key being defined
         :param list(str) paths: Paths to examine (globs OK)
         """
-        value, path = file_contents(*paths)
+        value, path = find_contents(*paths)
         if value:
             self.add_definition(key, value, path)
 
     def add_classifiers(self):
         """ Add classifiers from classifiers.txt, if present """
-        value, path = file_contents('classifiers.txt')
-        if value:
-            classifiers = []
-            for line in value.strip().split('\n'):
-                if '#' in line:
-                    i = line.index('#')
-                    line = line[:i]
-                line = line.strip()
-                if line:
-                    classifiers.append(line)
-            if classifiers:
-                classifiers = '\n'.join(classifiers)
-                self.add_definition('classifiers', classifiers, path)
+        classifiers = load_list('classifiers.txt')
+        if classifiers:
+            classifiers = '\n'.join(classifiers)
+            self.add_definition('classifiers', classifiers, 'classifiers.txt')
 
-    def auto_fill(self, field, value):
+    def auto_fill(self, field, value, source='auto-fill'):
         """ Auto-fill 'field' with 'value' """
         if value and value != self.value(field):
             override = field not in self.attrs
-            self.add_definition(field, value, 'auto-fill', override=override)
+            self.add_definition(field, value, source, override=override)
 
     def auto_adjust(self, field, adjust):
         """ Auto-adjust 'field' using 'adjust' function """
@@ -693,8 +845,8 @@ def self_upgrade(*argv):
                 short(tm.full_path, c=0))
             )
 
-        current, _ = file_contents(script)
-        tc, _ = file_contents(ts)
+        current = load_contents(script)
+        tc = load_contents(ts)
         if current == tc:
             print("Already up to date, v%s" % __version__)
             sys.exit(0)

@@ -27,7 +27,7 @@ This is the exhaustive list of what it looks for (which come from observing what
 
 - All the other usual keys are looked up (and used if present) in the following files (in this order, first find wins):
 
-    - ``<package>/__about__.py`` (cryptography_ for example does this)
+    - ``<package>/__about__.py`` (cryptography_, pipfile_ for example does this)
 
     - ``<package>/__version__.py`` (requests_ for example)
 
@@ -53,6 +53,10 @@ This is the exhaustive list of what it looks for (which come from observing what
     - of the form ``__<key>__ = "<some-constant>"`` in python modules
 
     - of the form ``<key>: <value>`` in docstrings
+
+- ``install_requires`` is auto-filled if you have a pipfile_ (or deprecated ``requirements.txt`` or ``pinned.txt`` file)
+
+- ``tests_require`` is auto-filled if you have a pipfile_ (or deprecated ``requirements-dev.txt`` file)
 
 
 Example
@@ -80,6 +84,8 @@ Note that:
 
 - ``__bar__`` is not considered as a simple key/value (not parsing multi-lines), and would not be looked at
 
+
+.. _pipfile: https://github.com/pypa/pipfile
 
 .. _requests: https://github.com/requests/requests/tree/master/requests
 
