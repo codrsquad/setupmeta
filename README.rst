@@ -132,7 +132,8 @@ If you already have the script in some project, you can use it to "seed" another
     ./setupmeta.py ~/my/other/project/
 
 
-This will grab the latest version of the script and put it ``~/my/other/project/``, it's almost equivalent to (and you could do this also BTW)::
+This will grab the latest version of the script and put it in ``~/my/other/project/``, it's almost equivalent to
+(and you could do this also BTW, the only difference from above is that no check for updates is performed)::
 
     cp ./setupmeta.py ~/my/other/project/setupmeta.py
 
