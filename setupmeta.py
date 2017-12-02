@@ -11,6 +11,7 @@ have this functionality come in via setup_requires=['setupmeta']
 instead of direct copy in project folder.
 """
 
+from distutils.errors import DistutilsClassError
 import glob
 import inspect
 import io
@@ -19,6 +20,8 @@ import re
 import setuptools
 import shutil
 import sys
+
+import setuptools.command.test
 
 
 __version__ = '0.0.1'
@@ -169,6 +172,8 @@ if sys.version_info[0] < 3:
 else:
     def to_str(text):
         """ Pretty string representation of 'text' for python3 """
+        if isinstance(text, bytes):
+            return text.decode('utf-8')
         return str(text)
 
 
@@ -757,6 +762,9 @@ class SetupMeta(Settings):
         self.auto_fill_requires('install', 'install_requires')
         self.auto_fill_requires('test', 'tests_require')
 
+        if os.path.isdir(project_path('tests')):
+            self.auto_fill('test_suite', 'tests')
+
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)
         if not req:
@@ -792,10 +800,10 @@ class SetupMeta(Settings):
             classifiers = '\n'.join(classifiers)
             self.add_definition('classifiers', classifiers, 'classifiers.txt')
 
-    def auto_fill(self, field, value, source='auto-fill'):
+    def auto_fill(self, field, value, source='auto-fill', override=False):
         """ Auto-fill 'field' with 'value' """
         if value and value != self.value(field):
-            override = field not in self.attrs
+            override = override or (field not in self.attrs)
             self.add_definition(field, value, source, override=override)
 
     def auto_adjust(self, field, adjust):
@@ -820,36 +828,58 @@ class SetupMeta(Settings):
             yield field_email, m.group(2)
 
 
-class SetupmetaDistribution(setuptools.dist.Distribution):
-    """ Our Distribution implementation that makes this possible """
-
-    def __init__(self, attrs):
-        self.setupmeta = SetupMeta(attrs)
-
-        attrs = self.setupmeta.to_dict()
-        customize_commands(attrs)
-
-        setuptools.dist.Distribution.__init__(self, attrs)
-
-
-def customize_commands(attrs):
-    """ Customize commands defined in 'attrs' """
-    cmdclass = attrs.get('cmdclass')
-    if cmdclass is None:
-        cmdclass = {}
-        attrs['cmdclass'] = cmdclass
+def custom_commands(attrs):
+    """ Custom commands we're adding """
+    result = {}
+    tests_require = attrs.get('tests_require', [])
     for name, obj in globals().items():
         if inspect.isclass(obj) and issubclass(obj, setuptools.Command):
+            if obj is MetaCommand:
+                continue
+            if not hasattr(obj, 'required_dependencies'):
+                continue
+            if obj.required_dependencies:
+                usable = True
+                for req in obj.required_dependencies:
+                    if not any(req in r for r in tests_require):
+                        usable = False
+                        break
+                if not usable:
+                    continue
             name = obj.__name__.lower().replace('command', '')
             if obj.__doc__:
                 desc = obj.__doc__.strip()
                 if desc:
                     obj.description = desc[0].lower() + desc[1:]
-            if name not in cmdclass:
-                cmdclass[name] = obj
+            result[name] = obj
+    return result
 
 
-class ExplainCommand(setuptools.Command):
+class SetupmetaDistribution(setuptools.dist.Distribution):
+    """ Our Distribution implementation that makes this possible """
+
+    def __init__(self, attrs):
+        self._setupmeta = SetupMeta(attrs)
+        attrs = self._setupmeta.to_dict()
+        custom = custom_commands(attrs)
+        custom.update(attrs.pop('cmdclass', {}))
+        attrs['cmdclass'] = custom
+        setuptools.dist.Distribution.__init__(self, attrs)
+
+
+class MetaCommand(setuptools.Command):
+    """ Common ancestor to our custom commands """
+
+    required_dependencies = None
+
+    def __init__(self, dist, **kw):
+        self.setupmeta = getattr(dist, '_setupmeta', None)
+        if not self.setupmeta:
+            raise DistutilsClassError("Missing setupmeta information")
+        setuptools.Command.__init__(self, dist, **kw)
+
+
+class ExplainCommand(MetaCommand):
     """ Show a report of where key/values setup(attr) come from """
 
     user_options = []
@@ -863,10 +893,10 @@ class ExplainCommand(setuptools.Command):
     def run(self):
         print("Definitions:")
         print("------------")
-        print(self.distribution.setupmeta.explain())
+        print(self.setupmeta.explain())
 
 
-class EntryPointsCommand(setuptools.Command):
+class EntryPointsCommand(MetaCommand):
     """ List entry points for pygradle consumption """
 
     user_options = []
@@ -878,7 +908,7 @@ class EntryPointsCommand(setuptools.Command):
         """ Not needed """
 
     def run(self):
-        entry_points = self.distribution.setupmeta.value('entry_points')
+        entry_points = self.setupmeta.value('entry_points')
         entry_points = parsed_toml(entry_points)
         if not entry_points:
             return
@@ -893,7 +923,37 @@ class EntryPointsCommand(setuptools.Command):
             print("%s = %s" % (key, value))
 
 
-class UploadCommand(setuptools.Command):
+class TestCommand(setuptools.command.test.test):
+    """ Run all tests via py.test """
+
+    user_options = []
+    required_dependencies = ['pytest']
+
+    def initialize_options(self):
+        setuptools.command.test.test.initialize_options(self)
+
+    def finalize_options(self):
+        """ Not needed """
+        setuptools.command.test.test.finalize_options(self)
+
+    def run_tests(self):
+        try:
+            import pytest
+
+        except ImportError:
+            sys.exit('pytest is not installed')
+
+        setupmeta = getattr(self.distribution, '_setupmeta', None)
+        if not setupmeta:
+            raise DistutilsClassError("Missing setupmeta information")
+
+        suite = setupmeta.value('test_suite') or 'tests'
+        args = ['-vvv'] + suite.split()
+        errno = pytest.main(args)
+        sys.exit(errno)
+
+
+class UploadCommand(MetaCommand):
     """ Build and publish the package """
 
     user_options = []

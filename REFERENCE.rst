@@ -58,6 +58,12 @@ This is the exhaustive list of what it looks for (which come from observing what
 
 - ``tests_require`` is auto-filled if you have a pipfile_ (or deprecated ``requirements-dev.txt`` file)
 
+- ``test_suite`` is auto-filled to ``tests/`` folder if you have one (no other places are examined, stick to the standard)
+
+- ``py.test`` is automatically used for ``setup.py test`` if you have it in your pipfile_ (or reqs).
+  Note that **all** tests are ran via ``py.tests -vvv <test_suite>``, you can't customize that (no options supported).
+  Just use something like ``pipenv run py.test ...`` if you want to run a subset of tests, ``setup.py``'s CLI interface is wonky anyway.
+
 
 Example
 =======

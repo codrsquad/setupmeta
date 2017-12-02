@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c85ff1370389a5515b4e710cc77b67e7fbbd1fc7aaed62f7b9c2425e4790762a"
+            "sha256": "53daa949a9586fae5b3a4fbac9b7a695e7e77f4ab91863a2a14cfeb74f80ae36"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -111,7 +111,7 @@
                 "sha256:330cc27ccbf7f1e992e69fef78261dc7c6569012cf397db8d3de0234e6c937ca",
                 "sha256:a7bb0f2cf3a3fd1ab2732cb49eba4252c2af4240442415b4abce3b87022a8f50"
             ],
-            "markers": "python_version < '3.3'",
+            "markers": "python_version < '3.0'",
             "version": "==1.0.2"
         },
         "mccabe": {
@@ -120,20 +120,6 @@
                 "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"
             ],
             "version": "==0.6.1"
-        },
-        "mock": {
-            "hashes": [
-                "sha256:5ce3c71c5545b472da17b72268978914d0252980348636840bd34a00b5cc96c1",
-                "sha256:b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba"
-            ],
-            "version": "==2.0.0"
-        },
-        "pbr": {
-            "hashes": [
-                "sha256:60c25b7dfd054ef9bb0ae327af949dd4676aa09ac3a9471cdc871d8a9213f9ac",
-                "sha256:05f61c71aaefc02d8e37c0a3eeb9815ff526ea28b3b76324769e6158d7f95be1"
-            ],
-            "version": "==3.1.1"
         },
         "pluggy": {
             "hashes": [
@@ -168,13 +154,6 @@
                 "sha256:6db1c070aa412c30647b6aeb13c55670f900cf00fbafa003cdde560c3f4a8d76"
             ],
             "version": "==3.3.0"
-        },
-        "pytest-runner": {
-            "hashes": [
-                "sha256:71e581622a1fad23cf12c1c1bd23e826e3358ab10b28c6e7e1a88f2f4489bf2f",
-                "sha256:0f7c3a3cf5aead13f54baaa01ceb49e5ae92aba5d3ff1928e81e189c40bc6703"
-            ],
-            "version": "==3.0"
         },
         "six": {
             "hashes": [
