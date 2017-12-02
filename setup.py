@@ -40,6 +40,6 @@ if __name__ == "__main__":
                 sys.exit("Could not bootstrap egg-info")
 
         # We're bootstrapped now, we can self-refer
-        args['setup_requires'] = 'setupmeta'
+        args['setup_requires'] = ['setupmeta']
 
     setuptools.setup(**args)

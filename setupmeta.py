@@ -11,7 +11,6 @@ have this functionality come in via setup_requires=['setupmeta']
 instead of direct copy in project folder.
 """
 
-import distutils.core
 import glob
 import inspect
 import io
@@ -72,8 +71,9 @@ def register(dist, keyword, value):
     """ Register ourselves to distutils
     We register a handle 'name' attribute, just to be able to perform this hook
     """
+    import distutils.core
     if setuptools.setup is distutils.core.setup:
-        abort("setuptools version is too old, need 38+")
+        abort("setuptools version is too old, need version 38+")
     global dist_core_setup
     if dist_core_setup is None:
         dist_core_setup = distutils.core.setup
@@ -501,6 +501,8 @@ class Settings:
 
     def __init__(self):
         self.definitions = {}                       # type: dict(Definition)
+        # Keys to ignore, optionally
+        self.ignore = set()                         # type: set(str)
 
     def __repr__(self):
         project_dir = short(PROJECT_DIR)
@@ -528,6 +530,8 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
+        if key in self.ignore:
+            return
         definition = self.definitions.get(key)
         if definition is None:
             definition = Definition(key)
@@ -688,6 +692,9 @@ class SetupMeta(Settings):
         if setup_py_path:
             global PROJECT_DIR
             PROJECT_DIR = os.path.dirname(os.path.abspath(setup_py_path))
+
+        if self.value('use_scm_version'):
+            self.ignore.add('version')
 
         packages = self.attrs.get('packages', [])
         py_modules = self.attrs.get('py_modules', [])
