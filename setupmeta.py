@@ -11,7 +11,7 @@ have this functionality come in via setup_requires=['setupmeta']
 instead of direct copy in project folder.
 """
 
-from distutils.errors import DistutilsClassError
+import distutils.core
 import glob
 import inspect
 import io
@@ -48,11 +48,36 @@ PROJECT_DIR = os.getcwd()               # Determined project directory
 # Used for poor-man's toml parsing (can't afford to import toml)
 CLOSERS = {'"': '"', "'": "'", '{': '}', '[': ']'}
 
+# Original distutils.core.setup, if we're running in 'setup_requires' mode
+dist_core_setup = None
+
 
 def setup(**attrs):
     """ Drop-in replacement for setuptools.setup() """
     distclass = attrs.pop('distclass', SetupmetaDistribution)
-    setuptools.setup(distclass=distclass, **attrs)
+    if callable(dist_core_setup):
+        # setup_requires mode
+        dist_core_setup(distclass=distclass, **attrs)
+    else:
+        # "Copy this big file next to your setup.py" mode
+        setuptools.setup(distclass=distclass, **attrs)
+
+
+def abort(message):
+    from distutils.errors import DistutilsClassError
+    raise DistutilsClassError(message)
+
+
+def register(dist, keyword, value):
+    """ Register ourselves to distutils
+    We register a handle 'name' attribute, just to be able to perform this hook
+    """
+    if setuptools.setup is distutils.core.setup:
+        abort("setuptools version is too old, need 38+")
+    global dist_core_setup
+    if dist_core_setup is None:
+        dist_core_setup = distutils.core.setup
+        distutils.core.setup = setup
 
 
 def project_path(*relative_paths):
@@ -875,7 +900,7 @@ class MetaCommand(setuptools.Command):
     def __init__(self, dist, **kw):
         self.setupmeta = getattr(dist, '_setupmeta', None)
         if not self.setupmeta:
-            raise DistutilsClassError("Missing setupmeta information")
+            abort("Missing setupmeta information")
         setuptools.Command.__init__(self, dist, **kw)
 
 
@@ -945,7 +970,7 @@ class TestCommand(setuptools.command.test.test):
 
         setupmeta = getattr(self.distribution, '_setupmeta', None)
         if not setupmeta:
-            raise DistutilsClassError("Missing setupmeta information")
+            abort("Missing setupmeta information")
 
         suite = setupmeta.value('test_suite') or 'tests'
         args = ['-vvv'] + suite.split()

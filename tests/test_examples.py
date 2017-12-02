@@ -58,6 +58,17 @@ def run(setup_py):
         sys.argv = old_argv
 
 
+def run_shell(*command):
+    import subprocess
+    p = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    output, error = p.communicate()
+    return setupmeta.to_str(output) + setupmeta.to_str(error)
+
+
 def test_scenario(scenario):
     """ Check that 'scenario' yields expected explain output """
     setup_py = os.path.join(EXAMPLES, scenario, 'setup.py')
@@ -68,12 +79,16 @@ def test_scenario(scenario):
 
 
 def chk(output, message):
-    assert re.search(message, output)
+    assert re.search(message, output), "'%s' not present in '%s'" % (message, setupmeta.short(output)) # noqa
 
 
 def test_self():
     """ Test setupmeta's own setup.py """
-    out = run(os.path.join(conftest.PROJECT, 'setup.py'))
+    out = run_shell(
+        sys.executable,
+        os.path.join(conftest.PROJECT, 'setup.py'),
+        'explain'
+    )
     chk(out, "author:.+ Zoran Simic")
     chk(out, "description:.+ Stop copy-paste technology in setup.py")
     chk(out, "version:.+ [0-9]+\.[0-9]")
