@@ -23,7 +23,7 @@ import sys
 import setuptools.command.test
 
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __license__ = 'MIT'
 __url__ = "https://github.com/zsimic/setupmeta"
 __author__ = 'Zoran Simic zoran@simicweb.com'
@@ -169,7 +169,7 @@ def short(text, c=64):
     """ Short representation of 'text' """
     if not text:
         return text
-    text = to_str(text)
+    text = to_str(text).strip()
     text = text.replace(USER_HOME, '~').replace('\n', ' ')
     if c and len(text) > c:
         summary = "%s chars" % len(text)
@@ -789,6 +789,7 @@ class SetupMeta(Settings):
         self.auto_adjust('author', self.extract_email)
         self.auto_adjust('contact', self.extract_email)
         self.auto_adjust('maintainer', self.extract_email)
+        self.listify('keywords')
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
@@ -799,13 +800,18 @@ class SetupMeta(Settings):
 
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)
-        if not req:
+        if req:
+            self.auto_fill(attr, req.reqs, req.source)
+
+    def listify(self, key, separator=','):
+        """ Ensure value for 'key' is a list """
+        definition = self.definitions.get(key)
+        if not definition or not definition.value:
             return
-        self.auto_fill(
-            attr,
-            req.reqs,
-            req.source,
-        )
+        if isinstance(definition.value, list):
+            return
+        definition.value = definition.value.split(separator)
+        definition.sources[0].value = definition.value
 
     @property
     def name(self):
@@ -829,7 +835,6 @@ class SetupMeta(Settings):
         """ Add classifiers from classifiers.txt, if present """
         classifiers = load_list('classifiers.txt')
         if classifiers:
-            classifiers = '\n'.join(classifiers)
             self.add_definition('classifiers', classifiers, 'classifiers.txt')
 
     def auto_fill(self, field, value, source='auto-fill', override=False):
@@ -902,7 +907,17 @@ class SetupmetaDistribution(setuptools.dist.Distribution):
 class MetaCommand(setuptools.Command):
     """ Common ancestor to our custom commands """
 
+    # Command will be active only if user's venv has these dependencies
     required_dependencies = None
+
+    # setuptools' user options are wonky, turn off by default
+    user_options = []
+
+    def initialize_options(self):
+        """ Not needed """
+
+    def finalize_options(self):
+        """ Not needed """
 
     def __init__(self, dist, **kw):
         self.setupmeta = getattr(dist, '_setupmeta', None)
@@ -914,14 +929,6 @@ class MetaCommand(setuptools.Command):
 class ExplainCommand(MetaCommand):
     """ Show a report of where key/values setup(attr) come from """
 
-    user_options = []
-
-    def initialize_options(self):
-        """ Not needed """
-
-    def finalize_options(self):
-        """ Not needed """
-
     def run(self):
         print("Definitions:")
         print("------------")
@@ -930,14 +937,6 @@ class ExplainCommand(MetaCommand):
 
 class EntryPointsCommand(MetaCommand):
     """ List entry points for pygradle consumption """
-
-    user_options = []
-
-    def initialize_options(self):
-        """ Not needed """
-
-    def finalize_options(self):
-        """ Not needed """
 
     def run(self):
         entry_points = self.setupmeta.value('entry_points')
@@ -958,8 +957,8 @@ class EntryPointsCommand(MetaCommand):
 class TestCommand(setuptools.command.test.test):
     """ Run all tests via py.test """
 
-    user_options = []
     required_dependencies = ['pytest']
+    user_options = []
 
     def initialize_options(self):
         setuptools.command.test.test.initialize_options(self)
@@ -985,31 +984,35 @@ class TestCommand(setuptools.command.test.test):
         sys.exit(errno)
 
 
+def run_program(*commands):
+    import subprocess
+    p = subprocess.Popen(commands)
+    if p.returncode:
+        sys.exit(p.returncode)
+
+
 class UploadCommand(MetaCommand):
     """ Build and publish the package """
 
-    user_options = []
-
-    def initialize_options(self):
-        """ Not needed """
-
-    def finalize_options(self):
-        """ Not needed """
-
     def run(self):
         try:
-            print('Removing previous builds...')
+            print('Cleaning up dist...')
             dist = project_path('dist')
             shutil.rmtree(dist)
         except OSError:
             pass
 
         print('Building Source and Wheel (universal) distribution...')
-        os.system('%s setup.py sdist bdist_wheel --universal' % sys.executable)
+        run_program(
+            sys.executable,
+            project_path('setup.py'),
+            'sdist',
+            'bdist_wheel',
+            '--universal'
+        )
 
-        print('Uploading the package to PyPi via Twine...')
+        print('Uploading the package to pypi via twine...')
         os.system('twine upload dist/*')
-
         sys.exit()
 
 
