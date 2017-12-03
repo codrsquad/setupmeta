@@ -13,6 +13,8 @@ History
 
 * Allow to use include other files in long description via something like ``.. [[include HISTORY.rst]]``
 
+.. [[end long_description]]
+
 
 0.0.2 (2017-12-02)
 ------------------
@@ -26,6 +28,4 @@ History
 ------------------
 
 * First release to PyPI.
-
-.. [[end long_description]]
 
