@@ -25,7 +25,7 @@ test = {t}:TestCommand
 upload = {t}:UploadCommand
 
 [distutils.setup_keywords]
-name = {t}:register
+setup_requires = {t}:register
 """.format(t=__title__)
 
 

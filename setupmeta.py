@@ -493,11 +493,11 @@ class Definition(object):
         self.sources = []           # type: list(DefinitionEntry)
 
     def __repr__(self):
-        return "%s=%s from %s sources" % (
-            self.key,
-            short(self.value),
-            len(self.sources)
-        )
+        if len(self.sources) == 1:
+            source = self.sources[0].source
+        else:
+            source = "%s sources" % len(self.sources)
+        return "%s=%s from %s" % (self.key, short(self.value), source)
 
     def __eq__(self, other):
         return isinstance(other, Definition) and self.key is other.key
