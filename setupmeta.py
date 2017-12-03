@@ -18,7 +18,7 @@ import setuptools.command.test
 __version__ = '0.0.3'
 __license__ = 'MIT'
 __url__ = "https://github.com/zsimic/setupmeta"
-__download_url__ = 'archive/{version}.tar.gz'
+__download_url__ = 'archive/v{version}.tar.gz'
 __author__ = 'Zoran Simic zoran@simicweb.com'
 
 # Used to mark which key/values were provided explicitly in setup.py
