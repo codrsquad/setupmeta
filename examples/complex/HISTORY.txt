@@ -1,0 +1,5 @@
+HISTORY here.
+.. [[include this-does-not-exist.txt]]
+foo .. [[end long_description]] foo
+
+This part won't make it to long_description

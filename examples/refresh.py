@@ -27,7 +27,7 @@ def run_command(path, command):
         env=dict(PYTHONPATH=PPATH)
     )
     output, error = p.communicate()
-    return setupmeta.to_str(output) + setupmeta.to_str(error)
+    return setupmeta.to_str(output)
 
 
 def refresh_example(path, dryrun):

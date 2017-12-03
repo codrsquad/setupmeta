@@ -32,7 +32,7 @@ RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
 R_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
 
 # Finds simple values of the form: __author__ = 'Someone'
-R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+)[\'"]\s*(#.+)?$')
+R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
 R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
@@ -52,10 +52,9 @@ def setup(**attrs):
     distclass = attrs.pop('distclass', SetupmetaDistribution)
     if callable(dist_core_setup):
         # setup_requires mode
-        dist_core_setup(distclass=distclass, **attrs)
-    else:
-        # "Copy this big file next to your setup.py" mode
-        setuptools.setup(distclass=distclass, **attrs)
+        return dist_core_setup(distclass=distclass, **attrs)
+    # "Copy this big file next to your setup.py" mode
+    return setuptools.setup(distclass=distclass, **attrs)
 
 
 def abort(message):
@@ -68,9 +67,9 @@ def register(*args, **kwargs):
     We register a handle 'name' attribute, just to be able to perform this hook
     """
     import distutils.core
+    global dist_core_setup
     if setuptools.setup is distutils.core.setup:
         abort("setuptools version is too old, need version 38+")
-    global dist_core_setup
     if dist_core_setup is None:
         dist_core_setup = distutils.core.setup
         distutils.core.setup = setup
@@ -97,7 +96,7 @@ def load_contents(relative_path):
     """
     try:
         with io.open(project_path(relative_path), encoding='utf-8') as fh:
-            return ''.join(fh.readlines()).strip()
+            return to_str(''.join(fh.readlines())).strip()
 
     except Exception:
         pass
@@ -110,23 +109,25 @@ def load_readme(relative_path):
         with io.open(project_path(relative_path), encoding='utf-8') as fh:
             for line in fh.readlines():
                 m = RE_README_TOKEN.search(line)
-                if m:
-                    pre, post = m.group(1), m.group(4)
-                    pre = pre and pre.strip()
-                    post = post and post.strip()
-                    if not pre and not post:
-                        action = m.group(2)
-                        param = m.group(3)
-                        if action == 'end' and param == 'long_description':
-                            break
-                        if action == 'include':
-                            included = load_readme(param)
-                            if included:
-                                content.append(included)
-                                continue
-                content.append(line)
+                if not m:
+                    content.append(line)
+                    continue
+                pre, post = m.group(1), m.group(4)
+                pre = pre and pre.strip()
+                post = post and post.strip()
+                if pre or post:
+                    content.append(line)
+                    continue    # Not beginning/end, or no spaces around
+                action = m.group(2)
+                param = m.group(3)
+                if action == 'end' and param == 'long_description':
+                    break
+                if action == 'include':
+                    included = load_readme(param)
+                    if included:
+                        content.append(included)
 
-            return ''.join(content).strip()
+            return to_str(''.join(content)).strip()
 
     except IOError:
         return None
@@ -297,7 +298,7 @@ def parsed_toml(text):
     if not text:
         return None
     sections = {}
-    section = None
+    section = sections
     for line in text:
         key, value = toml_key_value(line)
         if key is None and value is None:
@@ -308,8 +309,8 @@ def parsed_toml(text):
             if section is None:
                 section = {}
                 sections[section_name] = section
-            continue
-        section[key] = toml_value(value)
+        else:
+            section[key] = toml_value(value)
     return sections
 
 
@@ -872,7 +873,8 @@ class SetupMeta(Settings):
             return
         if isinstance(definition.value, list):
             return
-        definition.value = definition.value.split(separator)
+        value = to_str(definition.value).split(separator)
+        definition.value = filter(bool, map(str.strip, value))
         definition.sources[0].value = definition.value
 
     @property

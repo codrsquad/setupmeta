@@ -66,7 +66,7 @@ def run_shell(*command):
         stderr=subprocess.PIPE
     )
     output, error = p.communicate()
-    return setupmeta.to_str(output) + setupmeta.to_str(error)
+    return setupmeta.to_str(output)
 
 
 def test_scenario(scenario):

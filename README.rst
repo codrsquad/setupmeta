@@ -11,7 +11,7 @@ This package aims to simplify that, here's what your setup.py could look like wi
 
     from setuptools import setup
 
-    __version__ = '1.0.0'                   # This can come from your __about__.py etc
+    __version__ = '1.0.0'                   # This could come instead from your __about__.py etc (see below)
     __title__ = 'myproject'                 # Some project like to have this as a reusable constant
 
     setup(
@@ -19,6 +19,18 @@ This package aims to simplify that, here's what your setup.py could look like wi
     )
 
 And that should be it - setupmeta_ will take it from there, extracting everything else from your project, following the typical conventions commonly used.
+
+You can use the explain_ command to see what setupmeta deduced from your project, for the above it would look like so (you can see which file, and which line each setting came from)::
+
+    Definitions:
+    ------------
+         description: (setup.py:2) Short description of the project
+                name: (setup.py:8) myproject
+          py_modules: (auto-fill ) ['myproject']
+             version: (setup.py:7) 1.0.0
+
+
+See examples_ for more.
 
 Note that setuptools_ **version 38+** is required, if your version is too old, you can see the `alternative way`_ of using setupmeta.
 
@@ -170,6 +182,8 @@ Upload was customized to use ``twine upload``, if you don't have twine_ installe
 .. _setupmeta: https://github.com/zsimic/setupmeta
 
 .. _alternative way: https://github.com/zsimic/setupmeta/alternative-way.rst
+
+.. _examples: https://github.com/zsimic/setupmeta/tree/master/examples
 
 .. _setuptools: https://github.com/pypa/setuptools
 

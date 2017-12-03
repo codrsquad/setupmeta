@@ -3,6 +3,7 @@ Test edge cases
 """
 
 import os
+import pytest
 
 import setupmeta
 import conftest
@@ -29,7 +30,37 @@ def test_shortening():
     assert setupmeta.short(message) == 'found in ~/foo/bar'
 
 
+def test_toml():
+    assert setupmeta.toml_key_value(None) == (None, None)
+    assert setupmeta.toml_key_value('=') == (None, None)
+    assert setupmeta.toml_key_value('a=b') == ('a', 'b')
+    assert setupmeta.toml_key_value('"a=b') == (None, '"a=b')
+    assert setupmeta.toml_key_value('"a b"=c') == ('a b', 'c')
+
+    assert setupmeta.is_toml_section('[a]')
+    assert setupmeta.is_toml_section('[[a]]')
+
+    assert setupmeta.normalized_toml('a=[\n1]'.split()) == ['a=[ 1]']
+
+    assert setupmeta.parsed_toml(dict(a=1)) == dict(a=1)
+    assert setupmeta.parsed_toml('a=[\n1]') == dict(a=[1])
+    assert setupmeta.parsed_toml('=\n[foo]\na=1') == dict(foo=dict(a=1))
+
+    assert setupmeta.toml_value(None) is None
+    assert setupmeta.toml_value("true") is True
+    assert setupmeta.toml_value("false") is False
+    assert setupmeta.toml_value('{a=1,b=2}') == dict(a=1, b=2)
+    assert setupmeta.toml_value("a") == 'a'
+
+
 def test_edge_cases():
+    with pytest.raises(Exception):
+        setupmeta.abort("testing")
+
+    with pytest.raises(Exception):
+        obj = setupmeta.DefinitionEntry('', '', '')
+        setupmeta.meta_command_init(obj, obj)
+
     with conftest.capture_output() as logged:
         setupmeta.clean_file(None)
         assert "Could not clean up None" in logged
@@ -47,8 +78,11 @@ def test_meta():
     assert not setupmeta.Meta.is_setup_py_path(None)
     assert not setupmeta.Meta.is_setup_py_path('')
     assert not setupmeta.Meta.is_setup_py_path('foo.py')
+
     assert setupmeta.Meta.is_setup_py_path('/foo/setup.py')
     assert setupmeta.Meta.is_setup_py_path('/foo/setup.pyc')
+
+    assert setupmeta.Meta.custom_commands()
 
 
 def test_representation():

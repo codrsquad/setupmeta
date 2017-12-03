@@ -1,7 +1,9 @@
 Alternative way of using ``setupmeta``
 ======================================
 
-If for some reason you can't have setuptools_ **version 38+** (this commit_ in particular is needed), you can still use setupmeta_ using the approach described here.
+It is recommended to use setupmeta_ via the ``setup_requires`` method as described in the `main readme`_.
+
+If for some reason you can't have setuptools_ **version 38+** however (this commit_ in particular is needed), you can still use the approach described here.
 
 
 Installation
@@ -51,6 +53,8 @@ And that's it.
 All you need is that local copy of ``setupmeta.py``, keep it up-to-date and move to the new style when you can.
 
 .. _setupmeta: https://github.com/zsimic/setupmeta
+
+.. _main readme: https://github.com/zsimic/setupmeta/blob/master/README.rst
 
 .. _setuptools: https://github.com/pypa/setuptools
 

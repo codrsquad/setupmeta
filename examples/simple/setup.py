@@ -11,7 +11,7 @@ The stup is minimal:
 
 from setupmeta import setup
 
+__title__ = 'simple'            # This will auto-fill 'name'
 
-setup(
-    name='simple',
-)
+
+setup()

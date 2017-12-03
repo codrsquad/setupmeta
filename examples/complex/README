@@ -1,10 +1,25 @@
+Regular README.
+
+.. [[include HISTORY.txt]]
+
+Done with README.
+
+.. [[end long_description]]
+
+Everything below will not make it to long_description
+
 No README.rst here, long description is still found in this "README" however
 
 Other peculiarities of this example:
-- `version` is defined twice
+- only part of this README is included, as well as part of HISTORY.txt
+- there's a package in complex/ as well as src/complex/
+- `version` is defined 3 times
+- `keywords` is defined everywhere, the setup.py docstring (first found) wins
 - there's an `author`, `contact`, and `maintainer`
 - `maintainer` is defined twice
 - `url` is auto-filled with package name
 - `download_url` is auto-filled from a relative path
+- there's an explicit `extras_require`
 - `classifiers` is mention explicitly, as well as in `classifiers.txt` file
 - there's an `entry_points.ini`
+- there's a `pinned.txt` and `requirements-dev.txt`
