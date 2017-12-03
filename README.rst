@@ -11,16 +11,17 @@ This package aims to simplify that, here's what your setup.py could look like wi
 
     from setuptools import setup
 
-    __version__ = '1.0.0'                   # This could come instead from your __about__.py etc (see below)
-    __title__ = 'myproject'                 # Some project like to have this as a reusable constant
+    __version__ = '1.0.0'               # This could come instead from your __about__.py
+    __title__ = 'myproject'             # Some project like to have this as a reusable constant
 
     setup(
-        setup_requires='setupmeta'          # This is where setupmeta comes in
+        setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
 And that should be it - setupmeta_ will take it from there, extracting everything else from your project, following the typical conventions commonly used.
 
-You can use the explain_ command to see what setupmeta deduced from your project, for the above it would look like so (you can see which file, and which line each setting came from)::
+You can use the explain_ command to see what setupmeta deduced from your project, for the above it would look like so
+(you can see which file, and which line each setting came from)::
 
     Definitions:
     ------------
@@ -134,7 +135,7 @@ explain
           py_modules: (auto-fill      ) ['setupmeta']
          script_args: (explicit       ) ['explain']
          script_name: (explicit       ) setup.py
-       tests_require: (Pipfile        ) ['coverage', 'flake8', 'mock', 'pytest', 'pytest-runner']
+       tests_require: (Pipfile        ) ['coverage', 'flake8', 'mock', 'pytest']
                  url: (setupmeta.py:26) https://github.com/zsimic/setupmeta
              version: (setupmeta.py:24) 0.0.1
 

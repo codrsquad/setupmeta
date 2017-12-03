@@ -15,7 +15,7 @@ import sys
 import setuptools.command.test
 
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 __license__ = 'MIT'
 __url__ = "https://github.com/zsimic/setupmeta"
 __download_url__ = 'archive/v{version}.tar.gz'
@@ -213,11 +213,14 @@ if sys.version_info[0] < 3:
         """ Pretty string representation of 'text' for python2 """
         if isinstance(text, list):
             text = [to_str(s) for s in text]
-            return to_str("%s" % text)
+            return to_str(str(text))
+        if isinstance(text, list):
+            text = (to_str(s) for s in text)
+            return to_str(str(text))
         if isinstance(text, dict):
             text = dict((to_str(k), to_str(v)) for (k, v) in text.items())
-            return to_str("%s" % text)
-        text = "%s" % text
+            return to_str(str(text))
+        text = str(text)
         if isinstance(text, unicode):
             return text.encode('ascii', 'ignore')
         return text
