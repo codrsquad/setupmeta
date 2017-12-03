@@ -23,9 +23,10 @@ import sys
 import setuptools.command.test
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 __license__ = 'MIT'
 __url__ = "https://github.com/zsimic/setupmeta"
+__download_url__ = 'archive/{version}.tar.gz'
 __author__ = 'Zoran Simic zoran@simicweb.com'
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -67,7 +68,7 @@ def abort(message):
     raise DistutilsClassError(message)
 
 
-def register(dist, keyword, value):
+def register(*args, **kwargs):
     """ Register ourselves to distutils
     We register a handle 'name' attribute, just to be able to perform this hook
     """
@@ -368,10 +369,20 @@ def pipfile_spec(section):
     return sorted(result)
 
 
+def meta_command_init(self, dist, **kw):
+    """ Custom __init__ injected to commands decorated with @MetaCommand """
+    self.setupmeta = getattr(dist, '_setupmeta', None)
+    if not self.setupmeta:
+        abort("Missing setupmeta information")
+    setuptools.Command.__init__(self, dist, **kw)
+
+
 class Meta:
     """
     Meta things
     """
+
+    commands = []
 
     # Whitelist simple fields to extract from modules
     # Don't include everything blindly...
@@ -396,6 +407,29 @@ class Meta:
             return False
         # Accept also setup.pyc
         return os.path.basename(path).startswith('setup.py')
+
+    @classmethod
+    def register_command(cls, command):
+        """ Register our own 'command' """
+        command.description = command.__doc__.strip().split('\n')[0]
+        command.__init__ = meta_command_init
+        if command.initialize_options == setuptools.Command.initialize_options:
+            command.initialize_options = lambda x: None
+        if command.finalize_options == setuptools.Command.finalize_options:
+            command.finalize_options = lambda x: None
+        if not hasattr(command, 'user_options'):
+            command.user_options = []
+        cls.commands.append(command)
+        return command
+
+    @classmethod
+    def custom_commands(cls):
+        """ Won't be needed anymore once we go setup_requires only """
+        result = {}
+        for command in cls.commands:
+            name = command.__name__.lower().replace('command', '')
+            result[name] = command
+        return result
 
 
 class DefinitionEntry:
@@ -865,68 +899,26 @@ class SetupMeta(Settings):
             yield field_email, m.group(2)
 
 
-def custom_commands(attrs):
-    """ Custom commands we're adding """
-    result = {}
-    tests_require = attrs.get('tests_require', [])
-    for name, obj in globals().items():
-        if inspect.isclass(obj) and issubclass(obj, setuptools.Command):
-            if obj is MetaCommand:
-                continue
-            if not hasattr(obj, 'required_dependencies'):
-                continue
-            if obj.required_dependencies:
-                usable = True
-                for req in obj.required_dependencies:
-                    if not any(req in r for r in tests_require):
-                        usable = False
-                        break
-                if not usable:
-                    continue
-            name = obj.__name__.lower().replace('command', '')
-            if obj.__doc__:
-                desc = obj.__doc__.strip()
-                if desc:
-                    obj.description = desc[0].lower() + desc[1:]
-            result[name] = obj
-    return result
-
-
 class SetupmetaDistribution(setuptools.dist.Distribution):
     """ Our Distribution implementation that makes this possible """
 
     def __init__(self, attrs):
         self._setupmeta = SetupMeta(attrs)
         attrs = self._setupmeta.to_dict()
-        custom = custom_commands(attrs)
-        custom.update(attrs.pop('cmdclass', {}))
-        attrs['cmdclass'] = custom
+        if not callable(dist_core_setup):
+            custom = Meta.custom_commands()
+            custom.update(attrs.pop('cmdclass', {}))
+            attrs['cmdclass'] = custom
         setuptools.dist.Distribution.__init__(self, attrs)
 
 
-class MetaCommand(setuptools.Command):
-    """ Common ancestor to our custom commands """
-
-    # Command will be active only if user's venv has these dependencies
-    required_dependencies = None
-
-    # setuptools' user options are wonky, turn off by default
-    user_options = []
-
-    def initialize_options(self):
-        """ Not needed """
-
-    def finalize_options(self):
-        """ Not needed """
-
-    def __init__(self, dist, **kw):
-        self.setupmeta = getattr(dist, '_setupmeta', None)
-        if not self.setupmeta:
-            abort("Missing setupmeta information")
-        setuptools.Command.__init__(self, dist, **kw)
+def MetaCommand(cls):
+    """ Decorator allowing for less boilerplate in our commands """
+    return Meta.register_command(cls)
 
 
-class ExplainCommand(MetaCommand):
+@MetaCommand
+class ExplainCommand(setuptools.Command):
     """ Show a report of where key/values setup(attr) come from """
 
     def run(self):
@@ -935,7 +927,8 @@ class ExplainCommand(MetaCommand):
         print(self.setupmeta.explain())
 
 
-class EntryPointsCommand(MetaCommand):
+@MetaCommand
+class EntryPointsCommand(setuptools.Command):
     """ List entry points for pygradle consumption """
 
     def run(self):
@@ -954,44 +947,26 @@ class EntryPointsCommand(MetaCommand):
             print("%s = %s" % (key, value))
 
 
+@MetaCommand
 class TestCommand(setuptools.command.test.test):
     """ Run all tests via py.test """
-
-    required_dependencies = ['pytest']
-    user_options = []
-
-    def initialize_options(self):
-        setuptools.command.test.test.initialize_options(self)
-
-    def finalize_options(self):
-        """ Not needed """
-        setuptools.command.test.test.finalize_options(self)
 
     def run_tests(self):
         try:
             import pytest
 
         except ImportError:
-            sys.exit('pytest is not installed')
+            print('pytest is not installed, falling back to default')
+            return setuptools.command.test.test.run_tests(self)
 
-        setupmeta = getattr(self.distribution, '_setupmeta', None)
-        if not setupmeta:
-            abort("Missing setupmeta information")
-
-        suite = setupmeta.value('test_suite') or 'tests'
+        suite = self.setupmeta.value('test_suite') or 'tests'
         args = ['-vvv'] + suite.split()
         errno = pytest.main(args)
         sys.exit(errno)
 
 
-def run_program(*commands):
-    import subprocess
-    p = subprocess.Popen(commands)
-    if p.returncode:
-        sys.exit(p.returncode)
-
-
-class UploadCommand(MetaCommand):
+@MetaCommand
+class UploadCommand(setuptools.Command):
     """ Build and publish the package """
 
     def run(self):
@@ -1014,6 +989,14 @@ class UploadCommand(MetaCommand):
         print('Uploading the package to pypi via twine...')
         os.system('twine upload dist/*')
         sys.exit()
+
+
+def run_program(*commands):
+    """ Run shell program 'commands' """
+    import subprocess
+    p = subprocess.Popen(commands)
+    if p.returncode:
+        sys.exit(p.returncode)
 
 
 def default_upgrade_url(url=__url__):
