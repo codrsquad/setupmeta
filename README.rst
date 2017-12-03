@@ -1,24 +1,111 @@
-Stop copy-pasting stuff in ``setup.py``
-=======================================
+Simplify your ``setup.py``
+==========================
 
-This project aims at disrupting the proliferation of copy-paste tech that's currently affecting all ``setup.py`` writers in this world.
+Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
 
-
-Get started
-===========
-
-- Grab ``setupmeta.py`` next to your ``setup.py`` and check it in (it self-installs and self-upgrades as you'll see below).
-
-- ``from setupmeta import setup``, and voila: most of the things you had to have in ``setup.py`` can now go away and be auto-filled.
-  Your ``setup.py`` can now be as simple as::
+This package aims to simplify that, here's what your setup.py could look like with setupmeta_::
 
     """
-    Short description of my project
+    Short description of the project
     """
-    from setupmeta import setup
-    setup(name='myproject')
 
-- See what info was gathered by setupmeta, and from where::
+    from setuptools import setup
+
+    __version__ = '1.0.0'                   # This can come from your __about__.py etc
+    __title__ = 'myproject'                 # Some project like to have this as a reusable constant
+
+    setup(
+        setup_requires='setupmeta'          # This is where setupmeta comes in
+    )
+
+And that should be it - setupmeta_ will take it from there, extracting everything else from your project, following the typical conventions commonly used.
+
+Note that setuptools_ **version 38+** is required, if your version is too old, you can see the `alternative way`_ of using setupmeta.
+
+
+How it works?
+=============
+
+- Everything that you explicitly provide in your original ``setup.py`` -> ``setup()`` call is taken as-is (never changed), and internally labelled as ``explicit`` (see the explain_ command below).
+  So if you don't like something that setupmeta deduces, you can always explicitly state it.
+
+- ``name`` is auto-filled from your setup.py's ``__title__``, if there is one (sometimes having a constant is quite handy...)
+
+- ``description`` will be the 1st line of the docstring of your ``setup.py``
+
+- ``packages`` and ``package_dir`` is auto-filled accordingly if you have a ``<name>/__init__.py`` or ``src/<name>/__init__.py`` file
+
+- ``py_modules`` is auto-filled if you have a ``<name>.py`` file
+
+- ``version``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``, and ``platforms`` will be auto-filled from:
+
+    - Lines of the form ``__version__ = "1.0.0"`` in your modules (simple constants only, expressions are ignored - the modules are not imported but scanned using regexes)
+
+    - Lines of the form ``version: 1.0.0`` in your docstring
+
+    - Files are examined in this order (first find wins):
+
+        - ``setup.py``
+
+        - ``<package>.py`` (mccabe_ for example)
+
+        - ``<package>/__about__.py`` (cryptography_, pipfile_ for example do this)
+
+        - ``<package>/__version__.py`` (requests_ for example)
+
+        - ``<package>/__init__.py`` (changes_, arrow_ for example)
+
+        - ``src/`` is also examined (for those who like to have their packages under ``src``)
+
+    - URLs can be simplified:
+
+        - ``url`` may use ``{name}``, it will be expanded appropriately
+
+        - if ``url`` points to your general github repo (like: https://github.com/zsimic), the ``name`` of your project is auto-appended to it
+
+        - if ``download_url`` is a relative path, it is auto-filled by prefixing it with ``url``
+
+        - ``download_url`` may use ``{name}`` and/or ``{version}``, those will be expanded appropriately
+
+    - ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line (setupmeta will figure out the email part and auto-fill it properly)
+
+        - i.e.: ``author: Bob D bob@d.com`` will yield the proper ``author`` and ``author_email`` settings
+
+- ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``, then ``README*``, first one found wins).
+  Special tokens can be used (notation aimed at them easily being `rst comments`_):
+
+    - ``.. [[end long_description]]`` as end marker, so you don't have to use the entire file as long description
+
+    - ``.. [[include <relative-path>]]`` if you want another file included as well (for example, people like to add ``HISTORY.txt`` as well)
+
+    - these tokens must appear either at beginning/end of line, or be after/before at least one space character
+
+- ``classifiers`` is auto-filled from file ``classifiers.txt`` (one classification per line, ignoring empty lines and python style comments)
+
+- ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
+
+- ``install_requires`` is auto-filled if you have a pipfile_ (or the old school ``requirements.txt`` or ``pinned.txt`` file)
+
+- ``tests_require`` is auto-filled if you have a pipfile_ (or ``requirements-dev.txt`` file)
+
+- ``test_suite`` is auto-filled to ``tests`` folder if you have one (no other places are examined, stick to the standard)
+
+- ``py.test`` is automatically used for ``setup.py test`` if you have it in your pipfile_ (or reqs).
+
+This should hopefully work nicely for the vast majority of python projects out there.
+If you need advanced stuff, you can still leverage ``setupmeta`` for all the usual stuff above, and go explicit wherever needed.
+
+
+Commands
+========
+
+``setupmeta`` also introduces a few commands to make your life easier (more to come in the future).
+
+
+explain
+-------
+
+``python setup.py explain`` will show you what ``setupmeta`` found out about your project, what definitions came from where, example::
 
     ~/dev/setupmeta: python setup.py explain
     Definitions:
@@ -27,10 +114,10 @@ Get started
                   \_: (setupmeta.py:27) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust    ) zoran@simicweb.com
          classifiers: (classifiers.txt) 247 chars [Development Status :: 4 - Beta ...]
-         description: (setup.py:2     ) Stop copy-paste technology in setup.py
-            keywords: (setup.py:4     ) anti copy-paste, convenient, setup.py
+         description: (setup.py:2     ) Simplify your setup.py
+            keywords: (setup.py:4     ) convenient, setup.py
              license: (setupmeta.py:25) MIT
-    long_description: (README.rst     ) 7754 chars [Stop copy-pasting stuff in ``setup.py`` ...]
+    long_description: (README.rst     ) 7754 chars [Simplify your setup.py ======= ...]
                 name: (explicit       ) setupmeta
           py_modules: (auto-fill      ) ['setupmeta']
          script_args: (explicit       ) ['explain']
@@ -40,8 +127,6 @@ Get started
              version: (setupmeta.py:24) 0.0.1
 
 In the above output:
-
-- We ran ``python setup.py explain`` - "explain" is a command provided by setupmeta (see Commands_), it's there to help you see what definitions came from where
 
 - The ``author`` key was seen in ``setupmeta.py`` line 27, and the value was name + email,
   that got "auto-adjusted" and filled in as ``author`` + ``author_email`` properly as shown.
@@ -59,17 +144,75 @@ In the above output:
   (they appear as "explicit" from setupmeta's point of view - you get some insight as to what setuptools is doing here as well)
 
 
-How it works?
-=============
+entrypoints
+-----------
 
-  [It has to live alongside your ``setup.py`` in order for the ``from setupmeta import setup`` call to work.
-  I have plans to make this better (see Roadmap_ below), but for now this is the only way unfortunately]
+This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
 
-``setupmeta`` tries to save you some copy-pasting activity in ``setup.py`` by digging information about your project, from your project.
 
-It finds all the info that's usually provided to ``setuptools.setup()`` throughout your project and auto-fills it for you.
+test
+----
 
-See the `quick reference`_ page.
+
+The ``test`` command is customized to run ``pytest``, if you have it as a test/dev dependency.
+If you don't, then setupmeta falls back to the regulars setuptools implementation for the test command...
+
+Note that **all** tests are ran via ``py.tests -vvv <test_suite>``, you can't customize that (no options supported).
+Just use something like ``pipenv run py.test ...`` if you want to run a subset of tests, ``setup.py``'s CLI interface is wonky anyway.
+
+
+upload
+------
+
+Upload was customized to use ``twine upload``, if you don't have twine_ installed, the ``upload`` command will fail (I hear the default one is not good, so not falling back to it...)
+
+
+.. _setupmeta: https://github.com/zsimic/setupmeta
+
+.. _alternative way: https://github.com/zsimic/setupmeta/alternative-way.rst
+
+.. _setuptools: https://github.com/pypa/setuptools
+
+.. _twine: https://github.com/pypa/twine
+
+.. _rst comments: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#comments
+
+.. _pipfile: https://github.com/pypa/pipfile
+
+.. _requests: https://github.com/requests/requests/tree/master/requests
+
+.. _cryptography: https://github.com/pyca/cryptography/tree/master/src/cryptography
+
+.. _changes: https://github.com/michaeljoseph/changes/blob/master/changes/__init__.py
+
+.. _arrow: https://github.com/crsmithdev/arrow/blob/master/arrow/__init__.py
+
+.. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
+
+.. _pygradle: https://github.com/linkedin/pygradle/
+
+.. [[include HISTORY.rst]]
+
+.. [[end long_description]]
+
+----
+
+Motivation
+==========
+
+My motivation was to:
+
+- stop having to boilerplate my setup.py's
+
+- learn how to publish to pypi (and do it right)
+
+- have a nice workflow for when I want to publish to pypi:
+
+    - ``setup.py explain`` to see what's up at a glance
+
+    - ``setup.py test`` to verify my stuff works from setup.py's point of view
+
+    - ``setup.py upload`` to publish in one go
 
 I noticed that most open-source projects out there do the same thing over and over, like:
 
@@ -83,7 +226,7 @@ I noticed that most open-source projects out there do the same thing over and ov
 
 - Very few ``setup.py`` specimens out there even have a docstring
 
-- Etc.
+- etc.
 
 I didn't want to keep doing this anymore myself, so I decided to try and do something about it with this project.
 
@@ -106,91 +249,8 @@ With setupmeta, you can achieve a short and sweet setup.py by proceeding like so
     __version__ = "1.0.0"
     __url__ = "https://github.com/me/myproject"
 
-- Your README will end up on pypi automatically as ``long_description``
-
-- If you are using pipenv_, your ``install_requires`` and ``tests_require`` will be auto-filled from your ``Pipfile``
-
-- If you want classifiers, put them in a file ``classifiers.txt``
-
-- If you have entry_points, you can state them in a file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
-
-
-Installation
-============
-
-Grab the ``setupmeta.py`` script in your project folder, you can do so using one of the following ways::
-
-    wget https://raw.githubusercontent.com/zsimic/setupmeta/setupmeta.py
-
-Or using pip::
-
-    pip install setupmeta
-    setupmeta.py .
-
-If you already have the script in some project, you can use it to "seed" another project like so::
-
-    ./setupmeta.py ~/my/other/project/
-
-
-This will grab the latest version of the script and put it in ``~/my/other/project/``, it's almost equivalent to
-(and you could do this also BTW, the only difference from above is that no check for updates is performed)::
-
-    cp ./setupmeta.py ~/my/other/project/setupmeta.py
-
-The script can auto-upgrade itself, once you have a copy, you can get the latest version by running this (default target is current folder)::
-
-    ./setupmeta.py
-
-
-Commands
-========
-
-Only 2 commands for now, more to come in the future.
-
-explain
--------
-
-Use it to double-check on what ``setupmeta`` is doing, where it finds the info it auto-fills.
-The command only outputs info, does no changes, can be ran any time.
-
-upload
-------
-
-It's a draft, taken from `pipenv setup.py`_
-
-The idea is that this will be a convenient way to upload/publish your project to pypi,
-with all sorts of validation etc.
-
 
 Roadmap
 =======
 
-Install via ``setup_requires`` instead of local copy of ``setupmeta.py``
-------------------------------------------------------------------------
-
-Due to setuptools limitations, I had to make this work by asking users to put a copy of ``setupmeta.py`` in their projects.
-In the future, I plan to make setupmeta be consumed via ``setup_requires=['setupmeta']`` instead of this.
-
-I have a working implementation draft with ``setup_requires=['setupmeta']``,
-but it can only work with setuptools 36.7+ and in particular this `setuptools commit`_
-
-When setuptools 36.7+ becomes commonplace, we'll be able to:
-
-- Delete those ``setupmeta.py`` in-project copies
-
-- Use ``setup_requires=['setupmeta']`` in the original ``setup()`` call instead
-
-
-More commands
--------------
-
-Add more convenience commands such as ``upload`` and a ``test`` that works for most popular cases
-
-
-
-.. _setuptools commit: https://github.com/pypa/setuptools/commit/bb71fd1bed9f5e5e239ef99be82ed57e9f9b1dda#diff-6b59155d3acbddf6010c0f20482d4eea
-
-.. _pipenv: https://github.com/kennethreitz/pipenv
-.. _pipenv setup.py: https://github.com/kennethreitz/pipenv/blob/master/setup.py
-
-.. _quick reference: ./REFERENCE.rst
+- Support git-versioning, like ``setuptools_scm`` - but auto-apply tag on ``upload``

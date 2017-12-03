@@ -34,8 +34,9 @@ def run_self_upgrade(mode, args):
                 output, error = p.communicate()
                 return setupmeta.to_str(output) + setupmeta.to_str(error)
             else:
+                assert mode == 'setupmeta'
                 setupmeta.__url__ = LOCAL_URL
-                setupmeta.self_upgrade(args)
+                setupmeta.self_upgrade(['upgrade'] + args)
         except SystemExit as e:
             # self_upgrade() calls sys.exit()
             exit_msg = "%s" % e
@@ -54,6 +55,12 @@ def test_upgrade(mode):
     tmpdir = tempfile.mkdtemp()
 
     try:
+        # No setup.py
+        do_run(mode, [tmpdir], "Run upgrade only on ")
+
+        with open(os.path.join(tmpdir, 'setup.py'), 'a') as fh:
+            fh.write('""" foo """')
+
         if mode != 'bash':
             # Sanity check --help
             do_run(mode, ['--help'], "Install/upgrade")

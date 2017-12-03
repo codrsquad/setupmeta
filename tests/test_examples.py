@@ -90,6 +90,6 @@ def test_self():
         'explain'
     )
     chk(out, "author:.+ Zoran Simic")
-    chk(out, "description:.+ Auto-fill setup.py")
+    chk(out, "description:.+ Simplify your setup.py")
     chk(out, "version:.+ [0-9]+\.[0-9]")
     chk(out, "url:.+ https://github.com/zsimic/setupmeta")

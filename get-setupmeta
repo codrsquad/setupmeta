@@ -19,6 +19,11 @@ if [ ! -d $TARGET ]; then
     exit 1
 fi
 
+if [ ! -f $TARGET/setup.py ]; then
+    echo "Run upgrade only on folders that have a setup.py"
+    exit 1
+fi
+
 TARGET=${TARGET:-.}/setupmeta.py
 TEMP_TARGET=$TARGET.tmp
 COMMAND=""

@@ -1,5 +1,5 @@
 """
-Auto-fill setup.py
+Simplify your setup.py
 
 This setup.py is self-using and auto-bootstraps itself
 

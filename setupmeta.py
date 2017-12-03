@@ -1,14 +1,6 @@
 #!/usr/bin/env python
 """
-This file comes from https://github.com/zsimic/setupmeta, do not edit
-
-Due to current limitations of setuptools,
-this file has to be copied to your project folder.
-See url above for how to get it / update it.
-
-With setuptools 38.2.3+, it's becoming possible to
-have this functionality come in via setup_requires=['setupmeta']
-instead of direct copy in project folder.
+See https://github.com/zsimic/setupmeta
 """
 
 import glob
@@ -32,6 +24,9 @@ __author__ = 'Zoran Simic zoran@simicweb.com'
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = 'explicit'
 READMES = ['README.rst', 'README.md', 'README*']
+
+# Recognized README tokens
+RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
 
 # Accept reasonable variations of name + some separator + email
 R_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
@@ -108,6 +103,35 @@ def load_contents(relative_path):
         pass
 
 
+def load_readme(relative_path):
+    """ Loader for README files """
+    content = []
+    try:
+        with io.open(project_path(relative_path), encoding='utf-8') as fh:
+            for line in fh.readlines():
+                m = RE_README_TOKEN.search(line)
+                if m:
+                    pre, post = m.group(1), m.group(4)
+                    pre = pre and pre.strip()
+                    post = post and post.strip()
+                    if not pre and not post:
+                        action = m.group(2)
+                        param = m.group(3)
+                        if action == 'end' and param == 'long_description':
+                            break
+                        if action == 'include':
+                            included = load_readme(param)
+                            if included:
+                                content.append(included)
+                                continue
+                content.append(line)
+
+            return ''.join(content).strip()
+
+    except IOError:
+        return None
+
+
 def extract_list(content):
     """ List of non-comment, non-empty strings from 'content'
 
@@ -141,10 +165,11 @@ def load_pipfile(relative_path):
     return parsed_toml(load_list(relative_path))
 
 
-def find_contents(*relative_paths, **kwargs):
+def find_contents(relative_paths, loader=None):
     """ Return contents of first file found in 'relative_paths', globs OK
 
     :param list(str) relative_paths: Ex: "README.rst", "README*"
+    :param callable|None loader: Optional custom loader function
     :return str|None, str|None: Contents and path where they came from, if any
     """
     candidates = []
@@ -158,8 +183,9 @@ def find_contents(*relative_paths, **kwargs):
             continue
         if path not in candidates:
             candidates.append(path)
+    if loader is None:
+        loader = load_contents
     for relative_path in candidates:
-        loader = kwargs.get('loader', load_contents)
         contents = loader(relative_path)
         if contents:
             return contents, relative_path
@@ -333,7 +359,7 @@ def toml_value(text):
 
 def get_old_spec(*relative_paths):
     """ Read old-school requirements.txt type file """
-    contents, path = find_contents(*relative_paths, loader=load_list)
+    contents, path = find_contents(relative_paths, loader=load_list)
     if contents:
         return RequirementsEntry(contents, path)
     return None
@@ -384,21 +410,13 @@ class Meta:
 
     commands = []
 
-    # Whitelist simple fields to extract from modules
-    # Don't include everything blindly...
-    # A "simple field" is a variable assignment with a string constant
-    # of the form: __var__ = 'constant value'
-    simple = set(filter(bool, map(str.strip, """
-        description download_url license keywords platforms url version
+    # Allowed fields to extract from modules
+    allowed_fields = """
+        version description url download_url license keywords platforms
         author author_email
         contact contact_email
         maintainer maintainer_email
-    """.split())))
-
-    @classmethod
-    def is_known(cls, name):
-        """ Is field with 'name' meaningful to consider for setup()? """
-        return name in cls.simple
+    """
 
     @staticmethod
     def is_setup_py_path(path):
@@ -599,11 +617,14 @@ class Settings:
 class SimpleModule(Settings):
     """ Simple settings extracted from a module, such as __about__.py """
 
-    def __init__(self, *relative_paths):
+    def __init__(self, *relative_paths, **kwargs):
         """
         :param list(str) relative_paths: Relative path to scan for definitions
         """
         Settings.__init__(self)
+        self.allowed = kwargs.pop('allowed', '')
+        self.allowed = "%s %s" % (Meta.allowed_fields, self.allowed)
+        self.allowed = set(self.allowed.split())
         self.relative_path = os.path.join(*relative_paths)
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
@@ -667,7 +688,7 @@ class SimpleModule(Settings):
             return
         key = m.group(1)
         value = m.group(2)
-        if Meta.is_known(key):
+        if key in self.allowed:
             self.add_pair(key, value, line_number)
 
 
@@ -728,20 +749,25 @@ class SetupMeta(Settings):
             PROJECT_DIR = os.path.dirname(os.path.abspath(setup_py_path))
 
         if self.value('use_scm_version'):
+            # Don't look for version, let setuptools_scm do its thing
             self.ignore.add('version')
+
+        # Allow to auto-fill 'name' from setup.py's __title__, if any
+        self.merge(SimpleModule('setup.py', allowed='title'))
+        title = self.definitions.pop('title', None)
+        if title:
+            self.auto_fill('name', title.value, source=title.source)
 
         packages = self.attrs.get('packages', [])
         py_modules = self.attrs.get('py_modules', [])
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            mpath = project_path(self.name, '__init__.py')
-            if os.path.isfile(mpath):
+            if os.path.isfile(project_path(self.name, '__init__.py')):
                 packages = [self.name]
                 self.auto_fill('packages', packages)
 
-            mpath = project_path('src', self.name, '__init__.py')
-            if os.path.isfile(mpath):
+            if os.path.isfile(project_path('src', self.name, '__init__.py')):
                 packages = [self.name]
                 self.auto_fill('packages', packages)
                 self.auto_fill('package_dir', {'': 'src'})
@@ -751,13 +777,17 @@ class SetupMeta(Settings):
                 self.auto_fill('py_modules', py_modules)
 
         # Get long description from README (in this order)
-        self.add_full_contents('long_description', *READMES)
+        self.add_full_contents(
+            'long_description',
+            READMES,
+            loader=load_readme
+        )
 
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
         self.add_classifiers()
 
         # Entry points are more handily described in their own file
-        self.add_full_contents('entry_points', 'entry_points.ini')
+        self.add_full_contents('entry_points', ['entry_points.ini'])
 
         if 'PYGRADLE_PROJECT_VERSION' in os.environ:
             # Convenience: support https://github.com/linkedin/pygradle
@@ -778,6 +808,9 @@ class SetupMeta(Settings):
                 )
 
         # Scan the usual/conventional places
+        for py_module in py_modules:
+            self.merge(SimpleModule('%s.py' % py_module))
+
         for package in packages:
             self.merge(
                 SimpleModule(package, '__about__.py'),
@@ -787,11 +820,6 @@ class SetupMeta(Settings):
                 SimpleModule('src', package, '__version__.py'),
                 SimpleModule('src', package, '__init__.py'),
             )
-
-        for py_module in py_modules:
-            self.merge(SimpleModule('%s.py' % py_module))
-
-        self.merge(SimpleModule('setup.py'))
 
         url = self.value('url')
         download_url = self.value('download_url')
@@ -855,13 +883,14 @@ class SetupMeta(Settings):
     def version(self):
         return self.value('version')
 
-    def add_full_contents(self, key, *paths):
+    def add_full_contents(self, key, paths, loader=None):
         """ Add full contents of 1st file found in 'paths' under 'key'
 
         :param str key: Key being defined
         :param list(str) paths: Paths to examine (globs OK)
+        :param callable|None loader: Optional custom loader function
         """
-        value, path = find_contents(*paths)
+        value, path = find_contents(paths, loader=loader)
         if value:
             self.add_definition(key, value, path)
 
@@ -1029,6 +1058,7 @@ def self_upgrade(*argv):
         action='store_true',
         help="Don't actually install, simply check for updates"
     )
+    parser.add_argument('command', help="Command to run")
     parser.add_argument(
         'target',
         default='.',
@@ -1037,11 +1067,19 @@ def self_upgrade(*argv):
     )
     args = parser.parse_args(*argv)
 
+    if args.command != 'upgrade':
+        sys.exit("Command must be 'upgrade' (this is to avoid accidentals)")
+
     args.target = os.path.abspath(os.path.expanduser(args.target))
     if not os.path.isdir(args.target):
         sys.exit("'%s' is not a valid directory" % args.target)
 
     PROJECT_DIR = args.target
+
+    spy = SimpleModule('setup.py')
+    if not spy.exists:
+        sys.exit("Run upgrade only on folders that have a setup.py")
+
     csm = SimpleModule('setupmeta.py')  # current script module
     rsmlp = 'setupmeta.tmp'             # remote script module local path
     if os.path.islink(csm.full_path):
