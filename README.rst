@@ -205,11 +205,10 @@ Upload was customized to use ``twine upload``, if you don't have twine_ installe
 
 .. _pygradle: https://github.com/linkedin/pygradle/
 
+----
 .. [[include HISTORY.rst]]
-
 .. [[end long_description]]
 
-----
 
 Motivation
 ==========
