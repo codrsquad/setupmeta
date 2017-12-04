@@ -43,7 +43,7 @@ See examples_ for more.
 How it works?
 =============
 
-- Everything that you explicitly provide in your original ``setup.py`` -> ``setup()`` call is taken as-is (never changed), and internally labelled as ``explicit`` (see the explain_ command below).
+- Everything that you explicitly provide in your original ``setuptools.setup()`` call is taken as-is (never changed), and internally labelled as ``explicit`` (see the explain_ command below).
   So if you don't like something that setupmeta deduces, you can always explicitly state it.
 
 - ``name`` is auto-filled from your setup.py's ``__title__``, if there is one (sometimes having a constant is quite handy...)
