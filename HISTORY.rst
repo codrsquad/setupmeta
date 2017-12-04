@@ -2,16 +2,10 @@
 History
 =======
 
-0.0.7 (2017-12-04)
+0.0.8 (2017-12-04)
 ------------------
 
-* Inlined pipfile_'s code, removed old hacky toml/pipfile implementation
-
-.. _pipfile: https://pypi.org/project/pipfile/
-
-
-0.0.5 (2017-12-03)
-------------------
+* Inlined pipfile, removed old hacky toml/pipfile implementation
 
 * Refactored as a proper package (now that the one-file mode is not needed anymore)
 
