@@ -15,9 +15,9 @@ install_requires: (Pipfile        ) ['click>=6.7']
 long_description: (README.rst     ) Simple setup scenario =====================  This is your typical small project, with:
             name: (setup.py:14    ) simple
       py_modules: (auto-fill      ) ['simple']
-     script_args: (explicit       ) ['explain']
-     script_name: (explicit       ) setup.py
+  setup_requires: (explicit       ) ['setupmeta']
    tests_require: (Pipfile        ) ['flake8>=3.3.0,<4', 'pytest', 'six==1.11.0', "unittest2 ; python_version < '2.7.9'"]
+          title*: (setup.py:14    ) simple
              url: (simple.py:9    ) https://github.com/zsimic/simple
          version: (simple.py:5    ) 1.0.0
 

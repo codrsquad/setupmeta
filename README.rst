@@ -11,10 +11,10 @@ This package aims to simplify that, here's what your setup.py could look like wi
 
     from setuptools import setup
 
-    __version__ = '1.0.0'               # This could come instead from your __about__.py
-    __title__ = 'myproject'             # Some project like to have this as a reusable constant
+    __version__ = '1.0.0'               # This can come from your __about__.py
 
     setup(
+        name='myproject',
         setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
@@ -25,15 +25,18 @@ You can use the explain_ command to see what setupmeta deduced from your project
 
     Definitions:
     ------------
-         description: (setup.py:2) Short description of the project
-                name: (setup.py:8) myproject
-          py_modules: (auto-fill ) ['myproject']
-             version: (setup.py:7) 1.0.0
+         description: (setup.py:2 ) Short description of the project
+    long_description: (README.rst ) Long description would be your inlined README.rst
+                name: (setup.py:10) myproject
+          py_modules: (auto-fill  ) ['myproject']
+          test_suite: (auto-fill  ) tests
+       tests_require: (Pipfile    ) ['coverage', 'flake8', 'pytest']
+             version: (setup.py:7 ) 1.0.0
 
+The above would be what you get with just those few lines in your ``setup.py``, plus a ``README.rst`` file, a ``tests/`` folder, and a pipfile_
+(assumed here for auto-fill illustration purposes - you don't have to have those, they just get automatically picked up if you do)
 
 See examples_ for more.
-
-Note that setuptools_ **version 38+** is required, if your version is too old, you can see the `alternative way`_ of using setupmeta.
 
 
 How it works?
@@ -181,8 +184,6 @@ Upload was customized to use ``twine upload``, if you don't have twine_ installe
 
 
 .. _setupmeta: https://github.com/zsimic/setupmeta
-
-.. _alternative way: https://github.com/zsimic/setupmeta/alternative-way.rst
 
 .. _examples: https://github.com/zsimic/setupmeta/tree/master/examples
 

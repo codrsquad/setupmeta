@@ -71,7 +71,5 @@ if __name__ == "__main__":
 
         # We're bootstrapped now, we can self-refer
         args['setup_requires'] = [__title__]
-        import setupmeta
-        setupmeta.register()
 
     setuptools.setup(**args)

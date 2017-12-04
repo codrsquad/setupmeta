@@ -13,7 +13,7 @@ Definitions:
     download_url: (auto-fill                ) https://github.com/zsimic/complex/archive/3.2.1.tar.gz
               \_: (setup.py:6               ) archive/{version}.tar.gz
     entry_points: (entry_points.ini         ) [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
-  extras_require: (explicit                 ) {'bar': 'docutils'}
+  extras_require: (explicit                 ) {'bar': ['docutils']}
 install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
         keywords: (explicit                 ) ['one', 'more']
               \_: (setup.py:7               ) setup, docstring
@@ -29,8 +29,7 @@ maintainer_email: (auto-adjust              ) me@myplace.com
             name: (explicit                 ) complex
      package_dir: (auto-fill                ) {'': 'src'}
         packages: (auto-fill                ) ['complex']
-     script_args: (explicit                 ) ['explain']
-     script_name: (explicit                 ) setup.py
+  setup_requires: (explicit                 ) ['setupmeta']
       test_suite: (auto-fill                ) tests
    tests_require: (requirements-dev.txt     ) ['flake8', 'pytest']
              url: (auto-fill                ) https://github.com/zsimic/complex

@@ -1,18 +1,19 @@
-#!/usr/bin/env python
 """
+Simplify your setup.py
+
 See https://github.com/zsimic/setupmeta
 """
 
+import distutils.dist
 import glob
 import inspect
 import io
 import os
 import re
 import setuptools
+import setuptools.command.test
 import shutil
 import sys
-
-import setuptools.command.test
 
 
 __version__ = '0.0.4'
@@ -29,13 +30,13 @@ READMES = ['README.rst', 'README.md', 'README*']
 RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
 
 # Accept reasonable variations of name + some separator + email
-R_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
+RE_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
 
 # Finds simple values of the form: __author__ = 'Someone'
-R_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
+RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
-R_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
+RE_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
 
 USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
 PROJECT_DIR = os.getcwd()               # Determined project directory
@@ -43,49 +44,41 @@ PROJECT_DIR = os.getcwd()               # Determined project directory
 # Used for poor-man's toml parsing (can't afford to import toml)
 CLOSERS = {'"': '"', "'": "'", '{': '}', '[': ']'}
 
-# Original distutils.core.setup, if we're running in 'setup_requires' mode
-dist_core_setup = None
-
-
-def setup(**attrs):
-    """ Drop-in replacement for setuptools.setup() """
-    distclass = attrs.pop('distclass', SetupmetaDistribution)
-    if callable(dist_core_setup):
-        # setup_requires mode
-        return dist_core_setup(distclass=distclass, **attrs)
-    # "Copy this big file next to your setup.py" mode
-    return setuptools.setup(distclass=distclass, **attrs)
-
 
 def abort(message):
     from distutils.errors import DistutilsClassError
     raise DistutilsClassError(message)
 
 
-def register(*args, **kwargs):
-    """ Register ourselves to distutils
-    We register a handle 'name' attribute, just to be able to perform this hook
+def distutils_hook(dist, command, *args, **kwargs):
+    """ distutils.dist.Distribution.get_option_dict replacement
+
+    distutils calls this right after having processed 'setup_requires'
+    It really calls self.get_option_dict(command), we jump in
+    so we can decorate the 'dist' object appropriately for our own commands
     """
-    import distutils.core
-    global dist_core_setup
-    if setuptools.setup is distutils.core.setup:
-        abort("setuptools version is too old, need version 38+")
-    if dist_core_setup is None:
-        dist_core_setup = distutils.core.setup
-        distutils.core.setup = setup
+    if not hasattr(dist, '_setupmeta'):
+        # Add our ._setupmeta object
+        # (distutils calls this several times, we need only one)
+        dist._setupmeta = SetupMeta(dist)
+        MetaDefs.fill_dist(dist, dist._setupmeta.to_dict())
+    original = MetaDefs.dd_original
+    return original(dist, command, *args, **kwargs)
+
+
+def register(*args, **kwargs):
+    """ Hook into distutils in order to do our magic """
+    if MetaDefs.dd_original is None:
+        # Replace Distribution.get_option_dict so we can inject our parsing
+        # This is the earliest I found after 'setup_requires' are imported
+        # Do the replacement only once (distutils calls this several times...)
+        MetaDefs.dd_original = distutils.dist.Distribution.get_option_dict
+        distutils.dist.Distribution.get_option_dict = distutils_hook
 
 
 def project_path(*relative_paths):
     """ Full path corresponding to 'relative_paths' components """
     return os.path.join(PROJECT_DIR, *relative_paths)
-
-
-def clean_file(full_path):
-    """ Clean up file with 'path' """
-    try:
-        os.unlink(full_path)
-    except Exception as e:
-        print("Could not clean up %s: %s" % (short(full_path), e))
 
 
 def load_contents(relative_path):
@@ -208,22 +201,30 @@ def short(text, c=64):
     return text
 
 
+def listify(text, separator=None):
+    """ Turn 'text' into a list using 'separator' """
+    value = to_str(text).split(separator)
+    return filter(bool, map(str.strip, value))
+
+
 if sys.version_info[0] < 3:
+    def strify(value):
+        """ Avoid having the annoying u'..' in str() representations """
+        if isinstance(value, unicode):
+            return value.encode('ascii', 'ignore')
+        if isinstance(value, str):
+            return value
+        if isinstance(value, list):
+            return [strify(s) for s in value]
+        if isinstance(value, tuple):
+            return tuple(strify(s) for s in value)
+        if isinstance(value, dict):
+            return dict((strify(k), strify(v)) for (k, v) in value.items())
+        return value
+
     def to_str(text):
         """ Pretty string representation of 'text' for python2 """
-        if isinstance(text, list):
-            text = [to_str(s) for s in text]
-            return to_str(str(text))
-        if isinstance(text, list):
-            text = (to_str(s) for s in text)
-            return to_str(str(text))
-        if isinstance(text, dict):
-            text = dict((to_str(k), to_str(v)) for (k, v) in text.items())
-            return to_str(str(text))
-        text = str(text)
-        if isinstance(text, unicode):
-            return text.encode('ascii', 'ignore')
-        return text
+        return str(strify(text))
 
 else:
     def to_str(text):
@@ -407,20 +408,32 @@ def meta_command_init(self, dist, **kw):
     setuptools.Command.__init__(self, dist, **kw)
 
 
-class Meta:
+class MetaDefs:
     """
-    Meta things
+    Meta definitions
     """
 
+    # Original distutils.dist.Distribution.get_option_dict
+    dd_original = None
+
+    # Our own commands (populated by @MetaCommand decorator)
     commands = []
 
-    # Allowed fields to extract from modules
-    allowed_fields = """
-        version description url download_url license keywords platforms
-        author author_email
-        contact contact_email
-        maintainer maintainer_email
-    """
+    # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
+    metadata_fields = listify("""
+        author author_email classifiers description download_url keywords
+        license long_description maintainer maintainer_email name obsoletes
+        platforms provides requires url version
+    """)
+    dist_fields = listify("""
+        cmdclass contact contact_email dependency_links eager_resources
+        entry_points exclude_package_data extras_require include_package_data
+        install_requires libraries long_description_content_type
+        namespace_packages package_data package_dir packages py_modules
+        python_requires scripts setup_requires tests_require test_suite
+        zip_safe
+    """)
+    all_fields = metadata_fields + dist_fields
 
     @staticmethod
     def is_setup_py_path(path):
@@ -445,13 +458,48 @@ class Meta:
         return command
 
     @classmethod
-    def custom_commands(cls):
-        """ Won't be needed anymore once we go setup_requires only """
+    def dist_to_dict(cls, dist):
+        """
+        :param distutils.dist.Distribution dist: Distribution or attrs
+        :return dict:
+        """
+        if not dist or isinstance(dist, dict):
+            return dist or {}
         result = {}
-        for command in cls.commands:
-            name = command.__name__.lower().replace('command', '')
-            result[name] = command
+        for key in cls.all_fields:
+            value = cls.get_field(dist, key)
+            if value is not None:
+                result[key] = value
         return result
+
+    @classmethod
+    def fill_dist(cls, dist, attrs):
+        for key, value in attrs.items():
+            cls.set_field(dist, key, value)
+
+    @classmethod
+    def get_field(cls, dist, key):
+        """
+        :param distutils.dist.Distribution dist: Distribution to examine
+        :param str key: Key to extract
+        :return: None if 'key' wasn't in setup() call, value otherwise
+        """
+        if hasattr(dist.metadata, key):
+            # Get directly from metadata, those are None by default
+            return getattr(dist.metadata, key)
+        # dist fields however have a weird '0' default for some...
+        # we want to detect fields provided to the original setup() call
+        value = getattr(dist, key, None)
+        if value or isinstance(value, bool):
+            return value
+        return None
+
+    @classmethod
+    def set_field(cls, dist, key, value):
+        if hasattr(dist.metadata, key):
+            setattr(dist.metadata, key, value)
+        elif hasattr(dist, key):
+            setattr(dist, key, value)
 
 
 class DefinitionEntry:
@@ -547,7 +595,12 @@ class Definition(object):
         """ Representation used for 'explain' command """
         result = ""
         for source in self.sources:
-            prefix = "\_" if result else self.key
+            if result:
+                prefix = "\_"
+            elif self.key not in MetaDefs.all_fields:
+                prefix = "%s*" % self.key
+            else:
+                prefix = self.key
             result += source.explain(form, prefix, max_chars=max_chars)
         return result
 
@@ -621,23 +674,20 @@ class Settings:
 class SimpleModule(Settings):
     """ Simple settings extracted from a module, such as __about__.py """
 
-    def __init__(self, *relative_paths, **kwargs):
+    def __init__(self, *relative_paths):
         """
         :param list(str) relative_paths: Relative path to scan for definitions
         """
         Settings.__init__(self)
-        self.allowed = kwargs.pop('allowed', '')
-        self.allowed = "%s %s" % (Meta.allowed_fields, self.allowed)
-        self.allowed = set(self.allowed.split())
         self.relative_path = os.path.join(*relative_paths)
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
         if not self.exists:
             return
 
-        regex = R_PY_VALUE
+        regex = RE_PY_VALUE
         if self.relative_path.endswith('.properties'):
-            regex = R_DOC_VALUE
+            regex = RE_DOC_VALUE
 
         with io.open(self.full_path, encoding='utf-8') as fh:
             docstring_marker = None
@@ -667,7 +717,7 @@ class SimpleModule(Settings):
     @property
     def is_setup_py(self):
         """ Is this a setup.py module? """
-        return Meta.is_setup_py_path(self.relative_path)
+        return MetaDefs.is_setup_py_path(self.relative_path)
 
     def add_pair(self, key, value, line, **kwargs):
         source = self.relative_path
@@ -684,7 +734,7 @@ class SimpleModule(Settings):
                 description = line.strip()
                 self.add_pair('description', description, line_number)
                 continue
-            self.scan_line(line, R_DOC_VALUE, line_number)
+            self.scan_line(line, RE_DOC_VALUE, line_number)
 
     def scan_line(self, line, regex, line_number):
         m = regex.match(line)
@@ -692,8 +742,7 @@ class SimpleModule(Settings):
             return
         key = m.group(1)
         value = m.group(2)
-        if key in self.allowed:
-            self.add_pair(key, value, line_number)
+        self.add_pair(key, value, line_number)
 
 
 class RequirementsEntry:
@@ -726,12 +775,12 @@ class Requirements:
 class SetupMeta(Settings):
     """ Find usable definitions throughout a project SetupPy SetupMeta """
 
-    def __init__(self, attrs):
+    def __init__(self, upstream):
         """
-        :param dict attrs: 'attrs' as received in original setup() call
+        :param upstream: Either a dict or Distribution
         """
         Settings.__init__(self)
-        self.attrs = attrs or {}
+        self.attrs = MetaDefs.dist_to_dict(upstream)
 
         # _setup_py_path passed in by tests, or special usages
         setup_py_path = self.attrs.pop('_setup_py_path', None)
@@ -744,9 +793,13 @@ class SetupMeta(Settings):
             # Determine path to setup.py module from call stack
             for frame in inspect.stack():
                 module = inspect.getmodule(frame[0])
-                if Meta.is_setup_py_path(module.__file__):
+                if MetaDefs.is_setup_py_path(module.__file__):
                     setup_py_path = module.__file__
                     break
+
+        if not setup_py_path and sys.argv:
+            setup_py_path = os.path.abspath(os.path.expanduser(sys.argv[0]))
+            setup_py_path = os.path.dirname(setup_py_path)
 
         if setup_py_path:
             global PROJECT_DIR
@@ -757,8 +810,8 @@ class SetupMeta(Settings):
             self.ignore.add('version')
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
-        self.merge(SimpleModule('setup.py', allowed='title'))
-        title = self.definitions.pop('title', None)
+        self.merge(SimpleModule('setup.py'))
+        title = self.definitions.get('title')
         if title:
             self.auto_fill('name', title.value, source=title.source)
 
@@ -855,7 +908,7 @@ class SetupMeta(Settings):
         self.auto_adjust('author', self.extract_email)
         self.auto_adjust('contact', self.extract_email)
         self.auto_adjust('maintainer', self.extract_email)
-        self.listify('keywords')
+        self.listify('keywords:,')
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
@@ -869,16 +922,17 @@ class SetupMeta(Settings):
         if req:
             self.auto_fill(attr, req.reqs, req.source)
 
-    def listify(self, key, separator=','):
-        """ Ensure value for 'key' is a list """
-        definition = self.definitions.get(key)
-        if not definition or not definition.value:
-            return
-        if isinstance(definition.value, list):
-            return
-        value = to_str(definition.value).split(separator)
-        definition.value = filter(bool, map(str.strip, value))
-        definition.sources[0].value = definition.value
+    def listify(self, *keys):
+        """ Ensure values for 'keys' are lists """
+        for key in keys:
+            key, _, sep = key.partition(':')
+            definition = self.definitions.get(key)
+            if not definition or not definition.value:
+                continue
+            if isinstance(definition.value, list):
+                continue
+            value = listify(definition.value, separator=sep or None)
+            definition.sources[0].value = definition.value = value
 
     @property
     def name(self):
@@ -927,28 +981,15 @@ class SetupMeta(Settings):
         user = self.value(field)
         if not user:
             return
-        m = R_EMAIL.match(user)
+        m = RE_EMAIL.match(user)
         if m:
             yield field, m.group(1)
             yield field_email, m.group(2)
 
 
-class SetupmetaDistribution(setuptools.dist.Distribution):
-    """ Our Distribution implementation that makes this possible """
-
-    def __init__(self, attrs):
-        self._setupmeta = SetupMeta(attrs)
-        attrs = self._setupmeta.to_dict()
-        if not callable(dist_core_setup):
-            custom = Meta.custom_commands()
-            custom.update(attrs.pop('cmdclass', {}))
-            attrs['cmdclass'] = custom
-        setuptools.dist.Distribution.__init__(self, attrs)
-
-
 def MetaCommand(cls):
     """ Decorator allowing for less boilerplate in our commands """
-    return Meta.register_command(cls)
+    return MetaDefs.register_command(cls)
 
 
 @MetaCommand
@@ -1031,114 +1072,3 @@ def run_program(*commands):
     p = subprocess.Popen(commands)
     if p.returncode:
         sys.exit(p.returncode)
-
-
-def default_upgrade_url(url=__url__):
-    """ Default upgrade url, friendly for test customizations """
-    url = url.replace("github.com", "raw.githubusercontent.com")
-    if 'raw.github' in url and not url.endswith('setupmeta.py'):
-        url = os.path.join(url, 'master/setupmeta.py')
-    return url
-
-
-def self_upgrade(*argv):
-    """ Install/upgrade setupmeta """
-
-    global PROJECT_DIR
-    import argparse
-
-    try:
-        from urllib.request import urlopen
-    except ImportError:
-        from urllib2 import urlopen
-
-    parser = argparse.ArgumentParser(description=self_upgrade.__doc__.strip())
-    parser.add_argument(
-        '-u', '--url',
-        default=default_upgrade_url(),
-        help="URL to get setupmeta from (default: %(default)s)"
-    )
-    parser.add_argument(
-        '-n', '--dryrun',
-        action='store_true',
-        help="Don't actually install, simply check for updates"
-    )
-    parser.add_argument('command', help="Command to run")
-    parser.add_argument(
-        'target',
-        default='.',
-        nargs='?',
-        help="Folder to install/upgrade (default: %(default)s)"
-    )
-    args = parser.parse_args(*argv)
-
-    if args.command != 'upgrade':
-        sys.exit("Command must be 'upgrade' (this is to avoid accidentals)")
-
-    args.target = os.path.abspath(os.path.expanduser(args.target))
-    if not os.path.isdir(args.target):
-        sys.exit("'%s' is not a valid directory" % args.target)
-
-    PROJECT_DIR = args.target
-
-    spy = SimpleModule('setup.py')
-    if not spy.exists:
-        sys.exit("Run upgrade only on folders that have a setup.py")
-
-    csm = SimpleModule('setupmeta.py')  # current script module
-    rsmlp = 'setupmeta.tmp'             # remote script module local path
-    if os.path.islink(csm.full_path):
-        # Symlink is convenient when iterating on setupmeta itself:
-        # I symlink setupmeta.py to my own checkout of the main setupmeta...
-        short_path = short(csm.full_path, c=0)
-        sys.exit("'%s' is a symlink, can't upgrade" % short_path)
-
-    try:
-        fh = urlopen(args.url)
-        contents = to_str(fh.read())
-
-        with open(project_path(rsmlp), 'w') as fh:
-            fh.write(contents)
-
-    except Exception as e:
-        print("Could not fetch %s: %s" % (args.url, e))
-        sys.exit(1)
-
-    rsm = SimpleModule(rsmlp)           # remote script module
-    try:
-        nv = rsm.value('version')
-        if not nv or not rsm.value('url'):
-            # Sanity check what we downloaded
-            sys.exit("Invalid url %s, please check %s" % (
-                args.url,
-                short(rsm.full_path, c=0))
-            )
-
-        current = load_contents(csm.relative_path)
-        tc = load_contents(rsmlp)
-        if current == tc:
-            print("Already up to date, v%s" % __version__)
-            sys.exit(0)
-
-        if current:
-            if args.dryrun:
-                print("Would upgrade to v%s (without --dryrun)" % nv)
-                sys.exit(0)
-            shutil.copy(rsm.full_path, csm.full_path)
-            print("Upgraded to v%s" % nv)
-            sys.exit(0)
-
-        if args.dryrun:
-            print("Would seed to v%s (without --dryrun)" % nv)
-            sys.exit(0)
-
-        shutil.copy(rsm.full_path, csm.full_path)
-        print("Seeded with v%s" % nv)
-        sys.exit(0)
-
-    finally:
-        clean_file(rsm.full_path)
-
-
-if __name__ == "__main__":
-    self_upgrade()

@@ -7,7 +7,7 @@ download_url: archive/{version}.tar.gz      # will be auto-completed too
 keywords: setup, docstring
 """
 
-from setupmeta import setup
+from setuptools import setup
 
 
 __keywords__ = 'setup'
@@ -15,6 +15,7 @@ __keywords__ = 'setup'
 
 setup(
     name='complex',
+    setup_requires=['setupmeta'],
 
     # This will overshadow classifiers.txt
     classifiers=['Programming Language :: Python'],

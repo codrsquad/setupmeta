@@ -9,9 +9,11 @@ The stup is minimal:
 - README.rst is used as 'long_description'
 """
 
-from setupmeta import setup
+from setuptools import setup
 
 __title__ = 'simple'            # This will auto-fill 'name'
 
 
-setup()
+setup(
+    setup_requires=['setupmeta']
+)

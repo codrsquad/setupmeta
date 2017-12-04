@@ -6,7 +6,6 @@ import os
 import pytest
 
 import setupmeta
-import conftest
 
 
 def bogus_project(**attrs):
@@ -61,10 +60,6 @@ def test_edge_cases():
         obj = setupmeta.DefinitionEntry('', '', '')
         setupmeta.meta_command_init(obj, obj)
 
-    with conftest.capture_output() as logged:
-        setupmeta.clean_file(None)
-        assert "Could not clean up None" in logged
-
 
 def test_stringify():
     assert setupmeta.to_str(None) == 'None'
@@ -73,16 +68,27 @@ def test_stringify():
     assert setupmeta.to_str('hello') == 'hello'
     assert setupmeta.to_str(b'hello') == 'hello'
 
+    assert setupmeta.to_str([]) == "[]"
+    assert setupmeta.to_str([None]) == "[None]"
+    assert setupmeta.to_str([None, None]) == "[None, None]"
+    assert setupmeta.to_str(['foo', 'bar']) == "['foo', 'bar']"
+
+    assert setupmeta.to_str(tuple()) == "()"
+    assert setupmeta.to_str((None,)) == "(None,)"
+    assert setupmeta.to_str((None, None)) == "(None, None)"
+    assert setupmeta.to_str(('foo', 'bar')) == "('foo', 'bar')"
+
+    assert setupmeta.to_str(dict(bar='foo')) == "{'bar': 'foo'}"
+    assert setupmeta.to_str(dict(bar=[u'foo'])) == "{'bar': ['foo']}"
+
 
 def test_meta():
-    assert not setupmeta.Meta.is_setup_py_path(None)
-    assert not setupmeta.Meta.is_setup_py_path('')
-    assert not setupmeta.Meta.is_setup_py_path('foo.py')
+    assert not setupmeta.MetaDefs.is_setup_py_path(None)
+    assert not setupmeta.MetaDefs.is_setup_py_path('')
+    assert not setupmeta.MetaDefs.is_setup_py_path('foo.py')
 
-    assert setupmeta.Meta.is_setup_py_path('/foo/setup.py')
-    assert setupmeta.Meta.is_setup_py_path('/foo/setup.pyc')
-
-    assert setupmeta.Meta.custom_commands()
+    assert setupmeta.MetaDefs.is_setup_py_path('/foo/setup.py')
+    assert setupmeta.MetaDefs.is_setup_py_path('/foo/setup.pyc')
 
 
 def test_representation():
@@ -93,12 +99,12 @@ def test_representation():
     alpha2 = setupmeta.Definition('alpha')
     alpha2.add('foo', 'inlined')
     assert str(alpha1) == 'alpha=None from 0 sources'
-    assert str(alpha2) == 'alpha=foo from 1 sources'
+    assert str(alpha2) == 'alpha=foo from inlined'
 
     beta = setupmeta.Definition('beta')
     assert str(beta) == 'beta=None from 0 sources'
     beta.add('foo1', 'inlined1')
-    assert str(beta) == 'beta=foo1 from 1 sources'
+    assert str(beta) == 'beta=foo1 from inlined1'
     beta.add('foo2', 'inlined2')
     assert str(beta) == 'beta=foo1 from 2 sources'
     beta.add('foo3', 'inlined3', override=True)
