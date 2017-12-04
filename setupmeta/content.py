@@ -26,6 +26,21 @@ def project_path(*relative_paths):
     return os.path.join(MetaDefs.project_dir, *relative_paths)
 
 
+def find_packages(name, subfolder=None):
+    """ Find packages for 'name' (if any), 'subfolder' is like "src" """
+    result = None
+    if subfolder:
+        path = project_path(subfolder, name)
+    else:
+        path = project_path(name)
+    init_py = os.path.join(path, '__init__.py')
+    if os.path.isfile(init_py):
+        result = [name]
+        for subpackage in setuptools.find_packages(where=path):
+            result.append("%s.%s" % (name, subpackage))
+    return result
+
+
 def load_contents(relative_path):
     """ Return contents of file with 'relative_path'
 

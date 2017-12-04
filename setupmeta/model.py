@@ -8,7 +8,8 @@ import os
 import re
 import sys
 
-from setupmeta.content import find_contents, listify, load_list, load_readme
+from setupmeta.content import find_contents, find_packages, listify
+from setupmeta.content import load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short, to_str
 from setupmeta.pipfile import load, Pipfile
 
@@ -390,14 +391,16 @@ class SetupMeta(Settings):
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            if os.path.isfile(project_path(self.name, '__init__.py')):
-                packages = [self.name]
+            packages = find_packages(self.name)
+            if packages:
                 self.auto_fill('packages', packages)
 
-            if os.path.isfile(project_path('src', self.name, '__init__.py')):
-                packages = [self.name]
+            packages = find_packages(self.name, subfolder='src')
+            if packages:
                 self.auto_fill('packages', packages)
                 self.auto_fill('package_dir', {'': 'src'})
+
+            packages = self.value('packages') or []
 
             if os.path.isfile(project_path('%s.py' % self.name)):
                 py_modules = [self.name]
@@ -432,6 +435,9 @@ class SetupMeta(Settings):
             self.merge(SimpleModule('%s.py' % py_module))
 
         for package in packages:
+            if not package or '.' in package:
+                # Don't look at submodules
+                continue
             self.merge(
                 SimpleModule(package, '__about__.py'),
                 SimpleModule(package, '__version__.py'),

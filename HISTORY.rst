@@ -2,7 +2,7 @@
 History
 =======
 
-0.0.8 (2017-12-04)
+0.1.0 (2017-12-04)
 ------------------
 
 * Inlined pipfile, removed old hacky toml/pipfile implementation
