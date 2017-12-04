@@ -2,7 +2,7 @@
 See https://github.com/zsimic/setupmeta
 """
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
 __license__ = 'MIT'
 __url__ = "https://github.com/zsimic/setupmeta"
 __download_url__ = 'archive/v{version}.tar.gz'

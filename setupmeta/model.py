@@ -10,7 +10,7 @@ import sys
 
 from setupmeta.content import find_contents, listify, load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short
-from setupmeta.toml import parsed_toml
+from setupmeta.pipfile import load, Pipfile
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -25,40 +25,6 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
 RE_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
-
-
-def load_pipfile(relative_path):
-    """ Poor-man's parsing of a pipfile, can't afford to depend on pipfile """
-    return parsed_toml(load_list(relative_path))
-
-
-def pipfile_spec(section):
-    """ Extract old-school pip-style reqs from pipfile 'section' """
-    result = []
-    for name, info in section.items():
-        spec = pip_spec(name, info)
-        if spec:
-            result.append(spec)
-    return sorted(result)
-
-
-def pip_spec(name, info):
-    """ Convert pipfile spec into an old-school pip-style spec """
-    if not info or info == "*":
-        return name
-    if not isinstance(info, dict):
-        return "%s%s" % (name, info)
-    version = info.get('version')
-    markers = info.get('markers')
-    if info.get('editable') or version is None:
-        # Old pips don't support editable + not really useful when publishing
-        return None
-    result = [name]
-    if version and version != "*":
-        result.append(version)
-    if markers:
-        result.append(" ; %s" % markers)
-    return ''.join(result)
 
 
 def get_old_spec(*relative_paths):
@@ -324,24 +290,47 @@ class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
     def __init__(self, reqs, source):
-        self.reqs = reqs
-        self.source = source
+        if isinstance(reqs, Pipfile):
+            self.source = 'Pipfile'
+            self.reqs = []
+            section = reqs.data.get(source, {})
+            for name, info in section.items():
+                spec = pip_spec(name, info)
+                if spec:
+                    self.reqs.append(spec)
+            self.reqs = sorted(self.reqs)
+        else:
+            self.reqs = reqs
+            self.source = source
+
+
+def pip_spec(name, info):
+    """ Convert pipfile spec into an old-school pip-style spec """
+    if not info or info == "*":
+        return name
+    if not isinstance(info, dict):
+        return "%s%s" % (name, info)
+    version = info.get('version')
+    markers = info.get('markers')
+    if info.get('editable') or version is None:
+        # Old pips don't support editable + not really useful when publishing
+        return None
+    result = [name]
+    if version and version != "*":
+        result.append(version)
+    if markers:
+        result.append(" ; %s" % markers)
+    return ''.join(result)
 
 
 class Requirements:
     """ Allows to auto-fill requires from pipfile, or requirements.txt """
 
     def __init__(self):
-        pipfile = load_pipfile('Pipfile')
-        if pipfile:
-            self.install = RequirementsEntry(
-                pipfile_spec(pipfile.get('packages', {})),
-                'Pipfile'
-            )
-            self.test = RequirementsEntry(
-                pipfile_spec(pipfile.get('dev-packages', {})),
-                'Pipfile'
-            )
+        pipfile = load(project_path('Pipfile'))
+        if pipfile and pipfile.data:
+            self.install = RequirementsEntry(pipfile, 'default')
+            self.test = RequirementsEntry(pipfile, 'develop')
             return
         self.install = get_old_spec('requirements.txt', 'pinned.txt')
         self.test = get_old_spec(

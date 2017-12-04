@@ -9,7 +9,6 @@ import shutil
 import sys
 
 from setupmeta.content import MetaCommand, project_path
-from setupmeta.toml import parsed_toml
 
 
 def run_program(*commands):
@@ -36,8 +35,10 @@ class EntryPointsCommand(setuptools.Command):
 
     def run(self):
         entry_points = self.setupmeta.value('entry_points')
-        entry_points = parsed_toml(entry_points)
         if not entry_points:
+            return
+        if not isinstance(entry_points, dict):
+            print(entry_points)
             return
         console_scripts = entry_points.get('console_scripts')
         if not console_scripts:
