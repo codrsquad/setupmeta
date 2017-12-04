@@ -23,6 +23,7 @@ And that should be it - setupmeta_ will take it from there, extracting everythin
 You can use the explain_ command to see what setupmeta deduced from your project, for the above it would look like so
 (you can see which file, and which line each setting came from)::
 
+    ~/myproject: python setup.py explain
     Definitions:
     ------------
          description: (setup.py:2 ) Short description of the project
