@@ -121,43 +121,61 @@ Commands
 explain
 -------
 
-``python setup.py explain`` will show you what ``setupmeta`` found out about your project, what definitions came from where, example::
+``python setup.py explain`` will show you what ``setupmeta`` found out about your project, what definitions came from where.
+
+For example, this is what setupmeta says about itself (it's self-using)::
 
     ~/dev/setupmeta: python setup.py explain
     Definitions:
     ------------
-              author: (auto-adjust    ) Zoran Simic
-                  \_: (setupmeta.py:27) Zoran Simic zoran@simicweb.com
-        author_email: (auto-adjust    ) zoran@simicweb.com
-         classifiers: (classifiers.txt) 247 chars [Development Status :: 4 - Beta ...]
-         description: (setup.py:2     ) Simplify your setup.py
-            keywords: (setup.py:4     ) convenient, setup.py
-             license: (setupmeta.py:25) MIT
-    long_description: (README.rst     ) 7754 chars [Simplify your setup.py ======= ...]
-                name: (explicit       ) setupmeta
-          py_modules: (auto-fill      ) ['setupmeta']
-         script_args: (explicit       ) ['explain']
-         script_name: (explicit       ) setup.py
-       tests_require: (Pipfile        ) ['coverage', 'flake8', 'mock', 'pytest']
-                 url: (setupmeta.py:26) https://github.com/zsimic/setupmeta
-             version: (setupmeta.py:24) 0.0.1
+              author: (auto-adjust            ) Zoran Simic
+                  \_: (setupmeta/__init__.py:9) Zoran Simic zoran@simicweb.com
+        author_email: (auto-adjust            ) zoran@simicweb.com
+         classifiers: (classifiers.txt        ) 257 chars [['Development Status :: 4 - Beta', 'Intended Audience :: Developers', 'License :: OSI Approved :: MIT ...]
+         description: (setup.py:2             ) Simplify your setup.py
+        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v0.0.5.tar.gz
+                  \_: (setupmeta/__init__.py:8) archive/v{version}.tar.gz
+        entry_points: (explicit               ) 265 chars [[distutils.commands] explain = setupmeta.commands:ExplainCommand entrypoints = setupmeta.commands:Entr...]
+            keywords: (setup.py:6             ) ['convenient', 'setup.py']
+             license: (setupmeta/__init__.py:6) MIT
+    long_description: (README.rst             ) 9459 chars [Simplify your ``setup.py`` ==========================  Writing a ``setup.py`` typically involves lots...]
+                name: (setup.py:15            ) setupmeta
+            packages: (auto-fill              ) ['setupmeta']
+      setup_requires: (explicit               ) ['setupmeta']
+          test_suite: (auto-fill              ) tests
+       tests_require: (Pipfile                ) ['coverage', 'flake8', 'pytest', 'twine']
+              title*: (setup.py:15            ) setupmeta
+                 url: (setupmeta/__init__.py:7) https://github.com/zsimic/setupmeta
+             version: (setupmeta/__init__.py:5) 0.0.5
+            zip_safe: (explicit               ) True
 
 In the above output:
 
-- The ``author`` key was seen in ``setupmeta.py`` line 27, and the value was name + email,
-  that got "auto-adjusted" and filled in as ``author`` + ``author_email`` properly as shown.
+- The ``author`` key was seen in ``setupmeta/__init__.py`` line 9, and the value was name + email,
+  that got "auto-adjusted" and filled-in as ``author`` + ``author_email`` properly as shown.
 
 - Note that the ``\_`` indication tries to convey the fact that ``author`` in this example had a value that came from 2 different sources,
   final value showing at top, while all the other values seen showing below with the ``\_`` indicator.
 
-- ``classifiers`` came from file ``classifiers.txt``, ``description`` came from ``setup.py`` line 2, etc
+- ``classifiers`` came from file ``classifiers.txt``
 
-- ``name`` was ``explicit`` (ie: explicitly given to the original ``setup()`` call in ``setup.py``)
+- ``description`` came from ``setup.py`` line 2
 
-- ``py_modules`` was auto-filled to ``['setupmeta']``
+- ``download_url`` was defined in ``setupmeta/__init__.py`` line 8, since it was mentioning ``{version}`` (and was a relative path), it got auto-expanded and filled in properly
 
-- Note that ``script_args`` and ``script_name`` are injected by setuptools
-  (they appear as "explicit" from setupmeta's point of view - you get some insight as to what setuptools is doing here as well)
+- ``entry_points`` were explicitly stated (in project's setup.py)
+
+- ``long_description`` came from ``README.rst``
+
+- ``name`` came from line 15 of setup.py, note that ``title`` also came from that line - this simply means the constant ``__title__`` was used as ``name``
+
+- Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta saw the value and can use it, but doesn't transfer it to setuptools
+
+- ``packages`` was auto-filled to ``['setupmeta']``
+
+- ``test_suite`` auto-filled, since we do use the usual ``tests/`` folder convention
+
+- ``tests_require`` came from the project's pipfile_
 
 
 entrypoints
