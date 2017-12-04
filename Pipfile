@@ -15,6 +15,8 @@ twine = "*"
 
 [packages]
 
+pipfile = "*"
+toml = "*"
 
 
 [requires]

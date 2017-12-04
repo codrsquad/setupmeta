@@ -50,9 +50,8 @@ def pip_spec(name, info):
         return "%s%s" % (name, info)
     version = info.get('version')
     markers = info.get('markers')
-    if info.get('editable'):
-        # Old pips don't support this -e,
-        # and I'm not sure it's useful for setup.py
+    if info.get('editable') or version is None:
+        # Old pips don't support editable + not really useful when publishing
         return None
     result = [name]
     if version and version != "*":
@@ -345,7 +344,11 @@ class Requirements:
             )
             return
         self.install = get_old_spec('requirements.txt', 'pinned.txt')
-        self.test = get_old_spec('requirements-dev.txt')
+        self.test = get_old_spec(
+            'requirements-dev.txt',
+            'dev-requirements.txt',
+            'test-requirements.txt'
+        )
 
 
 class SetupMeta(Settings):
