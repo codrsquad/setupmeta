@@ -19,13 +19,13 @@ EGG = os.path.join(HERE, '%s.egg-info' % __title__)
 
 ENTRY_POINTS = """
 [distutils.commands]
-explain = {t}:ExplainCommand
-entrypoints = {t}:EntryPointsCommand
-test = {t}:TestCommand
-upload = {t}:UploadCommand
+explain = {t}.commands:ExplainCommand
+entrypoints = {t}.commands:EntryPointsCommand
+test = {t}.commands:TestCommand
+upload = {t}.commands:UploadCommand
 
 [distutils.setup_keywords]
-setup_requires = {t}:register
+setup_requires = {t}.hook:register
 """.format(t=__title__)
 
 
@@ -47,25 +47,32 @@ def run_bootstrap(message):
 
 if __name__ == "__main__":
     os.chdir(HERE)
+    have_egg = os.path.isdir(EGG)
+
     args = dict(
-        name=__title__,
-        py_modules=[__title__],
+        entry_points=ENTRY_POINTS,
         zip_safe=True,
-        entry_points=ENTRY_POINTS
     )
 
-    if os.path.isdir(EGG):
+    if have_egg:
         # We're bootstrapped, we can self-refer
         args['setup_requires'] = [__title__]
 
     if len(sys.argv) == 2 and sys.argv[1] == 'egg_info':
         # egg_info as lone command is bootstrap mode
+        if not have_egg:
+            # Very first bootstrap needs some help
+            # We do want all subsequent runs to guess name, packages etc
+            args['name'] = __title__
+            args['packages'] = [__title__]
+
         setuptools.setup(**args)
         sys.exit(0)
 
-    if not os.path.isdir(EGG):
+    if not have_egg:
         # No egg yet, not running egg_info -> must bootstrap
         run_bootstrap("first pass")
+
         # Rerun one more time to get the right VERSION filled-in etc
         run_bootstrap("second pass")
 

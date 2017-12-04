@@ -5,7 +5,7 @@ except ImportError:
 import os
 import sys
 
-import setupmeta
+from setupmeta.content import to_str
 
 
 TESTS = os.path.dirname(__file__)
@@ -55,7 +55,7 @@ class capture_output:
     def to_string(self):
         result = ''
         if self.out_buffer:
-            result += setupmeta.to_str(self.out_buffer.getvalue())
+            result += to_str(self.out_buffer.getvalue())
         if self.err_buffer:
-            result += setupmeta.to_str(self.err_buffer.getvalue())
+            result += to_str(self.err_buffer.getvalue())
         return result

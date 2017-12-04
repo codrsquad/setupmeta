@@ -8,7 +8,7 @@ import re
 import sys
 import pytest
 
-import setupmeta
+from setupmeta.content import extract_list, load_list, short, to_str
 import conftest
 
 
@@ -66,20 +66,20 @@ def run_shell(*command):
         stderr=subprocess.PIPE
     )
     output, error = p.communicate()
-    return setupmeta.to_str(output)
+    return to_str(output)
 
 
 def test_scenario(scenario):
     """ Check that 'scenario' yields expected explain output """
     setup_py = os.path.join(EXAMPLES, scenario, 'setup.py')
-    output = setupmeta.extract_list(run(setup_py))
+    output = extract_list(run(setup_py))
     path = os.path.join(EXAMPLES, scenario, 'expected.txt')
-    expected = setupmeta.load_list(path)
+    expected = load_list(path)
     assert expected == output
 
 
 def chk(output, message):
-    assert re.search(message, output), "'%s' not present in '%s'" % (message, setupmeta.short(output)) # noqa
+    assert re.search(message, output), "'%s' not present in '%s'" % (message, short(output)) # noqa
 
 
 def test_self():

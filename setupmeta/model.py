@@ -1,33 +1,21 @@
 """
-Simplify your setup.py
-
-See https://github.com/zsimic/setupmeta
+Model of our view on how setup.py + files in a project can come together
 """
 
-import distutils.dist
-import glob
 import inspect
 import io
 import os
 import re
-import setuptools
-import setuptools.command.test
-import shutil
 import sys
 
+from setupmeta.content import find_contents, listify, load_list, load_readme
+from setupmeta.content import MetaDefs, project_path, short
+from setupmeta.toml import parsed_toml
 
-__version__ = '0.0.4'
-__license__ = 'MIT'
-__url__ = "https://github.com/zsimic/setupmeta"
-__download_url__ = 'archive/v{version}.tar.gz'
-__author__ = 'Zoran Simic zoran@simicweb.com'
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = 'explicit'
 READMES = ['README.rst', 'README.md', 'README*']
-
-# Recognized README tokens
-RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
 
 # Accept reasonable variations of name + some separator + email
 RE_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
@@ -38,336 +26,20 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 # Finds simple docstring entries like: author: Zoran Simic
 RE_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
 
-USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
-PROJECT_DIR = os.getcwd()               # Determined project directory
-
-# Used for poor-man's toml parsing (can't afford to import toml)
-CLOSERS = {'"': '"', "'": "'", '{': '}', '[': ']'}
-
-
-def abort(message):
-    from distutils.errors import DistutilsClassError
-    raise DistutilsClassError(message)
-
-
-def distutils_hook(dist, command, *args, **kwargs):
-    """ distutils.dist.Distribution.get_option_dict replacement
-
-    distutils calls this right after having processed 'setup_requires'
-    It really calls self.get_option_dict(command), we jump in
-    so we can decorate the 'dist' object appropriately for our own commands
-    """
-    if not hasattr(dist, '_setupmeta'):
-        # Add our ._setupmeta object
-        # (distutils calls this several times, we need only one)
-        dist._setupmeta = SetupMeta(dist)
-        MetaDefs.fill_dist(dist, dist._setupmeta.to_dict())
-    original = MetaDefs.dd_original
-    return original(dist, command, *args, **kwargs)
-
-
-def register(*args, **kwargs):
-    """ Hook into distutils in order to do our magic """
-    if MetaDefs.dd_original is None:
-        # Replace Distribution.get_option_dict so we can inject our parsing
-        # This is the earliest I found after 'setup_requires' are imported
-        # Do the replacement only once (distutils calls this several times...)
-        MetaDefs.dd_original = distutils.dist.Distribution.get_option_dict
-        distutils.dist.Distribution.get_option_dict = distutils_hook
-
-
-def project_path(*relative_paths):
-    """ Full path corresponding to 'relative_paths' components """
-    return os.path.join(PROJECT_DIR, *relative_paths)
-
-
-def load_contents(relative_path):
-    """ Return contents of file with 'relative_path'
-
-    :param str relative_path: Relative path to file
-    :return str|None: Contents, if any
-    """
-    try:
-        with io.open(project_path(relative_path), encoding='utf-8') as fh:
-            return to_str(''.join(fh.readlines())).strip()
-
-    except Exception:
-        pass
-
-
-def load_readme(relative_path):
-    """ Loader for README files """
-    content = []
-    try:
-        with io.open(project_path(relative_path), encoding='utf-8') as fh:
-            for line in fh.readlines():
-                m = RE_README_TOKEN.search(line)
-                if not m:
-                    content.append(line)
-                    continue
-                pre, post = m.group(1), m.group(4)
-                pre = pre and pre.strip()
-                post = post and post.strip()
-                if pre or post:
-                    content.append(line)
-                    continue    # Not beginning/end, or no spaces around
-                action = m.group(2)
-                param = m.group(3)
-                if action == 'end' and param == 'long_description':
-                    break
-                if action == 'include':
-                    included = load_readme(param)
-                    if included:
-                        content.append(included)
-
-            return to_str(''.join(content)).strip()
-
-    except IOError:
-        return None
-
-
-def extract_list(content):
-    """ List of non-comment, non-empty strings from 'content'
-
-    :param str|unicode|None content: Text content
-    :return list(str)|None: Contents, if any
-    """
-    if not content:
-        return None
-    result = []
-    for line in content.strip().split('\n'):
-        if '#' in line:
-            i = line.index('#')
-            line = line[:i]
-        line = line.strip()
-        if line:
-            result.append(line)
-    return result
-
-
-def load_list(relative_path):
-    """ List of non-comment, non-empty strings from file
-
-    :param str relative_path: Relative path to file
-    :return list(str)|None: Contents, if any
-    """
-    return extract_list(load_contents(relative_path))
-
 
 def load_pipfile(relative_path):
     """ Poor-man's parsing of a pipfile, can't afford to depend on pipfile """
     return parsed_toml(load_list(relative_path))
 
 
-def find_contents(relative_paths, loader=None):
-    """ Return contents of first file found in 'relative_paths', globs OK
-
-    :param list(str) relative_paths: Ex: "README.rst", "README*"
-    :param callable|None loader: Optional custom loader function
-    :return str|None, str|None: Contents and path where they came from, if any
-    """
-    candidates = []
-    for path in relative_paths:
-        # De-dupe and respect order (especially for globbed paths)
-        if '*' in path:
-            for expanded in glob.glob(project_path(path)):
-                relative_path = os.path.basename(expanded)
-                if relative_path not in candidates:
-                    candidates.append(relative_path)
-            continue
-        if path not in candidates:
-            candidates.append(path)
-    if loader is None:
-        loader = load_contents
-    for relative_path in candidates:
-        contents = loader(relative_path)
-        if contents:
-            return contents, relative_path
-    return None, None
-
-
-def short(text, c=64):
-    """ Short representation of 'text' """
-    if not text:
-        return text
-    text = to_str(text).strip()
-    text = text.replace(USER_HOME, '~').replace('\n', ' ')
-    if c and len(text) > c:
-        summary = "%s chars" % len(text)
-        cutoff = c - len(summary) - 6
-        if cutoff <= 0:
-            return summary
-        return "%s [%s...]" % (summary, text[:cutoff])
-    return text
-
-
-def listify(text, separator=None):
-    """ Turn 'text' into a list using 'separator' """
-    value = to_str(text).split(separator)
-    return filter(bool, map(str.strip, value))
-
-
-if sys.version_info[0] < 3:
-    def strify(value):
-        """ Avoid having the annoying u'..' in str() representations """
-        if isinstance(value, unicode):
-            return value.encode('ascii', 'ignore')
-        if isinstance(value, str):
-            return value
-        if isinstance(value, list):
-            return [strify(s) for s in value]
-        if isinstance(value, tuple):
-            return tuple(strify(s) for s in value)
-        if isinstance(value, dict):
-            return dict((strify(k), strify(v)) for (k, v) in value.items())
-        return value
-
-    def to_str(text):
-        """ Pretty string representation of 'text' for python2 """
-        return str(strify(text))
-
-else:
-    def to_str(text):
-        """ Pretty string representation of 'text' for python3 """
-        if isinstance(text, bytes):
-            return text.decode('utf-8')
-        return str(text)
-
-
-def toml_key_value(line):
-    line = line and line.strip()
-    if not line:
-        return None, None
-    if '=' not in line:
-        return None, line
-    key, _, value = line.partition('=')
-    key = key.strip()
-    value = value.strip()
-    if not key or not value:
-        return None, None
-    key = toml_key(key)
-    if key is None:
-        return None, line
-    return key, value
-
-
-def toml_accumulated_value(acc, text):
-    if acc:
-        return "%s %s" % (acc, text)
-    return text
-
-
-def is_toml_section(line):
-    if not line or len(line) < 3:
-        return False
-    if line[0] == '[' and line[-1] == ']':
-        line = line[1:-1]
-        if len(line) >= 3 and line[0] == '[' and line[-1] == ']':
-            line = line[1:-1]
-        return toml_key(line) is not None
-
-
-def normalized_toml(lines):
-    """ Collapse toml multi-lines into one line """
-    if not lines:
-        return None
+def pipfile_spec(section):
+    """ Extract old-school pip-style reqs from pipfile 'section' """
     result = []
-    prev_key = None
-    acc = None
-    for line in lines:
-        key, value = toml_key_value(line)
-        if key or is_toml_section(line):
-            if acc:
-                if prev_key:
-                    result.append("%s=%s" % (prev_key, acc))
-                else:
-                    result.append(acc)
-                acc = None
-            prev_key = key
-            acc = toml_accumulated_value(acc, value)
-            continue
-        acc = toml_accumulated_value(acc, line)
-    if prev_key:
-        result.append("%s=%s" % (prev_key, acc))
-    return result
-
-
-def parsed_toml(text):
-    """ Can't afford to require toml """
-    if isinstance(text, dict):
-        return text
-    if text and not isinstance(text, list):
-        text = text.split('\n')
-    text = normalized_toml(text)
-    if not text:
-        return None
-    sections = {}
-    section = sections
-    for line in text:
-        key, value = toml_key_value(line)
-        if key is None and value is None:
-            continue
-        if key is None and is_toml_section(value):
-            section_name = line.strip('[]')
-            section = sections.get(section_name)
-            if section is None:
-                section = {}
-                sections[section_name] = section
-        else:
-            section[key] = toml_value(value)
-    return sections
-
-
-def toml_key(text):
-    text = text and text.strip()
-    if not text or len(text) < 2:
-        return text
-    fc = text[0]
-    if fc == '"' or fc == "'":
-        if text[-1] != fc:
-            return None
-        return text[1:-1]
-    return text
-
-
-def toml_value(text):
-    text = text and text.strip()
-    if not text:
-        return text
-    if text.startswith('{'):
-        rdict = {}
-        for line in text.strip('{}').split(','):
-            key, _, value = line.partition('=')
-            rdict[toml_key(key)] = toml_value(value)
-        return rdict
-    if text.startswith('['):
-        rlist = []
-        for line in text.strip('[]').split(','):
-            rlist.append(toml_value(line))
-        return rlist
-    if text.startswith('"'):
-        return toml_key(text)
-    if text == 'true':
-        return True
-    if text == 'false':
-        return False
-    try:
-        return int(text)
-    except ValueError:
-        pass
-    try:
-        return float(text)
-    except ValueError:
-        pass
-    return text
-
-
-def get_old_spec(*relative_paths):
-    """ Read old-school requirements.txt type file """
-    contents, path = find_contents(relative_paths, loader=load_list)
-    if contents:
-        return RequirementsEntry(contents, path)
-    return None
+    for name, info in section.items():
+        spec = pip_spec(name, info)
+        if spec:
+            result.append(spec)
+    return sorted(result)
 
 
 def pip_spec(name, info):
@@ -390,116 +62,20 @@ def pip_spec(name, info):
     return ''.join(result)
 
 
-def pipfile_spec(section):
-    """ Extract old-school pip-style reqs from pipfile 'section' """
-    result = []
-    for name, info in section.items():
-        spec = pip_spec(name, info)
-        if spec:
-            result.append(spec)
-    return sorted(result)
+def get_old_spec(*relative_paths):
+    """ Read old-school requirements.txt type file """
+    contents, path = find_contents(relative_paths, loader=load_list)
+    if contents:
+        return RequirementsEntry(contents, path)
+    return None
 
 
-def meta_command_init(self, dist, **kw):
-    """ Custom __init__ injected to commands decorated with @MetaCommand """
-    self.setupmeta = getattr(dist, '_setupmeta', None)
-    if not self.setupmeta:
-        abort("Missing setupmeta information")
-    setuptools.Command.__init__(self, dist, **kw)
-
-
-class MetaDefs:
-    """
-    Meta definitions
-    """
-
-    # Original distutils.dist.Distribution.get_option_dict
-    dd_original = None
-
-    # Our own commands (populated by @MetaCommand decorator)
-    commands = []
-
-    # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
-    metadata_fields = listify("""
-        author author_email classifiers description download_url keywords
-        license long_description maintainer maintainer_email name obsoletes
-        platforms provides requires url version
-    """)
-    dist_fields = listify("""
-        cmdclass contact contact_email dependency_links eager_resources
-        entry_points exclude_package_data extras_require include_package_data
-        install_requires libraries long_description_content_type
-        namespace_packages package_data package_dir packages py_modules
-        python_requires scripts setup_requires tests_require test_suite
-        zip_safe
-    """)
-    all_fields = metadata_fields + dist_fields
-
-    @staticmethod
-    def is_setup_py_path(path):
-        """ Is 'path' pointing to a setup.py module? """
-        if not path:
-            return False
-        # Accept also setup.pyc
-        return os.path.basename(path).startswith('setup.py')
-
-    @classmethod
-    def register_command(cls, command):
-        """ Register our own 'command' """
-        command.description = command.__doc__.strip().split('\n')[0]
-        command.__init__ = meta_command_init
-        if command.initialize_options == setuptools.Command.initialize_options:
-            command.initialize_options = lambda x: None
-        if command.finalize_options == setuptools.Command.finalize_options:
-            command.finalize_options = lambda x: None
-        if not hasattr(command, 'user_options'):
-            command.user_options = []
-        cls.commands.append(command)
-        return command
-
-    @classmethod
-    def dist_to_dict(cls, dist):
-        """
-        :param distutils.dist.Distribution dist: Distribution or attrs
-        :return dict:
-        """
-        if not dist or isinstance(dist, dict):
-            return dist or {}
-        result = {}
-        for key in cls.all_fields:
-            value = cls.get_field(dist, key)
-            if value is not None:
-                result[key] = value
-        return result
-
-    @classmethod
-    def fill_dist(cls, dist, attrs):
-        for key, value in attrs.items():
-            cls.set_field(dist, key, value)
-
-    @classmethod
-    def get_field(cls, dist, key):
-        """
-        :param distutils.dist.Distribution dist: Distribution to examine
-        :param str key: Key to extract
-        :return: None if 'key' wasn't in setup() call, value otherwise
-        """
-        if hasattr(dist.metadata, key):
-            # Get directly from metadata, those are None by default
-            return getattr(dist.metadata, key)
-        # dist fields however have a weird '0' default for some...
-        # we want to detect fields provided to the original setup() call
-        value = getattr(dist, key, None)
-        if value or isinstance(value, bool):
-            return value
-        return None
-
-    @classmethod
-    def set_field(cls, dist, key, value):
-        if hasattr(dist.metadata, key):
-            setattr(dist.metadata, key, value)
-        elif hasattr(dist, key):
-            setattr(dist, key, value)
+def is_setup_py_path(path):
+    """ Is 'path' pointing to a setup.py module? """
+    if not path:
+        return False
+    # Accept also setup.pyc
+    return os.path.basename(path).startswith('setup.py')
 
 
 class DefinitionEntry:
@@ -614,7 +190,7 @@ class Settings:
         self.ignore = set()                         # type: set(str)
 
     def __repr__(self):
-        project_dir = short(PROJECT_DIR)
+        project_dir = short(MetaDefs.project_dir)
         return "%s definitions, %s" % (len(self.definitions), project_dir)
 
     def value(self, key):
@@ -717,7 +293,7 @@ class SimpleModule(Settings):
     @property
     def is_setup_py(self):
         """ Is this a setup.py module? """
-        return MetaDefs.is_setup_py_path(self.relative_path)
+        return is_setup_py_path(self.relative_path)
 
     def add_pair(self, key, value, line, **kwargs):
         source = self.relative_path
@@ -793,17 +369,17 @@ class SetupMeta(Settings):
             # Determine path to setup.py module from call stack
             for frame in inspect.stack():
                 module = inspect.getmodule(frame[0])
-                if MetaDefs.is_setup_py_path(module.__file__):
+                if module and is_setup_py_path(module.__file__):
                     setup_py_path = module.__file__
                     break
 
         if not setup_py_path and sys.argv:
-            setup_py_path = os.path.abspath(os.path.expanduser(sys.argv[0]))
-            setup_py_path = os.path.dirname(setup_py_path)
+            if is_setup_py_path(sys.argv[0]):
+                setup_py_path = sys.argv[0]
 
         if setup_py_path:
-            global PROJECT_DIR
-            PROJECT_DIR = os.path.dirname(os.path.abspath(setup_py_path))
+            setup_py_path = os.path.abspath(setup_py_path)
+            MetaDefs.project_dir = os.path.dirname(setup_py_path)
 
         if self.value('use_scm_version'):
             # Don't look for version, let setuptools_scm do its thing
@@ -846,23 +422,16 @@ class SetupMeta(Settings):
         # Entry points are more handily described in their own file
         self.add_full_contents('entry_points', ['entry_points.ini'])
 
-        if 'PYGRADLE_PROJECT_VERSION' in os.environ:
+        pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
+        if pygradle_version:
             # Convenience: support https://github.com/linkedin/pygradle
-            self.add_definition(
-                'version',
-                os.environ['PYGRADLE_PROJECT_VERSION'],
-                'pygradle'
-            )
+            self.add_definition('version', pygradle_version, 'pygradle')
         elif os.path.isfile(project_path('gradle.properties')):
             # Convenience: calling pygradle setup.py outside of pygradle
             props = SimpleModule('gradle.properties')
             vdef = props.definitions.get('version')
             if vdef:
-                self.add_definition(
-                    vdef.key,
-                    vdef.value,
-                    vdef.source
-                )
+                self.add_definition(vdef.key, vdef.value, vdef.source)
 
         # Scan the usual/conventional places
         for py_module in py_modules:
@@ -985,90 +554,3 @@ class SetupMeta(Settings):
         if m:
             yield field, m.group(1)
             yield field_email, m.group(2)
-
-
-def MetaCommand(cls):
-    """ Decorator allowing for less boilerplate in our commands """
-    return MetaDefs.register_command(cls)
-
-
-@MetaCommand
-class ExplainCommand(setuptools.Command):
-    """ Show a report of where key/values setup(attr) come from """
-
-    def run(self):
-        print("Definitions:")
-        print("------------")
-        print(self.setupmeta.explain())
-
-
-@MetaCommand
-class EntryPointsCommand(setuptools.Command):
-    """ List entry points for pygradle consumption """
-
-    def run(self):
-        entry_points = self.setupmeta.value('entry_points')
-        entry_points = parsed_toml(entry_points)
-        if not entry_points:
-            return
-        console_scripts = entry_points.get('console_scripts')
-        if not console_scripts:
-            return
-        if isinstance(console_scripts, list):
-            for ep in console_scripts:
-                print(ep)
-            return
-        for key, value in console_scripts.items():
-            print("%s = %s" % (key, value))
-
-
-@MetaCommand
-class TestCommand(setuptools.command.test.test):
-    """ Run all tests via py.test """
-
-    def run_tests(self):
-        try:
-            import pytest
-
-        except ImportError:
-            print('pytest is not installed, falling back to default')
-            return setuptools.command.test.test.run_tests(self)
-
-        suite = self.setupmeta.value('test_suite') or 'tests'
-        args = ['-vvv'] + suite.split()
-        errno = pytest.main(args)
-        sys.exit(errno)
-
-
-@MetaCommand
-class UploadCommand(setuptools.Command):
-    """ Build and publish the package """
-
-    def run(self):
-        try:
-            print('Cleaning up dist...')
-            dist = project_path('dist')
-            shutil.rmtree(dist)
-        except OSError:
-            pass
-
-        print('Building Source and Wheel (universal) distribution...')
-        run_program(
-            sys.executable,
-            project_path('setup.py'),
-            'sdist',
-            'bdist_wheel',
-            '--universal'
-        )
-
-        print('Uploading the package to pypi via twine...')
-        os.system('twine upload dist/*')
-        sys.exit()
-
-
-def run_program(*commands):
-    """ Run shell program 'commands' """
-    import subprocess
-    p = subprocess.Popen(commands)
-    if p.returncode:
-        sys.exit(p.returncode)

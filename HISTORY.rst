@@ -2,6 +2,24 @@
 History
 =======
 
+0.0.5 (2017-12-03)
+------------------
+
+* Refactored as a proper package (now that the one-file mode is not needed anymore)
+
+
+0.0.4 (2017-12-03)
+------------------
+
+* Should work with any version of setuptools now
+
+* Removed old way, no more "drop setupmeta.py next to your setup.py" mode
+
+* Fixed a few bugs
+
+.. [[end long_description]]
+
+
 0.0.3 (2017-12-03)
 ------------------
 
@@ -12,8 +30,6 @@ History
 * Allow to use portion of README via ``.. [[end long_description]]``
 
 * Allow to use include other files in long description via something like ``.. [[include HISTORY.rst]]``
-
-.. [[end long_description]]
 
 
 0.0.2 (2017-12-02)
@@ -28,4 +44,3 @@ History
 ------------------
 
 * First release to PyPI.
-
