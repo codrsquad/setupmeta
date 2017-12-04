@@ -9,7 +9,7 @@ import re
 import sys
 
 from setupmeta.content import find_contents, listify, load_list, load_readme
-from setupmeta.content import MetaDefs, project_path, short
+from setupmeta.content import MetaDefs, project_path, short, to_str
 from setupmeta.pipfile import load, Pipfile
 
 
@@ -237,7 +237,7 @@ class SimpleModule(Settings):
             line_number = 0
             for line in fh:
                 line_number += 1
-                line = line.rstrip()
+                line = to_str(line).rstrip()
                 if docstring_marker:
                     if line.endswith(docstring_marker):
                         docstring_marker = None
@@ -327,11 +327,13 @@ class Requirements:
     """ Allows to auto-fill requires from pipfile, or requirements.txt """
 
     def __init__(self):
-        pipfile = load(project_path('Pipfile'))
-        if pipfile and pipfile.data:
-            self.install = RequirementsEntry(pipfile, 'default')
-            self.test = RequirementsEntry(pipfile, 'develop')
-            return
+        pipfile_path = project_path('Pipfile')
+        if os.path.isfile(pipfile_path):
+            pipfile = load(pipfile_path)
+            if pipfile and pipfile.data:
+                self.install = RequirementsEntry(pipfile, 'default')
+                self.test = RequirementsEntry(pipfile, 'develop')
+                return
         self.install = get_old_spec('requirements.txt', 'pinned.txt')
         self.test = get_old_spec(
             'requirements-dev.txt',
@@ -369,7 +371,7 @@ class SetupMeta(Settings):
             if is_setup_py_path(sys.argv[0]):
                 setup_py_path = sys.argv[0]
 
-        if setup_py_path:
+        if is_setup_py_path(setup_py_path):
             setup_py_path = os.path.abspath(setup_py_path)
             MetaDefs.project_dir = os.path.dirname(setup_py_path)
 

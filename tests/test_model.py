@@ -5,7 +5,7 @@ from setupmeta.model import Definition, DefinitionEntry, SetupMeta, \
 
 
 def bogus_project(**attrs):
-    return SetupMeta(dict(_setup_py_path='foo/bar', **attrs))
+    return SetupMeta(dict(_setup_py_path='foo/bar/setup.py', **attrs))
 
 
 def test_representation():

@@ -41,6 +41,7 @@ maintainer_email: (auto-adjust              ) me@myplace.com
 
 Replay: entrypoints
 running entrypoints
+[console_scripts]
 foo = complex.some_module:main_func
 bar = complex.some_module:bar
 

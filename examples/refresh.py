@@ -13,7 +13,7 @@ COMMANDS = 'explain entrypoints'.split()
 
 
 sys.path.insert(0, PPATH)
-import setupmeta            # noqa
+from setupmeta.content import to_str    # noqa
 
 
 def run_command(path, command):
@@ -27,7 +27,15 @@ def run_command(path, command):
         env=dict(PYTHONPATH=PPATH)
     )
     output, error = p.communicate()
-    return setupmeta.to_str(output)
+    if p.returncode:
+        print("examples/%s exited with code %s, output:" % (
+            os.path.basename(path),
+            p.returncode
+        ))
+        print(output)
+        print(error)
+        sys.exit(p.returncode)
+    return to_str(output) + to_str(error)
 
 
 def refresh_example(path, dryrun):

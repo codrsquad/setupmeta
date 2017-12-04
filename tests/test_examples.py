@@ -66,7 +66,8 @@ def run_shell(*command):
         stderr=subprocess.PIPE
     )
     output, error = p.communicate()
-    return to_str(output)
+    assert p.returncode == 0
+    return to_str(output) + to_str(error)
 
 
 def test_scenario(scenario):
