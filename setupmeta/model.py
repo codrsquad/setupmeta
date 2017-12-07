@@ -505,9 +505,13 @@ class SetupMeta(Settings):
         if self.value(key):
             return
         contents, _ = find_contents(['LICENSE*'], limit=20)
-        short, _ = determined_license(contents)
+        short, classifier = determined_license(contents)
         if short:
             self.auto_fill('license', short)
+            classifiers = self.value('classifiers')
+            if classifiers and isinstance(classifiers, list):
+                if classifier not in classifiers:
+                    classifiers.append(classifier)
 
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)

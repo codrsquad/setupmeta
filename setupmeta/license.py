@@ -41,7 +41,7 @@ class LicenseMojo:
                 post = 'v2'
             short = '%sGPL%s' % (pre[0], post)
             classifier = "GNU %sGeneral Public License (%s)" % (pre, short)
-        return short, classifier
+        return short, "License :: OSI Approved :: %s" % classifier
 
     def __repr__(self):
         return self.short

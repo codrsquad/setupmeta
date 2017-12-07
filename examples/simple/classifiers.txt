@@ -1,2 +1,2 @@
-Development Status :: 5 - Production/Stable
+Framework :: Pytest
 Programming Language :: Python

@@ -3,22 +3,22 @@ running explain
 Definitions:
 ------------
           author: (auto-adjust    ) Zoran Simic
-              \_: (simple.py:8    ) Zoran Simic zoran@simicweb.com
+              \_: (simple.py:7    ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust    ) zoran@simicweb.com
-     classifiers: (classifiers.txt) ['Development Status :: 5 - Production/Stable', 'Programming Language :: Python']
+     classifiers: (classifiers.txt) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
      description: (setup.py:2     ) Very simple package
     download_url: (auto-fill      ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
-              \_: (simple.py:10   ) https://github.com/zsimic/simple/archive/{version}.tar.gz
+              \_: (simple.py:9    ) https://github.com/zsimic/simple/archive/{version}.tar.gz
 install_requires: (Pipfile        ) ['click>=6.7']
-        keywords: (simple.py:7    ) ['simple', 'scenario']
-         license: (simple.py:6    ) MIT
+        keywords: (simple.py:6    ) ['simple', 'scenario']
+         license: (auto-fill      ) Apache Software License
 long_description: (README.rst     ) Simple setup scenario =====================  This is your typical small project, with:
             name: (setup.py:14    ) simple
       py_modules: (auto-fill      ) ['simple']
   setup_requires: (explicit       ) ['setupmeta']
    tests_require: (Pipfile        ) ['flake8>=3.3.0,<4', 'pytest', 'six==1.11.0', "unittest2>=1.0,<3.0 ; python_version < '2.7.9'"]
           title*: (setup.py:14    ) simple
-             url: (simple.py:9    ) https://github.com/zsimic/simple
+             url: (simple.py:8    ) https://github.com/zsimic/simple
          version: (simple.py:5    ) 1.0.0
 
 

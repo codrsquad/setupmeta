@@ -5,7 +5,7 @@ Definitions:
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:4               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
-     classifiers: (explicit                 ) ['Programming Language :: Python']
+     classifiers: (explicit                 ) ['Programming Language :: Python', 'License :: OSI Approved :: BSD License']
               \_: (classifiers.txt          ) ['Programming Language :: Python', 'Intended Audience :: Developers']
          contact: (complex/__init__.py:11   ) Zoran Simic
    contact_email: (complex/__init__.py:12   ) me@myplace.com
@@ -21,6 +21,7 @@ install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
               \_: (complex/__version__.py:4 ) complex, version
               \_: (complex/__init__.py:14   ) complex, init
               \_: (src/complex/__init__.py:6) src, complex, init
+         license: (auto-fill                ) BSD
 long_description: (README                   ) Regular README.  HISTORY here. Done with README.
       maintainer: (auto-adjust              ) Zoran Simic
               \_: (complex/__version__.py:2 ) Zoran Simic me@myplace.com

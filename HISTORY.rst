@@ -2,14 +2,20 @@
 History
 =======
 
+0.1.2 (2017-12-06)
+------------------
+
+* Auto-determine classifier for most common licenses
+
+.. [[end long_description]]
+
+
 0.1.1 (2017-12-06)
 ------------------
 
 * Auto-determine most common licenses
 
 * Accept description in project docstrings (not only setup.py)
-
-.. [[end long_description]]
 
 
 0.1.0 (2017-12-04)
