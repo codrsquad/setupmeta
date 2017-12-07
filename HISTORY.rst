@@ -2,14 +2,22 @@
 History
 =======
 
+0.1.1 (2017-12-06)
+------------------
+
+* Auto-determine most common licenses
+
+* Accept description in project docstrings (not only setup.py)
+
+.. [[end long_description]]
+
+
 0.1.0 (2017-12-04)
 ------------------
 
 * Inlined pipfile, removed old hacky toml/pipfile implementation
 
 * Refactored as a proper package (now that the one-file mode is not needed anymore)
-
-.. [[end long_description]]
 
 
 0.0.4 (2017-12-03)

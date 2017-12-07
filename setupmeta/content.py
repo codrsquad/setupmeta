@@ -41,21 +41,28 @@ def find_packages(name, subfolder=None):
     return result
 
 
-def load_contents(relative_path):
+def load_contents(relative_path, limit=0):
     """ Return contents of file with 'relative_path'
 
     :param str relative_path: Relative path to file
+    :param int limit: Max number of lines to load
     :return str|None: Contents, if any
     """
     try:
         with io.open(project_path(relative_path), encoding='utf-8') as fh:
-            return to_str(''.join(fh.readlines())).strip()
+            lines = []
+            for line in fh:
+                limit -= 1
+                if limit == 0:
+                    break
+                lines.append(line)
+            return to_str(''.join(lines)).strip()
 
     except IOError:
         pass
 
 
-def load_readme(relative_path):
+def load_readme(relative_path, limit=0):
     """ Loader for README files """
     content = []
     try:
@@ -76,7 +83,7 @@ def load_readme(relative_path):
                 if action == 'end' and param == 'long_description':
                     break
                 if action == 'include':
-                    included = load_readme(param)
+                    included = load_readme(param, limit=limit)
                     if included:
                         content.append(included)
 
@@ -86,18 +93,19 @@ def load_readme(relative_path):
         return None
 
 
-def extract_list(content):
+def extract_list(content, comment='#'):
     """ List of non-comment, non-empty strings from 'content'
 
-    :param str|unicode|None content: Text content
+    :param str|None content: Text content
+    :param str|None comment: Optional comment marker
     :return list(str)|None: Contents, if any
     """
     if not content:
         return None
     result = []
     for line in content.strip().split('\n'):
-        if '#' in line:
-            i = line.index('#')
+        if comment and comment in line:
+            i = line.index(comment)
             line = line[:i]
         line = line.strip()
         if line:
@@ -105,20 +113,26 @@ def extract_list(content):
     return result
 
 
-def load_list(relative_path):
+def load_list(relative_path, comment='#', limit=0):
     """ List of non-comment, non-empty strings from file
 
     :param str relative_path: Relative path to file
+    :param str|None comment: Optional comment marker
+    :param int limit: Max number of lines to load
     :return list(str)|None: Contents, if any
     """
-    return extract_list(load_contents(relative_path))
+    return extract_list(
+        load_contents(relative_path, limit=limit),
+        comment=comment
+    )
 
 
-def find_contents(relative_paths, loader=None):
+def find_contents(relative_paths, loader=None, limit=0):
     """ Return contents of first file found in 'relative_paths', globs OK
 
     :param list(str) relative_paths: Ex: "README.rst", "README*"
     :param callable|None loader: Optional custom loader function
+    :param int limit: Max number of lines to load
     :return str|None, str|None: Contents and path where they came from, if any
     """
     candidates = []
@@ -135,7 +149,7 @@ def find_contents(relative_paths, loader=None):
     if loader is None:
         loader = load_contents
     for relative_path in candidates:
-        contents = loader(relative_path)
+        contents = loader(relative_path, limit=limit)
         if contents:
             return contents, relative_path
     return None, None

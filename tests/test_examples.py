@@ -92,5 +92,6 @@ def test_self():
     )
     chk(out, "author:.+ Zoran Simic")
     chk(out, "description:.+ Simplify your setup.py")
-    chk(out, "version:.+ [0-9]+\.[0-9]")
+    chk(out, "license:.+ MIT")
     chk(out, "url:.+ https://github.com/zsimic/setupmeta")
+    chk(out, "version:.+ [0-9]+\.[0-9]")

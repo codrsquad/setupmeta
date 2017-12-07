@@ -11,6 +11,7 @@ import sys
 from setupmeta.content import find_contents, find_packages, listify
 from setupmeta.content import load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short, to_str
+from setupmeta.license import determined_license
 from setupmeta.pipfile import load, Pipfile
 
 
@@ -106,11 +107,14 @@ class Definition(object):
         """ Did this entry come explicitly from setup(**attrs)? """
         return any(s.is_explicit for s in self.sources)
 
-    def add_entries(self, entries):
-        for entry in entries:
+    def merge_sources(self, sources):
+        """ Record the fact that we saw this definition in 'sources' """
+        for entry in sources:
             if not self.value:
                 self.value = entry.value
-            self.sources.append(entry)
+            if not self.sources or self.key != 'description':
+                # Count 1st line in docstring as description only once
+                self.sources.append(entry)
 
     def add(self, value, source, override=False):
         """
@@ -119,7 +123,7 @@ class Definition(object):
         :param bool override: If True, 'value' is forcibly taken
         """
         if isinstance(source, list):
-            return self.add_entries(source)
+            return self.merge_sources(source)
         if override or not self.value:
             self.value = value
         entry = DefinitionEntry(self.key, value, source)
@@ -181,7 +185,7 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if key in self.ignore:
+        if not key or not value or key in self.ignore:
             return
         definition = self.definitions.get(key)
         if definition is None:
@@ -224,6 +228,7 @@ class SimpleModule(Settings):
         self.relative_path = os.path.join(*relative_paths)
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
+        self.description = None
         if not self.exists:
             return
 
@@ -256,11 +261,6 @@ class SimpleModule(Settings):
                     continue
                 self.scan_line(line, regex, line_number)
 
-    @property
-    def is_setup_py(self):
-        """ Is this a setup.py module? """
-        return is_setup_py_path(self.relative_path)
-
     def add_pair(self, key, value, line, **kwargs):
         source = self.relative_path
         if line:
@@ -269,14 +269,26 @@ class SimpleModule(Settings):
 
     def scan_docstring(self, lines, line_number=0):
         """ Scan docstring for definitions """
-        description = None
+        if not lines:
+            return
+        if not lines[0]:
+            # Disregard the 1st empty line, it's very common
+            lines.pop(0)
+            line_number += 1
         for line in lines:
             line_number += 1
-            if self.is_setup_py and line.strip() and not description:
-                description = line.strip()
-                self.add_pair('description', description, line_number)
-                continue
-            self.scan_line(line, RE_DOC_VALUE, line_number)
+            line = line.rstrip()
+            if self.description is None:
+                # Count as description only 1st lines that seem reasonable
+                if len(line) < 5 or not line[0].isalnum():
+                    self.description = ''
+                else:
+                    self.description = (line, line_number)
+            else:
+                self.scan_line(line, RE_DOC_VALUE, line_number)
+        if self.description:
+            description, line_number = self.description
+            self.add_pair('description', description, line_number)
 
     def scan_line(self, line, regex, line_number):
         m = regex.match(line)
@@ -485,6 +497,17 @@ class SetupMeta(Settings):
 
         if os.path.isdir(project_path('tests')):
             self.auto_fill('test_suite', 'tests')
+
+        self.auto_fill_license()
+
+    def auto_fill_license(self, key='license'):
+        """ Try to auto-determine the license """
+        if self.value(key):
+            return
+        contents, _ = find_contents(['LICENSE*'], limit=20)
+        short, _ = determined_license(contents)
+        if short:
+            self.auto_fill('license', short)
 
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)

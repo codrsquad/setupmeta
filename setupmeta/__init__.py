@@ -1,9 +1,9 @@
 """
-See https://github.com/zsimic/setupmeta
+Simplify your setup.py
+
+url: https://github.com/zsimic/setupmeta
+download_url: archive/v{version}.tar.gz
+author: Zoran Simic zoran@simicweb.com
 """
 
 __version__ = '0.1.1'
-__license__ = 'MIT'
-__url__ = "https://github.com/zsimic/setupmeta"
-__download_url__ = 'archive/v{version}.tar.gz'
-__author__ = 'Zoran Simic zoran@simicweb.com'

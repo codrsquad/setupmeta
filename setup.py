@@ -1,7 +1,5 @@
 """
-Simplify your setup.py
-
-This setup.py is self-using and auto-bootstraps itself
+: This setup.py is self-using and auto-bootstraps itself
 
 keywords: convenient, setup.py
 """
