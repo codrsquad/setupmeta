@@ -2,6 +2,12 @@
 History
 =======
 
+0.1.3 (2017-12-06)
+------------------
+
+* Look only at 1st paragraph of docstring for key/value definitions
+
+
 0.1.2 (2017-12-06)
 ------------------
 

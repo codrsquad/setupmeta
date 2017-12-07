@@ -228,7 +228,6 @@ class SimpleModule(Settings):
         self.relative_path = os.path.join(*relative_paths)
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
-        self.description = None
         if not self.exists:
             return
 
@@ -275,25 +274,28 @@ class SimpleModule(Settings):
             # Disregard the 1st empty line, it's very common
             lines.pop(0)
             line_number += 1
+        if lines and lines[0]:
+            # 2nd line is the description if it looks reasonable
+            line = lines.pop(0).rstrip()
+            line_number += 1
+            if len(line) > 5 and line[0].isalnum():
+                self.add_pair('description', line, line_number)
+        if lines and not lines[0]:
+            # Skip blank line after description, if any
+            lines.pop(0)
+            line_number += 1
         for line in lines:
             line_number += 1
             line = line.rstrip()
-            if self.description is None:
-                # Count as description only 1st lines that seem reasonable
-                if len(line) < 5 or not line[0].isalnum():
-                    self.description = ''
-                else:
-                    self.description = (line, line_number)
-            else:
-                self.scan_line(line, RE_DOC_VALUE, line_number)
-        if self.description:
-            description, line_number = self.description
-            self.add_pair('description', description, line_number)
+            if not line or self.scan_line(line, RE_DOC_VALUE, line_number):
+                # Look at first paragraph after description only
+                break
 
     def scan_line(self, line, regex, line_number):
+        """ Scan 'line' using 'regex', return True if no match found """
         m = regex.match(line)
         if not m:
-            return
+            return True
         key = m.group(1)
         value = m.group(2)
         self.add_pair(key, value, line_number)
