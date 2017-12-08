@@ -16,6 +16,11 @@ Simplify your setup.py
 .. image:: https://img.shields.io/github/languages/top/zsimic/setupmeta.svg
     :target: https://github.com/zsimic/setupmeta
 
+.. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
+    :target: https://www.python.org/
+
+----
+
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
 
 This package aims to simplify that, here's what your setup.py could look like with setupmeta_::

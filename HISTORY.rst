@@ -2,8 +2,10 @@
 History
 =======
 
-0.2.2 (2017-12-07)
+0.2.4 (2017-12-07)
 ------------------
+
+* Auto-publishing via travis
 
 * Use 1st line of README file as short description if no docstrings are found
 
