@@ -9,6 +9,8 @@ This is your typical small project, with:
 
 - one ``simple.py`` module (no module folder) -> ``py_modules`` is properly set
 
+- ``version``, ``keywords``, etc comes from ``simple.py``
+
 - there's a ``Pipfile`` with install and dev packages
 
 - a ``README.rst`` file

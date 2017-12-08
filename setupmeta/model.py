@@ -425,10 +425,6 @@ class SetupMeta(Settings):
                 py_modules = [self.name]
                 self.auto_fill('py_modules', py_modules)
 
-        self.auto_fill_long_description()
-        self.auto_fill_classifiers()
-        self.auto_fill_entry_points()
-
         pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
         if pygradle_version:
             # Convenience: support https://github.com/linkedin/pygradle
@@ -495,15 +491,10 @@ class SetupMeta(Settings):
         if os.path.isdir(project_path('tests')):
             self.auto_fill('test_suite', 'tests')
 
+        self.auto_fill_classifiers()
+        self.auto_fill_entry_points()
         self.auto_fill_license()
-
-        docstring_lead = self.definitions.pop('docstring_lead', None)
-        if docstring_lead and not self.value('description'):
-            self.auto_fill(
-                'description',
-                docstring_lead.value,
-                source=docstring_lead.source
-            )
+        self.auto_fill_long_description()
 
     def extract_short_description(self, contents):
         """
@@ -528,16 +519,22 @@ class SetupMeta(Settings):
 
     def auto_fill_long_description(self):
         """ Auto-fille descriptions from README file """
+        docstring_lead = self.definitions.pop('docstring_lead', None)
+        if docstring_lead and not self.value('description'):
+            self.auto_fill(
+                'description',
+                docstring_lead.value,
+                source=docstring_lead.source
+            )
         value, path = find_contents(READMES, loader=load_readme)
         if value:
-            short_description = self.extract_short_description(value)
-            if short_description:
+            self.add_definition('long_description', value, path)
+            if not self.value('description'):
                 self.auto_fill(
                     'description',
-                    short_description,
+                    self.extract_short_description(value),
                     source="%s:1" % path
                 )
-            self.add_definition('long_description', value, path)
 
     def auto_fill_entry_points(self):
         value, path = find_contents(['entry_points.ini'])

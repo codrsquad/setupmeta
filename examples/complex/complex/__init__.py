@@ -1,4 +1,6 @@
 """
+Short description of complex project
+
 Stuff can come from __init__.py too
 """
 
