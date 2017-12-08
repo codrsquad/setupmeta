@@ -6,7 +6,7 @@ keywords: convenient, setup.py
 
 import os
 import setuptools
-import subprocess
+import subprocess       # nosec
 import sys
 
 
@@ -29,7 +29,7 @@ setup_requires = {t}.hook:register
 
 def run_bootstrap(message):
     print("--- Bootstrapping %s" % message)
-    p = subprocess.Popen(
+    p = subprocess.Popen(                           # nosec
         [sys.executable, 'setup.py', 'egg_info'],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE

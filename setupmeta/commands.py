@@ -12,10 +12,26 @@ import setupmeta
 from setupmeta.content import MetaCommand, project_path
 
 
-def run_program(*commands):
+def which(program):
+    if not program:
+        return None
+    if os.path.isabs(program):
+        return program
+    for p in os.environ.get('PATH', '').split(':'):
+        fp = os.path.join(p, program)
+        if os.path.isfile(fp):
+            return fp
+    return None
+
+
+def run_program(program, *commands):
     """ Run shell program 'commands' """
-    import subprocess
-    p = subprocess.Popen(commands)
+    import subprocess                                   # nosec
+    full_path = which(program)
+    if not full_path:
+        sys.exit("'%s' is not installed" % program)
+    p = subprocess.Popen([full_path] + list(commands))  # nosec
+    p.wait()
     if p.returncode:
         sys.exit(p.returncode)
 
@@ -87,17 +103,25 @@ class UploadCommand(setuptools.Command):
     """ Build and publish the package """
 
     def run(self):
+        dist_folder = project_path('dist')
         try:
             print('Cleaning up dist...')
-            dist = project_path('dist')
+            dist = project_path(dist_folder)
             shutil.rmtree(dist)
         except OSError:
             pass
 
         # if docutils installed:
         # run_setup_py('check', '--strict', '--restructuredtext')
-        run_setup_py('sdist', 'bdist_wheel', '--universal')
+        run_setup_py('sdist')
+
+        if not os.path.isdir(dist_folder):
+            sys.exit("'dist' dir was not created")
 
         print('Uploading the package to pypi via twine...')
-        os.system('twine upload dist/*')
+        files = []
+        for name in os.listdir(dist_folder):
+            if name.endswith('.tar.gz'):
+                files.append(os.path.join(dist_folder, name))
+        run_program('twine', 'upload', *files)
         sys.exit()

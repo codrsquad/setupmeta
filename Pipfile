@@ -11,6 +11,7 @@ pytest = "*"
 "flake8" = "*"
 pytest-cov = "*"
 docutils = "*"
+bandit = "*"
 
 
 [packages]
@@ -18,3 +19,4 @@ docutils = "*"
 
 
 [requires]
+

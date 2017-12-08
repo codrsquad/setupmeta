@@ -144,9 +144,7 @@ class Pipfile(object):
         for marker, specifier in self.data['_meta']['requires'].items():
 
             if marker in lookup:
-                try:
-                    assert lookup[marker] == specifier
-                except AssertionError:
+                if lookup[marker] != specifier:
                     raise AssertionError('Specifier {!r} does not match {!r}.'.format(marker, specifier))
 
 

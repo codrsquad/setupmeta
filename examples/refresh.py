@@ -3,7 +3,7 @@
 import argparse
 import logging
 import os
-import subprocess
+import subprocess       # nosec
 import sys
 
 
@@ -20,7 +20,7 @@ def run_command(path, command):
     os.chdir(path)
     cmd = [sys.executable, 'setup.py'] + command.split()
     logging.debug("Running: %s", cmd)
-    p = subprocess.Popen(
+    p = subprocess.Popen(           # nosec
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

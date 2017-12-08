@@ -20,7 +20,6 @@ class LicenseMojo:
     """ Attempt at reasoning with the madness """
 
     def __init__(self, short, match=None, classifier=None):
-        assert short
         self.short = short
         self._match = match or short
         if not isinstance(self._match, list):
