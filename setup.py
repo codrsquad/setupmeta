@@ -1,8 +1,8 @@
 """
-: This setup.py is self-using and auto-bootstraps itself
-
 keywords: convenient, setup.py
 """
+
+# This setup.py is self-using and auto-bootstraps itself
 
 import os
 import setuptools
@@ -48,6 +48,7 @@ if __name__ == "__main__":
     have_egg = os.path.isdir(EGG)
 
     args = dict(
+        # Explicit on entry points due to bootstrap
         entry_points=ENTRY_POINTS,
         zip_safe=True,
     )
