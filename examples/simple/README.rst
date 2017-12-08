@@ -1,5 +1,5 @@
-Simple setup scenario
-=====================
+simple: Simple setup scenario
+=============================
 
 This is your typical small project, with:
 

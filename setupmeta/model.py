@@ -28,6 +28,12 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 # Finds simple docstring entries like: author: Zoran Simic
 RE_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
 
+# Beautify short description
+RE_DESCRIPTION = re.compile(
+    r'^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$',
+    re.IGNORECASE
+)
+
 
 def get_old_spec(*relative_paths):
     """ Read old-school requirements.txt type file """
@@ -112,9 +118,7 @@ class Definition(object):
         for entry in sources:
             if not self.value:
                 self.value = entry.value
-            if not self.sources or self.key != 'description':
-                # Count 1st line in docstring as description only once
-                self.sources.append(entry)
+            self.sources.append(entry)
 
     def add(self, value, source, override=False):
         """
@@ -275,20 +279,21 @@ class SimpleModule(Settings):
             lines.pop(0)
             line_number += 1
         if lines and lines[0]:
-            # 2nd line is the description if it looks reasonable
-            line = lines.pop(0).rstrip()
-            line_number += 1
-            if len(line) > 5 and line[0].isalnum():
-                self.add_pair('description', line, line_number)
+            if not RE_DOC_VALUE.match(lines[0]):
+                # Take first non-empty, non key-value line as docstring lead
+                line = lines.pop(0).rstrip()
+                line_number += 1
+                if len(line) > 5 and line[0].isalnum():
+                    self.add_pair('docstring_lead', line, line_number)
         if lines and not lines[0]:
-            # Skip blank line after description, if any
+            # Skip blank line after lead, if any
             lines.pop(0)
             line_number += 1
         for line in lines:
             line_number += 1
             line = line.rstrip()
             if not line or self.scan_line(line, RE_DOC_VALUE, line_number):
-                # Look at first paragraph after description only
+                # Look at first paragraph after lead only
                 break
 
     def scan_line(self, line, regex, line_number):
@@ -420,18 +425,9 @@ class SetupMeta(Settings):
                 py_modules = [self.name]
                 self.auto_fill('py_modules', py_modules)
 
-        # Get long description from README (in this order)
-        self.add_full_contents(
-            'long_description',
-            READMES,
-            loader=load_readme
-        )
-
-        # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        self.add_classifiers()
-
-        # Entry points are more handily described in their own file
-        self.add_full_contents('entry_points', ['entry_points.ini'])
+        self.auto_fill_long_description()
+        self.auto_fill_classifiers()
+        self.auto_fill_entry_points()
 
         pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
         if pygradle_version:
@@ -449,17 +445,16 @@ class SetupMeta(Settings):
             self.merge(SimpleModule('%s.py' % py_module))
 
         for package in packages:
-            if not package or '.' in package:
-                # Don't look at submodules
-                continue
-            self.merge(
-                SimpleModule(package, '__about__.py'),
-                SimpleModule(package, '__version__.py'),
-                SimpleModule(package, '__init__.py'),
-                SimpleModule('src', package, '__about__.py'),
-                SimpleModule('src', package, '__version__.py'),
-                SimpleModule('src', package, '__init__.py'),
-            )
+            if package and '.' not in package:
+                # Look at top level modules only
+                self.merge(
+                    SimpleModule(package, '__about__.py'),
+                    SimpleModule(package, '__version__.py'),
+                    SimpleModule(package, '__init__.py'),
+                    SimpleModule('src', package, '__about__.py'),
+                    SimpleModule('src', package, '__version__.py'),
+                    SimpleModule('src', package, '__init__.py'),
+                )
 
         url = self.value('url')
         download_url = self.value('download_url')
@@ -502,6 +497,53 @@ class SetupMeta(Settings):
 
         self.auto_fill_license()
 
+        docstring_lead = self.definitions.pop('docstring_lead', None)
+        if docstring_lead and not self.value('description'):
+            self.auto_fill(
+                'description',
+                docstring_lead.value,
+                source=docstring_lead.source
+            )
+
+    def extract_short_description(self, contents):
+        """
+        :param str contents: Readme file contents
+        :return str|None:
+        """
+        description = contents.strip().partition('\n')[0].strip()
+        size = len(description)
+        if size < 4 or size > 2048:
+            return None
+        m = RE_DESCRIPTION.match(description)
+        name = (self.name or '').lower()
+        if m:
+            lead = m.group(3)
+            if lead and lead.lower() == name:
+                description = m.group(4)
+            else:
+                description = m.group(1)
+        if len(description) < 4 or description.lower() == name:
+            return None
+        return description
+
+    def auto_fill_long_description(self):
+        """ Auto-fille descriptions from README file """
+        value, path = find_contents(READMES, loader=load_readme)
+        if value:
+            short_description = self.extract_short_description(value)
+            if short_description:
+                self.auto_fill(
+                    'description',
+                    short_description,
+                    source="%s:1" % path
+                )
+            self.add_definition('long_description', value, path)
+
+    def auto_fill_entry_points(self):
+        value, path = find_contents(['entry_points.ini'])
+        if value:
+            self.add_definition('entry_points', value, path)
+
     def auto_fill_license(self, key='license'):
         """ Try to auto-determine the license """
         if self.value(key):
@@ -540,19 +582,9 @@ class SetupMeta(Settings):
     def version(self):
         return self.value('version')
 
-    def add_full_contents(self, key, paths, loader=None):
-        """ Add full contents of 1st file found in 'paths' under 'key'
-
-        :param str key: Key being defined
-        :param list(str) paths: Paths to examine (globs OK)
-        :param callable|None loader: Optional custom loader function
-        """
-        value, path = find_contents(paths, loader=loader)
-        if value:
-            self.add_definition(key, value, path)
-
-    def add_classifiers(self):
+    def auto_fill_classifiers(self):
         """ Add classifiers from classifiers.txt, if present """
+        # https://pypi.python.org/pypi?%3Aaction=list_classifiers
         classifiers = load_list('classifiers.txt')
         if classifiers:
             self.add_definition('classifiers', classifiers, 'classifiers.txt')

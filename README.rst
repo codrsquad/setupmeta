@@ -1,13 +1,9 @@
-Simplify your ``setup.py``
-==========================
+Simplify your setup.py
+======================
 
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
 
 This package aims to simplify that, here's what your setup.py could look like with setupmeta_::
-
-    """
-    Short description of the project
-    """
 
     from setuptools import setup
 
@@ -26,8 +22,8 @@ You can use the explain_ command to see what setupmeta deduced from your project
     ~/myproject: python setup.py explain
     Definitions:
     ------------
-         description: (setup.py:2 ) Short description of the project
-    long_description: (README.rst ) Long description would be your inlined README.rst
+         description: (setup.py:2 ) First line of your README
+    long_description: (README.rst ) Long description would be your inlined README
                 name: (setup.py:10) myproject
           py_modules: (auto-fill  ) ['myproject']
           test_suite: (auto-fill  ) tests
@@ -48,11 +44,12 @@ How it works?
 
 - ``name`` is auto-filled from your setup.py's ``__title__``, if there is one (sometimes having a constant is quite handy...)
 
-- ``description`` will be the 1st line of the docstring of your ``setup.py``
-
 - ``packages`` and ``package_dir`` is auto-filled accordingly if you have a ``<name>/__init__.py`` or ``src/<name>/__init__.py`` file
 
 - ``py_modules`` is auto-filled if you have a ``<name>.py`` file
+
+- ``description`` will be the 1st line of your README (unless that 1st line is too short, or is just the project's name),
+  or the 1st line of the first docstring found in the scanned files (see list below)
 
 - ``version``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``, and ``platforms`` will be auto-filled from:
 

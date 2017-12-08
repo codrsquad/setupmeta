@@ -1,4 +1,6 @@
-A nice and short project.
+# empty
+
+A bare bones project.
 
 [//]: # (.. [[end long_description]])
 [//]: # ( .. [[end long_description]] )

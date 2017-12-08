@@ -1,9 +1,8 @@
-Regular README.
+complex - Sample complex project
 
+README is a regular txt file
 .. [[include HISTORY.txt]]
-
 Done with README.
-
 .. [[end long_description]]
 
 Everything below will not make it to long_description

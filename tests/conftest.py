@@ -31,8 +31,8 @@ class capture_output:
     def __init__(self, stdout=True, stderr=True):
         self.old_out = sys.stdout
         self.old_err = sys.stderr
-        sys.stdout = self.out_buffer = StringIO() if stdout else None
-        sys.stderr = self.err_buffer = StringIO() if stderr else None
+        sys.stdout = self.out_buffer = StringIO() if stdout else self.old_out
+        sys.stderr = self.err_buffer = StringIO() if stderr else self.old_err
 
     def __repr__(self):
         return self.to_string()

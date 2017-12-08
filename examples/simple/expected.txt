@@ -6,13 +6,13 @@ Definitions:
               \_: (simple.py:7    ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust    ) zoran@simicweb.com
      classifiers: (classifiers.txt) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
-     description: (setup.py:2     ) Very simple package
+     description: (README.rst:1   ) Simple setup scenario
     download_url: (auto-fill      ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
               \_: (simple.py:9    ) https://github.com/zsimic/simple/archive/{version}.tar.gz
 install_requires: (Pipfile        ) ['click>=6.7']
         keywords: (simple.py:6    ) ['simple', 'scenario']
          license: (auto-fill      ) Apache Software License
-long_description: (README.rst     ) Simple setup scenario =====================  This is your typical small project, with:
+long_description: (README.rst     ) simple: Simple setup scenario =============================  This is your typical small project, with:
             name: (setup.py:14    ) simple
       py_modules: (auto-fill      ) ['simple']
   setup_requires: (explicit       ) ['setupmeta']

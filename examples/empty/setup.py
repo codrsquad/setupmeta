@@ -1,5 +1,5 @@
 """
-Empty setup.py
+foo: bar    # edge case: not a description, key/value definition
 """
 
 from setuptools import setup

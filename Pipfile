@@ -10,7 +10,6 @@ name = "pypi"
 pytest = "*"
 "flake8" = "*"
 coverage = "*"
-twine = "*"
 
 
 [packages]
