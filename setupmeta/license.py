@@ -10,6 +10,11 @@ Like the Shadoks say: (Why do simple when one can do complicated)
 Why do simple when one can do complicated?
 """
 
+import re
+
+
+RE_VERSION = re.compile(r'version (\d+(.\d+)?)', re.IGNORECASE)
+
 
 class LicenseMojo:
     """ Attempt at reasoning with the madness """
@@ -22,6 +27,9 @@ class LicenseMojo:
             self._match = [self._match]
         self.classifier = classifier or short
 
+    def __repr__(self):
+        return self.short
+
     def match(self, contents):
         if not contents or any(m not in contents for m in self._match):
             return None, None
@@ -29,22 +37,26 @@ class LicenseMojo:
         post = ''
         short = self.short
         classifier = self.classifier
+
+        version = None
+        m = RE_VERSION.search(contents)
+        if m:
+            version = m.group(1)
+
         if self.short == 'GNU':
             # The GNU guys are extra-allergic to simplicity
             if 'LESSER' in contents:
                 pre = 'Lesser '
             elif 'AFFERO' in contents:
                 pre = 'Affero '
-            if 'Version 3' in contents:
-                post = 'v3'
-            elif 'Version 2' in contents:
-                post = 'v2'
-            short = '%sGPL%s' % (pre[0], post)
+            if version:
+                post = 'v%s' % version[0]
+            short = '%sGPL%s' % (pre and pre[0], post)
             classifier = "GNU %sGeneral Public License (%s)" % (pre, short)
+        if short == 'Apache' and version:
+            # Most project seem to abbreviate this to "Apache 2.0"
+            short = "%s %s" % (self.short, version)
         return short, "License :: OSI Approved :: %s" % classifier
-
-    def __repr__(self):
-        return self.short
 
 
 # BSD is not even mentioning "BSD" in the legalese... sigh
@@ -56,7 +68,7 @@ BSD_CHATTER = [
 
 KNOWN_LICENSES = [
     LicenseMojo('MIT', 'MIT License', 'MIT License'),
-    LicenseMojo('Apache Software License', 'apache.org/licenses'),
+    LicenseMojo('Apache', 'apache.org/licenses', 'Apache Software License'),
     LicenseMojo('GNU'),
     LicenseMojo('MPL', 'Mozilla Public License'),
     LicenseMojo('BSD', BSD_CHATTER, 'BSD License'),

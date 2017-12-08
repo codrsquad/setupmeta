@@ -11,7 +11,7 @@ Definitions:
               \_: (simple.py:9    ) https://github.com/zsimic/simple/archive/{version}.tar.gz
 install_requires: (Pipfile        ) ['click>=6.7']
         keywords: (simple.py:6    ) ['simple', 'scenario']
-         license: (auto-fill      ) Apache Software License
+         license: (auto-fill      ) Apache 2.0
 long_description: (README.rst     ) simple: Simple setup scenario =============================  This is your typical small project, with:
             name: (setup.py:3     ) simple
       py_modules: (auto-fill      ) ['simple']

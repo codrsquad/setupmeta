@@ -2,10 +2,10 @@
 History
 =======
 
-0.2.0 (2017-12-07)
+0.2.2 (2017-12-07)
 ------------------
 
-* Taking short description from 1st line of README file
+* Use 1st line of README file as short description if no docstrings are found
 
 
 0.1.3 (2017-12-06)
