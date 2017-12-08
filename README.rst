@@ -1,6 +1,21 @@
 Simplify your setup.py
 ======================
 
+.. image:: https://img.shields.io/pypi/v/setupmeta.svg
+    :target: https://pypi.org/project/setupmeta/
+    :alt: version
+
+.. image:: https://travis-ci.org/zsimic/setupmeta.svg?branch=master
+    :target: https://travis-ci.org/zsimic/setupmeta
+    :alt: build status
+
+.. image:: https://img.shields.io/pypi/l/setupmeta.svg
+    :target: https://choosealicense.com/licenses/mit/
+    :alt: license
+
+.. image:: https://img.shields.io/github/languages/top/zsimic/setupmeta.svg
+    :target: https://github.com/zsimic/setupmeta
+
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
 
 This package aims to simplify that, here's what your setup.py could look like with setupmeta_::
