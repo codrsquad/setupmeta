@@ -19,6 +19,11 @@ def run_program(*commands):
         sys.exit(p.returncode)
 
 
+def run_setup_py(*commands):
+    print("Running: setup.py %s" % ' '.join(commands))
+    return run_program(sys.executable, project_path('setup.py'), *commands)
+
+
 @MetaCommand
 class ExplainCommand(setuptools.Command):
     """ Show a report of where key/values setup(attr) come from """
@@ -81,14 +86,9 @@ class UploadCommand(setuptools.Command):
         except OSError:
             pass
 
-        print('Building Source and Wheel (universal) distribution...')
-        run_program(
-            sys.executable,
-            project_path('setup.py'),
-            'sdist',
-            'bdist_wheel',
-            '--universal'
-        )
+        # if docutils installed:
+        # run_setup_py('check', '--strict', '--restructuredtext')
+        run_setup_py('sdist', 'bdist_wheel', '--universal')
 
         print('Uploading the package to pypi via twine...')
         os.system('twine upload dist/*')

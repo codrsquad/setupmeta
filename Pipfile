@@ -9,7 +9,8 @@ name = "pypi"
 
 pytest = "*"
 "flake8" = "*"
-coverage = "*"
+pytest-cov = "*"
+docutils = "*"
 
 
 [packages]

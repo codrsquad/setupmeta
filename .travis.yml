@@ -2,42 +2,22 @@ sudo: false
 language: python
 python:
   - 2.7
-  - 3.6
 
-#install: pip install -U tox-travis
-#install: pip install tox-travis coveralls
-#install: "make"
+install:
+  - pipenv install --dev
 
-#script: tox
-
-#script:
-#    - tox
-#    - if [ $TRAVIS_TEST_RESULT -eq 0 ]; then coveralls; fi
-
-#script:
-#  - |
-#    if [[ "$TRAVIS_PYTHON_VERSION" != "2.6" ]] ; then make test-readme; fi
-#  - make ci
-
-cache: pip
-#jobs:
-#  include:
-#    - stage: test
-#      script:
-#        - |
-#          if [[ "$TRAVIS_PYTHON_VERSION" != "2.6" ]] ; then make test-readme; fi
-#        - make ci
-#    - stage: coverage
-#      python: 3.6
-#      script: codecov
+script:
+  - pipenv run pytest -vvv --cov
+  - pipenv run flake8
+  - pipenv run python setup.py check --strict --restructuredtext
 
 #deploy:
 #  provider: pypi
 #  distributions: sdist
 #  user: zsimic
 #  password:
-#    secure: PLEASE_REPLACE_ME
+#    secure: "J8ut8th4Wj/drhphGlKgOICjUORh+cg0+nbiVbJI6alCWfAhx9gNFPHR7su50Sw4T/LTYY+Dpvn/JXsJEDqCMiEQAFw27iCaxWPZuXfCKin97qLR2fBPV4DrttTM3SQabk36dNqaGoqtrGD1wZH2ei3JZ375tMYy8tt0OBRAt5/lRVu9kcxJemzJKPR6QaiX/JpWbxxo7a3sicurDxw8SpdNcrmjmmy3KDOmdBKa/+2RvUHErrX3MfVX/6fXGpUol/+uEDwbUKfq0UD/31s6Di/pmOGp+u5nVO+08NxHyJAC2Z+2IC7yGpIYqMFsU2yPJJlV+JbGyH4orDIvLvR3LcOiIFTALTqlbwDT0/BP0KTOdR++1biC/MmPTYyoWg/Rhmz2swAJuDhzxZTcVq4HCbvJQt2by5teWAE/CmAZBoVPENFoH0HU5r661aBqdOkCMrUqtwCKv1kXasU1udlqneC1Xus+MH7Jm6A+PCtWlfh00qjaBVVE/tuFELjOVMei2uiMeGKPchOBDd5lRsLPkX9js6pxZ7+BC7DOKmtbsrYuF4mnJ0KBU1F8uP1RamQkagQ1oVMv7orQk7eKvcGcdaLjVgZy77K4ha6iCO3p6bxDXqrXq7Vr6PYMnvuTfeH8Hpq2Hy+txEhB6FHGd5UX37c0pV3d7Uvr3Kcf4V7QA6w="
 #  on:
 #    tags: true
-#    repo: zsimic/hsetup
+#    repo: zsimic/setupmeta
 #    python: 3.6
