@@ -18,7 +18,7 @@ setup(
     # This will overshadow classifiers.txt
     classifiers=['Programming Language :: Python'],
 
-    extras_require=dict(bar='docutils'),
+    extras_require=dict(bar=['docutils']),
 
     keywords=['one', 'more'],
 )
