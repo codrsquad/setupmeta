@@ -13,7 +13,7 @@ import conftest
 
 
 EXAMPLES = os.path.join(conftest.PROJECT, 'examples')
-COMMANDS = 'explain entrypoints'.split()
+COMMANDS = ['explain -t replay', 'entrypoints']
 
 
 def scenario_names():
@@ -50,8 +50,7 @@ def run(setup_py):
     try:
         with conftest.capture_output() as logged:
             for command in COMMANDS:
-                sys.argv = [setup_py, command]
-                print("Replay: %s" % command)
+                sys.argv = [setup_py] + command.split()
                 load_module(setup_py)
             return logged.to_string()
     finally:

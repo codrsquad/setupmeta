@@ -8,6 +8,7 @@ import setuptools.command.test
 import shutil
 import sys
 
+import setupmeta
 from setupmeta.content import MetaCommand, project_path
 
 
@@ -28,9 +29,16 @@ def run_setup_py(*commands):
 class ExplainCommand(setuptools.Command):
     """ Show a report of where key/values setup(attr) come from """
 
+    user_options = [
+        ('title=', 't', "title to use as header")
+    ]
+
+    def initialize_options(self):
+        self.title = "setupmeta v%s" % setupmeta.__version__
+
     def run(self):
-        print("Definitions:")
-        print("------------")
+        print(self.title)
+        print("-" * len(self.title))
         print(self.setupmeta.explain())
 
 

@@ -1,7 +1,6 @@
-Replay: explain
 running explain
-Definitions:
-------------
+replay
+------
           author: (auto-adjust    ) Zoran Simic
               \_: (simple.py:7    ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust    ) zoran@simicweb.com
@@ -22,6 +21,5 @@ long_description: (README.rst     ) simple: Simple setup scenario ==============
          version: (simple.py:5    ) 1.0.0
 
 
-Replay: entrypoints
 running entrypoints
 

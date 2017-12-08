@@ -1,7 +1,6 @@
-Replay: explain
 running explain
-Definitions:
-------------
+replay
+------
      description: (README.md:1) A bare bones project
             foo*: (setup.py:2 ) bar
          license: (auto-fill  ) MIT
@@ -11,6 +10,5 @@ long_description: (README.md  ) # empty: A bare bones project  [//]: # (.. [[end
   setup_requires: (explicit   ) ['setupmeta']
 
 
-Replay: entrypoints
 running entrypoints
 

@@ -9,7 +9,7 @@ import sys
 
 EXAMPLES = os.path.abspath(os.path.dirname(__file__))
 PPATH = os.path.dirname(EXAMPLES)
-COMMANDS = 'explain entrypoints'.split()
+COMMANDS = ['explain -t replay', 'entrypoints']
 
 
 sys.path.insert(0, PPATH)
@@ -18,7 +18,7 @@ from setupmeta.content import to_str    # noqa
 
 def run_command(path, command):
     os.chdir(path)
-    cmd = [sys.executable, 'setup.py', command]
+    cmd = [sys.executable, 'setup.py'] + command.split()
     logging.debug("Running: %s", cmd)
     p = subprocess.Popen(
         cmd,
@@ -46,7 +46,6 @@ def refresh_example(path, dryrun):
     expected = os.path.join(path, 'expected.txt')
     output = ''
     for command in COMMANDS:
-        output += "Replay: %s\n" % command
         output += "%s\n" % run_command(path, command)
     if dryrun:
         print(output)

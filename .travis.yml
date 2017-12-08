@@ -8,7 +8,7 @@ install:
   - pipenv install --dev
 
 script:
-  - python setup.py check
+  - python setup.py explain
   - pipenv run pytest -vvv --cov
   - pipenv run flake8
   - pipenv run python setup.py check --strict --restructuredtext
