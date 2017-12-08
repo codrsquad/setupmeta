@@ -36,8 +36,8 @@ def run_bootstrap(message):
     )
     output, error = p.communicate()
     if p.returncode:
-        sys.stdout.write(output)
-        sys.stderr.write(error)
+        print(output)
+        print(error)
         sys.exit(p.returncode)
     if not os.path.isdir(EGG):
         sys.exit("Could not bootstrap egg-info")

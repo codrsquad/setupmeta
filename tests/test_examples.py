@@ -9,7 +9,7 @@ import sys
 import pytest
 
 from setupmeta.content import extract_list, load_list, short, to_str
-import conftest
+from . import conftest
 
 
 EXAMPLES = os.path.join(conftest.PROJECT, 'examples')

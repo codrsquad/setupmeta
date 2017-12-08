@@ -35,7 +35,7 @@ def run_command(path, command):
         print(output)
         print(error)
         sys.exit(p.returncode)
-    return to_str(output) + to_str(error)
+    return to_str(output)
 
 
 def refresh_example(path, dryrun):

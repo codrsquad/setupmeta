@@ -173,13 +173,13 @@ def short(text, c=64):
 def listify(text, separator=None):
     """ Turn 'text' into a list using 'separator' """
     value = to_str(text).split(separator)
-    return filter(bool, map(str.strip, value))
+    return list(filter(bool, map(str.strip, value)))
 
 
 if sys.version_info[0] < 3:
     def strify(value):
         """ Avoid having the annoying u'..' in str() representations """
-        if isinstance(value, unicode):
+        if isinstance(value, unicode):      # noqa
             return value.encode('ascii', 'ignore')
         if isinstance(value, str):
             return value
