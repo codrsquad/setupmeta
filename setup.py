@@ -27,8 +27,14 @@ setup_requires = {t}.hook:register
 """.format(t=__title__)
 
 
+def to_str(text):
+    if isinstance(text, bytes):
+        return text.decode('utf-8')
+    return text
+
+
 def run_bootstrap(message):
-    print("--- Bootstrapping %s" % message)
+    sys.stderr.write("--- Bootstrapping %s\n" % message)
     p = subprocess.Popen(                           # nosec
         [sys.executable, 'setup.py', 'egg_info'],
         stdout=subprocess.PIPE,
@@ -37,7 +43,7 @@ def run_bootstrap(message):
     output, error = p.communicate()
     if p.returncode:
         print(output)
-        print(error)
+        sys.stderr.write("%s\n" % to_str(error))
         sys.exit(p.returncode)
     if not os.path.isdir(EGG):
         sys.exit("Could not bootstrap egg-info")
