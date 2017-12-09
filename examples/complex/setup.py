@@ -8,7 +8,7 @@ keywords: setup, docstring
 from setuptools import setup
 
 
-__keywords__ = 'setup'
+__keywords__ = 'some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command'   # noqa
 
 
 setup(
@@ -18,7 +18,12 @@ setup(
     # This will overshadow classifiers.txt
     classifiers=['Programming Language :: Python'],
 
-    extras_require=dict(bar=['docutils']),
+    extras_require=dict(
+        bar=['docutils'],
+        baz=['some', 'long', 'list-of', 'requirements'],
+        foo=['long', 'enough', 'to-be', 'abbreviated'],
+    ),
 
-    keywords=['one', 'more'],
+    # Here to verify that explicit takes precedence
+    keywords=__keywords__.split(','),
 )

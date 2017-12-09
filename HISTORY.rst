@@ -2,12 +2,20 @@
 History
 =======
 
+0.2.5 (2017-12-09)
+------------------
+
+* Always listify ``keywords``
+
+
 0.2.4 (2017-12-07)
 ------------------
 
 * Auto-publishing via travis
 
 * Use 1st line of README file as short description if no docstrings are found
+
+.. [[end long_description]]
 
 
 0.1.3 (2017-12-06)
@@ -20,8 +28,6 @@ History
 * Accept description in project docstrings (not only setup.py)
 
 * Refactored as a proper package (now that the one-file mode is not needed anymore)
-
-.. [[end long_description]]
 
 
 0.0.4 (2017-12-03)

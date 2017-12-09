@@ -191,6 +191,8 @@ class Settings:
         """
         if not key or not value or key in self.ignore:
             return
+        if key == 'keywords':
+            value = listify(value, separator=',')
         definition = self.definitions.get(key)
         if definition is None:
             definition = Definition(key)
@@ -482,7 +484,6 @@ class SetupMeta(Settings):
         self.auto_adjust('author', self.extract_email)
         self.auto_adjust('contact', self.extract_email)
         self.auto_adjust('maintainer', self.extract_email)
-        self.listify('keywords:,')
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
@@ -558,18 +559,6 @@ class SetupMeta(Settings):
         req = getattr(self.requirements, field)
         if req:
             self.auto_fill(attr, req.reqs, req.source)
-
-    def listify(self, *keys):
-        """ Ensure values for 'keys' are lists """
-        for key in keys:
-            key, _, sep = key.partition(':')
-            definition = self.definitions.get(key)
-            if not definition or not definition.value:
-                continue
-            if isinstance(definition.value, list):
-                continue
-            value = listify(definition.value, separator=sep or None)
-            definition.sources[0].value = definition.value = value
 
     @property
     def name(self):

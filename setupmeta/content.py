@@ -158,21 +158,31 @@ def find_contents(relative_paths, loader=None, limit=0):
 def short(text, c=64):
     """ Short representation of 'text' """
     if not text:
-        return text
-    text = to_str(text).strip()
-    text = text.replace(USER_HOME, '~').replace('\n', ' ')
-    if c and len(text) > c:
-        summary = "%s chars" % len(text)
-        cutoff = c - len(summary) - 6
+        return to_str(text)
+    result = to_str(text).strip()
+    result = result.replace(USER_HOME, '~').replace('\n', ' ')
+    if c and len(result) > c:
+        if isinstance(text, dict):
+            summary = '%s keys' % len(text)
+        elif isinstance(text, list):
+            summary = '%s items' % len(text)
+        else:
+            summary = "%s chars" % len(result)
+        cutoff = c - len(summary) - 5
         if cutoff <= 0:
             return summary
-        return "%s [%s...]" % (summary, text[:cutoff])
-    return text
+        return "%s: %s..." % (summary, result[:cutoff])
+    return result
 
 
 def listify(text, separator=None):
     """ Turn 'text' into a list using 'separator' """
-    value = to_str(text).split(separator)
+    if isinstance(text, list):
+        return text
+    value = to_str(text)
+    if separator:
+        value = value.replace('\n', separator)
+    value = value.split(separator)
     return list(filter(bool, map(str.strip, value)))
 
 

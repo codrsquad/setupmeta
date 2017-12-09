@@ -1,18 +1,22 @@
 import os
 import pytest
 
-from setupmeta.content import abort, MetaDefs, meta_command_init, short, to_str
+from setupmeta.content import abort, listify, short, to_str
+from setupmeta.content import MetaDefs, meta_command_init
 
 
 def test_shortening():
-    assert short(None) is None
+    assert short(None) == "None"
     assert short("") == ""
 
     assert short("hello there", c=11) == "hello there"
     assert short("hello there", c=8) == "11 chars"
 
-    long_message = "hello there wonderful wild world"
-    assert short(long_message, c=19) == "32 chars [hello...]"
+    long_message = "hello there wild wonderful world"
+    assert short(long_message, c=19) == "32 chars: hello ..."
+
+    long_message = ["hello", "there", "wild", "wonderful  world"]
+    assert short(long_message, c=34) == "4 items: ['hello', 'there', 'wi..."
 
     path = os.path.expanduser('~/foo/bar')
     assert short(path) == '~/foo/bar'
@@ -28,6 +32,15 @@ def test_edge_cases():
     with pytest.raises(Exception):
         obj = MetaDefs()
         meta_command_init(obj, obj)
+
+
+def test_listify():
+    assert listify("a, b") == ['a,', 'b']
+    assert listify("a,  b") == ['a,', 'b']
+    assert listify("a, b", separator=',') == ['a', 'b']
+    assert listify("a,, b", separator=',') == ['a', 'b']
+    assert listify("a,\n b", separator=',') == ['a', 'b']
+    assert listify("a\n b", separator=',') == ['a', 'b']
 
 
 def test_stringify():
