@@ -191,8 +191,10 @@ def str_dict(data):
     :param dict data: Some python versions don't sort by key...
     :return str: Represented dict in a predictable manner
     """
+    if not isinstance(data, dict):
+        return to_str(data)
     result = []
-    for k, v in data.items():
+    for k, v in sorted(data.items()):
         result.append("%s: %s" % (to_str(k), to_str(v)))
     return "{%s}" % ', '.join(result)
 

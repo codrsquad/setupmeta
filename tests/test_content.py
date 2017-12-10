@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from setupmeta.content import abort, listify, short, to_str
+from setupmeta.content import abort, listify, short, str_dict, to_str
 from setupmeta.content import MetaDefs, meta_command_init
 
 
@@ -63,3 +63,6 @@ def test_stringify():
     assert to_str({'': 'foo'}) == "{: foo}"
     assert to_str(dict(bar='foo')) == "{bar: foo}"
     assert to_str(dict(bar=[u'foo'])) == "{bar: ['foo']}"
+
+    assert str_dict(None) == 'None'
+    assert str_dict('foo') == 'foo'
