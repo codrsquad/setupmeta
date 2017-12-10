@@ -2,10 +2,17 @@
 History
 =======
 
+0.2.7 (2017-12-09)
+------------------
+
+* Publish wheels as well
+
 0.2.6 (2017-12-09)
 ------------------
 
 * Always listify ``keywords``
+
+.. [[end long_description]]
 
 
 0.2.4 (2017-12-07)
@@ -14,8 +21,6 @@ History
 * Auto-publishing via travis
 
 * Use 1st line of README file as short description if no docstrings are found
-
-.. [[end long_description]]
 
 
 0.1.3 (2017-12-06)

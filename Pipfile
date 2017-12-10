@@ -7,11 +7,12 @@ name = "pypi"
 
 [dev-packages]
 
-pytest = "*"
-"flake8" = "*"
-pytest-cov = "*"
-docutils = "*"
 bandit = "*"
+docutils = "*"
+"flake8" = "*"
+pytest = "*"
+pytest-cov = "*"
+wheel = "*"
 
 
 [packages]
