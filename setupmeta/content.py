@@ -198,7 +198,9 @@ if sys.version_info[0] < 3:
         if isinstance(value, tuple):
             return tuple(strify(s) for s in value)
         if isinstance(value, dict):
-            return dict((strify(k), strify(v)) for (k, v) in value.items())
+            return dict(
+                (strify(k), strify(v)) for (k, v) in sorted(value.items())
+            )
         return value
 
     def to_str(text):
