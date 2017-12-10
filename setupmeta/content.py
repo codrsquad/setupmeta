@@ -186,6 +186,17 @@ def listify(text, separator=None):
     return list(filter(bool, map(str.strip, value)))
 
 
+def str_dict(data):
+    """
+    :param dict data: Some python versions don't sort by key...
+    :return str: Represented dict in a predictable manner
+    """
+    result = []
+    for k, v in data.items():
+        result.append("%s: %s" % (to_str(k), to_str(v)))
+    return "{%s}" % ', '.join(result)
+
+
 if sys.version_info[0] < 3:
     def strify(value):
         """ Avoid having the annoying u'..' in str() representations """
@@ -198,9 +209,7 @@ if sys.version_info[0] < 3:
         if isinstance(value, tuple):
             return tuple(strify(s) for s in value)
         if isinstance(value, dict):
-            return dict(
-                (strify(k), strify(v)) for (k, v) in sorted(value.items())
-            )
+            return str_dict(value)
         return value
 
     def to_str(text):
@@ -212,6 +221,8 @@ else:
         """ Pretty string representation of 'text' for python3 """
         if isinstance(text, bytes):
             return text.decode('utf-8')
+        if isinstance(text, dict):
+            return str_dict(text)
         return str(text)
 
 

@@ -12,7 +12,7 @@ replay
     download_url: (auto-fill                ) https://github.com/zsimic/complex/archive/3.2.1.tar.gz
               \_: (setup.py:4               ) archive/{version}.tar.gz
     entry_points: (entry_points.ini         ) [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
-  extras_require: (explicit                 ) 3 keys: {'bar': ['docutils'], 'baz': ['some', 'long', 'list-of', 'requirements'], 'foo': ['long', 'enough', 'to-...
+  extras_require: (explicit                 ) 3 keys: {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', '...
 install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
         keywords: (explicit                 ) 14 items: ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', '...
               \_: (setup.py:5               ) ['setup', 'docstring']
@@ -27,7 +27,7 @@ long_description: (README                   ) complex - Sample complex project  
               \_: (complex/__init__.py:10   ) Zoran Simic me2@myplace.com
 maintainer_email: (auto-adjust              ) me@myplace.com
             name: (explicit                 ) complex
-     package_dir: (auto-fill                ) {'': 'src'}
+     package_dir: (auto-fill                ) {: src}
         packages: (auto-fill                ) ['complex']
   setup_requires: (explicit                 ) ['setupmeta']
       test_suite: (auto-fill                ) tests
