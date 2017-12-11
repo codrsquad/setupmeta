@@ -2,13 +2,16 @@
 History
 =======
 
-0.2.7 (2017-12-09)
+0.3.0 (2017-12-10)
+------------------
+
+* Testing with pypy as well, produce eggs for 2.7, 3.4, 3.5, 3.6
+
+
+0.2.8 (2017-12-09)
 ------------------
 
 * Publish wheels as well
-
-0.2.6 (2017-12-09)
-------------------
 
 * Always listify ``keywords``
 
