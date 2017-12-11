@@ -7,17 +7,14 @@ Simplify your setup.py
 
 .. image:: https://travis-ci.org/zsimic/setupmeta.svg?branch=master
     :target: https://travis-ci.org/zsimic/setupmeta
-    :alt: build status
 
 .. image:: https://img.shields.io/pypi/l/setupmeta.svg
-    :target: https://choosealicense.com/licenses/mit/
-    :alt: license
+    :target: https://github.com/zsimic/setupmeta
 
 .. image:: https://img.shields.io/github/languages/top/zsimic/setupmeta.svg
     :target: https://github.com/zsimic/setupmeta
 
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
-    :target: https://www.python.org/
 
 ----
 
