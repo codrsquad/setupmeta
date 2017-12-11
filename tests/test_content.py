@@ -62,7 +62,7 @@ def test_stringify():
 
     assert to_str({'': 'foo'}) == "{: foo}"
     assert to_str(dict(bar='foo')) == "{bar: foo}"
-    assert to_str(dict(bar=[u'foo'])) == "{bar: ['foo']}"
+    assert to_str(dict(bar=['foo'])) == "{bar: ['foo']}"
 
     assert str_dict(None) == 'None'
     assert str_dict('foo') == 'foo'

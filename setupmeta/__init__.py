@@ -6,4 +6,4 @@ download_url: archive/v{version}.tar.gz
 author: Zoran Simic zoran@simicweb.com
 """
 
-__version__ = '0.2.7'
+__version__ = '0.2.8'

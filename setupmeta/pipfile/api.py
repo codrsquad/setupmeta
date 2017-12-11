@@ -38,10 +38,10 @@ class PipfileParser(object):
 
         # Load the default configuration.
         default_config = {
-            u'source': [{u'url': u'https://pypi.python.org/simple', u'verify_ssl': True, 'name': "pypi"}],
-            u'packages': {},
-            u'requires': {},
-            u'dev-packages': {}
+            'source': [{'url': 'https://pypi.python.org/simple', 'verify_ssl': True, 'name': "pypi"}],
+            'packages': {},
+            'requires': {},
+            'dev-packages': {}
         }
 
         config = {}
