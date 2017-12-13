@@ -487,7 +487,6 @@ class SetupMeta(Settings):
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
-        self.auto_fill_requires('test', 'tests_require')
 
         if os.path.isdir(project_path('tests')):
             self.auto_fill('test_suite', 'tests')
