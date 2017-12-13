@@ -15,7 +15,6 @@ long_description: (README.rst     ) simple: Simple setup scenario ==============
             name: (setup.py:3     ) simple
       py_modules: (auto-fill      ) ['simple']
   setup_requires: (explicit       ) ['setupmeta']
-   tests_require: (Pipfile        ) ['flake8>=3.3.0,<4', 'pytest', 'six==1.11.0', "unittest2>=1.0,<3.0 ; python_version < '2.7.9'"]
           title*: (setup.py:3     ) simple
              url: (simple.py:8    ) https://github.com/zsimic/simple
          version: (simple.py:5    ) 1.0.0

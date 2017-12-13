@@ -9,15 +9,10 @@ python:
   - pypy3
 
 install:
-  - pip install pipenv
-  - python setup.py explain
-  - pipenv install --dev
+  - pip install tox
 
 script:
-  - pipenv run pytest -vvv --cov --no-cov-on-fail
-  - pipenv run flake8
-  - pipenv run python setup.py check --strict --restructuredtext
-  - pipenv run bandit -r setupmeta/ setup.py examples/
+  - tox
 
 credentials:
   - &pypi
