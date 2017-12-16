@@ -6,14 +6,12 @@ import os
 import subprocess       # nosec
 import sys
 
+from setupmeta.content import to_str
+
 
 EXAMPLES = os.path.abspath(os.path.dirname(__file__))
 PPATH = os.path.dirname(EXAMPLES)
 COMMANDS = ['explain -t replay', 'entrypoints']
-
-
-sys.path.insert(0, PPATH)
-from setupmeta.content import to_str    # noqa
 
 
 def run_command(path, command):
