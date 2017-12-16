@@ -4,8 +4,6 @@ Commands contributed by setupmeta
 
 import os
 import setuptools
-import setuptools.command.test
-import shutil
 import sys
 
 import setupmeta
@@ -34,11 +32,6 @@ def run_program(program, *commands):
     p.wait()
     if p.returncode:
         sys.exit(p.returncode)
-
-
-def run_setup_py(*commands):
-    print("Running: setup.py %s" % ' '.join(commands))
-    return run_program(sys.executable, project_path('setup.py'), *commands)
 
 
 @MetaCommand
@@ -78,50 +71,3 @@ class EntryPointsCommand(setuptools.Command):
             return
         for key, value in console_scripts.items():
             print("%s = %s" % (key, value))
-
-
-@MetaCommand
-class TestCommand(setuptools.command.test.test):
-    """ Run all tests via py.test """
-
-    def run_tests(self):
-        try:
-            import pytest
-
-        except ImportError:
-            print('pytest is not installed, falling back to default')
-            return setuptools.command.test.test.run_tests(self)
-
-        suite = self.setupmeta.value('test_suite') or 'tests'
-        args = ['-vvv'] + suite.split()
-        errno = pytest.main(args)
-        sys.exit(errno)
-
-
-@MetaCommand
-class UploadCommand(setuptools.Command):
-    """ Build and publish the package """
-
-    def run(self):
-        dist_folder = project_path('dist')
-        try:
-            print('Cleaning up dist...')
-            dist = project_path(dist_folder)
-            shutil.rmtree(dist)
-        except OSError:
-            pass
-
-        # if docutils installed:
-        # run_setup_py('check', '--strict', '--restructuredtext')
-        run_setup_py('sdist')
-
-        if not os.path.isdir(dist_folder):
-            sys.exit("'dist' dir was not created")
-
-        print('Uploading the package to pypi via twine...')
-        files = []
-        for name in os.listdir(dist_folder):
-            if name.endswith('.tar.gz'):
-                files.append(os.path.join(dist_folder, name))
-        run_program('twine', 'upload', *files)
-        sys.exit()

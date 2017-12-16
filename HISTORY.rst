@@ -2,10 +2,14 @@
 History
 =======
 
-0.3.0 (2017-12-10)
+0.3.1 (2017-12-15)
 ------------------
 
+* Removed support for Pipfile
+
 * Testing with pypy as well, produce eggs for 2.7, 3.4, 3.5, 3.6
+
+.. [[end long_description]]
 
 
 0.2.8 (2017-12-09)
@@ -14,12 +18,6 @@ History
 * Publish wheels as well
 
 * Always listify ``keywords``
-
-.. [[end long_description]]
-
-
-0.2.4 (2017-12-07)
-------------------
 
 * Auto-publishing via travis
 

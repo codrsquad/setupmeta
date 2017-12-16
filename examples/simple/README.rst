@@ -11,8 +11,6 @@ This is your typical small project, with:
 
 - ``version``, ``keywords``, etc comes from ``simple.py``
 
-- there's a ``Pipfile`` with install and dev packages
-
 - a ``README.rst`` file
 
 - mostly everything comes from ``simple.py``

@@ -19,8 +19,6 @@ ENTRY_POINTS = """
 [distutils.commands]
 explain = {t}.commands:ExplainCommand
 entrypoints = {t}.commands:EntryPointsCommand
-test = {t}.commands:TestCommand
-upload = {t}.commands:UploadCommand
 
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register

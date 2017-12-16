@@ -43,11 +43,9 @@ You can use the explain_ command to see what setupmeta deduced from your project
     long_description: (README.rst ) Long description would be your inlined README
                 name: (setup.py:10) myproject
           py_modules: (auto-fill  ) ['myproject']
-          test_suite: (auto-fill  ) tests
-       tests_require: (Pipfile    ) ['coverage', 'flake8', 'pytest']
              version: (setup.py:7 ) 1.0.0
 
-The above would be what you get with just those few lines in your ``setup.py``, plus a ``README.rst`` file, a ``tests/`` folder, and a pipfile_
+The above would be what you get with just those few lines in your ``setup.py``, plus a ``README.rst`` file
 (assumed here for auto-fill illustration purposes - you don't have to have those, they just get automatically picked up if you do)
 
 See examples_ for more.
@@ -80,7 +78,7 @@ How it works?
 
         - ``<package>.py`` (mccabe_ for example)
 
-        - ``<package>/__about__.py`` (cryptography_, pipfile_ for example do this)
+        - ``<package>/__about__.py`` (cryptography_ for example)
 
         - ``<package>/__version__.py`` (requests_ for example)
 
@@ -115,13 +113,7 @@ How it works?
 
 - ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
 
-- ``install_requires`` is auto-filled if you have a pipfile_ (or the old school ``requirements.txt`` or ``pinned.txt`` file)
-
-- ``tests_require`` is auto-filled if you have a pipfile_ (or ``requirements-dev.txt`` file)
-
-- ``test_suite`` is auto-filled to ``tests`` folder if you have one (no other places are examined, stick to the standard)
-
-- ``py.test`` is automatically used for ``setup.py test`` if you have it in your pipfile_ (or reqs).
+- ``install_requires`` is auto-filled if you have a ``requirements.txt`` (or ``pinned.txt``) file
 
 This should hopefully work nicely for the vast majority of python projects out there.
 If you need advanced stuff, you can still leverage ``setupmeta`` for all the usual stuff above, and go explicit wherever needed.
@@ -157,8 +149,6 @@ For example, this is what setupmeta says about itself (it's self-using)::
                 name: (setup.py:15            ) setupmeta
             packages: (auto-fill              ) ['setupmeta']
       setup_requires: (explicit               ) ['setupmeta']
-          test_suite: (auto-fill              ) tests
-       tests_require: (Pipfile                ) ['coverage', 'flake8', 'pytest', 'twine']
               title*: (setup.py:15            ) setupmeta
                  url: (setupmeta/__init__.py:7) https://github.com/zsimic/setupmeta
              version: (setupmeta/__init__.py:5) 0.0.5
@@ -188,32 +178,11 @@ In the above output:
 
 - ``packages`` was auto-filled to ``['setupmeta']``
 
-- ``test_suite`` auto-filled, since we do use the usual ``tests/`` folder convention
-
-- ``tests_require`` came from the project's pipfile_
-
 
 entrypoints
 -----------
 
 This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
-
-
-test
-----
-
-
-The ``test`` command is customized to run ``pytest``, if you have it as a test/dev dependency.
-If you don't, then setupmeta falls back to the regulars setuptools implementation for the test command...
-
-Note that **all** tests are ran via ``py.tests -vvv <test_suite>``, you can't customize that (no options supported).
-Just use something like ``pipenv run py.test ...`` if you want to run a subset of tests, ``setup.py``'s CLI interface is wonky anyway.
-
-
-upload
-------
-
-Upload was customized to use ``twine upload``, if you don't have twine_ installed, the ``upload`` command will fail (I hear the default one is not good, so not falling back to it...)
 
 
 .. _setupmeta: https://github.com/zsimic/setupmeta
@@ -222,11 +191,7 @@ Upload was customized to use ``twine upload``, if you don't have twine_ installe
 
 .. _setuptools: https://github.com/pypa/setuptools
 
-.. _twine: https://github.com/pypa/twine
-
 .. _rst comments: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#comments
-
-.. _pipfile: https://github.com/pypa/pipfile
 
 .. _requests: https://github.com/requests/requests/tree/master/requests
 
@@ -256,10 +221,6 @@ My motivation was to:
 - have a nice workflow for when I want to publish to pypi:
 
     - ``setup.py explain`` to see what's up at a glance
-
-    - ``setup.py test`` to verify my stuff works from setup.py's point of view
-
-    - ``setup.py upload`` to publish in one go
 
 I noticed that most open-source projects out there do the same thing over and over, like:
 
@@ -300,4 +261,4 @@ With setupmeta, you can achieve a short and sweet setup.py by proceeding like so
 Roadmap
 =======
 
-- Support git-versioning, like ``setuptools_scm`` - but auto-apply tag on ``upload``
+- Support git-versioning, like ``setuptools_scm``?

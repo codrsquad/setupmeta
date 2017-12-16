@@ -12,7 +12,6 @@ from setupmeta.content import find_contents, find_packages, listify
 from setupmeta.content import load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short, to_str
 from setupmeta.license import determined_license
-from setupmeta.pipfile import load, Pipfile
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -312,50 +311,14 @@ class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
     def __init__(self, reqs, source):
-        if isinstance(reqs, Pipfile):
-            self.source = 'Pipfile'
-            self.reqs = []
-            section = reqs.data.get(source, {})
-            for name, info in section.items():
-                spec = pip_spec(name, info)
-                if spec:
-                    self.reqs.append(spec)
-            self.reqs = sorted(self.reqs)
-        else:
-            self.reqs = reqs
-            self.source = source
-
-
-def pip_spec(name, info):
-    """ Convert pipfile spec into an old-school pip-style spec """
-    if not info or info == "*":
-        return name
-    if not isinstance(info, dict):
-        return "%s%s" % (name, info)
-    version = info.get('version')
-    markers = info.get('markers')
-    if info.get('editable') or version is None:
-        # Old pips don't support editable + not really useful when publishing
-        return None
-    result = [name]
-    if version and version != "*":
-        result.append(version)
-    if markers:
-        result.append(" ; %s" % markers)
-    return ''.join(result)
+        self.reqs = reqs
+        self.source = source
 
 
 class Requirements:
-    """ Allows to auto-fill requires from pipfile, or requirements.txt """
+    """ Allows to auto-fill requires from requirements.txt """
 
     def __init__(self):
-        pipfile_path = project_path('Pipfile')
-        if os.path.isfile(pipfile_path):
-            pipfile = load(pipfile_path)
-            if pipfile and pipfile.data:
-                self.install = RequirementsEntry(pipfile, 'default')
-                self.test = RequirementsEntry(pipfile, 'develop')
-                return
         self.install = get_old_spec('requirements.txt', 'pinned.txt')
         self.test = get_old_spec(
             'requirements-dev.txt',
@@ -487,9 +450,6 @@ class SetupMeta(Settings):
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
-
-        if os.path.isdir(project_path('tests')):
-            self.auto_fill('test_suite', 'tests')
 
         self.auto_fill_classifiers()
         self.auto_fill_entry_points()
