@@ -24,14 +24,15 @@ This package aims to simplify that, here's what your setup.py could look like wi
 
     from setuptools import setup
 
-    __version__ = '1.0.0'               # This can come from your __about__.py
+    __version__ = '1.0.0'               # This can come from your __about__.py etc
 
     setup(
         name='myproject',
         setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
-And that should be it - setupmeta_ will take it from there, extracting everything else from your project, following the typical conventions commonly used.
+And that should be it (even the ``__version__`` mention above is not necessary, it's there for illustration purposes) - setupmeta_ will
+take it from there, extracting everything else from your project, following the typical conventions commonly used.
 
 You can use the explain_ command to see what setupmeta deduced from your project, for the above it would look like so
 (you can see which file, and which line each setting came from)::
@@ -39,11 +40,11 @@ You can use the explain_ command to see what setupmeta deduced from your project
     ~/myproject: python setup.py explain
     Definitions:
     ------------
-         description: (setup.py:2 ) First line of your README
-    long_description: (README.rst ) Long description would be your inlined README
-                name: (setup.py:10) myproject
-          py_modules: (auto-fill  ) ['myproject']
-             version: (setup.py:7 ) 1.0.0
+         description: (setup.py:2) First line of your README
+    long_description: (README.rst) Long description would be your inlined README
+                name: (setup.py:6) myproject
+          py_modules: (auto-fill ) ['myproject']
+             version: (setup.py:3) 1.0.0
 
 The above would be what you get with just those few lines in your ``setup.py``, plus a ``README.rst`` file
 (assumed here for auto-fill illustration purposes - you don't have to have those, they just get automatically picked up if you do)
@@ -136,22 +137,22 @@ For example, this is what setupmeta says about itself (it's self-using)::
     Definitions:
     ------------
               author: (auto-adjust            ) Zoran Simic
-                  \_: (setupmeta/__init__.py:9) Zoran Simic zoran@simicweb.com
+                  \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust            ) zoran@simicweb.com
-         classifiers: (classifiers.txt        ) 257 chars [['Development Status :: 4 - Beta', 'Intended Audience :: Developers', 'License :: OSI Approved :: MIT ...]
-         description: (setup.py:2             ) Simplify your setup.py
-        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v0.0.5.tar.gz
-                  \_: (setupmeta/__init__.py:8) archive/v{version}.tar.gz
-        entry_points: (explicit               ) 265 chars [[distutils.commands] explain = setupmeta.commands:ExplainCommand entrypoints = setupmeta.commands:Entr...]
-            keywords: (setup.py:6             ) ['convenient', 'setup.py']
-             license: (setupmeta/__init__.py:6) MIT
-    long_description: (README.rst             ) 9459 chars [Simplify your ``setup.py`` ==========================  Writing a ``setup.py`` typically involves lots...]
+         classifiers: (classifiers.txt        ) 16 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers', ...
+         description: (setupmeta/__init__.py:2) Simplify your setup.py
+        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v0.3.2.tar.gz
+                  \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
+        entry_points: (explicit               ) 185 chars: [distutils.commands] explain = setupmeta.commands:ExplainCommand ...
+            keywords: (setup.py:4             ) ['convenient', 'setup.py']
+             license: (auto-fill              ) MIT
+    long_description: (README.rst             ) 9877 chars: Simplify your setup.py ======================  ...
                 name: (setup.py:15            ) setupmeta
             packages: (auto-fill              ) ['setupmeta']
       setup_requires: (explicit               ) ['setupmeta']
               title*: (setup.py:15            ) setupmeta
-                 url: (setupmeta/__init__.py:7) https://github.com/zsimic/setupmeta
-             version: (setupmeta/__init__.py:5) 0.0.5
+                 url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
+             version: (setupmeta/__init__.py:9) 0.3.2
             zip_safe: (explicit               ) True
 
 In the above output:
