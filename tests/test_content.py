@@ -1,7 +1,8 @@
 import os
 import pytest
 
-from setupmeta.content import abort, listify, short, str_dict, to_str
+from setupmeta import str_dict, to_str
+from setupmeta.content import abort, listify, short
 from setupmeta.content import MetaDefs, meta_command_init
 
 

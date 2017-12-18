@@ -7,7 +7,8 @@ import io
 import os
 import re
 import setuptools
-import sys
+
+from setupmeta import to_str
 
 
 # Recognized README tokens
@@ -186,48 +187,6 @@ def listify(text, separator=None):
     return list(filter(bool, map(str.strip, value)))
 
 
-def str_dict(data):
-    """
-    :param dict data: Some python versions don't sort by key...
-    :return str: Represented dict in a predictable manner
-    """
-    if not isinstance(data, dict):
-        return to_str(data)
-    result = []
-    for k, v in sorted(data.items()):
-        result.append("%s: %s" % (to_str(k), to_str(v)))
-    return "{%s}" % ', '.join(result)
-
-
-if sys.version_info[0] < 3:
-    def strify(value):
-        """ Avoid having the annoying u'..' in str() representations """
-        if isinstance(value, unicode):      # noqa
-            return value.encode('ascii', 'ignore')
-        if isinstance(value, str):
-            return value
-        if isinstance(value, list):
-            return [strify(s) for s in value]
-        if isinstance(value, tuple):
-            return tuple(strify(s) for s in value)
-        if isinstance(value, dict):
-            return str_dict(value)
-        return value
-
-    def to_str(text):
-        """ Pretty string representation of 'text' for python2 """
-        return str(strify(text))
-
-else:
-    def to_str(text):
-        """ Pretty string representation of 'text' for python3 """
-        if isinstance(text, bytes):
-            return text.decode('utf-8')
-        if isinstance(text, dict):
-            return str_dict(text)
-        return str(text)
-
-
 def meta_command_init(self, dist, **kw):
     """ Custom __init__ injected to commands decorated with @MetaCommand """
     self.setupmeta = getattr(dist, '_setupmeta', None)
@@ -267,7 +226,7 @@ class MetaDefs:
         install_requires libraries long_description_content_type
         namespace_packages package_data package_dir packages py_modules
         python_requires scripts setup_requires tests_require test_suite
-        zip_safe
+        versioning zip_safe
     """)
     all_fields = metadata_fields + dist_fields
 

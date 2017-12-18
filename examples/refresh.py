@@ -6,7 +6,7 @@ import os
 import subprocess       # nosec
 import sys
 
-from setupmeta.content import to_str
+from setupmeta import to_str
 
 
 EXAMPLES = os.path.abspath(os.path.dirname(__file__))

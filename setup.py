@@ -19,11 +19,13 @@ EGG = os.path.join(HERE, '%s.egg-info' % __title__)
 
 ENTRY_POINTS = """
 [distutils.commands]
+bump = {t}.commands:BumpCommand
 explain = {t}.commands:ExplainCommand
 entrypoints = {t}.commands:EntryPointsCommand
 
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register
+versioning = {t}.hook:register
 """.format(t=__title__)
 
 
@@ -49,6 +51,11 @@ def run_bootstrap(message):
         sys.exit("Could not bootstrap egg-info")
 
 
+def complete_args(args):
+    args['setup_requires'] = [__title__]
+    # args['versioning'] = 'tag'
+
+
 if __name__ == "__main__":
     os.chdir(HERE)
     have_egg = os.path.isdir(EGG)
@@ -61,7 +68,7 @@ if __name__ == "__main__":
 
     if have_egg:
         # We're bootstrapped, we can self-refer
-        args['setup_requires'] = [__title__]
+        complete_args(args)
 
     if len(sys.argv) == 2 and sys.argv[1] == 'egg_info':
         # egg_info as lone command is bootstrap mode
@@ -82,6 +89,6 @@ if __name__ == "__main__":
         run_bootstrap("second pass")
 
         # We're bootstrapped now, we can self-refer
-        args['setup_requires'] = [__title__]
+        complete_args(args)
 
     setuptools.setup(**args)

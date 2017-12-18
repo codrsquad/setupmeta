@@ -5,7 +5,7 @@ except ImportError:
 import os
 import sys
 
-from setupmeta.content import to_str
+from setupmeta import to_str
 
 
 TESTS = os.path.dirname(__file__)

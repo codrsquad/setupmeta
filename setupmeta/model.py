@@ -8,10 +8,12 @@ import os
 import re
 import sys
 
+from setupmeta import to_str
 from setupmeta.content import find_contents, find_packages, listify
 from setupmeta.content import load_list, load_readme
-from setupmeta.content import MetaDefs, project_path, short, to_str
+from setupmeta.content import MetaDefs, project_path, short
 from setupmeta.license import determined_license
+from setupmeta.versioning import auto_fill_version
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -159,8 +161,6 @@ class Settings:
 
     def __init__(self):
         self.definitions = {}                       # type: dict(Definition)
-        # Keys to ignore, optionally
-        self.ignore = set()                         # type: set(str)
 
     def __repr__(self):
         project_dir = short(MetaDefs.project_dir)
@@ -188,7 +188,7 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if not key or not value or key in self.ignore:
+        if not key or not value:
             return
         if key == 'keywords':
             value = listify(value, separator=',')
@@ -360,10 +360,6 @@ class SetupMeta(Settings):
             setup_py_path = os.path.abspath(setup_py_path)
             MetaDefs.project_dir = os.path.dirname(setup_py_path)
 
-        if self.value('use_scm_version'):
-            # Don't look for version, let setuptools_scm do its thing
-            self.ignore.add('version')
-
         # Allow to auto-fill 'name' from setup.py's __title__, if any
         self.merge(SimpleModule('setup.py'))
         title = self.definitions.get('title')
@@ -417,6 +413,9 @@ class SetupMeta(Settings):
                     SimpleModule('src', package, '__init__.py'),
                 )
 
+        if self.value('versioning') == 'tag':
+            auto_fill_version(self)
+
         url = self.value('url')
         download_url = self.value('download_url')
 
@@ -455,6 +454,11 @@ class SetupMeta(Settings):
         self.auto_fill_entry_points()
         self.auto_fill_license()
         self.auto_fill_long_description()
+
+        # Sort classifiers alphabetically
+        classifiers = self.definitions.get('classifiers')
+        if classifiers and isinstance(classifiers.value, list):
+            classifiers.value = sorted(classifiers.value)
 
     def extract_short_description(self, contents):
         """

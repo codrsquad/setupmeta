@@ -2,6 +2,12 @@
 History
 =======
 
+0.4.0 (2017-12-18)
+------------------
+
+* Seeding support for ``versioning`` key in setup.py, setupmeta will allow for some simple git-tag based versioning
+
+
 0.3.1 (2017-12-15)
 ------------------
 

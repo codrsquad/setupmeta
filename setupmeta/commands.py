@@ -2,36 +2,31 @@
 Commands contributed by setupmeta
 """
 
-import os
 import setuptools
-import sys
 
 import setupmeta
-from setupmeta.content import MetaCommand, project_path
+from setupmeta.content import MetaCommand
 
 
-def which(program):
-    if not program:
-        return None
-    if os.path.isabs(program):
-        return program
-    for p in os.environ.get('PATH', '').split(':'):
-        fp = os.path.join(p, program)
-        if os.path.isfile(fp):
-            return fp
-    return None
+@MetaCommand
+class BumpCommand(setuptools.Command):
+    """ Bump version """
 
+    user_options = [
+        ('major=', 'M', "bump major part of version"),
+        ('minor=', 'm', "bump minor part of version"),
+        ('patch=', 'p', "bump patch part of version"),
+    ]
 
-def run_program(program, *commands):
-    """ Run shell program 'commands' """
-    import subprocess                                   # nosec
-    full_path = which(program)
-    if not full_path:
-        sys.exit("'%s' is not installed" % program)
-    p = subprocess.Popen([full_path] + list(commands))  # nosec
-    p.wait()
-    if p.returncode:
-        sys.exit(p.returncode)
+    boolean_options = ['major', 'minor', 'patch']
+
+    def initialize_options(self):
+        self.major = None
+        self.minor = None
+        self.patch = None
+
+    def run(self):
+        print("Not yet implemented, stay tuned")
 
 
 @MetaCommand
@@ -43,7 +38,7 @@ class ExplainCommand(setuptools.Command):
     ]
 
     def initialize_options(self):
-        self.title = "setupmeta v%s" % setupmeta.__version__
+        self.title = "setupmeta v%s" % getattr(setupmeta, '__version__', None)
 
     def run(self):
         print(self.title)
