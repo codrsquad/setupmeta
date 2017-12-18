@@ -49,8 +49,10 @@ class Version:
             self.canonical += 'b%s' % self.changes
         if self.broken:
             self.canonical += 'broken'
-        elif self.dirty:
-            self.canonical += 'dev-%s' % self.commit
+        if self.dirty:
+            self.canonical += 'dev'
+            if self.commit:
+                self.canonical += '-%s' % self.commit
         self.version = LooseVersion(self.canonical)
 
     def __repr__(self):

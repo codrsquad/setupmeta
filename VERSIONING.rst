@@ -14,7 +14,7 @@ First, in order to use setupmeta as a bridge to your git tags as versions, activ
 
 Once you have this, choose one of the below cases.
 
-You should use then ``python setup.py bump`` to bump major/minor/patch (avoid assigning tags manually).
+You should use then ``python setup.py bump`` to bump major/minor/patch (no need to assign tags manually).
 
 
 Major + minor rythm

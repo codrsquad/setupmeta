@@ -9,7 +9,7 @@ import os
 import sys
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 
 def which(program):
@@ -28,19 +28,22 @@ def run_program(program, *args, **kwargs):
     """ Run shell 'program' with 'args' """
     import subprocess                                           # nosec
     full_path = which(program)
-    shell = kwargs.pop('shell', False)
+    passthrough = kwargs.pop('passthrough', False)
     if not full_path:
-        if shell:
+        if passthrough:
             sys.exit("'%s' is not installed" % program)
         return None
-    if not shell:
+    if passthrough == 'dryrun':
+        print("Would run: %s %s" % (full_path, to_str(args)))
+        return None
+    if not passthrough:
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
     output = to_str(output) if output else None
     if p.returncode:
-        if shell:
+        if passthrough:
             if error:
                 sys.stderr.write(to_str(error))
             sys.exit(p.returncode)

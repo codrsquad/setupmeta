@@ -3,9 +3,16 @@ Commands contributed by setupmeta
 """
 
 import setuptools
+import sys
 
 import setupmeta
 from setupmeta.content import MetaCommand
+from setupmeta.versioning import git_version
+
+
+def abort(message):
+    sys.stderr.write("%s\n" % message)
+    sys.exit(1)
 
 
 @MetaCommand
@@ -13,20 +20,23 @@ class BumpCommand(setuptools.Command):
     """ Bump version """
 
     user_options = [
-        ('major=', 'M', "bump major part of version"),
-        ('minor=', 'm', "bump minor part of version"),
-        ('patch=', 'p', "bump patch part of version"),
+        ('major', 'M', "bump major part of version"),
+        ('minor', 'm', "bump minor part of version"),
+        ('patch', 'p', "bump patch part of version"),
+        ('commit', 'c', "commit changes"),
     ]
-
-    boolean_options = ['major', 'minor', 'patch']
 
     def initialize_options(self):
         self.major = None
         self.minor = None
         self.patch = None
+        self.commit = None
 
     def run(self):
-        print("Not yet implemented, stay tuned")
+        gv = git_version()
+        if not gv:
+            abort("Could not determine version from git tags")
+        print("Not yet implemented, stay tuned (%s %s %s)" % (self.major, self.minor, self.patch))
 
 
 @MetaCommand
