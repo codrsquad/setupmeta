@@ -2,12 +2,13 @@
 Commands contributed by setupmeta
 """
 
+from distutils.version import LooseVersion
 import setuptools
 import sys
 
 import setupmeta
 from setupmeta.content import MetaCommand
-from setupmeta.versioning import git_version
+from setupmeta.versioning import bump, git_version
 
 
 def abort(message):
@@ -27,16 +28,16 @@ class BumpCommand(setuptools.Command):
     ]
 
     def initialize_options(self):
-        self.major = None
-        self.minor = None
-        self.patch = None
-        self.commit = None
+        self.major = 0
+        self.minor = 0
+        self.patch = 0
+        self.commit = 0
 
     def run(self):
-        gv = git_version()
-        if not gv:
-            abort("Could not determine version from git tags")
-        print("Not yet implemented, stay tuned (%s %s %s)" % (self.major, self.minor, self.patch))
+        try:
+            bump(self.setupmeta, self.major, self.minor, self.patch, self.commit)
+        except Exception as e:
+            abort(e)
 
 
 @MetaCommand

@@ -28,24 +28,24 @@ def run_program(program, *args, **kwargs):
     """ Run shell 'program' with 'args' """
     import subprocess                                           # nosec
     full_path = which(program)
-    passthrough = kwargs.pop('passthrough', False)
+    mode = kwargs.pop('mode', '')
     if not full_path:
-        if passthrough:
+        if 'fatal' in mode:
             sys.exit("'%s' is not installed" % program)
         return None
-    if passthrough == 'dryrun':
-        print("Would run: %s %s" % (full_path, to_str(args)))
+    if 'dryrun' in mode:
+        print("Would run: %s %s" % (full_path, ' '.join(args)))
         return None
-    if not passthrough:
+    if 'passthrough' not in mode:
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
     output = to_str(output) if output else None
+    if error:
+        sys.stderr.write(to_str(error))
     if p.returncode:
-        if passthrough:
-            if error:
-                sys.stderr.write(to_str(error))
+        if 'fatal' in mode:
             sys.exit(p.returncode)
         raise Exception("%s exited with code %s" % (program, p.returncode))
     return output

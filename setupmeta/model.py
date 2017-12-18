@@ -413,7 +413,8 @@ class SetupMeta(Settings):
                     SimpleModule('src', package, '__init__.py'),
                 )
 
-        if self.value('versioning') == 'tag':
+        versioning = self.value('versioning')
+        if versioning and versioning.startswith('tag'):
             auto_fill_version(self)
 
         url = self.value('url')
