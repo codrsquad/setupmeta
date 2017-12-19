@@ -186,14 +186,13 @@ def update_sources(meta, next_version, commit):
                         lines = None
                         break
                     if revised != line:
-                        line = revised
+                        line = revised.decode('utf-8')
                 lines.append(line)
 
         if lines:
             modified.append(relative_path)
             with open(full_path, 'wt', encoding='utf-8') as fh:
-                for line in lines:
-                    fh.write(line)
+                fh.writelines(lines)
 
     if modified:
         run_git(commit, 'add', *modified)
