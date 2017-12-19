@@ -33,22 +33,30 @@ def run_program(program, *args, **kwargs):
         if 'fatal' in mode:
             sys.exit("'%s' is not installed" % program)
         return None
+
     if 'dryrun' in mode:
         print("Would run: %s %s" % (full_path, ' '.join(args)))
         return None
-    if 'passthrough' not in mode:
+
+    if 'passthrough' in mode:
+        print("Running: %s %s" % (full_path, ' '.join(args)))
+    else:
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
+
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
     output = decode(output)
     error = decode(error)
+
     if error:
         sys.stderr.write(error)
+
     if p.returncode:
         if 'fatal' in mode:
             sys.exit(p.returncode)
         raise Exception("%s exited with code %s" % (program, p.returncode))
+
     return output
 
 

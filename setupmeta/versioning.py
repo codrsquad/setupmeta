@@ -137,6 +137,8 @@ def bump(meta, bump_major, bump_minor, bump_patch, commit):
         raise Exception("Could not determine version from git tags")
     if gv.broken:
         raise Exception("Invalid git version tag: %s" % gv.text)
+    if commit and gv.dirty:
+        raise Exception("You have pending git changes, can't bump")
 
     if bump_patch and gv.auto_patch:
         raise Exception("Can't bump patch number, it's auto-filled")
@@ -177,22 +179,31 @@ def update_sources(meta, next_version, commit):
 
         lines = []
         line_number = 0
+        revised = None
         with open(full_path, 'rt', encoding='utf-8') as fh:
             for line in fh.readlines():
                 line_number += 1
                 if line_number == target_line_number:
                     revised = updated_line(line, next_version, vdef)
-                    if revised is None:
+                    if revised is None or revised == line:
                         lines = None
                         break
-                    if revised != line:
-                        line = revised.decode('utf-8')
+                    line = revised
                 lines.append(line)
 
-        if lines:
+        if not lines:
+            print("%s already has the right version" % vdef.source)
+
+        else:
             modified.append(relative_path)
-            with open(full_path, 'wt', encoding='utf-8') as fh:
-                fh.writelines(lines)
+            if commit:
+                with open(full_path, 'wt', encoding='utf-8') as fh:
+                    fh.writelines(lines)
+            else:
+                print("Would update %s with '%s'" % (
+                    vdef.source,
+                    revised.strip()
+                ))
 
     if modified:
         run_git(commit, 'add', *modified)
@@ -200,17 +211,21 @@ def update_sources(meta, next_version, commit):
 
 
 def updated_line(line, next_version, vdef):
-    if line.startswith('version'):
-        return "version: %s\n" % next_version
-
-    if line.startswith('__version__'):
-        return "__version__ = '%s'\n" % next_version
-
     if '=' in line:
-        return "%s='%s',\n" % (line.partition('=')[0], next_version)
+        sep = '='
+        next_version = "'%s'" % next_version
+        if not line.strip().startswith('_'):
+            next_version += ","
+    else:
+        sep = ':'
 
-    warnings.warn("Unknown line format %s: %s" % (vdef.source, line))
-    return None
+    key, _, value = line.partition(sep)
+    if not key or not value:
+        warnings.warn("Unknown line format %s: %s" % (vdef.source, line))
+        return None
+
+    space = ' ' if value[0] == ' ' else ''
+    return "%s%s%s%s\n" % (key, sep, space, next_version)
 
 
 def get_git_output(*args, **kwargs):
@@ -220,4 +235,8 @@ def get_git_output(*args, **kwargs):
 
 
 def run_git(commit, *args):
-    return get_git_output(*args, mode=None if commit else 'dryrun')
+    if commit:
+        mode = 'fatal passthrough'
+    else:
+        mode = 'dryrun'
+    return get_git_output(*args, mode=mode)
