@@ -41,7 +41,6 @@ def test_empty():
     assert not meta.name
     assert not meta.version
     assert str(meta).startswith('0 definitions, ')
-    assert not meta.explain()
 
 
 def test_pygradle_version():

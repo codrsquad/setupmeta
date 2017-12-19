@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from setupmeta import str_dict, to_str
+from setupmeta import decode
 from setupmeta.content import abort, listify, short
 from setupmeta.content import MetaDefs, meta_command_init
 
@@ -44,26 +44,7 @@ def test_listify():
     assert listify("a\n b", separator=',') == ['a', 'b']
 
 
-def test_stringify():
-    assert to_str(None) == 'None'
-    assert to_str('') == ''
-    assert to_str(b'') == ''
-    assert to_str('hello') == 'hello'
-    assert to_str(b'hello') == 'hello'
-
-    assert to_str([]) == "[]"
-    assert to_str([None]) == "[None]"
-    assert to_str([None, None]) == "[None, None]"
-    assert to_str(['foo', 'bar']) == "['foo', 'bar']"
-
-    assert to_str(tuple()) == "()"
-    assert to_str((None,)) == "(None,)"
-    assert to_str((None, None)) == "(None, None)"
-    assert to_str(('foo', 'bar')) == "('foo', 'bar')"
-
-    assert to_str({'': 'foo'}) == "{: foo}"
-    assert to_str(dict(bar='foo')) == "{bar: foo}"
-    assert to_str(dict(bar=['foo'])) == "{bar: ['foo']}"
-
-    assert str_dict(None) == 'None'
-    assert str_dict('foo') == 'foo'
+def test_decode():
+    assert decode(None) is None
+    assert decode('') == ''
+    assert decode(b'') == ''

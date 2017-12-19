@@ -8,13 +8,13 @@ import re
 import sys
 import pytest
 
-from setupmeta import to_str
+from setupmeta import run_program
 from setupmeta.content import extract_list, load_list, short
 from . import conftest
 
 
 EXAMPLES = os.path.join(conftest.PROJECT, 'examples')
-COMMANDS = ['explain -t replay', 'entrypoints']
+COMMANDS = ['explain -c160', 'entrypoints']
 
 
 def scenario_names():
@@ -58,18 +58,6 @@ def run(setup_py):
         sys.argv = old_argv
 
 
-def run_shell(*command):
-    import subprocess
-    p = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
-    output, error = p.communicate()
-    assert p.returncode == 0
-    return to_str(output) + to_str(error)
-
-
 def test_scenario(scenario):
     """ Check that 'scenario' yields expected explain output """
     setup_py = os.path.join(EXAMPLES, scenario, 'setup.py')
@@ -85,7 +73,7 @@ def chk(output, message):
 
 def test_self():
     """ Test setupmeta's own setup.py """
-    out = run_shell(
+    out = run_program(
         sys.executable,
         os.path.join(conftest.PROJECT, 'setup.py'),
         'explain'

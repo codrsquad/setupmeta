@@ -1,6 +1,4 @@
 running explain
-replay
-------
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
@@ -35,7 +33,6 @@ maintainer_email: (auto-adjust              ) me@myplace.com
          version: (gradle.properties:1      ) 3.2.1
               \_: (complex/__version__.py:1 ) 1.2.3
               \_: (complex/__init__.py:7    ) 0.0.1
-
 
 running entrypoints
 [console_scripts]

@@ -5,8 +5,7 @@ Commands contributed by setupmeta
 import setuptools
 import sys
 
-import setupmeta
-from setupmeta.content import MetaCommand
+from setupmeta.content import MetaCommand, MetaDefs, short
 from setupmeta.versioning import bump
 
 
@@ -47,16 +46,41 @@ class ExplainCommand(setuptools.Command):
     """ Show a report of where key/values setup(attr) come from """
 
     user_options = [
-        ('title=', 't', "title to use as header")
+        ('chars=', 'c', "max chars to show"),
     ]
 
     def initialize_options(self):
-        self.title = "setupmeta v%s" % getattr(setupmeta, '__version__', None)
+        self.chars = 200
 
     def run(self):
-        print(self.title)
-        print("-" * len(self.title))
-        print(self.setupmeta.explain())
+        try:
+            self.chars = int(self.chars)
+        except ValueError:
+            self.chars = 200
+
+        definitions = self.setupmeta.definitions
+        if not definitions:
+            return
+
+        longest_key = min(24, max(len(key) for key in definitions))
+        sources = sum((d.sources for d in definitions.values()), [])
+        longest_source = min(32, max(len(s.source) for s in sources))
+        form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
+        max_chars = max(60, self.chars - longest_key - longest_source - 4)
+
+        for definition in sorted(definitions.values()):
+            count = 0
+            for source in definition.sources:
+                if count:
+                    prefix = "\_"
+                elif source.key not in MetaDefs.all_fields:
+                    prefix = "%s*" % source.key
+                else:
+                    prefix = source.key
+
+                preview = short(source.value, c=max_chars)
+                print(form % (prefix, source.source, preview))
+                count += 1
 
 
 @MetaCommand

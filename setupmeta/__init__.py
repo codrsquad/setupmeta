@@ -6,10 +6,11 @@ author: Zoran Simic zoran@simicweb.com
 """
 
 import os
+import subprocess       # nosec
 import sys
 
 
-__version__ = '0.4.2'
+__version__ = '0.4.3'
 
 
 def which(program):
@@ -26,7 +27,6 @@ def which(program):
 
 def run_program(program, *args, **kwargs):
     """ Run shell 'program' with 'args' """
-    import subprocess                                           # nosec
     full_path = which(program)
     mode = kwargs.pop('mode', '')
     if not full_path:
@@ -41,9 +41,10 @@ def run_program(program, *args, **kwargs):
         kwargs['stderr'] = subprocess.PIPE
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
-    output = to_str(output) if output else None
+    output = decode(output)
+    error = decode(error)
     if error:
-        sys.stderr.write(to_str(error))
+        sys.stderr.write(error)
     if p.returncode:
         if 'fatal' in mode:
             sys.exit(p.returncode)
@@ -51,43 +52,45 @@ def run_program(program, *args, **kwargs):
     return output
 
 
-def str_dict(data):
+def decode(value):
+    """ Python 2/3 friendly decoding of output """
+    if isinstance(value, bytes):
+        return value.decode('utf-8')
+    return value
+
+
+def stringify_dict(data):
     """
     :param dict data: Some python versions don't sort by key...
     :return str: Represented dict in a predictable manner
     """
     if not isinstance(data, dict):
-        return to_str(data)
+        return stringify(data)
     result = []
     for k, v in sorted(data.items()):
-        result.append("%s: %s" % (to_str(k), to_str(v)))
+        result.append("%s: %s" % (stringify(k), stringify(v)))
     return "{%s}" % ', '.join(result)
 
 
+def stringify(value):
+    """ Avoid having the annoying u'..' in str() representations """
+    if isinstance(value, list):
+        return repr([stringify(s) for s in value])
+    if isinstance(value, tuple):
+        return repr(tuple(stringify(s) for s in value))
+    if isinstance(value, dict):
+        return stringify_dict(value)
+    return simplify_str(value)
+
+
 if sys.version_info[0] < 3:
-    def strify(value):
-        """ Avoid having the annoying u'..' in str() representations """
+    def simplify_str(value):
+        value = decode(value)
         if isinstance(value, unicode):      # noqa
             return value.encode('ascii', 'ignore')
-        if isinstance(value, str):
-            return value
-        if isinstance(value, list):
-            return [strify(s) for s in value]
-        if isinstance(value, tuple):
-            return tuple(strify(s) for s in value)
-        if isinstance(value, dict):
-            return str_dict(value)
-        return value
-
-    def to_str(text):
-        """ Pretty string representation of 'text' for python2 """
-        return str(strify(text))
+        return str(value)
 
 else:
-    def to_str(text):
+    def simplify_str(value):
         """ Pretty string representation of 'text' for python3 """
-        if isinstance(text, bytes):
-            return text.decode('utf-8')
-        if isinstance(text, dict):
-            return str_dict(text)
-        return str(text)
+        return str(decode(value))

@@ -1,6 +1,4 @@
 running explain
-replay
-------
           author: (auto-adjust     ) Zoran Simic
               \_: (simple.py:7     ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust     ) zoran@simicweb.com
@@ -18,7 +16,6 @@ long_description: (README.rst      ) simple: Simple setup scenario =============
           title*: (setup.py:3      ) simple
              url: (simple.py:8     ) https://github.com/zsimic/simple
          version: (simple.py:5     ) 1.0.0
-
 
 running entrypoints
 

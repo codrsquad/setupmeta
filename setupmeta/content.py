@@ -8,7 +8,7 @@ import os
 import re
 import setuptools
 
-from setupmeta import to_str
+from setupmeta import stringify
 
 
 # Recognized README tokens
@@ -57,7 +57,7 @@ def load_contents(relative_path, limit=0):
                 if limit == 0:
                     break
                 lines.append(line)
-            return to_str(''.join(lines)).strip()
+            return ''.join(lines).strip()
 
     except IOError:
         pass
@@ -88,7 +88,7 @@ def load_readme(relative_path, limit=0):
                     if included:
                         content.append(included)
 
-            return to_str(''.join(content)).strip()
+            return ''.join(content).strip()
 
     except IOError:
         return None
@@ -159,8 +159,8 @@ def find_contents(relative_paths, loader=None, limit=0):
 def short(text, c=64):
     """ Short representation of 'text' """
     if not text:
-        return to_str(text)
-    result = to_str(text).strip()
+        return "%s" % text
+    result = stringify(text).strip()
     result = result.replace(USER_HOME, '~').replace('\n', ' ')
     if c and len(result) > c:
         if isinstance(text, dict):
@@ -180,11 +180,9 @@ def listify(text, separator=None):
     """ Turn 'text' into a list using 'separator' """
     if isinstance(text, list):
         return text
-    value = to_str(text)
     if separator:
-        value = value.replace('\n', separator)
-    value = value.split(separator)
-    return list(filter(bool, map(str.strip, value)))
+        text = text.replace('\n', separator)
+    return [s.strip() for s in text.split(separator) if s.strip()]
 
 
 def meta_command_init(self, dist, **kw):

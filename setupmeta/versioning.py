@@ -66,7 +66,7 @@ class Version:
         self.version = LooseVersion(self.canonical)
 
     def __repr__(self):
-        return setupmeta.to_str(self.canonical)
+        return self.canonical
 
 
 def auto_fill_version(meta):
@@ -113,7 +113,7 @@ def get_pkg_version():
     if not os.path.isfile(full_path):
         return None
 
-    with open(full_path, 'rt') as fh:
+    with open(full_path, 'rt', encoding='utf-8') as fh:
         for line in fh.readlines():
             if line.startswith('Version:'):
                 s = line.strip().split()
@@ -177,7 +177,7 @@ def update_sources(meta, next_version, commit):
 
         lines = []
         line_number = 0
-        with open(full_path, 'rt') as fh:
+        with open(full_path, 'rt', encoding='utf-8') as fh:
             for line in fh.readlines():
                 line_number += 1
                 if line_number == target_line_number:
@@ -191,8 +191,9 @@ def update_sources(meta, next_version, commit):
 
         if lines:
             modified.append(relative_path)
-            with open(full_path, 'wt') as fh:
-                fh.writelines(lines)
+            with open(full_path, 'wt', encoding='utf-8') as fh:
+                for line in lines:
+                    fh.write(line)
 
     if modified:
         run_git(commit, 'add', *modified)

@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
 import argparse
+from io import open
 import logging
 import os
 import subprocess       # nosec
 import sys
 
-from setupmeta import to_str
+from setupmeta import decode
 
 
 EXAMPLES = os.path.abspath(os.path.dirname(__file__))
-PPATH = os.path.dirname(EXAMPLES)
-COMMANDS = ['explain -t replay', 'entrypoints']
+COMMANDS = ['explain -c160', 'entrypoints']
 
 
 def run_command(path, command):
@@ -22,9 +22,10 @@ def run_command(path, command):
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        env=dict(PYTHONPATH=PPATH)
     )
     output, error = p.communicate()
+    output = decode(output)
+    error = decode(error)
     if p.returncode:
         print("examples/%s exited with code %s, output:" % (
             os.path.basename(path),
@@ -33,7 +34,7 @@ def run_command(path, command):
         print(output)
         print(error)
         sys.exit(p.returncode)
-    return to_str(output)
+    return output
 
 
 def refresh_example(path, dryrun):
@@ -48,7 +49,7 @@ def refresh_example(path, dryrun):
     if dryrun:
         print(output)
         return
-    with open(expected, 'w') as fh:
+    with open(expected, 'wt', encoding='utf-8') as fh:
         fh.write(output)
 
 

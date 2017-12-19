@@ -8,7 +8,6 @@ import os
 import re
 import sys
 
-from setupmeta import to_str
 from setupmeta.content import find_contents, find_packages, listify
 from setupmeta.content import load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short
@@ -72,11 +71,6 @@ class DefinitionEntry:
     def is_explicit(self):
         """ Did this entry come explicitly from setup(**attrs)? """
         return self.source == EXPLICIT
-
-    def explain(self, form, prefix, max_chars):
-        """ Representation used for 'explain' command """
-        preview = short(self.value, c=max_chars)
-        return form % (prefix, self.source, preview)
 
 
 class Definition(object):
@@ -142,19 +136,6 @@ class Definition(object):
         """ Should this definition make it to the final setup attrs? """
         return bool(self.value) or self.is_explicit
 
-    def explain(self, form, max_chars=200):
-        """ Representation used for 'explain' command """
-        result = ""
-        for source in self.sources:
-            if result:
-                prefix = "\_"
-            elif self.key not in MetaDefs.all_fields:
-                prefix = "%s*" % self.key
-            else:
-                prefix = self.key
-            result += source.explain(form, prefix, max_chars=max_chars)
-        return result
-
 
 class Settings:
     """ Collection of key/value pairs with info on where they came from """
@@ -208,19 +189,6 @@ class Settings:
                     definition.sources
                 )
 
-    def explain(self, max_chars=160):
-        result = ""
-        if not self.definitions:
-            return result
-        longest_key = min(24, max(len(key) for key in self.definitions))
-        sources = sum((d.sources for d in self.definitions.values()), [])
-        longest_source = min(32, max(len(s.source) for s in sources))
-        form = "%%%ss: (%%%ss) %%s\n" % (longest_key, -longest_source)
-        max_chars -= longest_key + longest_source + 4
-        for definition in sorted(self.definitions.values()):
-            result += definition.explain(form, max_chars=max_chars)
-        return result
-
 
 class SimpleModule(Settings):
     """ Simple settings extracted from a module, such as __about__.py """
@@ -247,7 +215,7 @@ class SimpleModule(Settings):
             line_number = 0
             for line in fh:
                 line_number += 1
-                line = to_str(line).rstrip()
+                line = line.rstrip()
                 if docstring_marker:
                     if line.endswith(docstring_marker):
                         docstring_marker = None
