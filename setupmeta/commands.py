@@ -33,16 +33,13 @@ class BumpCommand(setuptools.Command):
         self.commit = 0
 
     def run(self):
-        try:
-            bump(
-                self.setupmeta,
-                self.major,
-                self.minor,
-                self.patch,
-                self.commit
-            )
-        except Exception as e:
-            abort(e)
+        bump(
+            self.setupmeta,
+            self.major,
+            self.minor,
+            self.patch,
+            self.commit
+        )
 
 
 @MetaCommand
