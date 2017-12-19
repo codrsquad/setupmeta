@@ -159,7 +159,7 @@ def bump(meta, bump_major, bump_minor, bump_patch, commit):
     update_sources(meta, next_version, commit)
 
     bump_msg = "Version %s" % next_version
-    run_git(commit, 'tag', '-a', next_version, '-m', bump_msg)
+    run_git(commit, 'tag', '-a', "v%s" % next_version, '-m', bump_msg)
     run_git(commit, 'push', '--tags')
 
 
