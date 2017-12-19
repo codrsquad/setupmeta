@@ -2,13 +2,12 @@
 Commands contributed by setupmeta
 """
 
-from distutils.version import LooseVersion
 import setuptools
 import sys
 
 import setupmeta
 from setupmeta.content import MetaCommand
-from setupmeta.versioning import bump, git_version
+from setupmeta.versioning import bump
 
 
 def abort(message):
@@ -35,7 +34,13 @@ class BumpCommand(setuptools.Command):
 
     def run(self):
         try:
-            bump(self.setupmeta, self.major, self.minor, self.patch, self.commit)
+            bump(
+                self.setupmeta,
+                self.major,
+                self.minor,
+                self.patch,
+                self.commit
+            )
         except Exception as e:
             abort(e)
 
