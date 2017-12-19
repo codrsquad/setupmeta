@@ -22,6 +22,10 @@ def strip_dash(text):
     return text.strip('-')
 
 
+class UsageError(Exception):
+    pass
+
+
 class Version:
     """ Parsed version, including git describe notation """
 
@@ -126,22 +130,26 @@ def get_pkg_version():
 def bump(meta, bump_major, bump_minor, bump_patch, commit):
     versioning = meta.value('versioning')
     if not versioning or not versioning.startswith('tag'):
-        raise Exception("Project not configured to use setupmeta versioning")
+        raise UsageError("Project not configured to use setupmeta versioning")
+
+    branch = get_git_output('rev-parse', '--abbrev-ref', 'HEAD')
+    branch = branch and branch.strip()
+    if branch != 'master':
+        raise UsageError("Can't bump branch '%s', need master" % branch)
 
     flags = bump_major + bump_minor + bump_patch
     if flags == 0 or flags > 1:
-        raise Exception("Specify exactly one of --major, --minor or --patch")
+        raise UsageError("Specify exactly one of --major, --minor or --patch")
 
     gv = git_version()
     if not gv:
-        raise Exception("Could not determine version from git tags")
+        raise UsageError("Could not determine version from git tags")
     if gv.broken:
-        raise Exception("Invalid git version tag: %s" % gv.text)
+        raise UsageError("Invalid git version tag: %s" % gv.text)
     if commit and gv.dirty:
-        raise Exception("You have pending git changes, can't bump")
-
+        raise UsageError("You have pending git changes, can't bump")
     if bump_patch and gv.auto_patch:
-        raise Exception("Can't bump patch number, it's auto-filled")
+        raise UsageError("Can't bump patch number, it's auto-filled")
 
     major, minor, rev = gv.version.version[:3]
     if bump_major:
@@ -160,7 +168,7 @@ def bump(meta, bump_major, bump_minor, bump_patch, commit):
 
     bump_msg = "Version %s" % next_version
     run_git(commit, 'tag', '-a', "v%s" % next_version, '-m', bump_msg)
-    run_git(commit, 'push', '--tags')
+    run_git(commit, 'push', '--tags', 'origin', branch)
 
 
 def update_sources(meta, next_version, commit):

@@ -6,7 +6,7 @@ import setuptools
 import sys
 
 from setupmeta.content import MetaCommand, MetaDefs, short
-from setupmeta.versioning import bump
+from setupmeta.versioning import bump, UsageError
 
 
 def abort(message):
@@ -32,13 +32,17 @@ class BumpCommand(setuptools.Command):
         self.commit = 0
 
     def run(self):
-        bump(
-            self.setupmeta,
-            self.major,
-            self.minor,
-            self.patch,
-            self.commit
-        )
+        try:
+            bump(
+                self.setupmeta,
+                self.major,
+                self.minor,
+                self.patch,
+                self.commit
+            )
+
+        except UsageError as e:
+            abort(e)
 
 
 @MetaCommand
