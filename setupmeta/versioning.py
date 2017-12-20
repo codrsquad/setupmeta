@@ -1,5 +1,5 @@
 from distutils.version import LooseVersion
-from io import open
+import io
 import os
 import re
 import warnings
@@ -102,9 +102,14 @@ def git_version(try_pkg=False):
         '--broken',
         '--first-parent'
     )
-
     if r is None and try_pkg:
         r = get_pkg_version()
+
+    else:
+        # git sometimes reports -dirty when used in temp build folders
+        rd = get_git_output('diff', '--quiet', '--ignore-submodules')
+        if not rd and '-dirty' in r:
+            r = r.replace('-dirty', '')
 
     if r:
         return Version(r)
@@ -117,7 +122,7 @@ def get_pkg_version():
     if not os.path.isfile(full_path):
         return None
 
-    with open(full_path, 'rt', encoding='utf-8') as fh:
+    with io.open(full_path, 'rt', encoding='utf-8') as fh:
         for line in fh.readlines():
             if line.startswith('Version:'):
                 s = line.strip().split()
@@ -194,7 +199,7 @@ def update_sources(meta, next_version, commit):
         lines = []
         line_number = 0
         revised = None
-        with open(full_path, 'rt', encoding='utf-8') as fh:
+        with io.open(full_path, 'rt', encoding='utf-8') as fh:
             for line in fh.readlines():
                 line_number += 1
                 if line_number == target_line_number:
@@ -211,7 +216,7 @@ def update_sources(meta, next_version, commit):
         else:
             modified.append(relative_path)
             if commit:
-                with open(full_path, 'wt', encoding='utf-8') as fh:
+                with io.open(full_path, 'wt', encoding='utf-8') as fh:
                     fh.writelines(lines)
             else:
                 print("Would update %s with '%s'" % (

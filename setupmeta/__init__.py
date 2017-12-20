@@ -10,7 +10,7 @@ import subprocess       # nosec
 import sys
 
 
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 
 
 def which(program):
