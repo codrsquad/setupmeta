@@ -27,11 +27,9 @@ History
 0.2.8 (2017-12-09)
 ------------------
 
-* Publish wheels as well
-
 * Always listify ``keywords``
 
-* Auto-publishing via travis
+* Auto-publishing via travis, publish wheels as well
 
 * Use 1st line of README file as short description if no docstrings are found
 
@@ -41,7 +39,7 @@ History
 
 * Look only at 1st paragraph of docstring for key/value definitions
 
-* Auto-determine most common license, and their classifier string
+* Auto-determine most common license, and associated classifier string
 
 * Accept description in project docstrings (not only setup.py)
 
