@@ -107,11 +107,11 @@ def git_version(try_pkg=False):
 
     else:
         # git sometimes reports -dirty when used in temp build folders
-        exitcode, _ = get_git_output(
+        exitcode = get_git_output(
             'diff',
             '--quiet',
             '--ignore-submodules',
-            mode='exitcode'
+            passthrough=True
         )
         if exitcode == 0 and '-dirty' in r:
             r = r.replace('-dirty', '')
@@ -137,7 +137,7 @@ def get_pkg_version():
     return None
 
 
-def bump(meta, what, commit):
+def bump(meta, what, commit, commit_all):
     versioning = meta.value('versioning')
     if not versioning or not versioning.startswith('tag'):
         raise UsageError("Project not configured to use setupmeta versioning")
@@ -152,7 +152,7 @@ def bump(meta, what, commit):
         raise UsageError("Could not determine version from git tags")
     if gv.broken:
         raise UsageError("Invalid git version tag: %s" % gv.text)
-    if commit and gv.dirty:
+    if commit and gv.dirty and not commit_all:
         raise UsageError("You have pending git changes, can't bump")
 
     major, minor, rev = gv.version.version[:3]
@@ -175,7 +175,7 @@ def bump(meta, what, commit):
     if not commit:
         print("Not committing bump, use --commit to commit")
 
-    update_sources(meta, next_version, commit)
+    update_sources(meta, next_version, commit, commit_all)
 
     bump_msg = "Version %s" % next_version
     run_git(commit, 'tag', '-a', "v%s" % next_version, '-m', bump_msg)
@@ -183,11 +183,13 @@ def bump(meta, what, commit):
 
     if '+' in versioning:
         cmd = versioning.partition('+')[2].split()
-        mode = 'passthrough fatal' if commit else 'dryrun'
-        setupmeta.run_program(*cmd, mode=mode)
+        if commit:
+            setupmeta.run_program(*cmd, passthrough=True, fatal=True)
+        else:
+            setupmeta.run_program(*cmd, dryrun=True)
 
 
-def update_sources(meta, next_version, commit):
+def update_sources(meta, next_version, commit, commit_all):
     vdefs = meta.definitions.get('version')
     if not vdefs:
         return None
@@ -230,7 +232,10 @@ def update_sources(meta, next_version, commit):
                 ))
 
     if modified:
-        run_git(commit, 'add', *modified)
+        if commit_all:
+            run_git(commit, 'add', '.')
+        else:
+            run_git(commit, 'add', *modified)
         run_git(commit, 'commit', '-m', "Version %s" % next_version)
 
 
@@ -260,7 +265,6 @@ def get_git_output(*args, **kwargs):
 
 def run_git(commit, *args):
     if commit:
-        mode = 'fatal passthrough'
+        return get_git_output(*args, passthrough=True, fatal=True)
     else:
-        mode = 'dryrun'
-    return get_git_output(*args, mode=mode)
+        return get_git_output(*args, passthrough=True, dryrun=True)

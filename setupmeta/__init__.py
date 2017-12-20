@@ -10,7 +10,7 @@ import subprocess       # nosec
 import sys
 
 
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 
 def which(program):
@@ -28,21 +28,23 @@ def which(program):
 def run_program(program, *args, **kwargs):
     """ Run shell 'program' with 'args' """
     full_path = which(program)
-    mode = kwargs.pop('mode', '')
+    fatal = kwargs.pop('fatal', False)
+    dryrun = kwargs.pop('dryrun', False)
+    passthrough = kwargs.pop('passthrough', False)
     if not full_path:
-        if 'fatal' in mode:
+        if fatal:
             sys.exit("'%s' is not installed" % program)
-        if 'exitcode' in mode:
-            return 1, None
+        if passthrough:
+            return 1
         return None
 
-    if 'dryrun' in mode:
+    if dryrun:
         print("Would run: %s %s" % (full_path, ' '.join(args)))
-        if 'exitcode' in mode:
-            return 0, None
+        if passthrough:
+            return 0
         return None
 
-    if 'passthrough' in mode:
+    if passthrough:
         print("Running: %s %s" % (full_path, ' '.join(args)))
     else:
         kwargs['stdout'] = subprocess.PIPE
@@ -57,14 +59,14 @@ def run_program(program, *args, **kwargs):
         sys.stderr.write(error)
 
     if p.returncode:
-        if 'fatal' in mode:
+        if fatal:
             sys.exit(p.returncode)
-        if 'exitcode' in mode:
-            return p.returncode, output
+        if passthrough:
+            return p.returncode
         raise Exception("%s exited with code %s" % (program, p.returncode))
 
-    if 'exitcode' in mode:
-        return p.returncode, output
+    if passthrough:
+        return p.returncode
     return output
 
 
