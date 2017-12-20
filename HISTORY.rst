@@ -2,10 +2,18 @@
 History
 =======
 
-0.4.1 (2017-12-18)
+0.5.0 (2017-12-20)
 ------------------
 
-* Seeding support for ``versioning`` key in setup.py, setupmeta will allow for some simple git-tag based versioning
+* Using ``versioning`` on setupmeta, which can now bump itself
+
+
+0.4.8 (2017-12-18)
+------------------
+
+* Added support for ``versioning`` key in setup.py, setupmeta can now compute version from git tags, and bump that version
+
+.. [[end long_description]]
 
 
 0.3.1 (2017-12-15)
@@ -14,8 +22,6 @@ History
 * Removed support for Pipfile
 
 * Testing with pypy as well, produce eggs for 2.7, 3.4, 3.5, 3.6
-
-.. [[end long_description]]
 
 
 0.2.8 (2017-12-09)
