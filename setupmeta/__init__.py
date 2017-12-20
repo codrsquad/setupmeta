@@ -10,7 +10,7 @@ import subprocess       # nosec
 import sys
 
 
-__version__ = '0.4.7'
+__version__ = '0.4.8'
 
 
 def which(program):
@@ -32,10 +32,14 @@ def run_program(program, *args, **kwargs):
     if not full_path:
         if 'fatal' in mode:
             sys.exit("'%s' is not installed" % program)
+        if 'exitcode' in mode:
+            return 1, None
         return None
 
     if 'dryrun' in mode:
         print("Would run: %s %s" % (full_path, ' '.join(args)))
+        if 'exitcode' in mode:
+            return 0, None
         return None
 
     if 'passthrough' in mode:
@@ -55,8 +59,12 @@ def run_program(program, *args, **kwargs):
     if p.returncode:
         if 'fatal' in mode:
             sys.exit(p.returncode)
+        if 'exitcode' in mode:
+            return p.returncode, output
         raise Exception("%s exited with code %s" % (program, p.returncode))
 
+    if 'exitcode' in mode:
+        return p.returncode, output
     return output
 
 

@@ -107,8 +107,13 @@ def git_version(try_pkg=False):
 
     else:
         # git sometimes reports -dirty when used in temp build folders
-        rd = get_git_output('diff', '--quiet', '--ignore-submodules')
-        if not rd and '-dirty' in r:
+        exitcode, _ = get_git_output(
+            'diff',
+            '--quiet',
+            '--ignore-submodules',
+            mode='exitcode'
+        )
+        if exitcode == 0 and '-dirty' in r:
             r = r.replace('-dirty', '')
 
     if r:
