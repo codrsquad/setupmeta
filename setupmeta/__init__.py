@@ -16,7 +16,7 @@ __version__ = '0.4.8'
 def which(program):
     if not program:
         return None
-    if os.path.isabs(program):
+    if os.path.isabs(program) or os.path.exists(program):
         return program
     for p in os.environ.get('PATH', '').split(':'):
         fp = os.path.join(p, program)

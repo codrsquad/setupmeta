@@ -53,7 +53,7 @@ def run_bootstrap(message):
 
 def complete_args(args):
     args['setup_requires'] = [__title__]
-    # args['versioning'] = 'tag'
+    args['versioning'] = 'tag'
 
 
 if __name__ == "__main__":
