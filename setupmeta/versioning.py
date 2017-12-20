@@ -127,7 +127,7 @@ def get_pkg_version():
     return None
 
 
-def bump(meta, bump_major, bump_minor, bump_patch, commit):
+def bump(meta, what, commit):
     versioning = meta.value('versioning')
     if not versioning or not versioning.startswith('tag'):
         raise UsageError("Project not configured to use setupmeta versioning")
@@ -137,10 +137,6 @@ def bump(meta, bump_major, bump_minor, bump_patch, commit):
     if branch != 'master':
         raise UsageError("Can't bump branch '%s', need master" % branch)
 
-    flags = bump_major + bump_minor + bump_patch
-    if flags == 0 or flags > 1:
-        raise UsageError("Specify exactly one of --major, --minor or --patch")
-
     gv = git_version()
     if not gv:
         raise UsageError("Could not determine version from git tags")
@@ -148,27 +144,37 @@ def bump(meta, bump_major, bump_minor, bump_patch, commit):
         raise UsageError("Invalid git version tag: %s" % gv.text)
     if commit and gv.dirty:
         raise UsageError("You have pending git changes, can't bump")
-    if bump_patch and gv.auto_patch:
-        raise UsageError("Can't bump patch number, it's auto-filled")
 
     major, minor, rev = gv.version.version[:3]
-    if bump_major:
+    if what == 'major':
         major, minor, rev = (major + 1, 0, 0)
-    elif bump_minor:
+    elif what == 'minor':
         major, minor, rev = (major, minor + 1, 0)
-    else:
+    elif what == 'patch':
+        if gv.auto_patch:
+            raise UsageError("Can't bump patch number, it's auto-filled")
         major, minor, rev = (major, minor, rev + 1)
+    else:
+        raise UsageError("Unknown bump target '%s'" % what)
 
     if gv.auto_patch:
         next_version = "%s.%s" % (major, minor)
     else:
         next_version = "%s.%s.%s" % (major, minor, rev)
 
+    if not commit:
+        print("Not committing bump, use --commit to commit")
+
     update_sources(meta, next_version, commit)
 
     bump_msg = "Version %s" % next_version
     run_git(commit, 'tag', '-a', "v%s" % next_version, '-m', bump_msg)
     run_git(commit, 'push', '--tags', 'origin', branch)
+
+    if '+' in versioning:
+        cmd = versioning.partition('+')[2].split()
+        mode = 'passthrough fatal' if commit else 'dryrun'
+        setupmeta.run_program(*cmd, mode=mode)
 
 
 def update_sources(meta, next_version, commit):

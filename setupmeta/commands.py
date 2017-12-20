@@ -32,14 +32,13 @@ class BumpCommand(setuptools.Command):
         self.commit = 0
 
     def run(self):
+        flags = self.major + self.minor + self.patch
+        if flags != 1:
+            abort("Specify exactly one of --major, --minor or --patch")
+
+        what = 'major' if self.major else 'minor' if self.minor else 'patch'
         try:
-            bump(
-                self.setupmeta,
-                self.major,
-                self.minor,
-                self.patch,
-                self.commit
-            )
+            bump(self.setupmeta, what, self.commit)
 
         except UsageError as e:
             abort(e)
