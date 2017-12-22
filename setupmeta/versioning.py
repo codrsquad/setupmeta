@@ -62,9 +62,9 @@ class Version:
         elif self.changes:
             self.canonical += 'b%s' % self.changes
         if self.broken:
-            self.canonical += 'broken'
+            self.canonical += '.broken'
         if self.dirty:
-            self.canonical += 'dev'
+            self.canonical += '.dev1'
             if self.commit:
                 self.canonical += '-%s' % self.commit
         self.version = LooseVersion(self.canonical)
