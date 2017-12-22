@@ -38,8 +38,6 @@ You can use the explain_ command to see what setupmeta deduced from your project
 (you can see which file, and which line each setting came from)::
 
     ~/myproject: python setup.py explain
-    Definitions:
-    ------------
          description: (setup.py:2) First line of your README
     long_description: (README.rst) Long description would be your inlined README
                 name: (setup.py:6) myproject
@@ -144,25 +142,22 @@ explain
 For example, this is what setupmeta says about itself (it's self-using)::
 
     ~/dev/setupmeta: python setup.py explain
-    Definitions:
-    ------------
               author: (auto-adjust            ) Zoran Simic
-                  \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
+                  \_: (setupmeta/__init__.py:5) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust            ) zoran@simicweb.com
-         classifiers: (classifiers.txt        ) 16 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers', ...
+         classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers'...
          description: (setupmeta/__init__.py:2) Simplify your setup.py
-        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v0.3.2.tar.gz
-                  \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
-        entry_points: (explicit               ) 185 chars: [distutils.commands] explain = setupmeta.commands:ExplainCommand ...
+        entry_points: (explicit               ) 260 chars: [distutils.commands] bump = setupmeta.commands:BumpCommand explain ...
             keywords: (setup.py:4             ) ['convenient', 'setup.py']
              license: (auto-fill              ) MIT
-    long_description: (README.rst             ) 9877 chars: Simplify your setup.py ======================  ...
+    long_description: (README.rst             ) 10936 chars: Simplify your setup.py ======================  .. image:: https:/...
                 name: (setup.py:15            ) setupmeta
             packages: (auto-fill              ) ['setupmeta']
       setup_requires: (explicit               ) ['setupmeta']
               title*: (setup.py:15            ) setupmeta
                  url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
-             version: (setupmeta/__init__.py:9) 0.3.2
+             version: (git                    ) 0.6.2.dev1
+          versioning: (explicit               ) tag
             zip_safe: (explicit               ) True
 
 In the above output:
