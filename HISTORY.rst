@@ -2,7 +2,15 @@
 History
 =======
 
-0.5.0 (2017-12-20)
+0.6.0 (2017-12-21)
+------------------
+
+* Fully using setupmeta's own versioning scheme (no more "backup" version stated in ``__init__.py``)
+
+.. [[end long_description]]
+
+
+0.5.2 (2017-12-20)
 ------------------
 
 * Using ``versioning`` on setupmeta, which can now bump itself
@@ -12,8 +20,6 @@ History
 ------------------
 
 * Added support for ``versioning`` key in setup.py, setupmeta can now compute version from git tags, and bump that version
-
-.. [[end long_description]]
 
 
 0.3.1 (2017-12-15)
