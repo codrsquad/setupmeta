@@ -10,9 +10,6 @@ import subprocess       # nosec
 import sys
 
 
-__version__ = '0.5.2'
-
-
 def which(program):
     if not program:
         return None
@@ -26,48 +23,56 @@ def which(program):
 
 
 def run_program(program, *args, **kwargs):
-    """ Run shell 'program' with 'args' """
+    """
+    Run 'program' with 'args'
+
+    :param str program: Path to program to run
+    :param list args: Arguments to pass to program
+    :param bool dryrun: When True, do not run, just print what would be ran
+    :param bool fatal: When True, exit immediately on return code != 0
+    :param bool capture: None: let output pass through, return exit code
+                         False: ignore output, return exit code
+                         True: return exit code and output/error
+    """
     full_path = which(program)
     fatal = kwargs.pop('fatal', False)
     dryrun = kwargs.pop('dryrun', False)
-    passthrough = kwargs.pop('passthrough', False)
+    capture = kwargs.pop('capture', None)   # None
+    represented = "%s %s" % (full_path, ' '.join(args))
     if not full_path:
+        if capture is True:
+            return None
         if fatal:
             sys.exit("'%s' is not installed" % program)
-        if passthrough:
-            return 1
-        return None
+        return 1
 
     if dryrun:
-        print("Would run: %s %s" % (full_path, ' '.join(args)))
-        if passthrough:
-            return 0
-        return None
+        print("Would run: %s" % represented)
+        if capture is True:
+            return None
+        return 0
 
-    if passthrough:
-        print("Running: %s %s" % (full_path, ' '.join(args)))
+    if capture is None:
+        print("Running: %s" % represented)
+
     else:
         kwargs['stdout'] = subprocess.PIPE
         kwargs['stderr'] = subprocess.PIPE
 
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
-    output = decode(output)
-    error = decode(error)
 
     if error:
-        sys.stderr.write(error)
+        sys.stderr.write(decode(error))
 
-    if p.returncode:
-        if fatal:
-            sys.exit(p.returncode)
-        if passthrough:
-            return p.returncode
-        raise Exception("%s exited with code %s" % (program, p.returncode))
+    if capture is True:
+        return decode(output)
 
-    if passthrough:
-        return p.returncode
-    return output
+    if p.returncode and fatal:
+        print("%s exited with code %s" % (represented, p.returncode))
+        sys.exit(p.returncode)
+
+    return p.returncode
 
 
 def decode(value):

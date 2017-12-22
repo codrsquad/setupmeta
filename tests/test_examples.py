@@ -76,7 +76,8 @@ def test_self():
     out = run_program(
         sys.executable,
         os.path.join(conftest.PROJECT, 'setup.py'),
-        'explain'
+        'explain',
+        capture=True
     )
     chk(out, "author:.+ Zoran Simic")
     chk(out, "description:.+ Simplify your setup.py")

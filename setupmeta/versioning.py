@@ -100,7 +100,8 @@ def git_version(try_pkg=False):
         '--tags',
         '--dirty',
         '--broken',
-        '--first-parent'
+        '--first-parent',
+        capture=True
     )
     if r is None and try_pkg:
         r = get_pkg_version()
@@ -111,7 +112,7 @@ def git_version(try_pkg=False):
             'diff',
             '--quiet',
             '--ignore-submodules',
-            passthrough=True
+            capture=False
         )
         if exitcode == 0 and '-dirty' in r:
             r = r.replace('-dirty', '')
@@ -142,7 +143,7 @@ def bump(meta, what, commit, commit_all):
     if not versioning or not versioning.startswith('tag'):
         raise UsageError("Project not configured to use setupmeta versioning")
 
-    branch = get_git_output('rev-parse', '--abbrev-ref', 'HEAD')
+    branch = get_git_output('rev-parse', '--abbrev-ref', 'HEAD', capture=True)
     branch = branch and branch.strip()
     if branch != 'master':
         raise UsageError("Can't bump branch '%s', need master" % branch)
@@ -184,7 +185,7 @@ def bump(meta, what, commit, commit_all):
     if '+' in versioning:
         cmd = versioning.partition('+')[2].split()
         if commit:
-            setupmeta.run_program(*cmd, passthrough=True, fatal=True)
+            setupmeta.run_program(*cmd, fatal=True)
         else:
             setupmeta.run_program(*cmd, dryrun=True)
 
@@ -265,6 +266,6 @@ def get_git_output(*args, **kwargs):
 
 def run_git(commit, *args):
     if commit:
-        return get_git_output(*args, passthrough=True, fatal=True)
+        return get_git_output(*args, fatal=True)
     else:
-        return get_git_output(*args, passthrough=True, dryrun=True)
+        return get_git_output(*args, dryrun=True)
