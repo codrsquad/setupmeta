@@ -37,29 +37,17 @@ History
 
 * Auto-publishing via travis, publish wheels as well
 
-* Use 1st line of README file as short description if no docstrings are found
-
-
-0.1.3 (2017-12-06)
-------------------
-
 * Look only at 1st paragraph of docstring for key/value definitions
 
 * Auto-determine most common license, and associated classifier string
-
-* Accept description in project docstrings (not only setup.py)
-
-* Refactored as a proper package (now that the one-file mode is not needed anymore)
-
-
-0.0.4 (2017-12-03)
-------------------
 
 * Should work with any version of setuptools now, via ``setup_requires='setupmeta'``
 
 * Removed old way, no more "drop setupmeta.py next to your setup.py" mode
 
 * Fixed bootstrap, so that ``PKG-INFO`` gets the right metadata (bootstrapping in 2 passes)
+
+* Use 1st line of README file as short description if no docstrings are found, accept description in project docstrings (not only setup.py)
 
 * Allow to use portion of README via ``.. [[end long_description]]``
 
