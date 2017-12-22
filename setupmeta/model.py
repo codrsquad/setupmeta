@@ -12,7 +12,7 @@ from setupmeta.content import find_contents, find_packages, listify
 from setupmeta.content import load_list, load_readme
 from setupmeta.content import MetaDefs, project_path, short
 from setupmeta.license import determined_license
-from setupmeta.versioning import auto_fill_version
+from setupmeta.versioning import Versioning
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -381,9 +381,8 @@ class SetupMeta(Settings):
                     SimpleModule('src', package, '__init__.py'),
                 )
 
-        versioning = self.value('versioning')
-        if versioning and versioning.startswith('tag'):
-            auto_fill_version(self)
+        self.versioning = Versioning(self)
+        self.versioning.auto_fill_version()
 
         url = self.value('url')
         download_url = self.value('download_url')
