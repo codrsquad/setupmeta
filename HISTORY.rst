@@ -2,7 +2,7 @@
 History
 =======
 
-0.6.0 (2017-12-21)
+0.6.1 (2017-12-21)
 ------------------
 
 * Fully using setupmeta's own versioning scheme (no more "backup" version stated in ``__init__.py``)

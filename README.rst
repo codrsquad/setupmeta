@@ -67,6 +67,16 @@ How it works?
 - ``description`` will be the 1st line of your README (unless that 1st line is too short, or is just the project's name),
   or the 1st line of the first docstring found in the scanned files (see list below)
 
+- ``version`` can be stated explicitly, or be computed from git tags using ``versioning='tag'``, in which case:
+
+    - If git tag is of the form ``v<Major>.<minor>.<patch>``, version will correspond to that tag, with ``bN`` added if there are commits since that tag (N being the number of changes since tag)
+
+    - If git tag is of the form ``v<Major>.<minor>``, version will be auto-complete with <patch> deduced from how many commits occurred since latest tag
+
+    - Use the bump_ command to easily bump (ie: increment major, minor or patch + apply git tag)
+
+    - See VERSIONING_ for more info
+
 - ``version``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``, and ``platforms`` will be auto-filled from:
 
     - Lines of the form ``__version__ = "1.0.0"`` in your modules (simple constants only, expressions are ignored - the modules are not imported but scanned using regexes)
@@ -180,11 +190,24 @@ In the above output:
 - ``packages`` was auto-filled to ``['setupmeta']``
 
 
+bump
+----
+
+If you're using the ``versioning='tag'`` feature, you can then use the ``python setup.py bump`` command to bump your git-tag driven version. See ``--help`` for more info.
+Typical usage::
+
+    python setup.py bump --help             # What were the options?
+    python setup.py bump --minor            # Check everything looks as expected
+    python setup.py bump --minor --commit   # Effectively bump
+
+
 entrypoints
 -----------
 
 This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
 
+
+.. _VERSIONING: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
 
 .. _setupmeta: https://github.com/zsimic/setupmeta
 
