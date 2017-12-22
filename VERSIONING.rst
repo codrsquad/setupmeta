@@ -13,7 +13,7 @@ The functionality is intentionally limited to 2 specific use cases (to avoid edg
 
 * if you tag using ``major.minor.patch``, reported version will be the tag itself, with possibly a ``bN`` added (for "beta") with N being the number of commits since last tag
 
-This was done intentionally to play well with PEP-440 (while remaining very simple).
+This was done intentionally to play well with PEP-440_ (while remaining very simple).
 
 If you find that one of these versioning schemes described here fits you, you are welcome to use this. Otherwise simply ignore this functionality.
 
@@ -86,3 +86,6 @@ This is well suited if you don't plan to publish often, and have a tag for each 
 * Any non-tagged commit will get a version of the form ``0.1.0b2`` (a "b" is added to get pip to interpret this as a "beta" version, the number following the "b" is the number of commits since tag "v0.1.0" here)
 
 * Similarly, non-clean checkouts will get a version of the form ``0.1.0b2.dev1``
+
+
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
