@@ -2,6 +2,7 @@
 Simplify your setup.py
 
 url: https://github.com/zsimic/setupmeta
+download_url: archive/{version}.tar.gz
 author: Zoran Simic zoran@simicweb.com
 """
 

@@ -178,26 +178,30 @@ For example, this is what setupmeta says about itself (it's self-using)::
 
     ~/dev/setupmeta: python setup.py explain
               author: (auto-adjust            ) Zoran Simic
-                  \_: (setupmeta/__init__.py:5) Zoran Simic zoran@simicweb.com
+                  \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust            ) zoran@simicweb.com
          classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers'...
          description: (setupmeta/__init__.py:2) Simplify your setup.py
+        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/0.7.3b1.dev1.tar.gz
+                  \_: (setupmeta/__init__.py:5) archive/{version}.tar.gz
         entry_points: (explicit               ) 260 chars: [distutils.commands] bump = setupmeta.commands:BumpCommand explain ...
             keywords: (setup.py:4             ) ['convenient', 'setup.py']
              license: (auto-fill              ) MIT
-    long_description: (README.rst             ) 10936 chars: Simplify your setup.py ======================  .. image:: https:/...
+    long_description: (README.rst             ) 12091 chars: Simplify your setup.py ======================  .. image:: https:/...
                 name: (setup.py:15            ) setupmeta
             packages: (auto-fill              ) ['setupmeta']
       setup_requires: (explicit               ) ['setupmeta']
               title*: (setup.py:15            ) setupmeta
                  url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
-             version: (git                    ) 0.6.2.dev1
+             version: (git                    ) 0.7.3b1.dev1
           versioning: (explicit               ) tag
             zip_safe: (explicit               ) True
 
 In the above output:
 
-- The ``author`` key was seen in ``setupmeta/__init__.py`` line 9, and the value was name + email,
+- All the ``explicit`` mentions mean that associated values were seen mentioned explicitly in setup.py, and were left untouched
+
+- The ``author`` key was seen in ``setupmeta/__init__.py`` line 6, and the value was name + email,
   that got "auto-adjusted" and filled-in as ``author`` + ``author_email`` properly as shown.
 
 - Note that the ``\_`` indication tries to convey the fact that ``author`` in this example had a value that came from 2 different sources,
@@ -207,7 +211,7 @@ In the above output:
 
 - ``description`` came from ``setup.py`` line 2
 
-- ``download_url`` was defined in ``setupmeta/__init__.py`` line 8, since it was mentioning ``{version}`` (and was a relative path), it got auto-expanded and filled in properly
+- ``download_url`` was defined in ``setupmeta/__init__.py`` line 5, since it was mentioning ``{version}`` (and was a relative path), it got auto-expanded and filled in properly
 
 - ``entry_points`` were explicitly stated (in project's setup.py)
 
@@ -218,6 +222,14 @@ In the above output:
 - Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta saw the value and can use it, but doesn't transfer it to setuptools
 
 - ``packages`` was auto-filled to ``['setupmeta']``
+
+- ``version`` was determined from git tag (due to ``versioning='tag'`` in setup.py), in this case ``0.7.3b1.dev1`` means:
+
+    * latest tag was 0.7.3
+
+    * there was one commit since that (``b1`` means one change since tag, "b" denotes this would be a "beta" version, and should play nicely with PEP-440_)
+
+    * the ``.dev1`` suffix means that the checkout wasn't clean when ``explain`` command was ran here
 
 
 bump
@@ -241,6 +253,8 @@ This will simply show you your ``entry_points/console_scripts``. I added it beca
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
 .. _VERSIONING: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
+
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 
 .. _setupmeta: https://github.com/zsimic/setupmeta
 
