@@ -5,8 +5,7 @@ Commands contributed by setupmeta
 import setuptools
 import sys
 
-from setupmeta.content import MetaCommand, MetaDefs, short
-from setupmeta.versioning import UsageError
+import setupmeta
 
 
 def abort(message):
@@ -14,9 +13,14 @@ def abort(message):
     sys.exit(1)
 
 
+def MetaCommand(cls):
+    """ Decorator allowing for less boilerplate in our commands """
+    return setupmeta.MetaDefs.register_command(cls)
+
+
 @MetaCommand
 class BumpCommand(setuptools.Command):
-    """ Bump version """
+    """ Bump version managed by setupmeta """
 
     user_options = [
         ('major', 'M', "bump major part of version"),
@@ -42,7 +46,7 @@ class BumpCommand(setuptools.Command):
         try:
             self.setupmeta.versioning.bump(what, self.commit, self.all)
 
-        except UsageError as e:
+        except setupmeta.UsageError as e:
             abort(e)
 
 
@@ -78,12 +82,12 @@ class ExplainCommand(setuptools.Command):
             for source in definition.sources:
                 if count:
                     prefix = "\_"
-                elif source.key not in MetaDefs.all_fields:
+                elif source.key not in setupmeta.MetaDefs.all_fields:
                     prefix = "%s*" % source.key
                 else:
                     prefix = source.key
 
-                preview = short(source.value, c=max_chars)
+                preview = setupmeta.short(source.value, c=max_chars)
                 print(form % (prefix, source.source, preview))
                 count += 1
 

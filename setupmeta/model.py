@@ -6,11 +6,11 @@ import inspect
 import io
 import os
 import re
+import setuptools
 import sys
 
-from setupmeta.content import find_contents, find_packages, listify
-from setupmeta.content import load_list, load_readme
-from setupmeta.content import MetaDefs, project_path, short
+from setupmeta import listify, MetaDefs, project_path, short
+from setupmeta.content import find_contents, load_list, load_readme
 from setupmeta.license import determined_license
 from setupmeta.versioning import Versioning
 
@@ -49,6 +49,21 @@ def is_setup_py_path(path):
         return False
     # Accept also setup.pyc
     return os.path.basename(path).startswith('setup.py')
+
+
+def find_packages(name, subfolder=None):
+    """ Find packages for 'name' (if any), 'subfolder' is like "src" """
+    result = None
+    if subfolder:
+        path = project_path(subfolder, name)
+    else:
+        path = project_path(name)
+    init_py = os.path.join(path, '__init__.py')
+    if os.path.isfile(init_py):
+        result = [name]
+        for subpackage in setuptools.find_packages(where=path):
+            result.append("%s.%s" % (name, subpackage))
+    return result
 
 
 class DefinitionEntry:

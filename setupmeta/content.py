@@ -6,40 +6,12 @@ import glob
 import io
 import os
 import re
-import setuptools
 
-from setupmeta import stringify
+import setupmeta
 
 
 # Recognized README tokens
 RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
-
-USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
-
-
-def abort(message):
-    from distutils.errors import DistutilsClassError
-    raise DistutilsClassError(message)
-
-
-def project_path(*relative_paths):
-    """ Full path corresponding to 'relative_paths' components """
-    return os.path.join(MetaDefs.project_dir, *relative_paths)
-
-
-def find_packages(name, subfolder=None):
-    """ Find packages for 'name' (if any), 'subfolder' is like "src" """
-    result = None
-    if subfolder:
-        path = project_path(subfolder, name)
-    else:
-        path = project_path(name)
-    init_py = os.path.join(path, '__init__.py')
-    if os.path.isfile(init_py):
-        result = [name]
-        for subpackage in setuptools.find_packages(where=path):
-            result.append("%s.%s" % (name, subpackage))
-    return result
 
 
 def load_contents(relative_path, limit=0):
@@ -50,7 +22,8 @@ def load_contents(relative_path, limit=0):
     :return str|None: Contents, if any
     """
     try:
-        with io.open(project_path(relative_path), encoding='utf-8') as fh:
+        full_path = setupmeta.project_path(relative_path)
+        with io.open(full_path, encoding='utf-8') as fh:
             lines = []
             for line in fh:
                 limit -= 1
@@ -67,7 +40,8 @@ def load_readme(relative_path, limit=0):
     """ Loader for README files """
     content = []
     try:
-        with io.open(project_path(relative_path), encoding='utf-8') as fh:
+        full_path = setupmeta.project_path(relative_path)
+        with io.open(full_path, encoding='utf-8') as fh:
             for line in fh.readlines():
                 m = RE_README_TOKEN.search(line)
                 if not m:
@@ -140,7 +114,8 @@ def find_contents(relative_paths, loader=None, limit=0):
     for path in relative_paths:
         # De-dupe and respect order (especially for globbed paths)
         if '*' in path:
-            for expanded in glob.glob(project_path(path)):
+            full_path = setupmeta.project_path(path)
+            for expanded in glob.glob(full_path):
                 relative_path = os.path.basename(expanded)
                 if relative_path not in candidates:
                     candidates.append(relative_path)
@@ -154,134 +129,3 @@ def find_contents(relative_paths, loader=None, limit=0):
         if contents:
             return contents, relative_path
     return None, None
-
-
-def short(text, c=64):
-    """ Short representation of 'text' """
-    if not text:
-        return "%s" % text
-    result = stringify(text).strip()
-    result = result.replace(USER_HOME, '~').replace('\n', ' ')
-    if c and len(result) > c:
-        if isinstance(text, dict):
-            summary = '%s keys' % len(text)
-        elif isinstance(text, list):
-            summary = '%s items' % len(text)
-        else:
-            summary = "%s chars" % len(result)
-        cutoff = c - len(summary) - 5
-        if cutoff <= 0:
-            return summary
-        return "%s: %s..." % (summary, result[:cutoff])
-    return result
-
-
-def listify(text, separator=None):
-    """ Turn 'text' into a list using 'separator' """
-    if isinstance(text, list):
-        return text
-    if separator:
-        text = text.replace('\n', separator)
-    return [s.strip() for s in text.split(separator) if s.strip()]
-
-
-def meta_command_init(self, dist, **kw):
-    """ Custom __init__ injected to commands decorated with @MetaCommand """
-    self.setupmeta = getattr(dist, '_setupmeta', None)
-    if not self.setupmeta:
-        abort("Missing setupmeta information")
-    setuptools.Command.__init__(self, dist, **kw)
-
-
-def MetaCommand(cls):
-    """ Decorator allowing for less boilerplate in our commands """
-    return MetaDefs.register_command(cls)
-
-
-class MetaDefs:
-    """
-    Meta definitions
-    """
-
-    # Original distutils.dist.Distribution.get_option_dict
-    dd_original = None
-
-    # Our own commands (populated by @MetaCommand decorator)
-    commands = []
-
-    # Determined project directory
-    project_dir = os.getcwd()
-
-    # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
-    metadata_fields = listify("""
-        author author_email classifiers description download_url keywords
-        license long_description maintainer maintainer_email name obsoletes
-        platforms provides requires url version
-    """)
-    dist_fields = listify("""
-        cmdclass contact contact_email dependency_links eager_resources
-        entry_points exclude_package_data extras_require include_package_data
-        install_requires libraries long_description_content_type
-        namespace_packages package_data package_dir packages py_modules
-        python_requires scripts setup_requires tests_require test_suite
-        versioning zip_safe
-    """)
-    all_fields = metadata_fields + dist_fields
-
-    @classmethod
-    def register_command(cls, command):
-        """ Register our own 'command' """
-        command.description = command.__doc__.strip().split('\n')[0]
-        command.__init__ = meta_command_init
-        if command.initialize_options == setuptools.Command.initialize_options:
-            command.initialize_options = lambda x: None
-        if command.finalize_options == setuptools.Command.finalize_options:
-            command.finalize_options = lambda x: None
-        if not hasattr(command, 'user_options'):
-            command.user_options = []
-        cls.commands.append(command)
-        return command
-
-    @classmethod
-    def dist_to_dict(cls, dist):
-        """
-        :param distutils.dist.Distribution dist: Distribution or attrs
-        :return dict:
-        """
-        if not dist or isinstance(dist, dict):
-            return dist or {}
-        result = {}
-        for key in cls.all_fields:
-            value = cls.get_field(dist, key)
-            if value is not None:
-                result[key] = value
-        return result
-
-    @classmethod
-    def fill_dist(cls, dist, attrs):
-        for key, value in attrs.items():
-            cls.set_field(dist, key, value)
-
-    @classmethod
-    def get_field(cls, dist, key):
-        """
-        :param distutils.dist.Distribution dist: Distribution to examine
-        :param str key: Key to extract
-        :return: None if 'key' wasn't in setup() call, value otherwise
-        """
-        if hasattr(dist.metadata, key):
-            # Get directly from metadata, those are None by default
-            return getattr(dist.metadata, key)
-        # dist fields however have a weird '0' default for some...
-        # we want to detect fields provided to the original setup() call
-        value = getattr(dist, key, None)
-        if value or isinstance(value, bool):
-            return value
-        return None
-
-    @classmethod
-    def set_field(cls, dist, key, value):
-        if hasattr(dist.metadata, key):
-            setattr(dist.metadata, key, value)
-        elif hasattr(dist, key):
-            setattr(dist, key, value)

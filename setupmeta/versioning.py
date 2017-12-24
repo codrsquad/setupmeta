@@ -3,12 +3,125 @@ import os
 import warnings
 
 import setupmeta
-from setupmeta.content import project_path
-from setupmeta.scm import Git
+from setupmeta.scm import Git, Version
 
 
-class UsageError(Exception):
-    pass
+BUMPABLE = 'major minor patch'.split()
+
+
+def abort(msg):
+    raise setupmeta.UsageError(msg)
+
+
+class Strategy:
+    def __init__(self, main_fmt, local_fmt=None, branches=None):
+        self.main_format = main_fmt
+        self.local_format = local_fmt or '{devmarker}'
+        self.branches = setupmeta.listify(branches or 'master')
+        self.problem = None
+        self.main_components = self.parsed_components(main_fmt)
+        self.local_components = self.parsed_components(self.local_format)
+        if self.problem:
+            return
+        if not main_fmt:
+            self.problem = "No format specified"
+        elif not self.main_components:
+            self.problem = self.invalid_msg()
+
+    def parsed_components(self, fmt):
+        if not fmt:
+            return None
+        parts = fmt.split('{')
+        if not parts:
+            return None
+        if parts[0]:
+            self.problem = self.invalid_msg("must begin with '{'")
+            return None
+        parts.pop(0)
+        if not parts:
+            return None
+        result = []
+        for part in parts:
+            p = part.partition('}')
+            if not p[0] or p[2] and p[2] not in '.+':
+                return None
+            result.append(p[0])
+        sample = Version('1.0.0')
+        for part in result:
+            if not hasattr(sample, part):
+                self.problem = self.invalid_msg("unknown part '%s'" % part)
+                return None
+        return result
+
+    def __repr__(self):
+        return self.main_format + self.local_format
+
+    def invalid_msg(self, msg=None):
+        if msg:
+            msg = ': %s' % msg
+        return "Invalid format '%s'%s" % (self, msg or '')
+
+    def rendered(self, version):
+        """
+        :param Version version: Version to render
+        :return str: Rendered version
+        """
+        if not version:
+            return None
+        fmt = "%s%s" % (self.main_format, self.local_format)
+        parts = version.to_dict()
+        return fmt.format(**parts)
+
+    def bumped(self, what, current_version):
+        """
+        :param str what: Which component to bump
+        :param Version current_version: Current version
+        :return str: Represented next version, with 'what' bumped
+        """
+        bumpable = [s for s in self.main_components if s in BUMPABLE]
+        if what not in bumpable:
+            msg = "Can't bump '%s', it's out of scope" % what
+            msg += " of main format '%s'" % self.main_format
+            abort(msg)
+
+        major, minor, rev = current_version.bump_triplet()
+        if what == 'major':
+            major, minor, rev = (major + 1, 0, 0)
+        elif what == 'minor':
+            major, minor, rev = (major, minor + 1, 0)
+        elif what == 'patch':
+            major, minor, rev = (major, minor, rev + 1)
+
+        next_version = Version("%s.%s.%s" % (major, minor, rev))
+        parts = next_version.to_dict(bumpable)
+        next_version = self.main_format.format(**parts)
+        return next_version.strip('.').strip('+')
+
+    @classmethod
+    def from_meta(cls, given):
+        if not given:
+            return None
+        if isinstance(given, dict):
+            vfmt = given.get('format')
+            lfmt = given.get('local')
+            branches = given.get('branches')
+
+            if not vfmt:
+                warnings.warn(
+                    "No 'format' in given strategy '%s'" % given
+                )
+                return None
+
+            return cls(vfmt, lfmt, branches=branches)
+
+        if given == 'changes':
+            return cls('{major}.{minor}.{changes}')
+
+        if given == 'tag':
+            return cls('{major}.{minor}.{patch}{beta}')
+
+        warnings.warn("Unknown versioning strategy '%s'" % given)
+        return None
 
 
 class Versioning:
@@ -19,25 +132,31 @@ class Versioning:
         """
         self.meta = meta
         self.scm = None
-        self.strategy = self.meta.value('versioning')
-        self.root = project_path()
+        given = meta.value('versioning')
+        self.enabled = bool(given)
+        self.strategy = Strategy.from_meta(given)
+        self.root = setupmeta.project_path()
         if os.path.isdir(os.path.join(self.root, '.git')):
             self.scm = Git(self.root)
         if not self.strategy:
-            self.problem = "Project not configured to use setupmeta versioning"
-        elif not self.strategy.startswith('tag'):
-            self.problem = "Unknown versioning strategy %s" % self.strategy
+            self.problem = "setupmeta versioning not enabled"
         elif not self.scm:
-            self.problem = "%s is not under a supported scm" % self.root
+            self.problem = "Unknown SCM (supported: git)"
         else:
             self.problem = None
 
     def auto_fill_version(self):
         """
-        Auto-fill version from SCM tag
+        Auto-fill version as defined by self.strategy
         :param setupmeta.model.SetupMeta meta: Parent meta object
         """
+        if not self.enabled:
+            return
+        vdef = self.meta.definitions.get('version')
+        cv = vdef.sources[0].value if vdef and vdef.sources else None
         if self.problem:
+            if not cv:
+                self.meta.auto_fill('version', '0.0.0', 'missing')
             if self.strategy:
                 warnings.warn(self.problem)
             return
@@ -48,61 +167,49 @@ class Versioning:
         if gv.broken:
             warnings.warn("Invalid version tag: %s" % gv.text)
             return
-        vdef = self.meta.definitions.get('version')
-        cv = vdef.sources[0].value if vdef and vdef.sources else None
-        if cv and not gv.canonical.startswith(cv):
+        rendered = self.strategy.rendered(gv)
+        if not rendered:
+            warnings.warn("Couldn't render version '%s'" % gv.text)
+            return
+        if cv and not rendered.startswith(cv):
             source = vdef.sources[0].source
-            expected = gv.canonical[:len(cv)]
+            expected = rendered[:len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
             warnings.warn(msg)
-        self.meta.auto_fill('version', gv.canonical, 'git', override=True)
+        self.meta.auto_fill('version', rendered, 'git', override=True)
 
     def bump(self, what, commit, commit_all):
         if self.problem:
-            raise UsageError(self.problem)
+            abort(self.problem)
 
         branch = self.scm.get_branch()
-        if branch != 'master':
-            raise UsageError("Can't bump branch '%s', need master" % branch)
+        if branch not in self.strategy.branches:
+            abort("Can't bump branch '%s', need one of %s" % (
+                branch,
+                self.strategy.branches
+            ))
 
         gv = self.scm.get_version()
         if not gv:
-            raise UsageError("Could not determine version from git tags")
+            abort("Could not determine version from git tags")
         if gv.broken:
-            raise UsageError("Invalid git version tag: %s" % gv.text)
+            abort("Invalid git version tag: %s" % gv.text)
         if commit and gv.dirty and not commit_all:
-            raise UsageError("You have pending git changes, can't bump")
+            abort("You have pending git changes, can't bump")
 
-        major, minor, rev = gv.version.version[:3]
-        if what == 'major':
-            major, minor, rev = (major + 1, 0, 0)
-        elif what == 'minor':
-            major, minor, rev = (major, minor + 1, 0)
-        elif what == 'patch':
-            if gv.auto_patch:
-                raise UsageError("Can't bump patch number, it's auto-filled")
-            major, minor, rev = (major, minor, rev + 1)
-        else:
-            raise UsageError("Unknown bump target '%s'" % what)
-
-        if gv.auto_patch:
-            next_version = "%s.%s" % (major, minor)
-        else:
-            next_version = "%s.%s.%s" % (major, minor, rev)
+        next_version = self.strategy.bumped(what, gv)
 
         if not commit:
             print("Not committing bump, use --commit to commit")
 
         self.update_sources(next_version, commit, commit_all)
-
         self.scm.apply_tag(commit, branch, next_version)
 
-        if '+' in self.strategy:
-            cmd = self.strategy.partition('+')[2].split()
-            if commit:
-                setupmeta.run_program(*cmd, fatal=True)
-            else:
-                setupmeta.run_program(*cmd, dryrun=True)
+        hook = 'bump-hook'
+        if not os.path.exists(setupmeta.project_path(hook)):
+            return
+
+        setupmeta.run_program(hook, fatal=True, dryrun=not commit)
 
     def update_sources(self, next_version, commit, commit_all):
         vdefs = self.meta.definitions.get('version')
@@ -115,7 +222,7 @@ class Versioning:
                 continue
 
             relative_path, _, target_line_number = vdef.source.partition(':')
-            full_path = project_path(relative_path)
+            full_path = setupmeta.project_path(relative_path)
             target_line_number = int(target_line_number)
 
             lines = []

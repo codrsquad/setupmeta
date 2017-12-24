@@ -8,8 +8,8 @@ import re
 import sys
 import pytest
 
-from setupmeta import run_program
-from setupmeta.content import extract_list, load_list, short
+from setupmeta import run_program, short
+from setupmeta.content import extract_list, load_list
 from . import conftest
 
 

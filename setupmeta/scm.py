@@ -20,46 +20,79 @@ def strip_dash(text):
 
 class Version:
 
-    text = None         # Given version text
-    canonical = None    # Parsed canonical version from 'text'
-    version = None      # Canonical LooseVersion object
-    main = None         # Main part of the version
-    changes = None      # Number of changes since last tag
-    commit_id = None    # Commit id
-    dirty = False       # True if local changes are present
-    broken = False      # True if version could not be properly determined
-    auto_patch = False  # True if patch number deduced from number of changes
+    text = None         # type: str # Given version text
+    version = None      # type: LooseVersion
+
+    major = None        # type: int # Major part of version
+    minor = None        # type: int # Minor part of version
+    patch = None        # type: int # Patch part of version
+    changes = None      # type: int # Number of changes since last tag
+    commitid = None     # type: str # Commit id
+    dirty = False       # type: bool # Local changes are present
+    broken = False      # type: bool # Could not be properly determined
 
     def __init__(self, text):
         self.text = text.strip()
-        self.canonical = text
         m = RE_GIT_DESCRIBE.match(text)
         if not m:
             self.version = LooseVersion(self.text)
             return
-        self.main = m.group(1)
+        main = m.group(1)
         self.changes = strip_dash(m.group(2))
         self.changes = int(self.changes) if self.changes else 0
-        self.commit_id = strip_dash(m.group(3))
+        self.commitid = strip_dash(m.group(3))
         self.dirty = '-dirty' in text
         self.broken = '-broken' in text
-        self.version = LooseVersion(self.main)
-        self.main = LooseVersion(self.main)
-        self.canonical = str(self.version)
-        if len(self.version.version) < 3:
-            # Auto-complete M.m.p with 'p' being number of changes since M.m
-            self.canonical += '.%s' % self.changes
-            self.auto_patch = True
-        elif self.changes:
-            self.canonical += 'b%s' % self.changes
-        if self.broken:
-            self.canonical += '.broken'
-        if self.dirty:
-            self.canonical += '.dev1'
-        self.version = LooseVersion(self.canonical)
+        self.version = LooseVersion(main)
+        triplet = self.bump_triplet()
+        self.major = triplet[0]
+        self.minor = triplet[1]
+        self.patch = triplet[2]
 
     def __repr__(self):
-        return self.canonical
+        return self.text
+
+    def bump_triplet(self):
+        """
+        :return int, int, int: Major, minor, patch
+        """
+        version = list(self.version.version)
+        major = version and version.pop(0) or 0
+        minor = version and version.pop(0) or 0
+        patch = version and version.pop(0) or 0
+        return major, minor, patch
+
+    def to_dict(self, parts=None):
+        result = {}
+        for key in dir(self):
+            if key.startswith('_'):
+                continue
+            value = getattr(self, key)
+            if value is None or callable(value):
+                continue
+            if not parts or key in parts:
+                result[key] = value
+            else:
+                result[key] = ''
+        return result
+
+    @property
+    def alpha(self):
+        if self.changes:
+            return 'a%s' % self.changes
+        return ''
+
+    @property
+    def beta(self):
+        if self.changes:
+            return 'b%s' % self.changes
+        return ''
+
+    @property
+    def devmarker(self):
+        if self.dirty:
+            return '.dev1'
+        return ''
 
 
 class Scm:
@@ -132,7 +165,4 @@ class Git(Scm):
         return setupmeta.run_program('git', *args, cwd=self.root, **kwargs)
 
     def run_git(self, commit, *args):
-        if commit:
-            return self.get_git_output(*args, fatal=True)
-        else:
-            return self.get_git_output(*args, dryrun=True)
+        return self.get_git_output(*args, fatal=True, dryrun=not commit)

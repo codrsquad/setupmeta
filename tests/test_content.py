@@ -1,9 +1,6 @@
 import os
-import pytest
 
-from setupmeta import decode
-from setupmeta.content import abort, listify, short
-from setupmeta.content import MetaDefs, meta_command_init
+from setupmeta import decode, listify, short, MetaDefs
 
 
 def test_shortening():
@@ -24,15 +21,6 @@ def test_shortening():
 
     message = "found in %s" % path
     assert short(message) == 'found in ~/foo/bar'
-
-
-def test_edge_cases():
-    with pytest.raises(Exception):
-        abort("testing")
-
-    with pytest.raises(Exception):
-        obj = MetaDefs()
-        meta_command_init(obj, obj)
 
 
 def test_listify():

@@ -39,7 +39,13 @@ def test_empty():
     assert not meta.attrs
     assert not meta.definitions
     assert not meta.name
+    assert not meta.requirements.install
+    assert not meta.requirements.test
     assert not meta.version
+    assert not meta.versioning.enabled
+    assert meta.versioning.problem == 'setupmeta versioning not enabled'
+    assert not meta.versioning.scm
+    assert not meta.versioning.strategy
     assert str(meta).startswith('0 definitions, ')
 
 
