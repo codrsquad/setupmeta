@@ -20,7 +20,8 @@ Simplify your setup.py
 
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
 
-This package aims to simplify that, here's what your setup.py could look like with setupmeta_::
+This package aims to simplify that and bring some DRY_ principle to python packaging.
+Here's what your setup.py could look like with setupmeta_::
 
     from setuptools import setup
 
@@ -201,6 +202,7 @@ entrypoints
 
 This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
 
+.. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
 .. _VERSIONING: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
 
