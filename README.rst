@@ -129,6 +129,40 @@ This should hopefully work nicely for the vast majority of python projects out t
 If you need advanced stuff, you can still leverage ``setupmeta`` for all the usual stuff above, and go explicit wherever needed.
 
 
+Versioning
+==========
+
+setumeta can also help with versioning, by leveraging git tags (a bit like setuptools_scm_).
+You can leverage that feature by specifying a ``versioning`` attribute, either in your ``setup.py``
+(or ``__versioning__`` in one of your ``__init__.py``-s, works similarly to how all other fields are picked up as described above)
+
+2 simple strategies are pre-configured (see VERSIONING_ for more info):
+
+* ``versioning='tag'`` to compute version from latest git tag + beta addendum
+
+    * suitable for controlled publications (1 tag = 1 publish)
+
+    * format is ``{major}.{minor}.{patch}{beta}``
+
+    * tag "v1.0.0" at current commit -> version is 1.0.0
+
+    * one commit after tag "v1.0.0" -> version becomes 1.0.0b1
+
+* ``versioning='changes'`` to compute version from latest git tag + number of changes since that tag
+
+    * suitable for "publish on every commit" (without having to tag every commit)
+
+    * format is ``{major}.{minor}.{changes}``
+
+    * tag "v1.0" at current commit -> version is 1.0.0 (last zero means "zero changes")
+
+    * one commit after tag "v1.0" -> version becomes 1.0.1
+
+* There's a "local" addendum when checkout is not clean, its default format is ``{dev}``
+
+* It's possible to fine-tune this via ``versioning=dict(...)`` (see VERSIONING_ for more info)
+
+
 Commands
 ========
 
@@ -203,6 +237,8 @@ entrypoints
 This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
 
 .. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+
+.. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
 .. _VERSIONING: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
 
