@@ -173,6 +173,8 @@ class Versioning:
             expected = rendered[:len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
             warnings.warn(msg)
+            if source == 'pygradle':
+                rendered = cv
         self.meta.auto_fill('version', rendered, 'git', override=True)
 
     def bump(self, what, commit, commit_all):
