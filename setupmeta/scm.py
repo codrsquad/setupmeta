@@ -130,7 +130,6 @@ class Git(Scm):
             '--tags',
             '--dirty',
             '--broken',
-            '--first-parent',
             capture=True
         )
         if r and '-dirty' in r:

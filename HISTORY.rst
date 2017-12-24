@@ -2,7 +2,7 @@
 History
 =======
 
-0.7.0 (2017-12-23)
+0.7.2 (2017-12-23)
 ------------------
 
 * Better defined versioning strategies
