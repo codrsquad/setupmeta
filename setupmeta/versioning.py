@@ -164,9 +164,6 @@ class Versioning:
         gv = self.scm.get_version()
         if not gv:
             return
-        if gv.broken:
-            warnings.warn("Invalid version tag: %s" % gv.text)
-            return
         rendered = self.strategy.rendered(gv)
         if not rendered:
             warnings.warn("Couldn't render version '%s'" % gv.text)
@@ -192,8 +189,6 @@ class Versioning:
         gv = self.scm.get_version()
         if not gv:
             abort("Could not determine version from git tags")
-        if gv.broken:
-            abort("Invalid git version tag: %s" % gv.text)
         if commit and gv.dirty and not commit_all:
             abort("You have pending git changes, can't bump")
 

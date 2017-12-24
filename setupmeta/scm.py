@@ -6,7 +6,7 @@ import setupmeta
 
 # Output expected from git describe
 RE_GIT_DESCRIBE = re.compile(
-    r'^v?(.+?)(-\d+)?(-g\w+)?(-(dirty|broken))*$',
+    r'^v?(.+?)(-\d+)?(-g\w+)?(-dirty)*$',
     re.IGNORECASE
 )
 
@@ -29,7 +29,6 @@ class Version:
     changes = None      # type: int # Number of changes since last tag
     commitid = None     # type: str # Commit id
     dirty = False       # type: bool # Local changes are present
-    broken = False      # type: bool # Could not be properly determined
 
     def __init__(self, text):
         self.text = text.strip()
@@ -42,7 +41,6 @@ class Version:
         self.changes = int(self.changes) if self.changes else 0
         self.commitid = strip_dash(m.group(3))
         self.dirty = '-dirty' in text
-        self.broken = '-broken' in text
         self.version = LooseVersion(main)
         triplet = self.bump_triplet()
         self.major = triplet[0]
@@ -129,7 +127,6 @@ class Git(Scm):
             'describe',
             '--tags',
             '--dirty',
-            '--broken',
             capture=True
         )
         if r and '-dirty' in r:
