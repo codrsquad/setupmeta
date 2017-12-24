@@ -37,8 +37,10 @@ def short(text, c=64):
 def which(program):
     if not program:
         return None
-    if os.path.isabs(program) or os.path.isfile(program):
-        return program
+    if os.path.isabs(program):
+        if os.path.isfile(program):
+            return program
+        return None
     for p in os.environ.get('PATH', '').split(':'):
         fp = os.path.join(p, program)
         if os.path.isfile(fp):
