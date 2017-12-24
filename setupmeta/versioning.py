@@ -209,7 +209,12 @@ class Versioning:
         if not os.path.exists(setupmeta.project_path(hook)):
             return
 
-        setupmeta.run_program(hook, fatal=True, dryrun=not commit)
+        setupmeta.run_program(
+            hook,
+            fatal=True,
+            dryrun=not commit,
+            cwd=self.root
+        )
 
     def update_sources(self, next_version, commit, commit_all):
         vdefs = self.meta.definitions.get('version')
