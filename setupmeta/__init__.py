@@ -34,19 +34,23 @@ def short(text, c=64):
     return result
 
 
+def is_executable(path):
+    return os.path.isfile(path) and os.access(path, os.X_OK)
+
+
 def which(program):
     if not program:
         return None
     if os.path.isabs(program):
-        if os.path.isfile(program):
+        if is_executable(program):
             return program
         return None
     for p in os.environ.get('PATH', '').split(':'):
         fp = os.path.join(p, program)
-        if os.path.isfile(fp):
+        if is_executable(fp):
             return fp
     ppath = project_path(program)
-    if os.path.isfile(ppath):
+    if is_executable(ppath):
         return ppath
     return None
 
@@ -69,12 +73,7 @@ def run_program(program, *args, **kwargs):
     capture = kwargs.pop('capture', None)   # None
     represented = "%s %s" % (full_path, ' '.join(args))
 
-    problem = None
-    if not full_path:
-        problem = "'%s' is not installed" % program
-    elif not os.access(full_path, os.X_OK):
-        problem = "'%s' is not executable" % program
-
+    problem = None if full_path else "'%s' is not installed" % program
     if problem:
         if dryrun:
             print(problem)

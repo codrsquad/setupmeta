@@ -205,8 +205,8 @@ class Versioning:
         self.update_sources(next_version, commit, commit_all)
         self.scm.apply_tag(commit, branch, next_version)
 
-        hook = 'bump-hook'
-        if not os.path.exists(setupmeta.project_path(hook)):
+        hook = setupmeta.project_path('bump-hook')
+        if not setupmeta.is_executable(hook):
             return
 
         setupmeta.run_program(
