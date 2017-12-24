@@ -35,7 +35,6 @@ maintainer_email: (auto-adjust              ) me@myplace.com
               \_: (complex/__init__.py:7    ) 0.0.1
 
 running entrypoints
-[console_scripts]
 foo = complex.some_module:main_func
 bar = complex.some_module:bar
 

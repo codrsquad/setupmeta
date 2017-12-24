@@ -2,14 +2,20 @@
 History
 =======
 
+0.7.0 (2017-12-23)
+------------------
+
+* Better defined versioning strategies
+
+.. [[end long_description]]
+
+
 0.6.3 (2017-12-21)
 ------------------
 
 * Fully using setupmeta's own versioning scheme (no more "backup" version stated in ``__init__.py``)
 
 * Versioning compatible with PEP-440
-
-.. [[end long_description]]
 
 
 0.5.2 (2017-12-20)

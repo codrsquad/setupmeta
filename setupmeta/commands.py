@@ -98,12 +98,7 @@ class EntryPointsCommand(setuptools.Command):
 
     def run(self):
         entry_points = self.setupmeta.value('entry_points')
-        if not entry_points:
-            return
-        if not isinstance(entry_points, dict):
-            print(entry_points)
-            return
-        console_scripts = entry_points.get('console_scripts')
+        console_scripts = get_console_scripts(entry_points)
         if not console_scripts:
             return
         if isinstance(console_scripts, list):
@@ -112,3 +107,28 @@ class EntryPointsCommand(setuptools.Command):
             return
         for key, value in console_scripts.items():
             print("%s = %s" % (key, value))
+
+
+def get_console_scripts(entry_points):
+    """
+    pygradle's 'entrypoints' are misnamed: they really mean 'consolescripts'
+    """
+    if not entry_points:
+        return None
+    if isinstance(entry_points, dict):
+        return entry_points.get('console_scripts')
+    if isinstance(entry_points, list):
+        result = []
+        in_console_scripts = False
+        for line in entry_points:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('['):
+                in_console_scripts = 'console_scripts' in line
+                continue
+            if not in_console_scripts:
+                continue
+            result.append(line)
+        return result
+    return get_console_scripts(entry_points.split('\n'))
