@@ -4,13 +4,6 @@ import re
 import setupmeta
 
 
-# Output expected from git describe
-RE_GIT_DESCRIBE = re.compile(
-    r'^v?(.+?)(-\d+)?(-g\w+)?(-dirty)*$',
-    re.IGNORECASE
-)
-
-
 def strip_dash(text):
     """ Strip leading dashes from 'text' """
     if not text:
@@ -20,27 +13,29 @@ def strip_dash(text):
 
 class Version:
 
-    text = None         # type: str # Given version text
+    text = None         # type: str
     version = None      # type: LooseVersion
 
-    major = None        # type: int # Major part of version
-    minor = None        # type: int # Minor part of version
-    patch = None        # type: int # Patch part of version
-    changes = None      # type: int # Number of changes since last tag
+    major = 0           # type: int # Major part of version
+    minor = 0           # type: int # Minor part of version
+    patch = 0           # type: int # Patch part of version
+    changes = 0         # type: int # Number of changes since last tag
     commitid = None     # type: str # Commit id
     dirty = False       # type: bool # Local changes are present
 
-    def __init__(self, text):
-        self.text = text.strip()
-        m = RE_GIT_DESCRIBE.match(text)
-        if not m:
-            self.version = LooseVersion(self.text)
-            return
-        main = m.group(1)
-        self.changes = strip_dash(m.group(2))
-        self.changes = int(self.changes) if self.changes else 0
-        self.commitid = strip_dash(m.group(3))
-        self.dirty = '-dirty' in text
+    def __init__(
+            self,
+            main=None,
+            changes=0,
+            commitid=None,
+            dirty=False,
+            text=None
+    ):
+        self.changes = changes or 0
+        self.commitid = (commitid or 'initial').strip()
+        self.dirty = dirty
+        main = (main or '0.0.0').strip()
+        self.text = text or "v%s-%s-%s" % (main, self.changes, self.commitid)
         self.version = LooseVersion(main)
         triplet = self.bump_triplet()
         self.major = triplet[0]
@@ -89,14 +84,14 @@ class Version:
     @property
     def devmarker(self):
         if self.dirty:
-            return '.dev1'
+            return '.%s' % self.commitid
         return ''
 
 
 class Scm:
 
-    def __init__(self, root):
-        self.root = root
+    def __init__(self):
+        self.root = setupmeta.project_path()
 
     def get_branch(self):
         pass
@@ -111,39 +106,72 @@ class Scm:
         pass
 
 
+class Hg(Scm):
+
+    def get_branch(self):
+        setupmeta.abort("get_branch() not implemented for hg")
+
+    def get_version(self):
+        setupmeta.abort("get_version() not implemented for hg")
+
+    def commit_files(self, commit, relative_paths, next_version):
+        setupmeta.abort("commit_files() not implemented for hg")
+
+    def apply_tag(self, commit, branch, next_version):
+        setupmeta.abort("apply_tag() not implemented for hg")
+
+
 class Git(Scm):
+
+    # Output expected from git describe
+    re_describe = re.compile(
+        r'^v?(.+?)(-\d+)?(-g\w+)?$',
+        re.IGNORECASE
+    )
 
     def get_branch(self):
         branch = self.get_git_output(
             'rev-parse',
             '--abbrev-ref',
-            'HEAD',
-            capture=True
+            'HEAD'
         )
         return branch and branch.strip()
 
+    def is_dirty(self):
+        exitcode = self.get_git_output(
+            'diff',
+            '--quiet',
+            '--ignore-submodules',
+            capture=False
+        )
+        return exitcode != 0
+
     def get_version(self):
-        r = self.get_git_output(
+        main = None
+        changes = None
+        commitid = None
+        dirty = self.is_dirty()
+        text = self.get_git_output(
             'describe',
             '--tags',
-            '--dirty',
-            capture=True
+            '--long',
+            '--match', 'v*.*'
         )
-        if r and '-dirty' in r:
-            # git sometimes reports -dirty when used in temp build folders
-            exitcode = self.get_git_output(
-                'diff',
-                '--quiet',
-                '--ignore-submodules',
-                capture=False
-            )
-            if exitcode == 0 and '-dirty' in r:
-                r = r.replace('-dirty', '')
+        if text:
+            m = self.re_describe.match(text)
+            if m:
+                main = m.group(1)
+                changes = strip_dash(m.group(2))
+                changes = int(changes) if changes else 0
+                commitid = strip_dash(m.group(3))
 
-        if r is None:
-            return None
+        if not text or not main:
+            commitid = self.get_git_output('rev-parse', '--short', 'HEAD')
+            commitid = 'g%s' % commitid if commitid else ''
+            changes = self.get_git_output('rev-list', 'HEAD')
+            changes = changes.count('\n') + 1 if changes else 0
 
-        return Version(r or '0.0')
+        return Version(main, changes, commitid, dirty, text)
 
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
@@ -158,7 +186,19 @@ class Git(Scm):
         self.run_git(commit, 'push', '--tags', 'origin', branch)
 
     def get_git_output(self, *args, **kwargs):
-        return setupmeta.run_program('git', *args, cwd=self.root, **kwargs)
+        capture = kwargs.pop('capture', True)
+        return setupmeta.run_program(
+            'git',
+            *args,
+            capture=capture,
+            cwd=self.root,
+            **kwargs
+        )
 
     def run_git(self, commit, *args):
-        return self.get_git_output(*args, fatal=True, dryrun=not commit)
+        return self.get_git_output(
+            *args,
+            capture=None,
+            fatal=True,
+            dryrun=not commit
+        )

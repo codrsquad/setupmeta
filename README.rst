@@ -136,7 +136,7 @@ setumeta can also help with versioning, by leveraging git tags (a bit like setup
 You can leverage that feature by specifying a ``versioning`` attribute, either in your ``setup.py``
 (or ``__versioning__`` in one of your ``__init__.py``-s, works similarly to how all other fields are picked up as described above)
 
-2 simple strategies are pre-configured (see VERSIONING_ for more info):
+2 simple strategies are pre-configured (see `versioning doc`_ for more info):
 
 * ``versioning='tag'`` to compute version from latest git tag + beta addendum
 
@@ -160,7 +160,7 @@ You can leverage that feature by specifying a ``versioning`` attribute, either i
 
 * There's a "local" addendum when checkout is not clean, its default format is ``{dev}``
 
-* It's possible to fine-tune this via ``versioning=dict(...)`` (see VERSIONING_ for more info)
+* It's possible to fine-tune this via ``versioning=dict(...)`` (see `versioning doc`_ for more info)
 
 
 Commands
@@ -252,7 +252,7 @@ This will simply show you your ``entry_points/console_scripts``. I added it beca
 
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
-.. _VERSIONING: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
+.. _versioning doc: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 

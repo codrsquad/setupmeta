@@ -13,6 +13,18 @@ import sys
 
 
 USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
+DEBUG = os.environ.get('SETUPMETA_DEBUG')
+
+
+def abort(msg):
+    raise UsageError(msg)
+
+
+def trace(msg):
+    if not DEBUG:
+        return
+    sys.stderr.write(":: %s\n" % msg)
+    sys.stderr.flush()
 
 
 def short(text, c=64):
@@ -99,12 +111,19 @@ def run_program(program, *args, **kwargs):
 
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
-
+    if output:
+        output = decode(output)
     if error:
-        sys.stderr.write(decode(error))
+        error = decode(error)
+
+    trace("Ran %s (exitcode: %s)" % (represented, p.returncode))
+    if output:
+        trace("output: %s" % output)
+    if error:
+        trace("error: %s" % error)
 
     if capture is True:
-        return decode(output)
+        return output
 
     if p.returncode and fatal:
         print("%s exited with code %s" % (represented, p.returncode))

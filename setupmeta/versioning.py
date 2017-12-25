@@ -3,14 +3,10 @@ import os
 import warnings
 
 import setupmeta
-from setupmeta.scm import Git, Version
+from setupmeta.scm import Git, Hg, Version
 
 
 BUMPABLE = 'major minor patch'.split()
-
-
-def abort(msg):
-    raise setupmeta.UsageError(msg)
 
 
 class Strategy:
@@ -46,7 +42,7 @@ class Strategy:
             if not p[0] or p[2] and p[2] not in '.+':
                 return None
             result.append(p[0])
-        sample = Version('1.0.0')
+        sample = Version()
         for part in result:
             if not hasattr(sample, part):
                 self.problem = self.invalid_msg("unknown part '%s'" % part)
@@ -82,7 +78,7 @@ class Strategy:
         if what not in bumpable:
             msg = "Can't bump '%s', it's out of scope" % what
             msg += " of main format '%s'" % self.main_format
-            abort(msg)
+            setupmeta.abort(msg)
 
         major, minor, rev = current_version.bump_triplet()
         if what == 'major':
@@ -92,7 +88,7 @@ class Strategy:
         elif what == 'patch':
             major, minor, rev = (major, minor, rev + 1)
 
-        next_version = Version("%s.%s.%s" % (major, minor, rev))
+        next_version = Version(main="%s.%s.%s" % (major, minor, rev))
         parts = next_version.to_dict(bumpable)
         next_version = self.main_format.format(**parts)
         return next_version.strip('.').strip('+')
@@ -135,13 +131,14 @@ class Versioning:
         given = meta.value('versioning')
         self.enabled = bool(given)
         self.strategy = Strategy.from_meta(given)
-        self.root = setupmeta.project_path()
-        if os.path.isdir(os.path.join(self.root, '.git')):
-            self.scm = Git(self.root)
+        if os.path.isdir(setupmeta.project_path('.git')):
+            self.scm = Git()
+        elif os.path.isdir(setupmeta.project_path('.hg')):
+            self.scm = Hg()
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
         elif not self.scm:
-            self.problem = "Unknown SCM (supported: git)"
+            self.problem = "project not under a supported SCM"
         else:
             self.problem = None
 
@@ -179,20 +176,20 @@ class Versioning:
 
     def bump(self, what, commit, commit_all):
         if self.problem:
-            abort(self.problem)
+            setupmeta.abort(self.problem)
 
         branch = self.scm.get_branch()
         if branch not in self.strategy.branches:
-            abort("Can't bump branch '%s', need one of %s" % (
+            setupmeta.abort("Can't bump branch '%s', need one of %s" % (
                 branch,
                 self.strategy.branches
             ))
 
         gv = self.scm.get_version()
         if not gv:
-            abort("Could not determine version from git tags")
+            setupmeta.abort("Could not determine version from git tags")
         if commit and gv.dirty and not commit_all:
-            abort("You have pending git changes, can't bump")
+            setupmeta.abort("You have pending git changes, can't bump")
 
         next_version = self.strategy.bumped(what, gv)
 
@@ -210,7 +207,7 @@ class Versioning:
             hook,
             fatal=True,
             dryrun=not commit,
-            cwd=self.root
+            cwd=setupmeta.project_path()
         )
 
     def update_sources(self, next_version, commit, commit_all):
