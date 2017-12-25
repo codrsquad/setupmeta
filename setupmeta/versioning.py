@@ -154,6 +154,8 @@ class Versioning:
             return
         vdef = self.meta.definitions.get('version')
         cv = vdef.sources[0].value if vdef and vdef.sources else None
+        if cv and vdef and vdef.source == 'pygradle':
+            return
         if self.problem:
             if not cv:
                 self.meta.auto_fill('version', '0.0.0', 'missing')
@@ -173,8 +175,6 @@ class Versioning:
             expected = rendered[:len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
             warnings.warn(msg)
-            if source == 'pygradle':
-                rendered = cv
         self.meta.auto_fill('version', rendered, 'git', override=True)
 
     def bump(self, what, commit, commit_all):
