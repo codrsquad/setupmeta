@@ -14,7 +14,7 @@ from . import conftest
 
 
 EXAMPLES = os.path.join(conftest.PROJECT, 'examples')
-COMMANDS = ['explain -c160', 'entrypoints']
+COMMANDS = ['explain -c161', 'entrypoints']
 
 
 def scenario_names():

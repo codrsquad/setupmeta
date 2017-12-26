@@ -220,9 +220,9 @@ class Versioning:
             if '.py:' not in vdef.source:
                 continue
 
-            relative_path, _, target_line_number = vdef.source.partition(':')
+            relative_path, _, target_line = vdef.source.partition(':')
             full_path = setupmeta.project_path(relative_path)
-            target_line_number = int(target_line_number)
+            target_line = setupmeta.to_int(target_line, default=0)
 
             lines = []
             line_number = 0
@@ -230,7 +230,7 @@ class Versioning:
             with io.open(full_path, 'rt', encoding='utf-8') as fh:
                 for line in fh.readlines():
                     line_number += 1
-                    if line_number == target_line_number:
+                    if line_number == target_line:
                         revised = updated_line(line, next_version, vdef)
                         if revised is None or revised == line:
                             lines = None

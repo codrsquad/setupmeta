@@ -27,6 +27,13 @@ def trace(msg):
     sys.stderr.flush()
 
 
+def to_int(text, default=None):
+    try:
+        return int(text)
+    except (ValueError, TypeError):
+        return default
+
+
 def short(text, c=64):
     """ Short representation of 'text' """
     if not text:

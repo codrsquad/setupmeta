@@ -2,6 +2,7 @@
 Commands contributed by setupmeta
 """
 
+import os
 import setuptools
 import sys
 
@@ -16,6 +17,21 @@ def abort(message):
 def MetaCommand(cls):
     """ Decorator allowing for less boilerplate in our commands """
     return setupmeta.MetaDefs.register_command(cls)
+
+
+class Console:
+
+    _columns = None
+
+    @classmethod
+    def columns(cls, default=160):
+        if cls._columns is None and sys.stdout.isatty():
+            cols = os.popen('tput cols', 'r').read()    # nosec
+            cols = setupmeta.decode(cols)
+            cls._columns = setupmeta.to_int(cols, default=None)
+        if cls._columns is None:
+            cls._columns = default
+        return cls._columns
 
 
 @MetaCommand
@@ -59,13 +75,10 @@ class ExplainCommand(setuptools.Command):
     ]
 
     def initialize_options(self):
-        self.chars = 200
+        self.chars = Console.columns()
 
     def run(self):
-        try:
-            self.chars = int(self.chars)
-        except ValueError:
-            self.chars = 200
+        self.chars = setupmeta.to_int(self.chars, default=Console.columns())
 
         definitions = self.setupmeta.definitions
         if not definitions:
@@ -75,7 +88,7 @@ class ExplainCommand(setuptools.Command):
         sources = sum((d.sources for d in definitions.values()), [])
         longest_source = min(32, max(len(s.source) for s in sources))
         form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
-        max_chars = max(60, self.chars - longest_key - longest_source - 4)
+        max_chars = max(60, self.chars - longest_key - longest_source - 5)
 
         for definition in sorted(definitions.values()):
             count = 0

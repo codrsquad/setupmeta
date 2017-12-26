@@ -11,7 +11,7 @@ from setupmeta import decode
 
 
 EXAMPLES = os.path.abspath(os.path.dirname(__file__))
-COMMANDS = ['explain -c160', 'entrypoints']
+COMMANDS = ['explain -c161', 'entrypoints']
 
 
 def run_command(path, command):

@@ -162,10 +162,11 @@ class Git(Scm):
             if m:
                 main = m.group(1)
                 changes = strip_dash(m.group(2))
-                changes = int(changes) if changes else 0
+                changes = setupmeta.to_int(changes, default=0)
                 commitid = strip_dash(m.group(3))
 
         if not text or not main:
+            dirty = True
             commitid = self.get_git_output('rev-parse', '--short', 'HEAD')
             commitid = 'g%s' % commitid if commitid else ''
             changes = self.get_git_output('rev-list', 'HEAD')
