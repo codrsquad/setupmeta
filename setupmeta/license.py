@@ -6,8 +6,7 @@ It's one of those annoying things, you're supposed to have:
 - a 'license' attribute in your metadata (short word(s), like "MIT")
 - 'License :: OSI Approved :: ...' in your classifiers
 
-Like the Shadoks say: (Why do simple when one can do complicated)
-Why do simple when one can do complicated?
+Like the Shadoks say: why do simple when one can do complicated?
 """
 
 import re
@@ -16,8 +15,7 @@ import re
 RE_VERSION = re.compile(r'version (\d+(.\d+)?)', re.IGNORECASE)
 
 
-class LicenseMojo:
-    """ Attempt at reasoning with the madness """
+class License:
 
     def __init__(self, short, match=None, classifier=None):
         self.short = short
@@ -25,9 +23,6 @@ class LicenseMojo:
         if not isinstance(self._match, list):
             self._match = [self._match]
         self.classifier = classifier or short
-
-    def __repr__(self):
-        return self.short
 
     def match(self, contents):
         if not contents or any(m not in contents for m in self._match):
@@ -66,11 +61,11 @@ BSD_CHATTER = [
 
 
 KNOWN_LICENSES = [
-    LicenseMojo('MIT', 'MIT License', 'MIT License'),
-    LicenseMojo('Apache', 'apache.org/licenses', 'Apache Software License'),
-    LicenseMojo('GNU'),
-    LicenseMojo('MPL', 'Mozilla Public License'),
-    LicenseMojo('BSD', BSD_CHATTER, 'BSD License'),
+    License('MIT', 'MIT License', 'MIT License'),
+    License('Apache', 'apache.org/licenses', 'Apache Software License'),
+    License('GNU'),
+    License('MPL', 'Mozilla Public License'),
+    License('BSD', BSD_CHATTER, 'BSD License'),
 ]
 
 
@@ -79,8 +74,8 @@ def determined_license(contents):
     :param str|None contents: Contents to determine license from
     :return tuple(str, str): Short name and classifier name
     """
-    for mojo in KNOWN_LICENSES:
-        short, classifier = mojo.match(contents)
+    for license in KNOWN_LICENSES:
+        short, classifier = license.match(contents)
         if short:
             return short, classifier
     return None, None
