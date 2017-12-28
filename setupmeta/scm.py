@@ -90,6 +90,8 @@ class Version:
 
 class Scm:
 
+    program = None      # type: str
+
     def __init__(self):
         self.root = setupmeta.project_path()
 
@@ -105,11 +107,31 @@ class Scm:
     def apply_tag(self, commit, branch, next_version):
         pass
 
+    def get_output(self, *args, **kwargs):
+        capture = kwargs.pop('capture', True)
+        return setupmeta.run_program(
+            self.program,
+            *args,
+            capture=capture,
+            cwd=self.root,
+            **kwargs
+        )
+
+    def run(self, commit, *args):
+        self.get_output(
+            *args,
+            capture=None,
+            fatal=True,
+            dryrun=not commit
+        )
 
 class Hg(Scm):
 
+    program = 'hg'
+
     def get_branch(self):
-        setupmeta.abort("get_branch() not implemented for hg")
+        branch = self.get_output('branch')
+        return branch and branch.strip()
 
     def get_version(self):
         setupmeta.abort("get_version() not implemented for hg")
@@ -123,6 +145,8 @@ class Hg(Scm):
 
 class Git(Scm):
 
+    program = 'git'
+
     # Output expected from git describe
     re_describe = re.compile(
         r'^v?(.+?)(-\d+)?(-g\w+)?$',
@@ -130,7 +154,7 @@ class Git(Scm):
     )
 
     def get_branch(self):
-        branch = self.get_git_output(
+        branch = self.get_output(
             'rev-parse',
             '--abbrev-ref',
             'HEAD'
@@ -138,7 +162,7 @@ class Git(Scm):
         return branch and branch.strip()
 
     def is_dirty(self):
-        exitcode = self.get_git_output(
+        exitcode = self.get_output(
             'diff',
             '--quiet',
             '--ignore-submodules',
@@ -151,7 +175,7 @@ class Git(Scm):
         changes = None
         commitid = None
         dirty = self.is_dirty()
-        text = self.get_git_output(
+        text = self.get_output(
             'describe',
             '--tags',
             '--long',
@@ -167,9 +191,9 @@ class Git(Scm):
 
         if not text or not main:
             dirty = True
-            commitid = self.get_git_output('rev-parse', '--short', 'HEAD')
+            commitid = self.get_output('rev-parse', '--short', 'HEAD')
             commitid = 'g%s' % commitid if commitid else ''
-            changes = self.get_git_output('rev-list', 'HEAD')
+            changes = self.get_output('rev-list', 'HEAD')
             changes = changes.count('\n') + 1 if changes else 0
 
         return Version(main, changes, commitid, dirty, text)
@@ -177,29 +201,11 @@ class Git(Scm):
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
             return
-        self.run_git(commit, 'add', *relative_paths)
-        self.run_git(commit, 'commit', '-m', "Version %s" % next_version)
+        self.run(commit, 'add', *relative_paths)
+        self.run(commit, 'commit', '-m', "Version %s" % next_version)
 
     def apply_tag(self, commit, branch, next_version):
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
-        self.run_git(commit, 'tag', '-a', tag, '-m', bump_msg)
-        self.run_git(commit, 'push', '--tags', 'origin', branch)
-
-    def get_git_output(self, *args, **kwargs):
-        capture = kwargs.pop('capture', True)
-        return setupmeta.run_program(
-            'git',
-            *args,
-            capture=capture,
-            cwd=self.root,
-            **kwargs
-        )
-
-    def run_git(self, commit, *args):
-        return self.get_git_output(
-            *args,
-            capture=None,
-            fatal=True,
-            dryrun=not commit
-        )
+        self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
+        self.run(commit, 'push', '--tags', 'origin', branch)
