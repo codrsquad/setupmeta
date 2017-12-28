@@ -3,18 +3,22 @@ Simplify your setup.py
 
 .. image:: https://img.shields.io/pypi/v/setupmeta.svg
     :target: https://pypi.org/project/setupmeta/
-    :alt: version
+    :alt: Version on pypi
 
 .. image:: https://travis-ci.org/zsimic/setupmeta.svg?branch=master
     :target: https://travis-ci.org/zsimic/setupmeta
+    :alt: Travis CI
 
-.. image:: https://img.shields.io/pypi/l/setupmeta.svg
-    :target: https://github.com/zsimic/setupmeta
+.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/zsimic/setupmeta
+    :alt: codecov
 
 .. image:: https://img.shields.io/github/languages/top/zsimic/setupmeta.svg
     :target: https://github.com/zsimic/setupmeta
+    :alt: github
 
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
+    :alt: Python versions tested
 
 ----
 

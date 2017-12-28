@@ -35,14 +35,6 @@ RE_DESCRIPTION = re.compile(
 )
 
 
-def get_old_spec(*relative_paths):
-    """ Read old-school requirements.txt type file """
-    contents, path = find_contents(relative_paths, loader=load_list)
-    if contents:
-        return RequirementsEntry(contents, path)
-    return None
-
-
 def is_setup_py_path(path):
     """ Is 'path' pointing to a setup.py module? """
     if not path:
@@ -302,12 +294,21 @@ class Requirements:
     """ Allows to auto-fill requires from requirements.txt """
 
     def __init__(self):
-        self.install = get_old_spec('requirements.txt', 'pinned.txt')
-        self.test = get_old_spec(
+        self.install = self.get_requirements('requirements.txt', 'pinned.txt')
+        self.test = self.get_requirements(
+            'tests/requirements.txt',
             'requirements-dev.txt',
             'dev-requirements.txt',
             'test-requirements.txt'
         )
+
+    @staticmethod
+    def get_requirements(*relative_paths):
+        """ Read old-school requirements.txt type file """
+        contents, path = find_contents(relative_paths, loader=load_list)
+        if contents:
+            return RequirementsEntry(contents, path)
+        return None
 
 
 class SetupMeta(Settings):
