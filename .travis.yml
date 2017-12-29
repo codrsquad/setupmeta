@@ -12,6 +12,7 @@ install:
   - pip install tox-travis
 
 script:
+  - env
   - tox
 
 after_success:

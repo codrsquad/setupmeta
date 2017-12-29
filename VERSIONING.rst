@@ -102,6 +102,10 @@ Advanced
 This is what ``versioning='tag'`` is a shortcut for::
 
     setup(
+        # <version>+h<build-id>.<node>
+        # 1.0.0+hlocal.g1234567
+        # 1.0.0+h123.g1234567
+        versioning='tag(master):{major}.{minor}.{patch}{beta}+h{$BUILD_ID:local}.{commitid}',
         versioning={
             'format': '{major}.{minor}.{patch}{beta}',
             'local': '{devmarker}',
