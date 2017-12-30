@@ -94,7 +94,7 @@ def check_git(dirty):
     assert 'commitid' in str(versioning.strategy.extra_bits)
     check_rep(versioning, main='{major}.{minor}.{changes}')
     if dirty:
-        assert meta.version == '0.1.3+hlocal.g123'
+        assert meta.version == '0.1.3+g123'
     else:
         assert meta.version == '0.1.3'
 

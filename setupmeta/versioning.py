@@ -13,7 +13,7 @@ RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?([^+]+)(\+(.*))?$')
 DEFAULT_SEPARATOR = '+'
 DEFAULT_MAIN = '{major}.{minor}.{patch}{beta}'
 CHANGES_MAIN = '{major}.{minor}.{changes}'
-DEFAULT_EXTRA = '?h{$*BUILD_ID:local}.{commitid}'
+DEFAULT_EXTRA = '?{commitid}'
 DEFAULT_BRANCHES = 'master'
 
 
