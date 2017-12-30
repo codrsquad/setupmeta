@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import warnings
 
 import setupmeta
@@ -7,66 +8,204 @@ from setupmeta.scm import Git, Hg, Version
 
 
 BUMPABLE = 'major minor patch'.split()
+RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?([^+]+)(\+(.*))?$')
+
+DEFAULT_SEPARATOR = '+'
+DEFAULT_MAIN = '{major}.{minor}.{patch}{beta}'
+CHANGES_MAIN = '{major}.{minor}.{changes}'
+DEFAULT_EXTRA = '?h{$*BUILD_ID:local}.{commitid}'
+DEFAULT_BRANCHES = 'master'
 
 
-class Strategy:
-    def __init__(self, main_fmt, local_fmt=None, branches=None):
-        self.main_format = main_fmt
-        self.local_format = local_fmt or '{devmarker}'
-        self.branches = setupmeta.listify(branches or 'master')
+def project_scm(root):
+    """
+    :param str root: Path to project folder
+    :return setupmeta.scm.Scm: SCM used by project, if any
+    """
+    if os.path.isdir(os.path.join(root, '.git')):
+        return Git(root)
+    elif os.path.isdir(os.path.join(root, '.hg')):
+        return Hg(root)
+    return None
+
+
+class VersionBit:
+    def __init__(self, strategy, text, alternative=None, constant=False):
+        self.strategy = strategy
+        self.text = text
+        self.alternative = alternative
+        self.constant = constant
+        self.renderer = None
         self.problem = None
-        self.main_components = self.parsed_components(main_fmt)
-        self.local_components = self.parsed_components(self.local_format)
-        if self.problem:
-            return
-        if not main_fmt:
-            self.problem = "No format specified"
-        elif not self.main_components:
-            self.problem = self.invalid_msg()
-
-    def parsed_components(self, fmt):
-        if not fmt:
-            return None
-        parts = fmt.split('{')
-        if not parts:
-            return None
-        if parts[0]:
-            self.problem = self.invalid_msg("must begin with '{'")
-            return None
-        parts.pop(0)
-        if not parts:
-            return None
-        result = []
-        for part in parts:
-            p = part.partition('}')
-            if not p[0] or p[2] and p[2] not in '.+':
-                return None
-            result.append(p[0])
-        sample = Version()
-        for part in result:
-            if not hasattr(sample, part):
-                self.problem = self.invalid_msg("unknown part '%s'" % part)
-                return None
-        return result
+        if self.constant:
+            self.renderer = self.rendered_constant
+        elif '$' in self.text:
+            self.renderer = self.rendered_env_var
+        elif not hasattr(Version, self.text):
+            self.problem = "invalid versioning part '%s'" % self.text
+        else:
+            self.renderer = self.rendered_attr
 
     def __repr__(self):
-        return self.main_format + self.local_format
+        text = self.text
+        if self.alternative:
+            text = '%s:%s' % (text, self.alternative)
+        if self.constant:
+            text = "'%s'" % text
+        else:
+            text = '{%s}' % text
+        if self.problem:
+            text = " [!%s]" % self.problem
+        return text
 
-    def invalid_msg(self, msg=None):
-        if msg:
-            msg = ': %s' % msg
-        return "Invalid format '%s'%s" % (self, msg or '')
+    def rendered_attr(self, version):
+        """
+        :param Version version: Version to render
+        :return str: Rendered version bit
+        """
+        return getattr(version, self.text, None)
+
+    def rendered_constant(self, version):
+        """
+        :param Version version: Version to render
+        :return str: Rendered version bit
+        """
+        return self.text
+
+    def rendered_env_var(self, version):
+        """
+        :param Version version: Version to render
+        :return str: Rendered version bit
+        """
+        i = self.text.index('$')
+        prefix = self.text[:i]
+        env_var = self.text[i + 1:]
+        if env_var.startswith('*') and env_var.endswith('*'):
+            env_var = env_var[1:-1]
+            candidates = [n for n in os.environ if env_var in n]
+        elif env_var.startswith('*'):
+            env_var = env_var[1:]
+            candidates = [n for n in os.environ if n.endswith(env_var)]
+        elif env_var.endswith('*'):
+            env_var = env_var[:-1]
+            candidates = [n for n in os.environ if n.startswith(env_var)]
+        else:
+            candidates = [env_var]
+        value = None
+        if candidates:
+            value = os.environ.get(sorted(candidates)[0])
+        if value is None:
+            value = self.alternative
+        if value is None:
+            if prefix:
+                return ''
+            return None
+        return "%s%s" % (prefix, value)
 
     def rendered(self, version):
         """
         :param Version version: Version to render
+        :return str: Rendered version bit
+        """
+        if not self.renderer:
+            return 'invalid'
+        value = self.renderer(version)
+        return str(value)
+
+
+class Strategy:
+
+    def __init__(self, main, extra, separator, branches, **kwargs):
+        self.main = main
+        self.extra = extra
+        if kwargs:
+            warnings.warn("Ignored fields for 'versioning': %s" % kwargs)
+        self.main_bits = self.bits(main)
+        self.extra_bits = self.bits(extra)
+        self.separator = separator or '+'
+        if branches and hasattr(branches, 'lstrip'):
+            branches = branches.lstrip('(').rstrip(')')
+        self.branches = setupmeta.listify(branches, separator=',')
+        self.text = self.formatted(
+            self.branches,
+            self.main,
+            self.separator,
+            self.extra,
+        )
+        all_bits = self.main_bits if isinstance(self.main_bits, list) else []
+        if isinstance(self.extra_bits, list):
+            all_bits = all_bits + self.extra_bits
+        problems = [bit.problem for bit in all_bits if bit.problem]
+        self.problem = '\n'.join(problems) if problems else None
+
+    @staticmethod
+    def formatted(branches, main, separator, extra):
+        if isinstance(branches, list):
+            branches = ','.join(branches)
+        return ''.join([
+            'tag(%s):' % branches,
+            str(main),
+            separator,
+            str(extra),
+        ])
+
+    def bits(self, fmt):
+        if callable(fmt):
+            return fmt
+        elif fmt.startswith('?'):
+            fmt = fmt[1:]
+        result = []
+        if not fmt:
+            return result
+        before, _, after = fmt.partition('{')
+        if before:
+            result.append(VersionBit(self, before, constant=True))
+        if not after:
+            return result
+        part, _, rest = after.partition('}')
+        if ':' in part:
+            left, _, right = part.partition(':')
+            left = VersionBit(self, left, alternative=right)
+            result.append(left)
+        else:
+            part = VersionBit(self, part)
+            result.append(part)
+        result.extend(self.bits(rest))
+        return result
+
+    def __repr__(self):
+        return self.text
+
+    def needs_extra(self, version):
+        if not self.extra:
+            return False
+        if not isinstance(self.extra_bits, list):
+            return True
+        return self.extra[0] != '?' or version.dirty
+
+    def rendered(self, version, extra=True):
+        """
+        :param Version version: Version to render
+        :param bool extra: Render extra part?
         :return str: Rendered version
         """
-        if not version:
-            return None
-        fmt = "%s%s" % (self.main_format, self.local_format)
-        parts = version.to_dict()
-        return fmt.format(**parts)
+        result = self.rendered_bits(version, self.main_bits) or []
+        if extra and self.needs_extra(version):
+            extra = self.rendered_bits(version, self.extra_bits)
+            if extra:
+                result.append(self.separator)
+                result.extend(extra)
+        return ''.join(result)
+
+    @staticmethod
+    def rendered_bits(version, bits):
+        if isinstance(bits, list):
+            return [bit.rendered(version) for bit in bits]
+        if callable(bits):
+            value = bits(version)
+            if value:
+                return [value]
+        return None
 
     def bumped(self, what, current_version):
         """
@@ -74,10 +213,13 @@ class Strategy:
         :param Version current_version: Current version
         :return str: Represented next version, with 'what' bumped
         """
-        bumpable = [s for s in self.main_components if s in BUMPABLE]
+        if not isinstance(self.main_bits, list):
+            setupmeta.abort("Main format is not a list: %s" % self.main_bits)
+
+        bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
         if what not in bumpable:
             msg = "Can't bump '%s', it's out of scope" % what
-            msg += " of main format '%s'" % self.main_format
+            msg += " of main format '%s'" % self.main_bits
             setupmeta.abort(msg)
 
         major, minor, rev = current_version.bump_triplet()
@@ -89,58 +231,73 @@ class Strategy:
             major, minor, rev = (major, minor, rev + 1)
 
         next_version = Version(main="%s.%s.%s" % (major, minor, rev))
-        parts = next_version.to_dict(bumpable)
-        next_version = self.main_format.format(**parts)
-        return next_version.strip('.').strip('+')
+        return self.rendered(next_version, extra=False)
 
     @classmethod
     def from_meta(cls, given):
         if not given:
             return None
-        if isinstance(given, dict):
-            vfmt = given.get('format')
-            lfmt = given.get('local')
-            branches = given.get('branches')
 
-            if not vfmt:
-                warnings.warn(
-                    "No 'format' in given strategy '%s'" % given
-                )
+        data = dict(
+            main=DEFAULT_MAIN,
+            extra=DEFAULT_EXTRA,
+            separator=DEFAULT_SEPARATOR,
+            branches=DEFAULT_BRANCHES,
+        )
+
+        if isinstance(given, dict):
+            data.update(given)
+
+        elif given == 'changes':
+            data['main'] = CHANGES_MAIN
+
+        elif given != 'tag' and given is not True:
+            m = RE_VERSIONING.match(given)
+            if not m:
                 return None
 
-            return cls(vfmt, lfmt, branches=branches)
+            if m.group(2):
+                data['branches'] = m.group(2)
 
-        if given == 'changes':
-            return cls('{major}.{minor}.{changes}')
+            data['main'] = m.group(3)
+            if m.group(4):
+                data['extra'] = m.group(5)
 
-        if given == 'tag':
-            return cls('{major}.{minor}.{patch}{beta}')
+        try:
+            return cls(**data)
 
-        warnings.warn("Unknown versioning strategy '%s'" % given)
-        return None
+        except Exception as e:
+            msg = "Malformed versioning strategy '%s': %s" % (given, e)
+            warnings.warn(msg)
+            return None
 
 
 class Versioning:
-    def __init__(self, meta):
+    def __init__(self, meta, scm):
         """
         :param setupmeta.model.SetupMeta meta: Parent meta object
         :param Scm scm: Backend SCM
         """
         self.meta = meta
-        self.scm = None
         given = meta.value('versioning')
-        self.enabled = bool(given)
         self.strategy = Strategy.from_meta(given)
-        if os.path.isdir(setupmeta.project_path('.git')):
-            self.scm = Git()
-        elif os.path.isdir(setupmeta.project_path('.hg')):
-            self.scm = Hg()
+        self.enabled = bool(given and self.strategy)
+        self.scm = scm
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
         elif not self.scm:
             self.problem = "project not under a supported SCM"
         else:
-            self.problem = None
+            self.problem = self.strategy.problem
+
+    @staticmethod
+    def formatted(
+            main=DEFAULT_MAIN,
+            extra=DEFAULT_EXTRA,
+            separator=DEFAULT_SEPARATOR,
+            branches=DEFAULT_BRANCHES
+    ):
+        return Strategy.formatted(branches, main, separator, extra)
 
     def auto_fill_version(self):
         """
@@ -165,7 +322,7 @@ class Versioning:
             return
         rendered = self.strategy.rendered(gv)
         if not rendered:
-            warnings.warn("Couldn't render version '%s'" % gv.text)
+            warnings.warn("Couldn't render version '%s'" % gv)
             return
         if cv and not rendered.startswith(cv):
             source = vdef.sources[0].source
@@ -174,7 +331,7 @@ class Versioning:
             warnings.warn(msg)
         self.meta.auto_fill('version', rendered, 'git', override=True)
 
-    def bump(self, what, commit, commit_all):
+    def bump(self, what, commit=False, commit_all=False):
         if self.problem:
             setupmeta.abort(self.problem)
 

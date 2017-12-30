@@ -1,6 +1,6 @@
 import os
 
-from setupmeta import decode, listify, short, MetaDefs
+from setupmeta import decode, listify, short
 
 
 def test_shortening():

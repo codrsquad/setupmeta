@@ -92,8 +92,8 @@ class Scm:
 
     program = None      # type: str
 
-    def __init__(self):
-        self.root = setupmeta.project_path()
+    def __init__(self, root):
+        self.root = root
 
     def get_branch(self):
         pass
@@ -124,6 +124,7 @@ class Scm:
             fatal=True,
             dryrun=not commit
         )
+
 
 class Hg(Scm):
 

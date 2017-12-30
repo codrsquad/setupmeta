@@ -12,7 +12,7 @@ import sys
 from setupmeta import listify, MetaDefs, project_path, short
 from setupmeta.content import find_contents, load_list, load_readme
 from setupmeta.license import determined_license
-from setupmeta.versioning import Versioning
+from setupmeta.versioning import project_scm, Versioning
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -323,6 +323,7 @@ class SetupMeta(Settings):
 
         # _setup_py_path passed in by tests, or special usages
         setup_py_path = self.attrs.pop('_setup_py_path', None)
+        scm = self.attrs.pop('scm', None)
 
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
@@ -397,7 +398,8 @@ class SetupMeta(Settings):
                     SimpleModule('src', package, '__init__.py'),
                 )
 
-        self.versioning = Versioning(self)
+        scm = scm or project_scm(MetaDefs.project_dir)
+        self.versioning = Versioning(self, scm)
         self.versioning.auto_fill_version()
 
         url = self.value('url')
@@ -433,6 +435,7 @@ class SetupMeta(Settings):
 
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
+        self.auto_fill_requires('test', 'tests_require')
 
         self.auto_fill_classifiers()
         self.auto_fill_entry_points()
