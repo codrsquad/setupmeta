@@ -9,7 +9,7 @@ This folder contains test case scenarios. The tests consist of:
 
 * commands ``explain`` and ``entrypoints`` are ran on each example, and their output is compared to ``expected.txt`` (has to match)
 
-* `refresh.py`_ (or ``tox -e refreshexamples``) can be used to regenerate ``expected.txt`` (see ``git diff`` to verify changes look good)
+* `scenarios.py`_ (or ``tox -e refreshscenarios``) can be used to regenerate ``expected.txt`` (see ``git diff`` to verify changes look good)
 
 * `test_scenarios.py`_ replays all scenarios and verifies that output matches ``expected.txt``
 
@@ -19,4 +19,4 @@ This folder contains test case scenarios. The tests consist of:
 
 .. _test_scenarios.py: https://github.com/zsimic/setupmeta/blob/master/tests/test_scenarios.py
 
-.. _refresh.py: https://github.com/zsimic/setupmeta/blob/master/tests/refresh.py
+.. _scenarios.py: https://github.com/zsimic/setupmeta/blob/master/tests/scenarios.py

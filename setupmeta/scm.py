@@ -64,7 +64,7 @@ class Scm:
 
     def __init__(self, root):
         self.root = root
-        mock_path = os.path.join(root, '.%s' % self.program, '.mock')
+        mock_path = os.path.join(root, '.mock%s' % self.program)
         if os.path.exists(mock_path):
             with open(mock_path) as fh:
                 self.mock = json.load(fh)

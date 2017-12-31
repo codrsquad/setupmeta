@@ -9,10 +9,6 @@ from setupmeta.scm import Git
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
-SCENARIOS = os.path.join(TESTS, 'scenarios')
-EXAMPLES = os.path.join(PROJECT_DIR, 'examples')
-
-SCENARIO_COMMANDS = ['explain -c161', 'entrypoints']
 
 
 def resouce(*relative_path):
@@ -66,33 +62,6 @@ class capture_output:
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
         return result
-
-
-def valid_scenarios(folder):
-    result = []
-    for name in os.listdir(folder):
-        full_path = os.path.join(folder, name)
-        if os.path.isdir(full_path):
-            result.append(full_path)
-    return result
-
-
-def scenario_paths():
-    """ Available scenario names """
-    return valid_scenarios(SCENARIOS) + valid_scenarios(EXAMPLES)
-
-
-def get_scenario_commands(scenario):
-    result = []
-    result.extend(SCENARIO_COMMANDS)
-    extra_commands = os.path.join(scenario, '.commands')
-    if os.path.isfile(extra_commands):
-        with open(extra_commands) as fh:
-            for line in fh:
-                line = decode(line).strip()
-                if line:
-                    result.append(line)
-    return result
 
 
 class MockGit(Git):

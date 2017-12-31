@@ -7,12 +7,13 @@ import os
 import sys
 
 import pytest
-from . import conftest
+import conftest
+import scenarios
 
 from setupmeta.content import load_contents
 
 
-@pytest.fixture(params=conftest.scenario_paths())
+@pytest.fixture(params=scenarios.scenario_paths())
 def scenario(request):
     """ Yield one test per scenario """
     yield request.param
@@ -37,7 +38,7 @@ def run_scenario(folder):
     old_argv = sys.argv
     try:
         result = []
-        for command in conftest.get_scenario_commands(folder):
+        for command in scenarios.get_scenario_commands(folder):
             with conftest.capture_output() as logged:
                 sys.argv = [setup_py] + command.split()
                 run_output = ''

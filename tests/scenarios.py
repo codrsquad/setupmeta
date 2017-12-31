@@ -10,7 +10,38 @@ import sys
 import conftest
 
 
+SCENARIOS = os.path.join(conftest.TESTS, 'scenarios')
+EXAMPLES = os.path.join(conftest.PROJECT_DIR, 'examples')
+
+SCENARIO_COMMANDS = ['explain -c161', 'entrypoints']
 IGNORED_ERRORS = 'debugger UserWarning warnings.warn'.split()
+
+
+def valid_scenarios(folder):
+    result = []
+    for name in os.listdir(folder):
+        full_path = os.path.join(folder, name)
+        if os.path.isdir(full_path):
+            result.append(full_path)
+    return result
+
+
+def scenario_paths():
+    """ Available scenario names """
+    return valid_scenarios(SCENARIOS) + valid_scenarios(EXAMPLES)
+
+
+def get_scenario_commands(scenario):
+    result = []
+    result.extend(SCENARIO_COMMANDS)
+    extra_commands = os.path.join(scenario, '.commands')
+    if os.path.isfile(extra_commands):
+        with open(extra_commands) as fh:
+            for line in fh:
+                line = conftest.decode(line).strip()
+                if line:
+                    result.append(line)
+    return result
 
 
 def cleaned_error(error):
@@ -38,7 +69,7 @@ def run_scenario_command(scenario, command):
 
 def run_scenario(scenario):
     output = ''
-    commands = conftest.get_scenario_commands(scenario)
+    commands = get_scenario_commands(scenario)
     for command in commands:
         output += "%s\n\n" % run_scenario_command(scenario, command).strip()
     return "%s\n" % output.strip()
@@ -71,7 +102,7 @@ def main():
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=level)
     logging.root.setLevel(level)
 
-    for scenario in conftest.scenario_paths():
+    for scenario in scenario_paths():
         refresh_example(scenario, dryrun=args.dryrun)
 
 

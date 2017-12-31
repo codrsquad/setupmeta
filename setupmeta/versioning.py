@@ -17,12 +17,16 @@ DEFAULT_EXTRA = '{commitid}'
 DEFAULT_BRANCHES = 'master'
 
 
+def has_scm_mark(root, name):
+    return os.path.isdir(os.path.join(root, '.%s' % name)) or os.path.isfile(os.path.join(root, '.mock%s' % name))
+
+
 def project_scm(root):
     """
     :param str root: Path to project folder
     :return setupmeta.scm.Scm: SCM used by project, if any
     """
-    if os.path.isdir(os.path.join(root, '.git')):
+    if has_scm_mark(root, 'git'):
         return Git(root)
     return None
 
