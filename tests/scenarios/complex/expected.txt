@@ -16,7 +16,7 @@ running explain
 install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
         keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (setup.py:5               ) ['setup', 'docstring']
-              \_: (setup.py:11              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
+              \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (complex/__version__.py:6 ) ['complex', 'version']
               \_: (complex/__init__.py:16   ) ['complex', 'init']
               \_: (src/complex/__init__.py:6) ['src', 'complex', 'init']
@@ -35,9 +35,12 @@ maintainer_email: (auto-adjust              ) me@myplace.com
              url: (auto-fill                ) https://github.com/zsimic/complex
               \_: (setup.py:3               ) https://github.com/zsimic
          version: (git                      ) 1.2.0
+              \_: (setup.py:6               ) 1.0a1
+              \_: (setup.py:12              ) 1.0b1
               \_: (gradle.properties:1      ) 3.2.1
               \_: (complex/__version__.py:3 ) 1.2.3
               \_: (complex/__init__.py:7    ) 0.0.1
+              \_: (src/complex/__init__.py:7) 1.3.0
       versioning: (explicit                 ) changes
 
 running entrypoints
@@ -49,30 +52,37 @@ error: Can't bump 'patch', it's out of scope of main format '[{major}, '.', {min
 
 running bump
 Not committing bump, use --commit to commit
+Would update setup.py:6 with 'version: 1.3.0'
+Would update setup.py:12 with '__version__ = '1.3.0''
 Would update complex/__version__.py:3 with '__version__ = '1.3.0''
 Would update complex/__init__.py:7 with '__version__ = '1.3.0''
-Would run: git add complex/__version__.py complex/__init__.py
+src/complex/__init__.py:7 already has the right version
+Would run: git add setup.py setup.py complex/__version__.py complex/__init__.py
 Would run: git commit -m Version 1.3.0
 Would run: git tag -a v1.3.0 -m Version 1.3.0
 Would run: git push --tags origin master
 
 running bump
 Not committing bump, use --commit to commit
+Would update setup.py:6 with 'version: 2.0.0'
+Would update setup.py:12 with '__version__ = '2.0.0''
 Would update complex/__version__.py:3 with '__version__ = '2.0.0''
 Would update complex/__init__.py:7 with '__version__ = '2.0.0''
-Would run: git add complex/__version__.py complex/__init__.py
+Would update src/complex/__init__.py:7 with '__version__ = '2.0.0''
+Would run: git add setup.py setup.py complex/__version__.py complex/__init__.py src/complex/__init__.py
 Would run: git commit -m Version 2.0.0
 Would run: git tag -a v2.0.0 -m Version 2.0.0
 Would run: git push --tags origin master
 
 running bump
-Running: git add complex/__version__.py complex/__init__.py
+src/complex/__init__.py:7 already has the right version
+Running: git add setup.py setup.py complex/__version__.py complex/__init__.py
 Running: git commit -m Version 1.3.0
 Running: git tag -a v1.3.0 -m Version 1.3.0
 Running: git push --tags origin master
 
 running bump
-Running: git add complex/__version__.py complex/__init__.py
+Running: git add .
 Running: git commit -m Version 2.0.0
 Running: git tag -a v2.0.0 -m Version 2.0.0
 Running: git push --tags origin master
@@ -95,7 +105,7 @@ running explain
 install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
         keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (setup.py:5               ) ['setup', 'docstring']
-              \_: (setup.py:11              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
+              \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (complex/__version__.py:6 ) ['complex', 'version']
               \_: (complex/__init__.py:16   ) ['complex', 'init']
               \_: (src/complex/__init__.py:6) ['src', 'complex', 'init']
@@ -114,7 +124,10 @@ maintainer_email: (auto-adjust              ) me@myplace.com
              url: (auto-fill                ) https://github.com/zsimic/complex
               \_: (setup.py:3               ) https://github.com/zsimic
          version: (git                      ) 2.0.0
+              \_: (setup.py:6               ) 2.0.0
+              \_: (setup.py:12              ) 2.0.0
               \_: (gradle.properties:1      ) 3.2.1
               \_: (complex/__version__.py:3 ) 2.0.0
               \_: (complex/__init__.py:7    ) 2.0.0
+              \_: (src/complex/__init__.py:7) 2.0.0
       versioning: (explicit                 ) changes

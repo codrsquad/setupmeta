@@ -34,36 +34,42 @@ def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
 
 
 def test_no_scm():
-    s = 'tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR*:}{$BAZ:z}'
-    meta = new_meta(s)
+    meta = new_meta('tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}')
     versioning = meta.versioning
+
     assert versioning.enabled
     assert versioning.problem == "project not under a supported SCM"
     assert meta.version == '0.0.0'
     assert versioning.strategy
     assert versioning.strategy.branches == ['a', 'b']
     assert not versioning.strategy.problem
-    check_rep(versioning, extra='!{.$*FOO*}.{$BAR*:}{$BAZ:z}', branches='a,b', separator=' ')
+
+    assert 'BAZ:z' in str(versioning.strategy.extra_bits)
+
+    check_rep(versioning, extra='!{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}', branches='a,b', separator=' ')
+
     check_render(versioning, '1.0.0.z')
     check_render(versioning, '1.0.0.post2.z', c=2)
     check_render(versioning, '1.0.0.post2.z', c=2, d=True)
+
     os.environ['TEST_FOO1'] = 'bar'
     os.environ['TEST_FOO2'] = 'baz'
     check_render(versioning, '1.0.0.post2.bar.z', c=2, d=True)
     del os.environ['TEST_FOO1']
     del os.environ['TEST_FOO2']
+
     with pytest.raises(setupmeta.UsageError):
         versioning.bump('patch')
 
 
 def test_no_extra():
-    meta = new_meta('{major}.{minor}+', scm=conftest.MockGit(True))
+    meta = new_meta('{major}.{minor}.{$FOO}+', scm=conftest.MockGit(True))
     versioning = meta.versioning
-    assert meta.version == '0.1'
-    check_rep(versioning, main='{major}.{minor}', extra='')
-    check_render(versioning, '1.0')
-    check_render(versioning, '1.0', c=2)
-    check_render(versioning, '1.0', c=2, d=True)
+    assert meta.version == '0.1.None'
+    check_rep(versioning, main='{major}.{minor}.{$FOO}', extra='')
+    check_render(versioning, '1.0.None')
+    check_render(versioning, '1.0.None', c=2)
+    check_render(versioning, '1.0.None', c=2, d=True)
 
 
 def check_git(dirty):

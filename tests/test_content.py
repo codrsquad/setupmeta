@@ -22,6 +22,8 @@ def test_shortening():
 
     assert setupmeta.short("found in %s" % path) == 'found in ~/foo/bar'
 
+    assert setupmeta.short(dict(foo='bar'), c=8) == '1 keys'
+
 
 def test_listify():
     assert setupmeta.listify("a, b") == ['a,', 'b']

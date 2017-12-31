@@ -8,7 +8,7 @@ from setupmeta.scm import Git, Version
 
 
 BUMPABLE = 'major minor patch'.split()
-RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#$%^&*:;/,]!?(.*))?$')
+RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^;/,]!?(.*))?$')
 
 DEFAULT_SEPARATOR = '+'
 DEFAULT_MAIN = '{major}.{minor}.{patch}{post}'
@@ -376,6 +376,7 @@ class Versioning:
             target_line = setupmeta.to_int(target_line, default=0)
 
             lines = []
+            changed = 0
             line_number = 0
             revised = None
             with io.open(full_path, 'rt', encoding='utf-8') as fh:
@@ -383,13 +384,12 @@ class Versioning:
                     line_number += 1
                     if line_number == target_line:
                         revised = updated_line(line, next_version, vdef)
-                        if revised is None or revised == line:
-                            lines = None
-                            break
-                        line = revised
+                        if revised and revised != line:
+                            changed += 1
+                            line = revised
                     lines.append(line)
 
-            if not lines:
+            if not changed:
                 print("%s already has the right version" % vdef.source)
 
             else:
@@ -412,15 +412,9 @@ def updated_line(line, next_version, vdef):
     if '=' in line:
         sep = '='
         next_version = "'%s'" % next_version
-        if not line.strip().startswith('_'):
-            next_version += ","
     else:
         sep = ':'
 
     key, _, value = line.partition(sep)
-    if not key or not value:
-        warnings.warn("Unknown line format %s: %s" % (vdef.source, line))
-        return None
-
-    space = ' ' if value[0] == ' ' else ''
+    space = ' ' if value and value[0] == ' ' else ''
     return "%s%s%s%s\n" % (key, sep, space, next_version)

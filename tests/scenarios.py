@@ -138,11 +138,11 @@ class Scenario:
         if self.temp:
             shutil.rmtree(self.temp)
 
-    def run_internal(self):
-        """ Run 'setup_py' with 'command' """
-        setup_py = os.path.join(self.target, 'setup.py')
+    def replay(self):
         old_argv = sys.argv
         try:
+            self.prepare()
+            setup_py = os.path.join(self.target, 'setup.py')
             result = []
             for command in self.commands:
                 with conftest.capture_output() as logged:
@@ -161,15 +161,8 @@ class Scenario:
             return "\n\n".join(result)
 
         finally:
-            sys.argv = old_argv
-
-    def replay(self):
-        try:
-            self.prepare()
-            return self.run_internal()
-
-        finally:
             self.clean()
+            sys.argv = old_argv
 
     def expected_path(self):
         return os.path.join(self.folder, 'expected.txt')
