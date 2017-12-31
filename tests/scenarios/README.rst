@@ -11,12 +11,12 @@ This folder contains test case scenarios. The tests consist of:
 
 * `refresh.py`_ (or ``tox -e refreshexamples``) can be used to regenerate ``expected.txt`` (see ``git diff`` to verify changes look good)
 
-* `test_examples.py`_ replays all scenarios and verifies that output matches ``expected.txt``
+* `test_scenarios.py`_ replays all scenarios and verifies that output matches ``expected.txt``
 
 
 
 .. _examples: https://github.com/zsimic/setupmeta/tree/master/examples
 
-.. _test_examples.py: https://github.com/zsimic/setupmeta/blob/master/tests/test_examples.py
+.. _test_scenarios.py: https://github.com/zsimic/setupmeta/blob/master/tests/test_scenarios.py
 
 .. _refresh.py: https://github.com/zsimic/setupmeta/blob/master/tests/refresh.py

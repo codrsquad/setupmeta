@@ -1,4 +1,3 @@
-import pytest
 from . import conftest
 
 import setupmeta.scm
