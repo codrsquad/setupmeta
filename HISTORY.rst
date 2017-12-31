@@ -2,10 +2,12 @@
 History
 =======
 
-0.8.0 (2017-12-30)
+0.8.0 (2017-12-31)
 -------------------
 
 * Versioning is more easily customizable, using post-release marker by default (instead of beta)
+
+* Test coverage at 99%
 
 
 0.7.11 (2017-12-27)
