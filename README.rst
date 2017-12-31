@@ -55,6 +55,15 @@ The above would be what you get with just those few lines in your ``setup.py``, 
 See examples_ for more.
 
 
+Current code coverage
+=====================
+
+.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graphs/sunburst.svg
+    :alt: Python versions tested
+
+We aim for 100% test coverage
+
+
 How it works?
 =============
 
