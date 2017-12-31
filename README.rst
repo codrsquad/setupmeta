@@ -59,7 +59,8 @@ Current code coverage
 =====================
 
 .. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graphs/sunburst.svg
-    :alt: Python versions tested
+    :target: https://codecov.io/gh/zsimic/setupmeta
+    :alt: Code coverage overview
 
 We aim for 100% test coverage
 
