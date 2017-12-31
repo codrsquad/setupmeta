@@ -48,20 +48,6 @@ class Version:
         patch = version and version.pop(0) or 0
         return major, minor, patch
 
-    def to_dict(self, parts=None):
-        result = {}
-        for key in dir(self):
-            if key.startswith('_'):
-                continue
-            value = getattr(self, key)
-            if value is None or callable(value):
-                continue
-            if not parts or key in parts:
-                result[key] = value
-            else:
-                result[key] = ''
-        return result
-
     @property
     def post(self):
         if self.changes:

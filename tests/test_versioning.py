@@ -5,7 +5,7 @@ from . import conftest
 
 import setupmeta
 from setupmeta.model import SetupMeta
-from setupmeta.scm import Git, Version
+from setupmeta.scm import Version
 import setupmeta.versioning
 
 
@@ -17,24 +17,6 @@ def new_meta(versioning, scm=None, setup_py=None, **kwargs):
     upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
     upstream.update(kwargs)
     return SetupMeta(upstream=upstream)
-
-
-class MockGit(Git):
-    def __init__(self, dirty=True, describe='v0.1.2-3-g123', branch='master'):
-        self.dirty = dirty
-        self.describe = describe
-        self.branch = branch
-        Git.__init__(self, conftest.resouce())
-
-    def get_output(self, cmd, *args, **kwargs):
-        if cmd == 'diff':
-            return 1 if self.dirty else 0
-        if cmd == 'describe':
-            return self.describe
-        if cmd == 'rev-parse':
-            return self.branch
-        assert kwargs.get('dryrun') is True
-        return Git.get_output(self, cmd, *args, **kwargs)
 
 
 def test_disabled():
@@ -75,7 +57,7 @@ def test_no_scm():
 
 
 def test_no_extra():
-    meta = new_meta('{major}.{minor}+', scm=MockGit(True))
+    meta = new_meta('{major}.{minor}+', scm=conftest.MockGit(True))
     versioning = meta.versioning
     assert meta.version == '0.1'
     check_rep(versioning, main='{major}.{minor}', extra='')
@@ -85,7 +67,7 @@ def test_no_extra():
 
 
 def check_git(dirty):
-    meta = new_meta('changes', scm=MockGit(dirty))
+    meta = new_meta('changes', scm=conftest.MockGit(dirty))
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.problem
@@ -137,7 +119,7 @@ def extra_version(version):
 
 def test_invalid_part():
     versioning = dict(foo='bar', main='{foo}.{major}.{minor}{', extra=extra_version, separator='-',)
-    meta = new_meta(versioning, scm=MockGit())
+    meta = new_meta(versioning, scm=conftest.MockGit())
     versioning = meta.versioning
     assert 'invalid' in str(versioning.strategy.main_bits)
     assert meta.version is None
@@ -152,7 +134,7 @@ def test_invalid_part():
 
 
 def test_invalid_main():
-    meta = new_meta(dict(main=extra_version, extra=''), scm=MockGit())
+    meta = new_meta(dict(main=extra_version, extra=''), scm=conftest.MockGit())
     versioning = meta.versioning
     check_rep(versioning, main=extra_version, extra='')
     check_render(versioning, '')
@@ -163,7 +145,7 @@ def test_invalid_main():
 
 
 def test_malformed():
-    meta = new_meta(dict(main=None, extra=''), scm=MockGit())
+    meta = new_meta(dict(main=None, extra=''), scm=conftest.MockGit())
     versioning = meta.versioning
     assert meta.version is None
     assert not versioning.enabled

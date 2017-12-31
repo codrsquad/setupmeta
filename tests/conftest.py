@@ -6,6 +6,7 @@ import os
 import sys
 
 from setupmeta import decode
+from setupmeta.scm import Git
 
 
 TESTS = os.path.dirname(__file__)
@@ -59,3 +60,26 @@ class capture_output:
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
         return result
+
+
+class MockGit(Git):
+    def __init__(self, dirty=True, describe='v0.1.2-3-g123', branch='master', commitid='abc123'):
+        self.dirty = dirty
+        self.describe = describe
+        self.branch = branch
+        self.commitid = commitid
+        Git.__init__(self, resouce())
+
+    def get_output(self, cmd, *args, **kwargs):
+        if cmd == 'diff':
+            return 1 if self.dirty else 0
+        if cmd == 'describe':
+            return self.describe
+        if cmd == 'rev-parse':
+            if '--abbrev-ref' in args:
+                return self.branch
+            return self.commitid
+        if cmd == 'rev-list':
+            return self.commitid.split()
+        assert kwargs.get('dryrun') is True
+        return Git.get_output(self, cmd, *args, **kwargs)
