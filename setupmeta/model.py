@@ -190,11 +190,7 @@ class Settings:
         """ Merge settings from 'others' """
         for other in others:
             for definition in other.definitions.values():
-                self.add_definition(
-                    definition.key,
-                    definition.value,
-                    definition.sources
-                )
+                self.add_definition(definition.key, definition.value, definition.sources)
 
 
 class SimpleModule(Settings):
@@ -226,16 +222,18 @@ class SimpleModule(Settings):
                 if docstring_marker:
                     if line.endswith(docstring_marker):
                         docstring_marker = None
-                        self.scan_docstring(
-                            docstring,
-                            line_number=docstring_start - 1
-                        )
+                        if docstring:
+                            self.scan_docstring(docstring, line_number=docstring_start - 1)
                         continue
                     docstring.append(line)
                     continue
                 if line.startswith('"""') or line.startswith("'''"):
-                    docstring_start = line_number
                     docstring_marker = line[:3]
+                    if len(line) > 3 and line.endswith(docstring_marker):
+                        # Single docstring line edge case
+                        docstring_marker = None
+                        continue
+                    docstring_start = line_number
                     docstring.append(line[3:])
                     continue
                 self.scan_line(line, regex, line_number)
@@ -248,8 +246,6 @@ class SimpleModule(Settings):
 
     def scan_docstring(self, lines, line_number=0):
         """ Scan docstring for definitions """
-        if not lines:
-            return
         if not lines[0]:
             # Disregard the 1st empty line, it's very common
             lines.pop(0)
@@ -421,10 +417,7 @@ class SetupMeta(Settings):
 
         if download_url:
             # Convenience: allow {name} and {version} in download_url
-            download_url = download_url.format(
-                name=self.name,
-                version=self.version
-            )
+            download_url = download_url.format(name=self.name, version=self.version)
 
         self.auto_fill('url', url)
         self.auto_fill('download_url', download_url)
@@ -472,20 +465,15 @@ class SetupMeta(Settings):
         """ Auto-fille descriptions from README file """
         docstring_lead = self.definitions.pop('docstring_lead', None)
         if docstring_lead and not self.value('description'):
-            self.auto_fill(
-                'description',
-                docstring_lead.value,
-                source=docstring_lead.source
-            )
-        value, path = find_contents(READMES, loader=load_readme)
-        if value:
-            self.add_definition('long_description', value, path)
-            if not self.value('description'):
-                self.auto_fill(
-                    'description',
-                    self.extract_short_description(value),
-                    source="%s:1" % path
-                )
+            self.auto_fill('description', docstring_lead.value, source=docstring_lead.source)
+        for readme in READMES:
+            if self.value('long_description') and self.value('description'):
+                return
+            value, path = find_contents([readme], loader=load_readme)
+            if value:
+                short_desc = self.extract_short_description(value)
+                self.auto_fill('description', short_desc, source="%s:1" % path)
+                self.add_definition('long_description', value, path)
 
     def auto_fill_entry_points(self):
         value, path = find_contents(['entry_points.ini'])
@@ -494,8 +482,6 @@ class SetupMeta(Settings):
 
     def auto_fill_license(self, key='license'):
         """ Try to auto-determine the license """
-        if self.value(key):
-            return
         contents, _ = find_contents(['LICENSE*'], limit=20)
         short, classifier = determined_license(contents)
         if short:

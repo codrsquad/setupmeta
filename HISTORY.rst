@@ -2,12 +2,16 @@
 History
 =======
 
+0.8.0 (2017-12-30)
+-------------------
+
+* Versioning is more easily customizable, using post-release marker by default (instead of beta)
+
+
 0.7.11 (2017-12-27)
 -------------------
 
 * Better defined versioning strategies
-
-.. [[end long_description]]
 
 
 0.6.3 (2017-12-21)

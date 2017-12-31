@@ -1,11 +1,20 @@
 import os
+import sys
 
-from setupmeta.model import Definition, DefinitionEntry, SetupMeta, \
-    is_setup_py_path
+from setupmeta.model import Definition, DefinitionEntry, SetupMeta, is_setup_py_path
 
 
 def bogus_project(**attrs):
     return SetupMeta(dict(_setup_py_path='foo/bar/setup.py', **attrs))
+
+
+def test_setup_py_determination():
+    initial = sys.argv[0]
+    sys.argv[0] = "foo/setup.py"
+    meta = SetupMeta(dict(_setup_py_path=None))
+    assert not meta.definitions
+    assert not meta.version
+    sys.argv[0] = initial
 
 
 def test_representation():

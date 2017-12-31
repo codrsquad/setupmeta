@@ -26,4 +26,7 @@ setup(
 
     # Here to verify that explicit takes precedence
     keywords=__keywords__.split(','),
+
+    # For illustration purposes
+    license='foo',
 )

@@ -52,7 +52,7 @@ def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
 
 
 def test_no_scm():
-    s = 'tag(a,b):{major}.{minor}.{patch}{beta}+?{.$*FOO*}.{$BAR*:}{$BAZ:z}'
+    s = 'tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR*:}{$BAZ:z}'
     meta = new_meta(s)
     versioning = meta.versioning
     assert versioning.enabled
@@ -61,13 +61,13 @@ def test_no_scm():
     assert versioning.strategy
     assert versioning.strategy.branches == ['a', 'b']
     assert not versioning.strategy.problem
-    check_rep(versioning, extra='?{.$*FOO*}.{$BAR*:}{$BAZ:z}', branches='a,b')
-    check_render(versioning, '1.0.0')
-    check_render(versioning, '1.0.0b2', c=2)
-    check_render(versioning, '1.0.0b2+.z', c=2, d=True)
+    check_rep(versioning, extra='!{.$*FOO*}.{$BAR*:}{$BAZ:z}', branches='a,b', separator=' ')
+    check_render(versioning, '1.0.0.z')
+    check_render(versioning, '1.0.0.post2.z', c=2)
+    check_render(versioning, '1.0.0.post2.z', c=2, d=True)
     os.environ['TEST_FOO1'] = 'bar'
     os.environ['TEST_FOO2'] = 'baz'
-    check_render(versioning, '1.0.0b2+.bar.z', c=2, d=True)
+    check_render(versioning, '1.0.0.post2.bar.z', c=2, d=True)
     del os.environ['TEST_FOO1']
     del os.environ['TEST_FOO2']
     with pytest.raises(setupmeta.UsageError):
@@ -136,24 +136,13 @@ def extra_version(version):
 
 
 def test_invalid_part():
-    meta = new_meta(
-        dict(
-            foo='bar',
-            main='{foo}.{major}.{minor}{',
-            extra=extra_version,
-            separator='-',
-        ),
-        scm=MockGit()
-    )
+    versioning = dict(foo='bar', main='{foo}.{major}.{minor}{', extra=extra_version, separator='-',)
+    meta = new_meta(versioning, scm=MockGit())
     versioning = meta.versioning
     assert 'invalid' in str(versioning.strategy.main_bits)
-    assert meta.version == '0.0.0'
+    assert meta.version is None
     assert versioning.problem == "invalid versioning part 'foo'"
-    check_rep(
-        versioning,
-        main='{foo}.{major}.{minor}{',
-        extra=str(extra_version), separator='-'
-    )
+    check_rep(versioning, main='{foo}.{major}.{minor}{', extra=str(extra_version), separator='-')
     check_render(versioning, 'invalid.1.0')
     check_render(versioning, 'invalid.1.0-c2', c=2)
     check_render(versioning, 'invalid.1.0-extra', c=2, d=True)
@@ -163,13 +152,7 @@ def test_invalid_part():
 
 
 def test_invalid_main():
-    meta = new_meta(
-        dict(
-            main=extra_version,
-            extra='',
-        ),
-        scm=MockGit()
-    )
+    meta = new_meta(dict(main=extra_version, extra=''), scm=MockGit())
     versioning = meta.versioning
     check_rep(versioning, main=extra_version, extra='')
     check_render(versioning, '')
@@ -180,15 +163,8 @@ def test_invalid_main():
 
 
 def test_malformed():
-    meta = new_meta(
-        dict(
-            main=None,
-            extra='',
-        ),
-        scm=MockGit()
-    )
+    meta = new_meta(dict(main=None, extra=''), scm=MockGit())
     versioning = meta.versioning
     assert meta.version is None
     assert not versioning.enabled
-    assert not versioning.strategy
-    assert versioning.problem == "setupmeta versioning not enabled"
+    assert versioning.problem == "No versioning format specified"

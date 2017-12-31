@@ -60,11 +60,8 @@ if __name__ == "__main__":
     os.chdir(HERE)
     have_egg = os.path.isdir(EGG)
 
-    args = dict(
-        # Explicit on entry points due to bootstrap
-        entry_points=ENTRY_POINTS,
-        zip_safe=True,
-    )
+    # Explicit on entry points due to bootstrap
+    args = dict(entry_points=ENTRY_POINTS, zip_safe=True)
 
     if have_egg:
         # We're bootstrapped, we can self-refer

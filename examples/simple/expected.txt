@@ -3,7 +3,8 @@ running explain
               \_: (simple.py:7     ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust     ) zoran@simicweb.com
      classifiers: (classifiers.txt ) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
-     description: (simple.py:2     ) This is an extremely simple package
+     description: (README.rst:1    ) Simple setup scenario
+              \_: (simple.py:2     ) This is an extremely simple package
     download_url: (auto-fill       ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
               \_: (simple.py:9     ) https://github.com/zsimic/simple/archive/{version}.tar.gz
 install_requires: (requirements.txt) ['click>=6.7']

@@ -10,8 +10,8 @@ import setupmeta
 
 
 def abort(message):
-    sys.stderr.write("%s\n" % message)
-    sys.exit(1)
+    from distutils.errors import DistutilsSetupError
+    raise DistutilsSetupError(message)
 
 
 def MetaCommand(cls):

@@ -6,6 +6,7 @@ import imp
 import os
 import re
 import sys
+
 import pytest
 
 from setupmeta import run_program, short
@@ -73,12 +74,8 @@ def chk(output, message):
 
 def test_self():
     """ Test setupmeta's own setup.py """
-    out = run_program(
-        sys.executable,
-        os.path.join(conftest.PROJECT, 'setup.py'),
-        'explain',
-        capture=True
-    )
+    setup_py = os.path.join(conftest.PROJECT, 'setup.py')
+    out = run_program(sys.executable, setup_py, 'explain', capture=True)
     chk(out, "author:.+ Zoran Simic")
     chk(out, "description:.+ Simplify your setup.py")
     chk(out, "license:.+ MIT")

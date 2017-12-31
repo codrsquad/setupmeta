@@ -23,14 +23,7 @@ class Version:
     commitid = None     # type: str # Commit id
     dirty = False       # type: bool # Local changes are present
 
-    def __init__(
-            self,
-            main=None,
-            changes=0,
-            commitid=None,
-            dirty=False,
-            text=None
-    ):
+    def __init__(self, main=None, changes=0, commitid=None, dirty=False, text=None):
         self.changes = changes or 0
         self.commitid = (commitid or 'initial').strip()
         self.dirty = dirty
@@ -70,21 +63,9 @@ class Version:
         return result
 
     @property
-    def alpha(self):
+    def post(self):
         if self.changes:
-            return 'a%s' % self.changes
-        return ''
-
-    @property
-    def beta(self):
-        if self.changes:
-            return 'b%s' % self.changes
-        return ''
-
-    @property
-    def devmarker(self):
-        if self.dirty:
-            return '.%s' % self.commitid
+            return '.post%s' % self.changes
         return ''
 
 
@@ -109,21 +90,10 @@ class Scm:
 
     def get_output(self, *args, **kwargs):
         capture = kwargs.pop('capture', True)
-        return setupmeta.run_program(
-            self.program,
-            *args,
-            capture=capture,
-            cwd=self.root,
-            **kwargs
-        )
+        return setupmeta.run_program(self.program, *args, capture=capture, cwd=self.root, **kwargs)
 
     def run(self, commit, *args):
-        self.get_output(
-            *args,
-            capture=None,
-            fatal=True,
-            dryrun=not commit
-        )
+        self.get_output(*args, capture=None, fatal=True, dryrun=not commit)
 
 
 class Hg(Scm):
@@ -149,26 +119,14 @@ class Git(Scm):
     program = 'git'
 
     # Output expected from git describe
-    re_describe = re.compile(
-        r'^v?(.+?)(-\d+)?(-g\w+)?$',
-        re.IGNORECASE
-    )
+    re_describe = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?$', re.IGNORECASE)
 
     def get_branch(self):
-        branch = self.get_output(
-            'rev-parse',
-            '--abbrev-ref',
-            'HEAD'
-        )
+        branch = self.get_output('rev-parse', '--abbrev-ref', 'HEAD')
         return branch and branch.strip()
 
     def is_dirty(self):
-        exitcode = self.get_output(
-            'diff',
-            '--quiet',
-            '--ignore-submodules',
-            capture=False
-        )
+        exitcode = self.get_output('diff', '--quiet', '--ignore-submodules', capture=False)
         return exitcode != 0
 
     def get_version(self):
@@ -176,12 +134,7 @@ class Git(Scm):
         changes = None
         commitid = None
         dirty = self.is_dirty()
-        text = self.get_output(
-            'describe',
-            '--tags',
-            '--long',
-            '--match', 'v*.*'
-        )
+        text = self.get_output('describe', '--tags', '--long', '--match', 'v*.*')
         if text:
             m = self.re_describe.match(text)
             if m:

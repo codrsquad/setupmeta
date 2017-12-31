@@ -8,12 +8,12 @@ from setupmeta.scm import Git, Hg, Version
 
 
 BUMPABLE = 'major minor patch'.split()
-RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?([^+]+)(\+(.*))?$')
+RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#$%^&*:;/,]!?(.*))?$')
 
 DEFAULT_SEPARATOR = '+'
-DEFAULT_MAIN = '{major}.{minor}.{patch}{beta}'
+DEFAULT_MAIN = '{major}.{minor}.{patch}{post}'
 CHANGES_MAIN = '{major}.{minor}.{changes}'
-DEFAULT_EXTRA = '?{commitid}'
+DEFAULT_EXTRA = '{commitid}'
 DEFAULT_BRANCHES = 'master'
 
 
@@ -55,7 +55,7 @@ class VersionBit:
         else:
             text = '{%s}' % text
         if self.problem:
-            text = " [!%s]" % self.problem
+            text = " [%s]" % self.problem
         return text
 
     def rendered_attr(self, version):
@@ -122,16 +122,15 @@ class Strategy:
             warnings.warn("Ignored fields for 'versioning': %s" % kwargs)
         self.main_bits = self.bits(main)
         self.extra_bits = self.bits(extra)
-        self.separator = separator or '+'
-        if branches and hasattr(branches, 'lstrip'):
-            branches = branches.lstrip('(').rstrip(')')
-        self.branches = setupmeta.listify(branches, separator=',')
-        self.text = self.formatted(
-            self.branches,
-            self.main,
-            self.separator,
-            self.extra,
-        )
+        self.separator = separator or DEFAULT_SEPARATOR
+        self.branches = branches or DEFAULT_BRANCHES
+        if self.branches and hasattr(self.branches, 'lstrip'):
+            self.branches = self.branches.lstrip('(').rstrip(')')
+        self.branches = setupmeta.listify(self.branches, separator=',')
+        self.text = self.formatted(self.branches, self.main, self.separator, self.extra)
+        if not self.main_bits:
+            self.problem = "No versioning format specified"
+            return
         all_bits = self.main_bits if isinstance(self.main_bits, list) else []
         if isinstance(self.extra_bits, list):
             all_bits = all_bits + self.extra_bits
@@ -142,17 +141,21 @@ class Strategy:
     def formatted(branches, main, separator, extra):
         if isinstance(branches, list):
             branches = ','.join(branches)
-        return ''.join([
-            'tag(%s):' % branches,
-            str(main),
-            separator,
-            str(extra),
-        ])
+        result = ''
+        if main:
+            result += str(main)
+        if result or extra:
+            result += separator
+        if extra:
+            result += str(extra)
+        if branches:
+            result = 'tag(%s):%s' % (branches, result)
+        return result
 
     def bits(self, fmt):
         if callable(fmt):
             return fmt
-        elif fmt.startswith('?'):
+        elif fmt and fmt[0] == '!':
             fmt = fmt[1:]
         result = []
         if not fmt:
@@ -181,7 +184,7 @@ class Strategy:
             return False
         if not isinstance(self.extra_bits, list):
             return True
-        return self.extra[0] != '?' or version.dirty
+        return self.extra[0] == '!' or version.dirty
 
     def rendered(self, version, extra=True):
         """
@@ -193,7 +196,8 @@ class Strategy:
         if extra and self.needs_extra(version):
             extra = self.rendered_bits(version, self.extra_bits)
             if extra:
-                result.append(self.separator)
+                if self.separator != ' ':
+                    result.append(self.separator)
                 result.extend(extra)
         return ''.join(result)
 
@@ -238,12 +242,7 @@ class Strategy:
         if not given:
             return None
 
-        data = dict(
-            main=DEFAULT_MAIN,
-            extra=DEFAULT_EXTRA,
-            separator=DEFAULT_SEPARATOR,
-            branches=DEFAULT_BRANCHES,
-        )
+        data = dict(main=DEFAULT_MAIN, extra=DEFAULT_EXTRA, separator=DEFAULT_SEPARATOR, branches=DEFAULT_BRANCHES)
 
         if isinstance(given, dict):
             data.update(given)
@@ -260,8 +259,10 @@ class Strategy:
                 data['branches'] = m.group(2)
 
             data['main'] = m.group(3)
-            if m.group(4):
-                data['extra'] = m.group(5)
+            extra = m.group(4)
+            if extra:
+                data['separator'] = extra[0]
+                data['extra'] = extra[1:]
 
         try:
             return cls(**data)
@@ -281,7 +282,7 @@ class Versioning:
         self.meta = meta
         given = meta.value('versioning')
         self.strategy = Strategy.from_meta(given)
-        self.enabled = bool(given and self.strategy)
+        self.enabled = bool(given and self.strategy and not self.strategy.problem)
         self.scm = scm
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
@@ -291,12 +292,7 @@ class Versioning:
             self.problem = self.strategy.problem
 
     @staticmethod
-    def formatted(
-            main=DEFAULT_MAIN,
-            extra=DEFAULT_EXTRA,
-            separator=DEFAULT_SEPARATOR,
-            branches=DEFAULT_BRANCHES
-    ):
+    def formatted(main=DEFAULT_MAIN, extra=DEFAULT_EXTRA, separator=DEFAULT_SEPARATOR, branches=DEFAULT_BRANCHES):
         return Strategy.formatted(branches, main, separator, extra)
 
     def auto_fill_version(self):
@@ -337,10 +333,7 @@ class Versioning:
 
         branch = self.scm.get_branch()
         if branch not in self.strategy.branches:
-            setupmeta.abort("Can't bump branch '%s', need one of %s" % (
-                branch,
-                self.strategy.branches
-            ))
+            setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
 
         gv = self.scm.get_version()
         if not gv:
@@ -360,12 +353,7 @@ class Versioning:
         if not setupmeta.is_executable(hook):
             return
 
-        setupmeta.run_program(
-            hook,
-            fatal=True,
-            dryrun=not commit,
-            cwd=setupmeta.project_path()
-        )
+        setupmeta.run_program(hook, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
     def update_sources(self, next_version, commit, commit_all):
         vdefs = self.meta.definitions.get('version')
@@ -404,10 +392,7 @@ class Versioning:
                     with io.open(full_path, 'wt', encoding='utf-8') as fh:
                         fh.writelines(lines)
                 else:
-                    print("Would update %s with '%s'" % (
-                        vdef.source,
-                        revised.strip()
-                    ))
+                    print("Would update %s with '%s'" % (vdef.source, revised.strip()))
 
         if not modified:
             return

@@ -18,19 +18,12 @@ def run_command(path, command):
     os.chdir(path)
     cmd = [sys.executable, 'setup.py'] + command.split()
     logging.debug("Running: %s", cmd)
-    p = subprocess.Popen(           # nosec
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   # nosec
     output, error = p.communicate()
     output = decode(output)
     error = decode(error)
     if p.returncode:
-        print("examples/%s exited with code %s, output:" % (
-            os.path.basename(path),
-            p.returncode
-        ))
+        print("examples/%s exited with code %s, output:" % (os.path.basename(path), p.returncode))
         print(output)
         print(error)
         sys.exit(p.returncode)
@@ -58,23 +51,12 @@ def main():
     Refresh examples/*/expected.txt
     """
     parser = argparse.ArgumentParser(description=main.__doc__.strip())
-    parser.add_argument(
-        '--debug',
-        action='store_true',
-        help="Show debug info"
-    )
-    parser.add_argument(
-        '-n', '--dryrun',
-        action='store_true',
-        help="Print output rather, don't update expected.txt"
-    )
+    parser.add_argument('--debug', action='store_true', help="Show debug info")
+    parser.add_argument('-n', '--dryrun', action='store_true', help="Print output rather, don't update expected.txt")
     args = parser.parse_args()
 
     level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        format="%(asctime)s %(levelname)s %(message)s",
-        level=level
-    )
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=level)
     logging.root.setLevel(level)
 
     examples = os.listdir(EXAMPLES)

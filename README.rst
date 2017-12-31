@@ -142,29 +142,31 @@ You can leverage that feature by specifying a ``versioning`` attribute, either i
 
 2 simple strategies are pre-configured (see `versioning doc`_ for more info):
 
-* ``versioning='tag'`` to compute version from latest git tag + beta addendum
+* ``versioning='tag'`` to compute version from latest git tag + post addendum
 
-    * suitable for controlled publications (1 tag = 1 publish)
+    * suitable for controlled publications (where 1 tag = 1 publish usually)
 
-    * format is ``{major}.{minor}.{patch}{beta}``
+    * format is ``{major}.{minor}.{patch}{post}+{commitid}``
 
-    * tag "v1.0.0" at current commit -> version is 1.0.0
+    * tag "v1.0.0" at current commit -> version is ``1.0.0``
 
-    * one commit after tag "v1.0.0" -> version becomes 1.0.0b1
+    * one commit after tag "v1.0.0" -> version becomes ``1.0.0.post1``
+
+    * if checkout is not clean -> version becomes ``1.0.0.post1+g123`` (where "123" is the git commit id)
 
 * ``versioning='changes'`` to compute version from latest git tag + number of changes since that tag
 
     * suitable for "publish on every commit" (without having to tag every commit)
 
-    * format is ``{major}.{minor}.{changes}``
+    * format is ``{major}.{minor}.{changes}+{commitid}``
 
-    * tag "v1.0" at current commit -> version is 1.0.0 (last zero means "zero changes")
+    * tag "v1.0" at current commit -> version is ``1.0.0`` (last zero means "zero changes since tag")
 
-    * one commit after tag "v1.0" -> version becomes 1.0.1
+    * one commit after tag "v1.0" -> version becomes ``1.0.1``
 
-* There's a "local" addendum when checkout is not clean, its default format is ``{dev}``
+    * if checkout is not clean -> version becomes ``1.0.1+g123`` (where "123" is the git commit id)
 
-* It's possible to fine-tune this via ``versioning=dict(...)`` (see `versioning doc`_ for more info)
+* It's possible to fine-tune this via ``versioning=tag(<branches>):<main><separator><extra>`` or ``versioning={...}`` (see `versioning doc`_ for more info)
 
 
 Commands
@@ -186,18 +188,19 @@ For example, this is what setupmeta says about itself (it's self-using)::
         author_email: (auto-adjust            ) zoran@simicweb.com
          classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers'...
          description: (setupmeta/__init__.py:2) Simplify your setup.py
-        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/0.7.3b1.dev1.tar.gz
+        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/0.7.11.post4+g5d93420.tar.gz
                   \_: (setupmeta/__init__.py:5) archive/{version}.tar.gz
         entry_points: (explicit               ) 260 chars: [distutils.commands] bump = setupmeta.commands:BumpCommand explain ...
             keywords: (setup.py:4             ) ['convenient', 'setup.py']
              license: (auto-fill              ) MIT
-    long_description: (README.rst             ) 12091 chars: Simplify your setup.py ======================  .. image:: https:/...
+    long_description: (README.rst             ) 13346 chars: Simplify your setup.py ======================  .. image:: https:/...
                 name: (setup.py:15            ) setupmeta
             packages: (auto-fill              ) ['setupmeta']
       setup_requires: (explicit               ) ['setupmeta']
+       tests_require: (tests/requirements.txt ) ["mock ; python_version < '3.0'", 'pytest-cov']
               title*: (setup.py:15            ) setupmeta
                  url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
-             version: (git                    ) 0.7.3b1.dev1
+             version: (git                    ) 0.7.11.post4+g5d93420
           versioning: (explicit               ) tag
             zip_safe: (explicit               ) True
 
@@ -223,17 +226,19 @@ In the above output:
 
 - ``name`` came from line 15 of setup.py, note that ``title`` also came from that line - this simply means the constant ``__title__`` was used as ``name``
 
+- ``tests_require`` was deduced from ``tests/requirements.txt``
+
 - Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta saw the value and can use it, but doesn't transfer it to setuptools
 
 - ``packages`` was auto-filled to ``['setupmeta']``
 
-- ``version`` was determined from git tag (due to ``versioning='tag'`` in setup.py), in this case ``0.7.3b1.dev1`` means:
+- ``version`` was determined from git tag (due to ``versioning='tag'`` in setup.py), in this case ``0.7.11.post4+g5d93420`` means:
 
-    * latest tag was 0.7.3
+    * latest tag was 0.7.11
 
-    * there was one commit since that (``b1`` means one change since tag, "b" denotes this would be a "beta" version, and should play nicely with PEP-440_)
+    * there were 4 commits since that (``.post4`` means 4 changes since tag, ".post" denotes this would be a "post-release" version, and should play nicely with PEP-440_)
 
-    * the ``.dev1`` suffix means that the checkout wasn't clean when ``explain`` command was ran here
+    * the ``+g5d93420`` suffix means that the checkout wasn't clean when ``explain`` command was ran, local checkout was dirty at short git commit id "5d93420"
 
 
 bump
@@ -280,7 +285,6 @@ This will simply show you your ``entry_points/console_scripts``. I added it beca
 
 .. _pygradle: https://github.com/linkedin/pygradle/
 
-.. [[include HISTORY.rst]]
 .. [[end long_description]]
 
 
