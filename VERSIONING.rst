@@ -54,7 +54,7 @@ Now, running ``setup.py explain`` will show you something like this::
     version: (git          ) 1.0.0.post2+g123
          \_: (__init__.py:7) 1.0.0
 
-Which simply means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init)_.py`` line 7 states it is "1.0.0".
+Which means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init)_.py`` line 7 states it is "1.0.0".
 
 If you commit your changes, your checkout won't be dirty anymore, and the number of commits since latest tag will be 3, so ``setup.py explain`` will now show::
 
@@ -97,7 +97,7 @@ Tag
 
 This is well suited if you don't plan to publish often, and have a tag for each release.
 
-``tag`` corresponds to this format: ``tag(master):{major}.{minor}.{patch}+{commitid}``
+``tag`` corresponds to this format: ``tag(master):{major}.{minor}.{patch}{post}+{commitid}``
 
 State this in your ``setup.py``::
 
@@ -106,16 +106,24 @@ State this in your ``setup.py``::
         ...
     )
 
+Now, every time you commit a change, setupmeta will use the number of commits since last git tag to determine the 'post' part of your version.
 
-Now, your reported version will be (for example):
 
-* ``0.1.0`` when you build against the tag ``v0.1.0`` without any changes
+Example:
 
-* Any non-tagged commit will get a version of the form ``0.1.0.post2`` (marking pip interpret this as a "post" release, the number following the ".post" is the number of commits since tag "v0.1.0" here)
+* First commit is tagged ``v0.1.0``, ``git describe`` will yield ``v0.1.0`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag as-is)
+
+* A commit occurs and doesn't add a git tag, version for that commit will be ``0.1.0.post1`` (tag 0.1.0 with 1 change since tag)
+
+* A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.0.post2`` etc
 
 * Similarly, dirty checkouts (with changes pending) will get a version of the form ``0.1.0.post2+g123``
 
-* Use ``python setup.py bump --[major|minor|patch]`` whenever you want to release (this will modify your ``__init__.py`` and assign a git tag accordingly)
+* Use ``python setup.py bump --[major|minor|patch]`` whenever you want to bump major, minor or patch revision (this will assign a git tag accordingly)
+
+    * ``python setup.py bump --patch --commit`` -> tag "v0.1.1" is added, version is now ``0.1.1``
+
+    * Next commit after that will be version ``0.1.1.post1`` etc
 
 
 Changes
@@ -138,58 +146,54 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-* first commit is tagged ``v0.1``, ``git describe`` will yield ``v0.1`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 changes)
+* First commit is tagged ``v0.1``, ``git describe`` will yield ``v0.1`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 changes)
 
-* a commit occurs, and doesn't add a git tag
+* A commit occurs and doesn't add a git tag, version for that commit will be ``0.1.1`` (tag 0.1 with 1 change since tag)
 
-    * ``git describe`` will now yield ``v0.1-1-g...`` (latest tag ``v0.1``, 1 commit since that tag)
+* A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.2`` etc
 
-    * Since only major+minor parts are in the tag, setupmeta will use the "git number of commits since last tag" as patch part
+* Similarly, dirty checkouts (with changes pending) will get a version of the form ``0.1.2+g123``
 
-    * setupmeta will hence determine (auto-fill) the version to be ``0.1.1`` (tag 0.1 with 1 change)
+* Use ``python setup.py bump --[major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
 
-    * If you publish from your CI job (or from anywhere), the version reported by your setup.py will be ``0.1.1``
+    * ``python setup.py bump --minor --commit`` -> tag "v0.2" is added, version is now ``0.2.0``
 
-    * If the repo is not clean (a dev checked out repo and modified something), the version will show as ``0.1.1+g123``, which should make it obvious this is a local build
-
-* Version will naturally evolve as ``0.1.2``, ``0.1.3``, etc at every commit
-
-* Once we want to bump minor version, we run ``python setup.py bump --minor``, which will do the following:
-
-    * Assign git tag ``v0.2``
-
-    * Now, we go back to same thing as earlier: we'll get versions ``0.2.0``, ``0.2.1``, etc
+    * Next commit after that will be version ``0.2.1`` etc
 
 
 Advanced
 ========
 
-* a **string** that can be either:
+``versioning`` can be customized beyond the 2 pre-defined strategies described above, it can be passed as a **string** describing the version format, or a **dict** for even more customization:
 
-    * ``tag`` or ``changes`` for pre-configured version formats (see Tag_ or Changes_) above
+* a **string** can be of the form:
+
+    * ``tag`` or ``changes`` for pre-configured version formats (see Tag_ or Changes_ above)
 
     * a version format specified of the form ``tag(<branches>):<main><separator><extra>``
 
     * ``tag(<branches>):`` is optional, and you would use this full form only if you wanted version bumps to be possible on branches other than master,
-      if you wanted bumps to be possible on both ``master`` and ``test`` branches for example, you would use ``tag(master,test):...``
+      if you want bumps to be possible on both ``master`` and ``test`` branches for example, you would use ``tag(master,test):...``
 
-    * the part before the ``<separator>`` sign specifies the format of the "main version" part (ie: when no local changes are present)
+    * See Formatting_ below to see what's usable for ``<main>`` and ``<extra>``
 
-    * the part after the ``<separator>`` sign indicates what format to use when there are local changes (aka checkout is "dirty")
+    * the ``<main>`` part (before the ``<separator>`` sign) specifies the format of the "main version" part (ie: when no local changes are present)
 
-    * you can add ``<separator>!`` to force the extra part to always be shown, even when checkout is not dirty
+    * the ``<extra>`` part (after the ``<separator>`` sign indicates) what format to use when there are local changes (aka checkout is "dirty")
 
-    * characters that can be used as separators are: `` +@#%^;/,``, space can be used as a demarcation, but will not be rendered in the version per se
+    * you can add an exclamation point ``!`` after separator to force the extra part to always be shown (even when checkout is not dirty)
+
+    * characters that can be used as separators are: `` +@#%^;/,`` (space can be used as a demarcation, but will not be rendered in the version per se)
 
 * a **dict** with the following keys:
 
-    * ``main``
+    * ``main``: a **string** (see Formatting_) or callable (if callable given, **bump** command becomes unusable)
 
-    * ``extra``
+    * ``extra``: a **string** (see Formatting_) or callable (custom function yielding a string from a given ``Version``, see `Scm class`_)
 
-    * ``separator``
+    * ``separator``: character to use as separator between ``main`` and ``extra``
 
-    * ``branches``
+    * ``branches``: list of branch names (or csv) where to allow **bump**
 
 
 This is what ``versioning='tag'`` is a shortcut for::
@@ -204,29 +208,81 @@ This is what ``versioning='tag'`` is a shortcut for::
         ...
     )
 
-* ``format``: what to use for the "main" part of the version
-
-* ``local``: what to use when there are pending local changes
-
-* ``branches``: branches where to accept bumps
-
 
 Formatting
 ----------
 
-The following names are available for specifying what ``format`` and ``local`` should carry when setupmeta computes the version number
+The following can be used as format specifiers:
 
-* ``{major}``: Major part of version found in latest tag
+* ``{major}``: Major part of version
 
-* ``{minor}``: Minor part of version found in latest tag
+* ``{minor}``: Minor part of version
 
-* ``{patch}``: Patch part of version found in latest tag
+* ``{patch}``: Patch part of version
 
-* ``{changes}``: Number of changes since latest tag (0 if latest commit is tagged)
+* ``{changes}``: Number of changes since last version tag from current commit (0 if current commit is tagged)
 
-* ``{post}``: Designates a "post" release, empty when no changes since latest tag were committed, otherwise ``post{changes}``
+* ``{post}``: Designates a "post" release (PEP-440_ friendly), empty when current commit is version-tagged, otherwise ``.postN`` (wehre ``N`` is ``{changes}``)
 
 * ``{commitid}}``: short string identifying commit, like ``g3bf9221``
+
+* ``foo``: constant ``foo`` (used as-is if specified)
+
+* ``{$FOO}``: value of environment variable ``FOO`` (string ``None`` if not defined)
+
+* ``{$BUILD_ID:local}``: value of environment variable ``BUILD_ID`` if defined, constant ``local`` otherwise
+
+* generalized env var spec is: ``{prefix$*FOO*:default}``:
+
+    * ``prefix`` is shown only if any env var containing ``FOO`` in this case is defined
+
+    * ``$FOO`` will look for env var ``FOO`` exactly
+
+    * ``$*FOO`` will use the first (alphabetically sorted) env var that ends with ``FOO``
+
+    * ``$FOO*`` will use the first (alphabetically sorted) env var that starts with ``FOO``
+
+    * ``$*FOO*`` will use the first (alphabetically sorted) env var that contains ``FOO``
+
+    * ``default`` will be shown if no corresponding env var is defined
+
+
+Examples
+========
+
+* ``{major}.{minor}.{patch}{post}+h{$BUILD_ID:local}.{commitid}`` will yield versions like:
+
+    * ``1.0.0`` (clean, on tag)
+
+    * ``1.0.0.post1`` (clean, one commit since tag)
+
+    * ``1.0.0.post1+hlocal.g123`` (dirty, no $BUILD_ID)
+
+    * ``1.0.0.post1+h123.g123`` (dirty, with $BUILD_ID)
+
+
+* ``{major}.{minor}.{patch}{post}+!h{$BUILD_ID:local}.{commitid}`` would be the same as above, but ``extra`` part **always** shown:
+
+    * ``1.0.0+hlocal.g123`` (clean, on tag, no $BUILD_ID)
+
+    * ``1.0.0.post1+h123.g123`` (clean, one commit since tag, with $BUILD_ID)
+
+    * ``1.0.0.post1+hlocal.g123`` (dirty, no $BUILD_ID)
+
+    * ``1.0.0.post1+h123.g123`` (dirty, with $BUILD_ID)
+
+
+* ``{major}.{minor}.{changes} .{commitid}``: space demarcates ``main`` vs ``extra``, but is not added in the final version render
+
+    * ``1.0.0`` (clean, on tag)
+
+    * ``1.0.1`` (clean, one commit since tag)
+
+    * ``1.0.1.g123`` (dirty, note: no space between ``1.0.1`` ("main" part) and ``.g123`` ("extra" part))
+
+
+* ``{major}.{minor}.{changes}.{commitid}``: similar to above, except here there is no separator, and hence no ``extra`` part
+  (the ``.{commitid}`` is part of **main** part and will be always rendered, so equivalent to above with explamation point, like: ``{major}.{minor}.{changes} !.{commitid}``)
 
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
