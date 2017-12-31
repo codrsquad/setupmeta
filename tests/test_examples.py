@@ -4,13 +4,11 @@ Verify that ../examples/*/setup.py behave as expected
 
 import imp
 import os
-import re
 import sys
 
 import pytest
 from . import conftest
 
-from setupmeta import run_program, short
 from setupmeta.content import extract_list, load_list
 
 SCENARIOS = conftest.resouce('scenarios')
@@ -71,18 +69,3 @@ def test_scenario(scenario):
     path = os.path.join(scenario, 'expected.txt')
     expected = load_list(path)
     assert expected == output
-
-
-def chk(output, message):
-    assert re.search(message, output), "'%s' not present in '%s'" % (message, short(output)) # noqa
-
-
-def test_self():
-    """ Test setupmeta's own setup.py """
-    setup_py = os.path.join(conftest.PROJECT, 'setup.py')
-    out = run_program(sys.executable, setup_py, 'explain', capture=True)
-    chk(out, "author:.+ Zoran Simic")
-    chk(out, "description:.+ Simplify your setup.py")
-    chk(out, "license:.+ MIT")
-    chk(out, "url:.+ https://github.com/zsimic/setupmeta")
-    chk(out, "version:.+ [0-9]+\.[0-9]")

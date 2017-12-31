@@ -8,7 +8,7 @@ keywords: setup, docstring
 from setuptools import setup
 
 
-__keywords__ = 'some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command'   # noqa
+__keywords__ = 'some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command'
 
 
 setup(
@@ -26,6 +26,8 @@ setup(
 
     # Here to verify that explicit takes precedence
     keywords=__keywords__.split(','),
+
+    entry_points=dict(console_scripts="a=b"),
 
     # For illustration purposes
     license='foo',

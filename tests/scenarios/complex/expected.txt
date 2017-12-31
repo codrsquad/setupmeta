@@ -10,7 +10,8 @@ running explain
               \_: (complex/__init__.py:2    ) Short description of complex project
     download_url: (auto-fill                ) https://github.com/zsimic/complex/archive/3.2.1.tar.gz
               \_: (setup.py:4               ) archive/{version}.tar.gz
-    entry_points: (entry_points.ini         ) [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
+    entry_points: (explicit                 ) {console_scripts: a=b}
+              \_: (entry_points.ini         ) [foo]  [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
   extras_require: (explicit                 ) 3 keys: {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', '...
 install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
         keywords: (explicit                 ) 14 items: ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', '...
@@ -38,6 +39,5 @@ maintainer_email: (auto-adjust              ) me@myplace.com
               \_: (complex/__init__.py:7    ) 0.0.1
 
 running entrypoints
-foo = complex.some_module:main_func
-bar = complex.some_module:bar
+a=b
 

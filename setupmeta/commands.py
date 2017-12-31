@@ -81,28 +81,26 @@ class ExplainCommand(setuptools.Command):
         self.chars = setupmeta.to_int(self.chars, default=Console.columns())
 
         definitions = self.setupmeta.definitions
-        if not definitions:
-            return
+        if definitions:
+            longest_key = min(24, max(len(key) for key in definitions))
+            sources = sum((d.sources for d in definitions.values()), [])
+            longest_source = min(32, max(len(s.source) for s in sources))
+            form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
+            max_chars = max(60, self.chars - longest_key - longest_source - 5)
 
-        longest_key = min(24, max(len(key) for key in definitions))
-        sources = sum((d.sources for d in definitions.values()), [])
-        longest_source = min(32, max(len(s.source) for s in sources))
-        form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
-        max_chars = max(60, self.chars - longest_key - longest_source - 5)
+            for definition in sorted(definitions.values()):
+                count = 0
+                for source in definition.sources:
+                    if count:
+                        prefix = "\_"
+                    elif source.key not in setupmeta.MetaDefs.all_fields:
+                        prefix = "%s*" % source.key
+                    else:
+                        prefix = source.key
 
-        for definition in sorted(definitions.values()):
-            count = 0
-            for source in definition.sources:
-                if count:
-                    prefix = "\_"
-                elif source.key not in setupmeta.MetaDefs.all_fields:
-                    prefix = "%s*" % source.key
-                else:
-                    prefix = source.key
-
-                preview = setupmeta.short(source.value, c=max_chars)
-                print(form % (prefix, source.source, preview))
-                count += 1
+                    preview = setupmeta.short(source.value, c=max_chars)
+                    print(form % (prefix, source.source, preview))
+                    count += 1
 
 
 @MetaCommand
@@ -118,8 +116,10 @@ class EntryPointsCommand(setuptools.Command):
             for ep in console_scripts:
                 print(ep)
             return
-        for key, value in console_scripts.items():
-            print("%s = %s" % (key, value))
+        for line in console_scripts.splitlines():
+            line = line.strip()
+            if line:
+                print(line)
 
 
 def get_console_scripts(entry_points):
@@ -135,13 +135,10 @@ def get_console_scripts(entry_points):
         in_console_scripts = False
         for line in entry_points:
             line = line.strip()
-            if not line:
-                continue
-            if line.startswith('['):
+            if line and line.startswith('['):
                 in_console_scripts = 'console_scripts' in line
                 continue
-            if not in_console_scripts:
-                continue
-            result.append(line)
+            if in_console_scripts:
+                result.append(line)
         return result
     return get_console_scripts(entry_points.split('\n'))

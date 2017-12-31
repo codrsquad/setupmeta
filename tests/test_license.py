@@ -33,6 +33,6 @@ def test_license():
     check_license(BSD_SAMPLE, 'BSD', 'BSD License')
     check_license(MIT_SAMPLE, 'MIT', 'MIT License')
     check_license(MPL_SAMPLE, 'MPL', 'MPL')
-    check_license(AGPL_SAMPLE, 'AGPLv3', 'GNU Affero General Public License (AGPLv3)')  # noqa
-    check_license(GPL_SAMPLE, 'GPLv3', 'GNU General Public License (GPLv3)')            # noqa
-    check_license(LGPL_SAMPLE, 'LGPLv3', 'GNU Lesser General Public License (LGPLv3)')  # noqa
+    check_license(AGPL_SAMPLE, 'AGPLv3', 'GNU Affero General Public License (AGPLv3)')
+    check_license(GPL_SAMPLE, 'GPLv3', 'GNU General Public License (GPLv3)')
+    check_license(LGPL_SAMPLE, 'LGPLv3', 'GNU Lesser General Public License (LGPLv3)')
