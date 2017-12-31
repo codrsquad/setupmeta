@@ -123,11 +123,8 @@ class Git(Scm):
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
             return
-        if relative_paths == ['.']:
-            self.run(commit, 'add', '-A', '.')
-        else:
-            relative_paths = sorted(set(relative_paths))
-            self.run(commit, 'add', *relative_paths)
+        relative_paths = sorted(set(relative_paths))
+        self.run(commit, 'add', *relative_paths)
         self.run(commit, 'commit', '-m', "Version %s" % next_version)
         self.run(commit, 'push', 'origin')
 

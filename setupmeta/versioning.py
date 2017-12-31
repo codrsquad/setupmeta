@@ -262,12 +262,7 @@ class Strategy:
                 data['separator'] = extra[0]
                 data['extra'] = extra[1:]
 
-        try:
-            return cls(**data)
-        except Exception as e:
-            msg = "Malformed versioning strategy '%s': %s" % (given, e)
-            warnings.warn(msg)
-            return None
+        return cls(**data)
 
 
 class Versioning:
@@ -310,18 +305,9 @@ class Versioning:
                 warnings.warn(self.problem)
             return
 
-        try:
-            gv = self.scm.get_version()
-
-        except Exception as e:
-            warnings.warn("Can't determine version: %s" % e)
-            return
-
+        gv = self.scm.get_version()
         rendered = self.strategy.rendered(gv)
-        if not rendered:
-            warnings.warn("Couldn't render version '%s'" % gv)
-            return
-        if cv and not rendered.startswith(cv):
+        if cv and rendered and not rendered.startswith(cv):
             source = vdef.sources[0].source
             expected = rendered[:len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
@@ -337,9 +323,7 @@ class Versioning:
             setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
 
         gv = self.scm.get_version()
-        if not gv:
-            setupmeta.abort("Could not determine version from git tags")
-        if commit and gv.dirty and not commit_all:
+        if commit and gv and gv.dirty and not commit_all:
             setupmeta.abort("You have pending git changes, can't bump")
 
         next_version = self.strategy.bumped(what, gv)

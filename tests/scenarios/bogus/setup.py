@@ -9,6 +9,6 @@ setup(
     name='bogus',
     versioning={
         'main': main_part,
-        'extra': []
+        'extra': [],
     },
 )
