@@ -8,26 +8,31 @@ import re
 import sys
 
 import pytest
+from . import conftest
 
 from setupmeta import run_program, short
 from setupmeta.content import extract_list, load_list
-from . import conftest
 
-
+SCENARIOS = conftest.resouce('scenarios')
 EXAMPLES = os.path.join(conftest.PROJECT, 'examples')
 COMMANDS = ['explain -c161', 'entrypoints']
 
 
-def scenario_names():
+def valid_scenarios(folder):
+    result = []
+    for name in os.listdir(folder):
+        full_path = os.path.join(folder, name)
+        if os.path.isdir(full_path):
+            result.append(full_path)
+    return result
+
+
+def scenario_paths():
     """ Available scenario names """
-    names = []
-    for name in os.listdir(EXAMPLES):
-        if os.path.isdir(os.path.join(EXAMPLES, name)):
-            names.append(name)
-    return names
+    return valid_scenarios(SCENARIOS) + valid_scenarios(EXAMPLES)
 
 
-@pytest.fixture(params=scenario_names())
+@pytest.fixture(params=scenario_paths())
 def scenario(request):
     """ Yield one test per scenario """
     yield request.param
@@ -61,9 +66,9 @@ def run(setup_py):
 
 def test_scenario(scenario):
     """ Check that 'scenario' yields expected explain output """
-    setup_py = os.path.join(EXAMPLES, scenario, 'setup.py')
+    setup_py = os.path.join(scenario, 'setup.py')
     output = extract_list(run(setup_py))
-    path = os.path.join(EXAMPLES, scenario, 'expected.txt')
+    path = os.path.join(scenario, 'expected.txt')
     expected = load_list(path)
     assert expected == output
 

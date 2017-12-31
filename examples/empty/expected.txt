@@ -1,13 +1,9 @@
 running explain
-     description: (README:1  ) A bare bones project
-            foo*: (setup.py:2) bar
-         license: (auto-fill ) MIT
-long_description: (README.rst) empty =====  (see README)
-              \_: (README.md ) foo
-              \_: (README    ) # empty: A bare bones project  [//]: # (.. [[end long_description]])
-            name: (explicit  ) empty
-      py_modules: (auto-fill ) ['empty']
-  setup_requires: (explicit  ) ['setupmeta']
+     description: (README.rst:1) A bare bones project
+long_description: (README.rst  ) 239 chars: empty: A bare bones project ===========================  This example shows:  - `name` is the only thing defined i...
+            name: (explicit    ) empty
+      py_modules: (auto-fill   ) ['empty']
+  setup_requires: (explicit    ) ['setupmeta']
 
 running entrypoints
 

@@ -118,10 +118,8 @@ def run_program(program, *args, **kwargs):
 
     p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
     output, error = p.communicate()
-    if output:
-        output = decode(output)
-    if error:
-        error = decode(error)
+    output = decode(output)
+    error = decode(error)
 
     trace("Ran %s (exitcode: %s)" % (represented, p.returncode))
     if output:

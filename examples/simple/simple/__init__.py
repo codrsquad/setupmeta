@@ -7,3 +7,7 @@ __keywords__ = 'simple, scenario'
 __author__ = 'Zoran Simic zoran@simicweb.com'
 __url__ = "https://github.com/zsimic/simple"
 __download_url__ = "https://github.com/zsimic/simple/archive/{version}.tar.gz"
+
+
+def main():
+    pass

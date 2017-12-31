@@ -45,16 +45,16 @@ def is_setup_py_path(path):
 
 def find_packages(name, subfolder=None):
     """ Find packages for 'name' (if any), 'subfolder' is like "src" """
-    result = None
+    result = set()
     if subfolder:
         path = project_path(subfolder, name)
     else:
         path = project_path(name)
     init_py = os.path.join(path, '__init__.py')
     if os.path.isfile(init_py):
-        result = [name]
+        result.add(name)
         for subpackage in setuptools.find_packages(where=path):
-            result.append("%s.%s" % (name, subpackage))
+            result.add("%s.%s" % (name, subpackage))
     return result
 
 
@@ -352,16 +352,14 @@ class SetupMeta(Settings):
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            packages = find_packages(self.name)
-            if packages:
-                self.auto_fill('packages', packages)
+            direct_packages = find_packages(self.name)
+            src_packages = find_packages(self.name, subfolder='src')
+            packages = sorted(direct_packages | src_packages)
 
-            packages = find_packages(self.name, subfolder='src')
-            if packages:
-                self.auto_fill('packages', packages)
+            if src_packages:
                 self.auto_fill('package_dir', {'': 'src'})
-
-            packages = self.value('packages') or []
+            if packages:
+                self.auto_fill('packages', packages)
 
             if os.path.isfile(project_path('%s.py' % self.name)):
                 py_modules = [self.name]
@@ -447,7 +445,7 @@ class SetupMeta(Settings):
         """
         description = contents.strip().partition('\n')[0].strip()
         size = len(description)
-        if size < 4 or size > 2048:
+        if size < 4 or size > 256:
             return None
         m = RE_DESCRIPTION.match(description)
         name = (self.name or '').lower()
@@ -473,7 +471,7 @@ class SetupMeta(Settings):
             if value:
                 short_desc = self.extract_short_description(value)
                 self.auto_fill('description', short_desc, source="%s:1" % path)
-                self.add_definition('long_description', value, path)
+                self.add_definition('long_description', value, path, override=short_desc)
 
     def auto_fill_entry_points(self):
         value, path = find_contents(['entry_points.ini'])

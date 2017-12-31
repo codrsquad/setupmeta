@@ -1,0 +1,12 @@
+running explain
+     description: (README:1  ) Several readme files
+            foo*: (setup.py:2) bar
+         license: (auto-fill ) MIT
+long_description: (README    ) # Several readme files  [//]: # (.. [[end long_description]])
+              \_: (README.rst) 314 chars: foo ================================================================================================================...
+              \_: (README.md ) readmes: foo  No useful short description on 1st line here
+            name: (explicit  ) readmes
+  setup_requires: (explicit  ) ['setupmeta']
+
+running entrypoints
+

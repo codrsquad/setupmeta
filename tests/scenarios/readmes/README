@@ -1,0 +1,11 @@
+# Several readme files
+
+[//]: # (.. [[end long_description]])
+[//]: # ( .. [[end long_description]] )
+
+[//]: # (This is markdown comment)
+[//]: # (The above tests edge case of special readme mention, surrounded by spaces vs not)
+[//]: # (Only the 1st line should make it as long_description)
+
+
+The 1st 2 are not used because their 1st line doesn't seem to be reasonable

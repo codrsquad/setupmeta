@@ -4,14 +4,19 @@ import argparse
 from io import open
 import logging
 import os
-import subprocess       # nosec
+import subprocess           # nosec
 import sys
 
 from setupmeta import decode
 
-
-EXAMPLES = os.path.abspath(os.path.dirname(__file__))
+SCENARIOS = os.path.abspath(os.path.dirname(__file__))
+PROJECT_DIR = os.path.dirname(os.path.dirname(SCENARIOS))
+EXAMPLES = os.path.join(PROJECT_DIR, 'examples')
 COMMANDS = ['explain -c161', 'entrypoints']
+
+
+def relative_path(full_path):
+    return full_path[len(PROJECT_DIR) + 1:]
 
 
 def run_command(path, command):
@@ -31,7 +36,7 @@ def run_command(path, command):
 
 
 def refresh_example(path, dryrun):
-    logging.info("Refreshing %s" % (os.path.basename(path)))
+    logging.info("Refreshing %s" % relative_path(path))
     setup_py = os.path.join(path, 'setup.py')
     if not os.path.isfile(setup_py):
         return
@@ -46,9 +51,17 @@ def refresh_example(path, dryrun):
         fh.write(output)
 
 
+def run(folder, dryrun=False):
+    files = os.listdir(folder)
+    for name in files:
+        full_path = os.path.join(folder, name)
+        if os.path.isdir(full_path):
+            refresh_example(full_path, dryrun=dryrun)
+
+
 def main():
     """
-    Refresh examples/*/expected.txt
+    Refresh tests/scenarios/*/expected.txt and examples/*/expected.txt
     """
     parser = argparse.ArgumentParser(description=main.__doc__.strip())
     parser.add_argument('--debug', action='store_true', help="Show debug info")
@@ -59,12 +72,8 @@ def main():
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=level)
     logging.root.setLevel(level)
 
-    examples = os.listdir(EXAMPLES)
-    for name in examples:
-        path = os.path.join(EXAMPLES, name)
-        if not os.path.isdir(path):
-            continue
-        refresh_example(path, dryrun=args.dryrun)
+    run(SCENARIOS, dryrun=args.dryrun)
+    run(EXAMPLES, dryrun=args.dryrun)
 
 
 if __name__ == "__main__":
