@@ -313,9 +313,13 @@ class Versioning:
                 warnings.warn(self.problem)
             return
 
-        gv = self.scm.get_version()
-        if not gv:
+        try:
+            gv = self.scm.get_version()
+
+        except Exception as e:
+            warnings.warn("Can't determine version: %s" % e)
             return
+
         rendered = self.strategy.rendered(gv)
         if not rendered:
             warnings.warn("Couldn't render version '%s'" % gv)

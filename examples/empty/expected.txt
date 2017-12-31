@@ -6,4 +6,3 @@ long_description: (README.rst  ) 239 chars: empty: A bare bones project ========
   setup_requires: (explicit    ) ['setupmeta']
 
 running entrypoints
-

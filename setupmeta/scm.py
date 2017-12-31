@@ -1,4 +1,6 @@
 from distutils.version import LooseVersion
+import json
+import os
 import re
 
 import setupmeta
@@ -58,9 +60,14 @@ class Version:
 class Scm:
 
     program = None      # type: str
+    mock = None         # type: dict # For testing
 
     def __init__(self, root):
         self.root = root
+        mock_path = os.path.join(root, '.%s' % self.program, '.mock')
+        if os.path.exists(mock_path):
+            with open(mock_path) as fh:
+                self.mock = json.load(fh)
 
     def get_branch(self):
         pass
@@ -76,6 +83,10 @@ class Scm:
 
     def get_output(self, *args, **kwargs):
         capture = kwargs.pop('capture', True)
+        if self.mock and not kwargs.get('dryrun'):
+            if capture is True:
+                return self.mock.get(' '.join(args))
+            return 0
         return setupmeta.run_program(self.program, *args, capture=capture, cwd=self.root, **kwargs)
 
     def run(self, commit, *args):
@@ -91,13 +102,24 @@ class Hg(Scm):
         return branch and branch.strip()
 
     def get_version(self):
-        setupmeta.abort("get_version() not implemented for hg")
+        if not self.mock:
+            setupmeta.abort("get_version() not implemented for hg")
+        text = self.get_output('id', '-i', '-t')
+        dirty = text[-1] == '+'
+        text = text.strip('+')
+        return Version(text, dirty=dirty, text=text)
 
     def commit_files(self, commit, relative_paths, next_version):
-        setupmeta.abort("commit_files() not implemented for hg")
+        if not self.mock:
+            setupmeta.abort("commit_files() not implemented for hg")
+        self.run(commit, 'commit', '-m', "Version %s" % next_version)
 
     def apply_tag(self, commit, branch, next_version):
-        setupmeta.abort("apply_tag() not implemented for hg")
+        if not self.mock:
+            setupmeta.abort("apply_tag() not implemented for hg")
+        bump_msg = "Version %s" % next_version
+        tag = "v%s" % next_version
+        self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
 
 
 class Git(Scm):

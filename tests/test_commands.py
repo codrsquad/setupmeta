@@ -1,14 +1,17 @@
 import os
 import re
 
+from mock import patch
+from six import StringIO
 from . import conftest
 
 import setupmeta
+from setupmeta.commands import Console
 
 
 def run_setup_py(args, expected):
     expected = expected.splitlines()
-    setup_py = os.path.join(conftest.PROJECT, 'setup.py')
+    setup_py = os.path.join(conftest.PROJECT_DIR, 'setup.py')
     with conftest.capture_output() as out:
         setupmeta.DEBUG = True
         setupmeta.run_program(setup_py, *args, capture=True)
@@ -44,8 +47,8 @@ def test_bump():
         ['bump', '--major', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: .+/git push --tags origin master
+            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git push --tags origin master
         """
     )
 
@@ -53,8 +56,8 @@ def test_bump():
         ['bump', '--minor', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: .+/git push --tags origin master
+            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git push --tags origin master
         """
     )
 
@@ -62,7 +65,14 @@ def test_bump():
         ['bump', '-p', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: .+/git push --tags origin master
+            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git push --tags origin master
         """
     )
+
+
+@patch('sys.stdout.isatty', return_value=True)
+@patch('os.popen', return_value=StringIO('60'))
+def test_console(*_):
+    Console._columns = None
+    assert Console.columns() == 60

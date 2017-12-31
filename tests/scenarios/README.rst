@@ -19,4 +19,4 @@ This folder contains test case scenarios. The tests consist of:
 
 .. _test_examples.py: https://github.com/zsimic/setupmeta/blob/master/tests/test_examples.py
 
-.. _refresh.py: https://github.com/zsimic/setupmeta/blob/master/examples/refresh.py
+.. _refresh.py: https://github.com/zsimic/setupmeta/blob/master/tests/refresh.py

@@ -21,4 +21,3 @@ long_description: (README.rst          ) 521 chars: simple: Simple setup scenari
 
 running entrypoints
 simple = simple:main
-

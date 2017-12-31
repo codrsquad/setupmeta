@@ -13,6 +13,7 @@ __keywords__ = 'some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,
 
 setup(
     name='complex',
+    versioning='changes',
     setup_requires=['setupmeta'],
 
     # This will overshadow classifiers.txt

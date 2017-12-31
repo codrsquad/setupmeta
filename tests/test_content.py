@@ -65,9 +65,7 @@ def test_run_program():
         assert setupmeta.run_program('ls', 'foo/does/not/exist', capture=None) != 0
         assert setupmeta.run_program('ls', 'foo/does/not/exist', capture=True) == ''
         assert setupmeta.run_program('/foo/does/not/exist', capture=True, dryrun=True) is None
-        assert setupmeta.run_program('/foo/does/not/exist', capture=False, dryrun=True) != 0
-
-        assert 'is not installed' in out
+        assert setupmeta.run_program('/foo/does/not/exist', capture=False) != 0
 
         with pytest.raises(SystemExit):
             setupmeta.run_program('/foo/does/not/exist', fatal=True)
@@ -75,7 +73,7 @@ def test_run_program():
         with pytest.raises(SystemExit):
             assert setupmeta.run_program('ls', 'foo/does/not/exist', fatal=True)
 
-        assert 'ls foo/does/not/exist exited with code ' in out
+        assert 'exitcode' in out
 
     setupmeta.DEBUG = False
 

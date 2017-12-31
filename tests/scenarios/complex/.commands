@@ -1,0 +1,3 @@
+bump -p
+bump -m
+bump -M
