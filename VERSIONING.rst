@@ -115,21 +115,21 @@ Example:
 Commit  Tag     Version           Note (command ran to add tag)
 ======  ======  ================  =============================================================================
 none            0.0.0+initial     No commit yet
-g123            0.0.0.post1+g123  Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
-g124            0.0.0.post2+g124
-g125            0.0.0.post3+g125
-g126    v0.1.0  0.1.0             ``bump --minor --commit``
-g127            0.1.0.post1       (1 commit since tag)
-g128            0.1.0.post2
-g129    v0.1.1  0.1.1             ``bump --patch --commit``
-g130            0.1.1.post1
-g131    v1.0.0  1.0.0             ``bump --major --commit``
-g132            1.0.0.post1
+g1              0.0.0.post1+g1    Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
+g2              0.0.0.post2+g2
+g3              0.0.0.post3+g3
+g4      v0.1.0  0.1.0             ``bump --minor --commit``
+g5              0.1.0.post1       (1 commit since tag)
+g6              0.1.0.post2
+g7      v0.1.1  0.1.1             ``bump --patch --commit``
+g8              0.1.1.post1
+g9      v1.0.0  1.0.0             ``bump --major --commit``
+g10             1.0.0.post1
 ======  ======  ================  =============================================================================
 
 * Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
 
-* First commit is tagged ``v0.1.0``, ``git describe`` will yield ``v0.1.0`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag as-is)
+* First tag here is ``v0.1.0``, ``git describe`` will yield ``v0.1.0`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag as-is)
 
 * A commit occurs and doesn't add a git tag, version for that commit will be ``0.1.0.post1`` (tag 0.1.0 with 1 change since tag)
 
@@ -164,13 +164,31 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-* First commit is tagged ``v0.1``, ``git describe`` will yield ``v0.1`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 changes)
+======  ======  ================  =============================================================================
+Commit  Tag     Version           Note (command ran to add tag)
+======  ======  ================  =============================================================================
+none            0.0.0+initial     No commit yet
+g1              0.0.1+g1          Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
+g2              0.0.2+g2
+g3              0.0.3+g3
+g4      v0.1    0.1.0             ``bump --minor --commit``
+g5              0.1.1             (1 commit since tag)
+g6              0.1.2
+g7      v0.2    0.2.0             ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g8              0.2.1
+g9      v1.0    1.0.0             ``bump --major --commit``
+g10             1.0.1
+======  ======  ================  =============================================================================
+
+* Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
+
+* First tag here is ``v0.1``, ``git describe`` will yield ``v0.1`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 changes)
 
 * A commit occurs and doesn't add a git tag, version for that commit will be ``0.1.1`` (tag 0.1 with 1 change since tag)
 
 * A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.2`` etc
 
-* Similarly, dirty checkouts (with changes pending) will get a version of the form ``0.1.2+g123``
+* Dirty checkouts (with changes pending) will get a version of the form ``0.1.2+g123``
 
 * Use ``python setup.py bump --[major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
 
