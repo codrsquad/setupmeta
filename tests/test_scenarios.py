@@ -7,7 +7,7 @@ import os
 import sys
 
 import pytest
-import conftest
+from . import conftest
 import scenarios
 
 from setupmeta.content import load_contents
