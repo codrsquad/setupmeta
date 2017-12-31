@@ -1,0 +1,10 @@
+running explain
+      name: (explicit) bogus
+   version: (git     ) 1.0
+versioning: (explicit) {extra: [], main: function 'main_part'}
+
+running entrypoints
+
+running bump
+'bump -p' exited with code 1:
+error: Main format is not a list: function 'main_part'

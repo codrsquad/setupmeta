@@ -163,6 +163,8 @@ def stringify(value):
         return repr(tuple(stringify(s) for s in value))
     if isinstance(value, dict):
         return stringify_dict(value)
+    if callable(value):
+        return "function '%s'" % value.__name__
     return simplify_str(value)
 
 

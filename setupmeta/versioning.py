@@ -220,7 +220,7 @@ class Strategy:
         :return str: Represented next version, with 'what' bumped
         """
         if not isinstance(self.main_bits, list):
-            setupmeta.abort("Main format is not a list: %s" % self.main_bits)
+            setupmeta.abort("Main format is not a list: %s" % setupmeta.stringify(self.main_bits))
 
         bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
         if what not in bumpable:
@@ -254,12 +254,8 @@ class Strategy:
 
         elif given != 'tag' and given is not True:
             m = RE_VERSIONING.match(given)
-            if not m:
-                return None
-
             if m.group(2):
                 data['branches'] = m.group(2)
-
             data['main'] = m.group(3)
             extra = m.group(4)
             if extra:
@@ -268,7 +264,6 @@ class Strategy:
 
         try:
             return cls(**data)
-
         except Exception as e:
             msg = "Malformed versioning strategy '%s': %s" % (given, e)
             warnings.warn(msg)
@@ -352,8 +347,11 @@ class Versioning:
         if not commit:
             print("Not committing bump, use --commit to commit")
 
-        self.update_sources(next_version, commit, commit_all)
-        self.scm.apply_tag(commit, branch, next_version)
+        vdefs = self.meta.definitions.get('version')
+        if vdefs:
+            self.update_sources(next_version, commit, commit_all, vdefs)
+
+        self.scm.apply_tag(commit, next_version)
 
         hook = setupmeta.project_path('bump-hook')
         if not setupmeta.is_executable(hook):
@@ -361,11 +359,7 @@ class Versioning:
 
         setupmeta.run_program(hook, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
-    def update_sources(self, next_version, commit, commit_all):
-        vdefs = self.meta.definitions.get('version')
-        if not vdefs:
-            return None
-
+    def update_sources(self, next_version, commit, commit_all, vdefs):
         modified = []
         for vdef in vdefs.sources:
             if '.py:' not in vdef.source:

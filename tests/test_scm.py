@@ -8,7 +8,7 @@ def test_scm():
     assert scm.get_branch() is None
     assert scm.get_version() is None
     assert scm.commit_files(False, None, None) is None
-    assert scm.apply_tag(False, None, None) is None
+    assert scm.apply_tag(False, None) is None
     assert scm.get_output() is None
 
 

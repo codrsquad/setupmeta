@@ -48,7 +48,7 @@ def test_bump():
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: git push --tags origin master
+            Would run: git push --tags origin
         """
     )
 
@@ -57,7 +57,7 @@ def test_bump():
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: git push --tags origin master
+            Would run: git push --tags origin
         """
     )
 
@@ -66,7 +66,7 @@ def test_bump():
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m Version [\d.]+
-            Would run: git push --tags origin master
+            Would run: git push --tags origin
         """
     )
 

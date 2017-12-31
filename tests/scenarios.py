@@ -112,7 +112,7 @@ class Scenario:
         for line in text.splitlines():
             line = line.rstrip()
             if line and all(m not in line for m in self._ignored_errors):
-                result.append(line)
+                result.append(line.replace(self.target, '<tmp>'))
         return '\n'.join(result)
 
     def prepare(self):

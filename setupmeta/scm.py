@@ -71,7 +71,7 @@ class Scm:
     def commit_files(self, commit, relative_paths, next_version):
         pass
 
-    def apply_tag(self, commit, branch, next_version):
+    def apply_tag(self, commit, next_version):
         pass
 
     def get_output(self, *args, **kwargs):
@@ -79,7 +79,7 @@ class Scm:
         return setupmeta.run_program(self.program, *args, capture=capture, cwd=self.root, **kwargs)
 
     def run(self, commit, *args):
-        self.get_output(*args, capture=None, fatal=True, dryrun=not commit)
+        return self.get_output(*args, capture=None, fatal=True, dryrun=not commit)
 
 
 class Git(Scm):
@@ -123,11 +123,16 @@ class Git(Scm):
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
             return
-        self.run(commit, 'add', *relative_paths)
+        if relative_paths == ['.']:
+            self.run(commit, 'add', '-A', '.')
+        else:
+            relative_paths = sorted(set(relative_paths))
+            self.run(commit, 'add', *relative_paths)
         self.run(commit, 'commit', '-m', "Version %s" % next_version)
+        self.run(commit, 'push', 'origin')
 
-    def apply_tag(self, commit, branch, next_version):
+    def apply_tag(self, commit, next_version):
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
         self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
-        self.run(commit, 'push', '--tags', 'origin', branch)
+        self.run(commit, 'push', '--tags', 'origin')
