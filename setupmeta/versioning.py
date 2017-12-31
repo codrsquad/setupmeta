@@ -4,7 +4,7 @@ import re
 import warnings
 
 import setupmeta
-from setupmeta.scm import Git, Hg, Version
+from setupmeta.scm import Git, Version
 
 
 BUMPABLE = 'major minor patch'.split()
@@ -24,8 +24,6 @@ def project_scm(root):
     """
     if os.path.isdir(os.path.join(root, '.git')):
         return Git(root)
-    elif os.path.isdir(os.path.join(root, '.hg')):
-        return Hg(root)
     return None
 
 

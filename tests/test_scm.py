@@ -4,17 +4,6 @@ from . import conftest
 import setupmeta.scm
 
 
-class MockHg(setupmeta.scm.Hg):
-    def __init__(self, branch='master'):
-        self.branch = branch
-        setupmeta.scm.Hg.__init__(self, conftest.resouce())
-
-    def get_output(self, cmd, *args, **kwargs):
-        if cmd == 'branch':
-            return self.branch
-        return None
-
-
 def test_scm():
     scm = setupmeta.scm.Scm(conftest.resouce())
     assert scm.get_branch() is None
@@ -36,17 +25,6 @@ def test_git():
         assert "Would run" in out
         assert "git add foo" in out
         assert "git commit -m Version 2.0" in out
-
-
-def test_hg():
-    hg = MockHg()
-    assert hg.get_branch() == 'master'
-    with pytest.raises(Exception):
-        hg.get_version()
-    with pytest.raises(Exception):
-        hg.commit_files(False, None, None)
-    with pytest.raises(Exception):
-        hg.apply_tag(False, None, None)
 
 
 def test_strip():
