@@ -1,5 +1,5 @@
 bump -p
-bump -m
+bump -m --all
 bump -M
 bump --minor --commit
 bump --major --commit

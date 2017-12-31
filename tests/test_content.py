@@ -25,6 +25,12 @@ def test_shortening():
     assert setupmeta.short(dict(foo='bar'), c=8) == '1 keys'
 
 
+def test_strip():
+    assert setupmeta.strip_dash(None) is None
+    assert setupmeta.strip_dash('foo') == 'foo'
+    assert setupmeta.strip_dash('--foo-') == 'foo'
+
+
 def test_listify():
     assert setupmeta.listify("a, b") == ['a,', 'b']
     assert setupmeta.listify("a,  b") == ['a,', 'b']

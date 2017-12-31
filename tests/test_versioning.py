@@ -156,3 +156,18 @@ def test_malformed():
     assert meta.version is None
     assert not versioning.enabled
     assert versioning.problem == "No versioning format specified"
+
+
+def test_pygradle():
+    meta = new_meta('changes', scm=conftest.MockGit(dirty=True))
+    vdef = meta.definitions.get('version')
+
+    # Version not auto-filled if source is pygradle
+    vdef.sources[0].source = 'pygradle'
+    meta.versioning.auto_fill_version()
+    assert vdef.source == 'pygradle'
+    assert vdef.value == '0.1.3+g123'
+
+    with pytest.raises(setupmeta.UsageError):
+        # Can't commit with dirty checkout
+        meta.versioning.bump('patch', commit=True, simulate_branch='master')

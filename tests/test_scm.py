@@ -24,9 +24,3 @@ def test_git():
         assert "Would run" in out
         assert "git add foo" in out
         assert "git commit -m Version 2.0" in out
-
-
-def test_strip():
-    assert setupmeta.scm.strip_dash(None) is None
-    assert setupmeta.scm.strip_dash('foo') == 'foo'
-    assert setupmeta.scm.strip_dash('--foo-') == 'foo'

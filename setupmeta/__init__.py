@@ -54,6 +54,13 @@ def short(text, c=64):
     return result
 
 
+def strip_dash(text):
+    """ Strip leading dashes from 'text' """
+    if not text:
+        return text
+    return text.strip('-')
+
+
 def is_executable(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)
 

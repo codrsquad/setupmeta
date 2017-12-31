@@ -1,13 +1,13 @@
 Support for versioning
 ======================
 
-setupmeta can use git tags to automatically version and bump the version of your project.
+setupmeta can use git tags to automatically **version** and **bump** the version of your project.
 
-The functionality is completely optional and has to be explicitly enabled, note that:
+The functionality is optional and has to be explicitly enabled, note that:
 
 * SCM tags are used for versioning
 
-* only git is supported currently (contributions for other SCMs welcome)
+* only git is supported currently (contributions for other SCMs welcome and should be easy, see `Scm class`_)
 
 * It can be a drop-in replacement for setuptools_scm_
 
@@ -232,3 +232,5 @@ The following names are available for specifying what ``format`` and ``local`` s
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
+
+.. _Scm class: https://github.com/zsimic/setupmeta/blob/master/setupmeta/scm.py
