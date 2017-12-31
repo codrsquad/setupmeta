@@ -1,11 +1,14 @@
-#!/usr/bin/env python
-
 import argparse
+import imp
 from io import open
 import logging
 import os
-import subprocess
+import shutil
 import sys
+import tempfile
+
+import setupmeta
+from setupmeta.content import load_contents
 
 if __name__ == "__main__":
     import conftest
@@ -17,7 +20,6 @@ SCENARIOS = os.path.join(conftest.TESTS, 'scenarios')
 EXAMPLES = os.path.join(conftest.PROJECT_DIR, 'examples')
 
 SCENARIO_COMMANDS = ['explain -c161', 'entrypoints']
-IGNORED_ERRORS = 'debugger UserWarning warnings.warn'.split()
 
 
 def valid_scenarios(folder):
@@ -34,62 +36,143 @@ def scenario_paths():
     return valid_scenarios(SCENARIOS) + valid_scenarios(EXAMPLES)
 
 
-def get_scenario_commands(scenario):
-    result = []
-    result.extend(SCENARIO_COMMANDS)
-    extra_commands = os.path.join(scenario, '.commands')
-    if os.path.isfile(extra_commands):
-        with open(extra_commands) as fh:
-            for line in fh:
-                line = conftest.decode(line).strip()
-                if line:
-                    result.append(line)
-    return result
+def copytree(src, dst):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            if os.path.isdir(d):
+                copytree(s, d)
+            else:
+                shutil.copytree(s, d)
+        else:
+            shutil.copy2(s, d)
 
 
-def cleaned_error(error):
-    error = conftest.decode(error)
-    result = []
-    for line in error.splitlines():
-        line = line.strip()
-        if line and all(m not in line for m in IGNORED_ERRORS):
-            result.append(line)
-    return '\n'.join(result)
+def load_module(full_path):
+    """ Load module pointed to by 'full_path' """
+    fp = None
+    try:
+        folder = os.path.dirname(full_path)
+        basename = os.path.basename(full_path).replace('.py', '')
+        fp, pathname, description = imp.find_module(basename, [folder])
+        imp.load_module(basename, fp, pathname, description)
+    finally:
+        if fp:
+            fp.close()
 
 
-def run_scenario_command(scenario, command):
-    os.chdir(scenario)
-    cmd = [sys.executable, 'setup.py'] + command.split()
-    logging.debug("Running: %s", cmd)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)   # nosec
-    output, error = p.communicate()
-    output = conftest.decode(output) or ''
-    if p.returncode:
-        output = output.strip()
-        output += "\n'%s' exited with code %s:\n%s\n" % (command, p.returncode, cleaned_error(error))
-    return output
+class Scenario:
 
+    folder = None           # type: str # Folder where scenario is defined
+    commands = None         # type: list(str) # setup.py commands to run
+    target = None           # type: str # Folder where to run the scenario (temp folder for full git modification support)
 
-def run_scenario(scenario):
-    output = ''
-    commands = get_scenario_commands(scenario)
-    for command in commands:
-        output += "%s\n\n" % run_scenario_command(scenario, command).strip()
-    return "%s\n" % output.strip()
+    temp = None             # type: str # Optional temp folder used
+    origin = None           # type: str # Temp SCM origin to use
 
+    _ignored_errors = 'debugger UserWarning warnings.warn'.split()
 
-def refresh_example(scenario, dryrun):
-    logging.info("Refreshing %s" % conftest.relative_path(scenario))
-    setup_py = os.path.join(scenario, 'setup.py')
-    if not os.path.isfile(setup_py):
-        return
-    expected = os.path.join(scenario, 'expected.txt')
-    output = run_scenario(scenario)
-    if dryrun:
-        print(output)
-        return
-    with open(expected, 'wt', encoding='utf-8') as fh:
-        fh.write(output)
+    def __init__(self, folder):
+        self.folder = folder
+        self.commands = []
+        self.commands.extend(SCENARIO_COMMANDS)
+        self.target = folder
+        extra_commands = os.path.join(folder, '.commands')
+        if os.path.isfile(extra_commands):
+            self.target = None
+            with open(extra_commands) as fh:
+                for line in fh:
+                    line = conftest.decode(line).strip()
+                    if line:
+                        self.commands.append(line)
+
+    def __repr__(self):
+        return conftest.relative_path(self.folder)
+
+    def run_git(self, *args, **kwargs):
+        cwd = kwargs.pop('cwd', self.target)
+        return setupmeta.run_program(*args, cwd=cwd, capture=kwargs.pop('capture', True), fatal=kwargs.pop('fatal', True), **kwargs)
+
+    def cleaned_output(self, text):
+        text = conftest.decode(text)
+        if not text:
+            return text
+        result = []
+        for line in text.splitlines():
+            line = line.rstrip()
+            if line and all(m not in line for m in self._ignored_errors):
+                result.append(line)
+        return '\n'.join(result)
+
+    def prepare(self):
+        if self.target:
+            return
+        self.temp = tempfile.mkdtemp()
+
+        # Create a temp origin and clone folder
+        self.origin = os.path.join(self.temp, 'origin')
+        self.target = os.path.join(self.temp, 'work')
+
+        os.makedirs(self.origin)
+        self.run_git('git', 'init', '--bare', cwd=self.origin)
+        self.run_git('git', 'clone', self.origin, self.target, cwd=self.temp)
+        copytree(self.folder, self.target)
+        self.run_git('git', 'add', '.')
+        self.run_git('git', 'commit', '-m', "Initial commit")
+        self.run_git('git', 'push', 'origin', 'master')
+
+    def clean(self):
+        if self.temp:
+            shutil.rmtree(self.temp)
+
+    def run_internal(self):
+        """ Run 'setup_py' with 'command' """
+        setup_py = os.path.join(self.target, 'setup.py')
+        old_argv = sys.argv
+        try:
+            result = []
+            for command in self.commands:
+                with conftest.capture_output() as logged:
+                    sys.argv = [setup_py] + command.split()
+                    run_output = ''
+                    try:
+                        load_module(setup_py)
+
+                    except SystemExit as e:
+                        run_output += "'%s' exited with code 1:\n" % command
+                        run_output += "%s\n" % e
+
+                    run_output = "%s\n%s" % (logged.to_string().strip(), run_output.strip())
+                    result.append(self.cleaned_output(run_output))
+
+            return "\n\n".join(result)
+
+        finally:
+            sys.argv = old_argv
+
+    def replay(self):
+        try:
+            self.prepare()
+            return self.run_internal()
+
+        finally:
+            self.clean()
+
+    def expected_path(self):
+        return os.path.join(self.folder, 'expected.txt')
+
+    def expected_contents(self):
+        return load_contents(self.expected_path()).strip()
+
+    def refresh_example(self, dryrun):
+        logging.info("Refreshing %s" % self)
+        output = self.replay()
+        if dryrun:
+            print(output)
+            return
+        with open(self.expected_path(), 'wt', encoding='utf-8') as fh:
+            fh.write("%s\n" % output)
 
 
 def main():
@@ -105,8 +188,9 @@ def main():
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=level)
     logging.root.setLevel(level)
 
-    for scenario in scenario_paths():
-        refresh_example(scenario, dryrun=args.dryrun)
+    for folder in scenario_paths():
+        scenario = Scenario(folder)
+        scenario.refresh_example(args.dryrun)
 
 
 if __name__ == "__main__":
