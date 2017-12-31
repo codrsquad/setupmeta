@@ -1,3 +1,6 @@
 bump -p
 bump -m
 bump -M
+bump --minor --commit
+bump --major --commit
+explain -c180

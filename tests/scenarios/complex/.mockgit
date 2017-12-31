@@ -1,5 +1,0 @@
-{
-    "rev-parse --abbrev-ref HEAD": "master",
-    "describe --tags --long --match v*.*": "v3.4.5-1-g123",
-    "diff --quiet --ignore-submodules": 1
-}

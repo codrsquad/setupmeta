@@ -1,6 +1,4 @@
 from distutils.version import LooseVersion
-import json
-import os
 import re
 
 import setupmeta
@@ -60,14 +58,9 @@ class Version:
 class Scm:
 
     program = None      # type: str
-    mock = None         # type: dict # For testing
 
     def __init__(self, root):
         self.root = root
-        mock_path = os.path.join(root, '.mock%s' % self.program)
-        if os.path.exists(mock_path):
-            with open(mock_path) as fh:
-                self.mock = json.load(fh)
 
     def get_branch(self):
         pass
@@ -83,8 +76,6 @@ class Scm:
 
     def get_output(self, *args, **kwargs):
         capture = kwargs.pop('capture', True)
-        if self.mock and not kwargs.get('dryrun'):
-            return self.mock.get(' '.join(args))
         return setupmeta.run_program(self.program, *args, capture=capture, cwd=self.root, **kwargs)
 
     def run(self, commit, *args):

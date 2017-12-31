@@ -19,14 +19,15 @@ else:
 SCENARIOS = os.path.join(conftest.TESTS, 'scenarios')
 EXAMPLES = os.path.join(conftest.PROJECT_DIR, 'examples')
 
-SCENARIO_COMMANDS = ['explain -c161', 'entrypoints']
+SCENARIO_COMMANDS = ['explain -c180', 'entrypoints']
 
 
 def valid_scenarios(folder):
     result = []
     for name in os.listdir(folder):
         full_path = os.path.join(folder, name)
-        if os.path.isdir(full_path):
+        setup_py = os.path.join(full_path, 'setup.py')
+        if os.path.isdir(full_path) and os.path.isfile(setup_py):
             result.append(full_path)
     return result
 
@@ -57,6 +58,7 @@ def load_module(full_path):
         basename = os.path.basename(full_path).replace('.py', '')
         fp, pathname, description = imp.find_module(basename, [folder])
         imp.load_module(basename, fp, pathname, description)
+
     finally:
         if fp:
             fp.close()
@@ -92,7 +94,15 @@ class Scenario:
 
     def run_git(self, *args, **kwargs):
         cwd = kwargs.pop('cwd', self.target)
-        return setupmeta.run_program(*args, cwd=cwd, capture=kwargs.pop('capture', True), fatal=kwargs.pop('fatal', True), **kwargs)
+        # git requires a user.email configured, which is usually done in ~/.gitconfig, however under tox, we don't have $HOME defined
+        output = setupmeta.run_program(
+            'git', '-c', 'user.email=tess@test.com', *args,
+            cwd=cwd,
+            capture=kwargs.pop('capture', True),
+            fatal=kwargs.pop('fatal', True),
+            **kwargs
+        )
+        return output
 
     def cleaned_output(self, text):
         text = conftest.decode(text)
@@ -111,16 +121,18 @@ class Scenario:
         self.temp = tempfile.mkdtemp()
 
         # Create a temp origin and clone folder
-        self.origin = os.path.join(self.temp, 'origin')
+        self.origin = os.path.join(self.temp, 'origin.git')
         self.target = os.path.join(self.temp, 'work')
 
         os.makedirs(self.origin)
-        self.run_git('git', 'init', '--bare', cwd=self.origin)
-        self.run_git('git', 'clone', self.origin, self.target, cwd=self.temp)
+        self.run_git('init', '--bare', self.origin, cwd=self.temp)
+        self.run_git('clone', self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
-        self.run_git('git', 'add', '.')
-        self.run_git('git', 'commit', '-m', "Initial commit")
-        self.run_git('git', 'push', 'origin', 'master')
+        self.run_git('add', '.')
+        self.run_git('commit', '-m', "Initial commit")
+        self.run_git('push', 'origin', 'master')
+        self.run_git('tag', '-a', 'v1.2.3', '-m', 'Initial tag at v1.2.3')
+        self.run_git('push', '--tags', 'origin', 'master')
 
     def clean(self):
         if self.temp:

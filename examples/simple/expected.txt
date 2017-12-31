@@ -11,7 +11,7 @@ running explain
 install_requires: (requirements.txt    ) ['click>=6.7']
         keywords: (simple/__init__.py:6) ['simple', 'scenario']
          license: (auto-fill           ) Apache 2.0
-long_description: (README.rst          ) 521 chars: simple: Simple setup scenario =============================  This is your typical small project, with:  * ...
+long_description: (README.rst          ) 521 chars: simple: Simple setup scenario =============================  This is your typical small project, with:  * ``name`` is deduced...
             name: (setup.py:3          ) simple
         packages: (auto-fill           ) ['simple']
   setup_requires: (explicit            ) ['setupmeta']
