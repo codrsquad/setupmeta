@@ -44,6 +44,7 @@ class BumpCommand(setuptools.Command):
         ('patch', 'p', "bump patch part of version"),
         ('commit', 'c', "commit changes"),
         ('all', 'a', "commit all pending (default: restrict to bumps)"),
+        ('simulate-branch=', 'b', "simulate branch name (useful for testing)"),
     ]
 
     def initialize_options(self):
@@ -52,6 +53,7 @@ class BumpCommand(setuptools.Command):
         self.patch = 0
         self.commit = 0
         self.all = 0
+        self.simulate_branch = 0
 
     def run(self):
         flags = self.major + self.minor + self.patch
@@ -60,7 +62,7 @@ class BumpCommand(setuptools.Command):
 
         what = 'major' if self.major else 'minor' if self.minor else 'patch'
         try:
-            self.setupmeta.versioning.bump(what, self.commit, self.all)
+            self.setupmeta.versioning.bump(what, self.commit, self.all, self.simulate_branch)
 
         except setupmeta.UsageError as e:
             abort(e)

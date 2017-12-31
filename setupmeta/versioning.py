@@ -327,11 +327,11 @@ class Versioning:
             warnings.warn(msg)
         self.meta.auto_fill('version', rendered, 'git', override=True)
 
-    def bump(self, what, commit=False, commit_all=False):
+    def bump(self, what, commit=False, commit_all=False, simulate_branch=None):
         if self.problem:
             setupmeta.abort(self.problem)
 
-        branch = self.scm.get_branch()
+        branch = simulate_branch or self.scm.get_branch()
         if branch not in self.strategy.branches:
             setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
 

@@ -37,13 +37,11 @@ def test_explain():
 
 
 def test_bump():
-    run_setup_py(
-        ['bump'],
-        "Specify exactly one of --major, --minor or --patch"
-    )
+    run_setup_py(['bump'], "Specify exactly one of --major, --minor or --patch")
+    run_setup_py(['bump', '--major', '--simulate-branch=HEAD'], "Can't bump branch 'HEAD'")
 
     run_setup_py(
-        ['bump', '--major'],
+        ['bump', '--major', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
@@ -52,7 +50,7 @@ def test_bump():
     )
 
     run_setup_py(
-        ['bump', '--minor'],
+        ['bump', '--minor', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
@@ -61,7 +59,7 @@ def test_bump():
     )
 
     run_setup_py(
-        ['bump', '-p'],
+        ['bump', '-p', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: .+/git tag -a v[\d.]+ -m Version [\d.]+
