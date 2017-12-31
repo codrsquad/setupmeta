@@ -111,21 +111,21 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-======  ======  ===========       =============================================================================
+======  ======  ================  =============================================================================
 Commit  Tag     Version           Note (command ran to add tag)
-======  ======  ===========       =============================================================================
+======  ======  ================  =============================================================================
 none            0.0.0+initial     No commit yet
 g123            0.0.0.post1+g123  Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
 g124            0.0.0.post2+g124
 g125            0.0.0.post3+g125
-g126   v0.1.0   0.1.0             ``bump --minor --commit``
+g126    v0.1.0  0.1.0             ``bump --minor --commit``
 g127            0.1.0.post1       (1 commit since tag)
 g128            0.1.0.post2
-g129   v0.1.1   0.1.1             ``bump --patch --commit``
+g129    v0.1.1  0.1.1             ``bump --patch --commit``
 g130            0.1.1.post1
-g131   v1.0.0   1.0.0             ``bump --major --commit``
+g131    v1.0.0  1.0.0             ``bump --major --commit``
 g132            1.0.0.post1
-======  ======  ===========       =============================================================================
+======  ======  ================  =============================================================================
 
 * Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
 
