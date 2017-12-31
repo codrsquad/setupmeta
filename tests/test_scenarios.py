@@ -8,7 +8,7 @@ import sys
 
 import pytest
 from . import conftest
-import scenarios
+from . import scenarios
 
 from setupmeta.content import load_contents
 

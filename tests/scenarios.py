@@ -7,7 +7,10 @@ import os
 import subprocess
 import sys
 
-import conftest
+if __name__ == "__main__":
+    import conftest
+else:
+    from . import conftest
 
 
 SCENARIOS = os.path.join(conftest.TESTS, 'scenarios')
