@@ -19,7 +19,7 @@ def run_setup_py(args, expected):
             if not line:
                 continue
             m = re.search(line, output)
-            assert m, "'%s' not present in output of '%s'" % (line, ' '.join(args))
+            assert m, "'%s' not present in output of '%s': %s" % (line, ' '.join(args), output)
 
 
 def test_explain():
