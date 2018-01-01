@@ -15,9 +15,9 @@ This example shows:
 
 * project layout is::
 
-    ├── README.rst
-    ├── setup.py
-    └── single.py           # Python module as single file, definitions are taken from here
+    |-- README.rst
+    |-- setup.py
+    |-- single.py           # Python module as single file, definitions are taken from here
 
 
 * ``setup.py`` contents::
@@ -51,7 +51,7 @@ This example shows:
          description: (README.rst:1) A package implemented by a single .py file
                   \_: (single.py:2 ) This is a python package implemented by a single .py file
              license: (single.py:4 ) MIT
-    long_description: (README.rst  ) 1591 chars: single: A package implemented by a single .py file ...
+    long_description: (README.rst  ) 1600 chars: single: A package implemented by a single .py file ...
                 name: (explicit    ) single
           py_modules: (auto-fill   ) ['single']
       setup_requires: (explicit    ) ['setupmeta']

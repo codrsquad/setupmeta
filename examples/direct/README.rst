@@ -21,14 +21,14 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
 
 * project layout is::
 
-    ├── LICENSE.txt
-    ├── README.rst
-    ├── classifiers.txt
-    ├── direct/                     # Python module as subfolder
-    │   └── __init__.py             # Definitions are taken from here
-    ├── entry_points.ini
-    ├── requirements.txt
-    └── setup.py
+    |-- LICENSE.txt
+    |-- README.rst
+    |-- classifiers.txt
+    |-- direct/                     # Python module as subfolder
+    |   |-- __init__.py             # Definitions are taken from here
+    |-- entry_points.ini
+    |-- requirements.txt
+    |-- setup.py
 
 
 * ``setup.py`` contents::

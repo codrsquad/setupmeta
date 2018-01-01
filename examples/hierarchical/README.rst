@@ -20,17 +20,17 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
 
 * project layout is::
 
-    ├── LICENSE.txt
-    ├── README.rst
-    ├── classifiers.txt
-    ├── entry_points.ini
-    ├── requirements.txt
-    ├── setup.py
-    └── src/
-        └── hierarchical/               # Python module under src/
-            ├── __init__.py             # Definitions are taken from here
-            └── submodule/              # Submodule shows up in 'packages'
-                └── __init__.py
+    |-- LICENSE.txt
+    |-- README.rst
+    |-- classifiers.txt
+    |-- entry_points.ini
+    |-- requirements.txt
+    |-- setup.py
+    |-- src/
+        |-- hierarchical/               # Python module under src/
+            |-- __init__.py             # Definitions are taken from here
+            |-- submodule/              # Submodule shows up in 'packages'
+                |-- __init__.py
 
 
 * ``setup.py`` contents::
