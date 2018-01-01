@@ -16,7 +16,7 @@ For example, this is what setupmeta says about itself (it's self-using)::
               author: (auto-adjust            ) Zoran Simic
                   \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
         author_email: (auto-adjust            ) zoran@simicweb.com
-         classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 4 - Beta', 'Intended Audience :: Developers'...
+         classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 5 - Production/Stable', 'Intended Audience :...
          description: (setupmeta/__init__.py:2) Simplify your setup.py
         download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/0.8.0.post1+g816252c.tar.gz
                   \_: (setupmeta/__init__.py:5) archive/{version}.tar.gz

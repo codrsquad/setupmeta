@@ -1,7 +1,9 @@
 from setuptools import setup
 
 
+__title__ = 'hierarchical'          # This will auto-fill 'name'
+
+
 setup(
-    name='empty',
     setup_requires=['setupmeta']
 )

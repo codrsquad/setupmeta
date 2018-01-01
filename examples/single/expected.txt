@@ -1,0 +1,14 @@
+running explain
+          author: (auto-adjust ) Someone
+              \_: (single.py:5 ) Someone someone@somewhere.com
+    author_email: (auto-adjust ) someone@somewhere.com
+     description: (README.rst:1) A package implemented by a single .py file
+              \_: (single.py:2 ) This is a python package implemented by a single .py file
+         license: (single.py:4 ) MIT
+long_description: (README.rst  ) 1591 chars: single: A package implemented by a single .py file ==================================================  This example shows:  * `name`...
+            name: (explicit    ) single
+      py_modules: (auto-fill   ) ['single']
+  setup_requires: (explicit    ) ['setupmeta']
+         version: (single.py:8 ) 0.1.0
+
+running entrypoints

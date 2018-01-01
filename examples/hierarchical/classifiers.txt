@@ -1,0 +1,2 @@
+Framework :: Pytest
+Programming Language :: Python

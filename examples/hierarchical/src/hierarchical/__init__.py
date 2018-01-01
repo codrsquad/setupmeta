@@ -1,10 +1,11 @@
 """
-This is an extremely simple package
+A hierarchical package (code under src/, tests under tests/)
+
+keywords: hierarchical, package
+author: Someone someone@somewhere.com
 """
 
 __version__ = '1.0.0'
-__keywords__ = 'simple, scenario'
-__author__ = 'Zoran Simic zoran@simicweb.com'
 __url__ = "https://github.com/zsimic/simple"
 __download_url__ = "https://github.com/zsimic/simple/archive/{version}.tar.gz"
 

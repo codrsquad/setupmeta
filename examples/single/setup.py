@@ -1,8 +1,7 @@
 from setuptools import setup
 
-__title__ = 'simple'            # This will auto-fill 'name'
-
 
 setup(
+    name='single',
     setup_requires=['setupmeta']
 )

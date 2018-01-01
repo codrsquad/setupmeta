@@ -1,8 +1,0 @@
-running explain
-     description: (README.rst:1) A bare bones project
-long_description: (README.rst  ) 239 chars: empty: A bare bones project ===========================  This example shows:  - `name` is the only thing defined in `setup.py` (and a...
-            name: (explicit    ) empty
-      py_modules: (auto-fill   ) ['empty']
-  setup_requires: (explicit    ) ['setupmeta']
-
-running entrypoints
