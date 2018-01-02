@@ -291,14 +291,18 @@ class Versioning:
         Auto-fill version as defined by self.strategy
         :param setupmeta.model.SetupMeta meta: Parent meta object
         """
+        pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
+        if pygradle_version:
+            # Minimal support for https://github.com/linkedin/pygradle
+            self.meta.auto_fill('version', pygradle_version, 'pygradle', override=True)
+            return
+
         if not self.enabled:
             setupmeta.trace("not auto-filling version, versioning is disabled")
             return
+
         vdef = self.meta.definitions.get('version')
         cv = vdef.sources[0].value if vdef and vdef.sources else None
-        if cv and vdef and vdef.source == 'pygradle':
-            setupmeta.trace("not auto-filling version for pygradle")
-            return
         if self.problem:
             if not cv:
                 self.meta.auto_fill('version', '0.0.0', 'missing')
@@ -325,8 +329,10 @@ class Versioning:
             setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
 
         gv = self.scm.get_version()
-        if commit and gv and gv.dirty:
-            setupmeta.abort("You have pending git changes, can't bump")
+        if gv and gv.dirty:
+            if commit:
+                setupmeta.abort("You have pending git changes, can't bump")
+            print("Commit your pending changes before running bump --commit")
 
         next_version = self.strategy.bumped(what, gv)
 

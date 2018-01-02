@@ -113,17 +113,13 @@ def run_program(program, *args, **kwargs):
 
     if dryrun:
         print("Would run: %s" % represented)
-        if capture is True:
-            return None
-        return 0
+        return None if capture is True else 0
 
     problem = None if full_path else "'%s' is not installed" % program
     if problem:
         if fatal:
             sys.exit(problem)
-        if capture is True:
-            return None
-        return 1
+        return None if capture is True else 1
 
     if capture is None:
         print("Running: %s" % represented)

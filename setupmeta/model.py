@@ -321,32 +321,12 @@ class SetupMeta(Settings):
         Settings.__init__(self)
         self.attrs = MetaDefs.dist_to_dict(upstream)
 
-        # _setup_py_path passed in by tests, or special usages
-        setup_py_path = self.attrs.pop('_setup_py_path', None)
+        self.find_project_dir(self.attrs.pop('_setup_py_path', None))
         scm = self.attrs.pop('scm', None)
 
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
             self.add_definition(key, value, EXPLICIT)
-
-        if not setup_py_path:
-            # Determine path to setup.py module from call stack
-            for frame in inspect.stack():
-                module = inspect.getmodule(frame[0])
-                if module and is_setup_py_path(module.__file__):
-                    setup_py_path = module.__file__
-                    trace("setup.py found from call stack: %s" % setup_py_path)
-                    break
-
-        if not setup_py_path and sys.argv:
-            if is_setup_py_path(sys.argv[0]):
-                setup_py_path = sys.argv[0]
-                trace("setup.py found from sys.argv: %s" % setup_py_path)
-
-        if is_setup_py_path(setup_py_path):
-            setup_py_path = os.path.abspath(setup_py_path)
-            MetaDefs.project_dir = os.path.dirname(setup_py_path)
-            trace("project dir: %s" % MetaDefs.project_dir)
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
         self.merge(SimpleModule('setup.py'))
@@ -372,11 +352,6 @@ class SetupMeta(Settings):
                 py_modules = [self.name]
                 self.auto_fill('py_modules', py_modules)
 
-        pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
-        if pygradle_version:
-            # Minimal support for https://github.com/linkedin/pygradle
-            self.add_definition('version', pygradle_version, 'pygradle')
-
         # Scan the usual/conventional places
         for py_module in py_modules:
             self.merge(SimpleModule('%s.py' % py_module))
@@ -397,6 +372,24 @@ class SetupMeta(Settings):
         self.versioning = Versioning(self, scm)
         self.versioning.auto_fill_version()
 
+        self.fill_urls()
+
+        self.auto_adjust('author', self.extract_email)
+        self.auto_adjust('contact', self.extract_email)
+        self.auto_adjust('maintainer', self.extract_email)
+
+        self.requirements = Requirements()
+        self.auto_fill_requires('install', 'install_requires')
+        self.auto_fill_requires('test', 'tests_require')
+
+        self.auto_fill_classifiers()
+        self.auto_fill_entry_points()
+        self.auto_fill_license()
+        self.auto_fill_long_description()
+        self.sort_classifiers()
+
+    def fill_urls(self):
+        """ Auto-fill url and download_url """
         url = self.value('url')
         download_url = self.value('download_url')
 
@@ -421,23 +414,28 @@ class SetupMeta(Settings):
         self.auto_fill('url', url)
         self.auto_fill('download_url', download_url)
 
-        self.auto_adjust('author', self.extract_email)
-        self.auto_adjust('contact', self.extract_email)
-        self.auto_adjust('maintainer', self.extract_email)
+    def find_project_dir(self, setup_py_path):
+        """
+        :param str|None setup_py_path: Given setup.py (when invoked from test)
+        """
+        if not setup_py_path:
+            # Determine path to setup.py module from call stack
+            for frame in inspect.stack():
+                module = inspect.getmodule(frame[0])
+                if module and is_setup_py_path(module.__file__):
+                    setup_py_path = module.__file__
+                    trace("setup.py found from call stack: %s" % setup_py_path)
+                    break
 
-        self.requirements = Requirements()
-        self.auto_fill_requires('install', 'install_requires')
-        self.auto_fill_requires('test', 'tests_require')
+        if not setup_py_path and sys.argv:
+            if is_setup_py_path(sys.argv[0]):
+                setup_py_path = sys.argv[0]
+                trace("setup.py found from sys.argv: %s" % setup_py_path)
 
-        self.auto_fill_classifiers()
-        self.auto_fill_entry_points()
-        self.auto_fill_license()
-        self.auto_fill_long_description()
-
-        # Sort classifiers alphabetically
-        classifiers = self.definitions.get('classifiers')
-        if classifiers and isinstance(classifiers.value, list):
-            classifiers.value = sorted(classifiers.value)
+        if is_setup_py_path(setup_py_path):
+            setup_py_path = os.path.abspath(setup_py_path)
+            MetaDefs.project_dir = os.path.dirname(setup_py_path)
+            trace("project dir: %s" % MetaDefs.project_dir)
 
     def extract_short_description(self, contents):
         """
@@ -509,6 +507,12 @@ class SetupMeta(Settings):
         classifiers = load_list('classifiers.txt')
         if classifiers:
             self.add_definition('classifiers', classifiers, 'classifiers.txt')
+
+    def sort_classifiers(self):
+        """ Sort classifiers alphabetically """
+        classifiers = self.definitions.get('classifiers')
+        if classifiers and isinstance(classifiers.value, list):
+            classifiers.value = sorted(classifiers.value)
 
     def auto_fill(self, field, value, source='auto-fill', override=False):
         """ Auto-fill 'field' with 'value' """
