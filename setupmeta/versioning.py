@@ -28,6 +28,7 @@ def project_scm(root):
     """
     if has_scm_mark(root, 'git'):
         return Git(root)
+    setupmeta.trace("could not determine SCM for '%s'" % root)
     return None
 
 
@@ -282,6 +283,7 @@ class Versioning:
             self.problem = "project not under a supported SCM"
         else:
             self.problem = self.strategy.problem
+        setupmeta.trace("versioning given: '%s', strategy: [%s], problem: [%s]" % (given, self.strategy, self.problem))
 
     @staticmethod
     def formatted(main=DEFAULT_MAIN, extra=DEFAULT_EXTRA, separator=DEFAULT_SEPARATOR, branches=DEFAULT_BRANCHES):
@@ -293,16 +295,19 @@ class Versioning:
         :param setupmeta.model.SetupMeta meta: Parent meta object
         """
         if not self.enabled:
+            setupmeta.trace("not auto-filling version, versioning is disabled")
             return
         vdef = self.meta.definitions.get('version')
         cv = vdef.sources[0].value if vdef and vdef.sources else None
         if cv and vdef and vdef.source == 'pygradle':
+            setupmeta.trace("not auto-filling version for pygradle")
             return
         if self.problem:
             if not cv:
                 self.meta.auto_fill('version', '0.0.0', 'missing')
             if self.strategy:
                 warnings.warn(self.problem)
+            setupmeta.trace("not auto-filling version due to problem: [%s]" % self.problem)
             return
 
         gv = self.scm.get_version()

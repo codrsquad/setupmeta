@@ -9,7 +9,7 @@ import re
 import setuptools
 import sys
 
-from setupmeta import listify, MetaDefs, project_path, short
+from setupmeta import listify, MetaDefs, project_path, short, trace
 from setupmeta.content import find_contents, load_list, load_readme
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -48,13 +48,17 @@ def find_packages(name, subfolder=None):
     result = set()
     if subfolder:
         path = project_path(subfolder, name)
+        trace("looking for packages in '%s/%s'" % (subfolder, name))
     else:
         path = project_path(name)
+        trace("looking for packages in '%s'" % name)
     init_py = os.path.join(path, '__init__.py')
     if os.path.isfile(init_py):
         result.add(name)
+        trace("found package '%s'" % name)
         for subpackage in setuptools.find_packages(where=path):
             result.add("%s.%s" % (name, subpackage))
+            trace("found subpackage '%s.%s'" % (name, subpackage))
     return result
 
 
@@ -118,8 +122,9 @@ class Definition(object):
     def merge_sources(self, sources):
         """ Record the fact that we saw this definition in 'sources' """
         for entry in sources:
-            if not self.value:
+            if not self.value and entry.value:
                 self.value = entry.value
+                trace("[merge: %s] %s=%s" % (entry.source, self.key, entry.value))
             self.sources.append(entry)
 
     def add(self, value, source, override=False):
@@ -135,8 +140,10 @@ class Definition(object):
         entry = DefinitionEntry(self.key, value, source)
         if override:
             self.sources.insert(0, entry)
+            trace("[high: %s] %s=%s" % (source, self.key, short(value)))
         else:
             self.sources.append(entry)
+            trace("[low: %s] %s=%s" % (source, self.key, short(value)))
 
     @property
     def is_meaningful(self):
@@ -207,10 +214,6 @@ class SimpleModule(Settings):
         if not self.exists:
             return
 
-        regex = RE_PY_VALUE
-        if self.relative_path.endswith('.properties'):
-            regex = RE_DOC_VALUE
-
         with io.open(self.full_path, encoding='utf-8') as fh:
             docstring_marker = None
             docstring_start = None
@@ -236,7 +239,7 @@ class SimpleModule(Settings):
                     docstring_start = line_number
                     docstring.append(line[3:])
                     continue
-                self.scan_line(line, regex, line_number)
+                self.scan_line(line, RE_PY_VALUE, line_number)
 
     def add_pair(self, key, value, line, **kwargs):
         source = self.relative_path
@@ -303,6 +306,7 @@ class Requirements:
         """ Read old-school requirements.txt type file """
         contents, path = find_contents(relative_paths, loader=load_list)
         if contents:
+            trace("found requirements: %s" % path)
             return RequirementsEntry(contents, path)
         return None
 
@@ -331,15 +335,18 @@ class SetupMeta(Settings):
                 module = inspect.getmodule(frame[0])
                 if module and is_setup_py_path(module.__file__):
                     setup_py_path = module.__file__
+                    trace("setup.py found from call stack: %s" % setup_py_path)
                     break
 
         if not setup_py_path and sys.argv:
             if is_setup_py_path(sys.argv[0]):
                 setup_py_path = sys.argv[0]
+                trace("setup.py found from sys.argv: %s" % setup_py_path)
 
         if is_setup_py_path(setup_py_path):
             setup_py_path = os.path.abspath(setup_py_path)
             MetaDefs.project_dir = os.path.dirname(setup_py_path)
+            trace("project dir: %s" % MetaDefs.project_dir)
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
         self.merge(SimpleModule('setup.py'))
@@ -367,14 +374,8 @@ class SetupMeta(Settings):
 
         pygradle_version = os.environ.get('PYGRADLE_PROJECT_VERSION')
         if pygradle_version:
-            # Convenience: support https://github.com/linkedin/pygradle
+            # Minimal support for https://github.com/linkedin/pygradle
             self.add_definition('version', pygradle_version, 'pygradle')
-        elif os.path.isfile(project_path('gradle.properties')):
-            # Convenience: calling pygradle setup.py outside of pygradle
-            props = SimpleModule('gradle.properties')
-            vdef = props.definitions.get('version')
-            if vdef:
-                self.add_definition(vdef.key, vdef.value, vdef.source)
 
         # Scan the usual/conventional places
         for py_module in py_modules:

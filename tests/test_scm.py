@@ -23,4 +23,4 @@ def test_git():
         git.commit_files(False, ['foo'], '2.0')
         assert "Would run" in out
         assert "git add foo" in out
-        assert "git commit -m Version 2.0" in out
+        assert 'git commit -m "Version 2.0"' in out

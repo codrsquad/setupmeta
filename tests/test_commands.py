@@ -47,7 +47,7 @@ def test_bump():
         ['bump', '--major', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
             Would run: git push --tags origin
         """
     )
@@ -56,7 +56,7 @@ def test_bump():
         ['bump', '--minor', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
             Would run: git push --tags origin
         """
     )
@@ -65,7 +65,7 @@ def test_bump():
         ['bump', '-p', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m Version [\d.]+
+            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
             Would run: git push --tags origin
         """
     )

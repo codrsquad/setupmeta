@@ -2,18 +2,16 @@
 History
 =======
 
-1.0.1 (2017-12-31)
+1.0.2 (2017-01-02)
 -------------------
 
-* Ready for 1.0
+* Ready for 1.0, test coverage at 100%, added debug info via env var ``SETUPMETA_DEBUG=1``
 
 
 0.8.1 (2017-12-31)
 -------------------
 
 * Versioning is more easily customizable, using post-release marker by default (instead of beta)
-
-* Test coverage at 100%
 
 
 0.7.11 (2017-12-27)

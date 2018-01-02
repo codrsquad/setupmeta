@@ -12,7 +12,7 @@ import subprocess       # nosec
 import sys
 
 
-USER_HOME = os.path.expanduser('~')     # Used to pretty-print folder in ~
+USER_HOME = os.path.expanduser('~')         # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get('SETUPMETA_DEBUG')
 
 
@@ -82,6 +82,17 @@ def which(program):
     return None
 
 
+def represented_args(args):
+    result = []
+    for text in args:
+        if not text or ' ' in text:
+            sep = "'" if '"' in text else '"'
+            result.append("%s%s%s" % (sep, text, sep))
+        else:
+            result.append(text)
+    return ' '.join(result)
+
+
 def run_program(program, *args, **kwargs):
     """
     Run 'program' with 'args'
@@ -97,8 +108,8 @@ def run_program(program, *args, **kwargs):
     full_path = which(program)
     fatal = kwargs.pop('fatal', False)
     dryrun = kwargs.pop('dryrun', False)
-    capture = kwargs.pop('capture', None)   # None
-    represented = "%s %s" % (program, ' '.join(args))
+    capture = kwargs.pop('capture', None)
+    represented = "%s %s" % (program, represented_args(args))
 
     if dryrun:
         print("Would run: %s" % represented)
@@ -126,11 +137,12 @@ def run_program(program, *args, **kwargs):
     output = decode(output)
     error = decode(error)
 
-    trace("Ran %s (exitcode: %s)" % (represented, p.returncode))
+    trace_msg = "ran [%s], exitcode: %s" % (represented, p.returncode)
     if output:
-        trace("output: %s" % output)
+        trace_msg = "%s, output: [%s]" % (trace_msg, output.strip())
     if error:
-        trace("error: %s" % error)
+        trace_msg = "%s, error: [%s]" % (trace_msg, error.strip())
+    trace(trace_msg)
 
     if capture is True:
         return output
