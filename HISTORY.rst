@@ -2,7 +2,7 @@
 History
 =======
 
-1.0.3 (2017-01-02)
+1.0.4 (2017-01-02)
 -------------------
 
 * Ready for 1.0, test coverage at 100%, added debug info via env var ``SETUPMETA_DEBUG=1``

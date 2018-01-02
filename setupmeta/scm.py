@@ -148,6 +148,7 @@ class Version:
     patch = 0           # type: int # Patch part of version
     changes = 0         # type: int # Number of changes since last version tag
     commitid = None     # type: str # Commit id
+    dirty = ''          # type: str # Dirty marker
 
     def __init__(self, main=None, changes=0, commitid=None, dirty=False, text=None):
         """

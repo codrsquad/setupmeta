@@ -146,11 +146,11 @@ class Strategy:
             branches = ','.join(branches)
         result = ''
         if main:
-            result += str(main)
+            result += setupmeta.stringify(main)
         if result or extra:
-            result += separator
+            result += setupmeta.stringify(separator)
         if extra:
-            result += str(extra)
+            result += setupmeta.stringify(extra)
         if branches:
             result = 'tag(%s):%s' % (branches, result)
         return result
@@ -277,17 +277,14 @@ class Versioning:
         self.strategy = Strategy.from_meta(given)
         self.enabled = bool(given and self.strategy and not self.strategy.problem)
         self.scm = scm
+        self.problem = None
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
+        elif self.strategy.problem:
+            self.problem = self.strategy.problem
         elif not self.scm:
             self.problem = "project not under a supported SCM"
-        else:
-            self.problem = self.strategy.problem
         setupmeta.trace("versioning given: '%s', strategy: [%s], problem: [%s]" % (given, self.strategy, self.problem))
-
-    @staticmethod
-    def formatted(main=DEFAULT_MAIN, extra=DEFAULT_EXTRA, separator=DEFAULT_SEPARATOR, branches=DEFAULT_BRANCHES):
-        return Strategy.formatted(branches, main, separator, extra)
 
     def auto_fill_version(self):
         """
@@ -319,7 +316,7 @@ class Versioning:
             warnings.warn(msg)
         self.meta.auto_fill('version', rendered, 'git', override=True)
 
-    def bump(self, what, commit=False, commit_all=False, simulate_branch=None):
+    def bump(self, what, commit=False, simulate_branch=None):
         if self.problem:
             setupmeta.abort(self.problem)
 
@@ -328,7 +325,7 @@ class Versioning:
             setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
 
         gv = self.scm.get_version()
-        if commit and gv and gv.dirty and not commit_all:
+        if commit and gv and gv.dirty:
             setupmeta.abort("You have pending git changes, can't bump")
 
         next_version = self.strategy.bumped(what, gv)
@@ -338,7 +335,7 @@ class Versioning:
 
         vdefs = self.meta.definitions.get('version')
         if vdefs:
-            self.update_sources(next_version, commit, commit_all, vdefs)
+            self.update_sources(next_version, commit, vdefs)
 
         self.scm.apply_tag(commit, next_version)
 
@@ -348,7 +345,7 @@ class Versioning:
 
         setupmeta.run_program(hook, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
-    def update_sources(self, next_version, commit, commit_all, vdefs):
+    def update_sources(self, next_version, commit, vdefs):
         modified = []
         for vdef in vdefs.sources:
             if '.py:' not in vdef.source:
@@ -386,8 +383,6 @@ class Versioning:
         if not modified:
             return
 
-        if commit_all:
-            modified = ['.']
         self.scm.commit_files(commit, modified, next_version)
 
 

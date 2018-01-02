@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #  -*- encoding: utf-8 -*-
 """
-keywords: convenient, setup.py
+keywords: simple, DRY, setup.py
 """
 
-# This setup.py is self-using and auto-bootstraps itself
+# This library is self-using and auto-bootstraps itself
 
 import os
 import setuptools

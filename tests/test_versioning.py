@@ -34,7 +34,8 @@ def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
 
 
 def test_no_scm():
-    meta = new_meta('tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}')
+    fmt = "tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
+    meta = new_meta(fmt)
     versioning = meta.versioning
 
     assert versioning.enabled
@@ -44,17 +45,16 @@ def test_no_scm():
     assert versioning.strategy.branches == ['a', 'b']
     assert not versioning.strategy.problem
 
+    assert str(versioning.strategy) == fmt
     assert 'BAZ:z' in str(versioning.strategy.extra_bits)
-
-    check_rep(versioning, extra='!{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}', branches='a,b', separator=' ')
 
     check_render(versioning, '1.0.0.z')
     check_render(versioning, '1.0.0.post2.z', c=2)
-    check_render(versioning, '1.0.0.post2.z', c=2, d=True)
+    check_render(versioning, '1.0.0.post2.z.dirty', c=2, d=True)
 
     os.environ['TEST_FOO1'] = 'bar'
     os.environ['TEST_FOO2'] = 'baz'
-    check_render(versioning, '1.0.0.post2.bar.z', c=2, d=True)
+    check_render(versioning, '1.0.0.post2.bar.z.dirty', c=2, d=True)
     del os.environ['TEST_FOO1']
     del os.environ['TEST_FOO2']
 
@@ -66,7 +66,7 @@ def test_no_extra():
     meta = new_meta('{major}.{minor}.{$FOO}+', scm=conftest.MockGit(True))
     versioning = meta.versioning
     assert meta.version == '0.1.None'
-    check_rep(versioning, main='{major}.{minor}.{$FOO}', extra='')
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{$FOO}+"
     check_render(versioning, '1.0.None')
     check_render(versioning, '1.0.None', c=2)
     check_render(versioning, '1.0.None', c=2, d=True)
@@ -80,7 +80,7 @@ def check_git(dirty):
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    check_rep(versioning, main='{major}.{minor}.{changes}')
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+{commitid}"
     if dirty:
         assert meta.version == '0.1.3+g123'
     else:
@@ -110,11 +110,6 @@ def test_git():
     check_git(False)
 
 
-def check_rep(versioning, **kwargs):
-    expected = setupmeta.versioning.Versioning.formatted(**kwargs)
-    assert str(versioning.strategy) == expected
-
-
 def extra_version(version):
     if version.dirty:
         return 'extra'
@@ -130,7 +125,7 @@ def test_invalid_part():
     assert 'invalid' in str(versioning.strategy.main_bits)
     assert meta.version is None
     assert versioning.problem == "invalid versioning part 'foo'"
-    check_rep(versioning, main='{foo}.{major}.{minor}{', extra=str(extra_version), separator='-')
+    assert str(versioning.strategy) == "tag(master):{foo}.{major}.{minor}{-function 'extra_version'"
     check_render(versioning, 'invalid.1.0')
     check_render(versioning, 'invalid.1.0-c2', c=2)
     check_render(versioning, 'invalid.1.0-extra', c=2, d=True)
@@ -140,9 +135,9 @@ def test_invalid_part():
 
 
 def test_invalid_main():
-    meta = new_meta(dict(main=extra_version, extra=''), scm=conftest.MockGit())
+    meta = new_meta(dict(main=extra_version, extra='', separator=' '), scm=conftest.MockGit())
     versioning = meta.versioning
-    check_rep(versioning, main=extra_version, extra='')
+    assert str(versioning.strategy) == "tag(master):function 'extra_version' "
     check_render(versioning, '')
     check_render(versioning, 'c2', c=2)
     check_render(versioning, 'extra', c=2, d=True)
