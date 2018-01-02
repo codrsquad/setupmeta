@@ -146,9 +146,8 @@ class Version:
     major = 0           # type: int # Major part of version
     minor = 0           # type: int # Minor part of version
     patch = 0           # type: int # Patch part of version
-    changes = 0         # type: int # Number of changes since last tag
+    changes = 0         # type: int # Number of changes since last version tag
     commitid = None     # type: str # Commit id
-    dirty = False       # type: bool # Local changes are present
 
     def __init__(self, main=None, changes=0, commitid=None, dirty=False, text=None):
         """
@@ -160,7 +159,7 @@ class Version:
         """
         self.changes = changes or 0
         self.commitid = (commitid or 'initial').strip()
-        self.dirty = dirty
+        self.dirty = '.dirty' if dirty else ''
         main = (main or '0.0.0').strip()
         self.text = text or "v%s-%s-%s" % (main, self.changes, self.commitid)
         self.version = LooseVersion(main)
@@ -185,7 +184,9 @@ class Version:
     @property
     def post(self):
         """
-        :return str: Render {post} marker for this version
+        {post} marker for this version
+
+        :return str: '.post{changes}' for changes > 0, empty string otherwise
         """
         if self.changes:
             return '.post%s' % self.changes

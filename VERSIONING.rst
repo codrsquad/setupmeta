@@ -260,7 +260,9 @@ The following can be used as format specifiers:
 
 * ``{post}``: Designates a "post" release (PEP-440_ friendly), empty when current commit is version-tagged, otherwise ``.postN`` (wehre ``N`` is ``{changes}``)
 
-* ``{commitid}}``: short string identifying commit, like ``g3bf9221``
+* ``{commitid}``: short string identifying commit, like ``g3bf9221``
+
+* ``{dirty}``: Expands to ``.dirty`` when checkout is dirty (has pending changes), empty string otherwise
 
 * ``foo``: constant ``foo`` (used as-is if specified)
 
