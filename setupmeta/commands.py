@@ -5,8 +5,9 @@ Commands contributed by setupmeta
 import os
 import sys
 
-import setupmeta
 import setuptools
+
+import setupmeta
 
 
 def abort(message):

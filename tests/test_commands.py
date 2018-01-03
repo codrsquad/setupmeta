@@ -1,11 +1,11 @@
 import os
 import re
 
-import setupmeta
 from mock import patch
-from setupmeta.commands import Console
 from six import StringIO
 
+import setupmeta
+from setupmeta.commands import Console
 from . import conftest
 
 

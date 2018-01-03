@@ -1,8 +1,8 @@
 import os
 
 import pytest
-import setupmeta
 
+import setupmeta
 from . import conftest
 
 
