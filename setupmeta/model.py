@@ -6,9 +6,9 @@ import inspect
 import io
 import os
 import re
-import setuptools
 import sys
 
+import setuptools
 from setupmeta import listify, MetaDefs, project_path, short, trace
 from setupmeta.content import find_contents, load_list, load_readme
 from setupmeta.license import determined_license

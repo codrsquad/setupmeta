@@ -1,6 +1,6 @@
-from . import conftest
-
 import setupmeta.scm
+
+from . import conftest
 
 
 def test_scm():

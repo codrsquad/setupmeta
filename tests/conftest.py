@@ -1,10 +1,9 @@
 import os
 import sys
 
-from six import StringIO
-
 from setupmeta import decode
 from setupmeta.scm import Git
+from six import StringIO
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))

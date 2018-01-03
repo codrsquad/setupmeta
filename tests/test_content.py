@@ -1,9 +1,9 @@
 import os
 
 import pytest
-from . import conftest
-
 import setupmeta
+
+from . import conftest
 
 
 def test_shortening():

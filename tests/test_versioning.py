@@ -1,12 +1,12 @@
 import os
 
 import pytest
-from . import conftest
-
 import setupmeta
+import setupmeta.versioning
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Version
-import setupmeta.versioning
+
+from . import conftest
 
 
 setupmeta.versioning.warnings.warn = lambda *x: None

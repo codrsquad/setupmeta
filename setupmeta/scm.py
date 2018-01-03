@@ -1,5 +1,5 @@
-from distutils.version import LooseVersion
 import re
+from distutils.version import LooseVersion
 
 import setupmeta
 

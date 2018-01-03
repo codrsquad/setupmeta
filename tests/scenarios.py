@@ -1,11 +1,11 @@
 import argparse
 import imp
-from io import open
 import logging
 import os
 import shutil
 import sys
 import tempfile
+from io import open
 
 import setupmeta
 from setupmeta.content import load_contents

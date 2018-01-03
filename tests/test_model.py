@@ -1,7 +1,7 @@
 import os
 import sys
 
-from setupmeta.model import Definition, DefinitionEntry, SetupMeta, is_setup_py_path
+from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path, SetupMeta
 
 
 def bogus_project(**attrs):

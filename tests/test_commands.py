@@ -1,12 +1,12 @@
 import os
 import re
 
-from mock import patch
-from six import StringIO
-from . import conftest
-
 import setupmeta
+from mock import patch
 from setupmeta.commands import Console
+from six import StringIO
+
+from . import conftest
 
 
 def run_setup_py(args, expected):

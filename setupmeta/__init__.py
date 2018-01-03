@@ -7,9 +7,10 @@ author: Zoran Simic zoran@simicweb.com
 """
 
 import os
-import setuptools
 import subprocess       # nosec
 import sys
+
+import setuptools
 
 
 USER_HOME = os.path.expanduser('~')         # Used to pretty-print subfolders of ~

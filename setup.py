@@ -7,9 +7,10 @@ keywords: simple, DRY, setup.py
 # This library is self-using and auto-bootstraps itself
 
 import os
-import setuptools
 import subprocess       # nosec
 import sys
+
+import setuptools
 
 
 __title__ = 'setupmeta'

@@ -3,10 +3,10 @@ Commands contributed by setupmeta
 """
 
 import os
-import setuptools
 import sys
 
 import setupmeta
+import setuptools
 
 
 def abort(message):

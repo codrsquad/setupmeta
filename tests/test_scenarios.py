@@ -3,6 +3,7 @@ Verify that ../examples/*/setup.py behave as expected
 """
 
 import pytest
+
 from . import scenarios
 
 
