@@ -92,7 +92,7 @@ You could leverage this ``__version__`` possibility if you have specific use cas
 Preconfigured formats
 =====================
 
-Tag
+tag
 ---
 
 This is well suited if you don't plan to publish often, and have a tag for each release.
@@ -144,12 +144,12 @@ g10             1.0.0.post1
     * Next commit after that will be version ``0.1.1.post1`` etc
 
 
-Changes
+changes
 -------
 
 This is well suited if you want to publish a new version at every commit (but don't want to keep bumping version in code for every commit).
 
-``changes`` corresponds to this format: ``{major}.{minor}.{changes}+{commitid}``
+``changes`` corresponds to this format: ``tag(master):{major}.{minor}.{changes}+{commitid}``
 
 State this in your ``setup.py``::
 
@@ -195,6 +195,45 @@ g10             1.0.1
     * ``python setup.py bump --minor --commit`` -> tag "v0.2" is added, version is now ``0.2.0``
 
     * Next commit after that will be version ``0.2.1`` etc
+
+
+build-id
+--------
+
+This is similar to changes_ (described above), so well suited if you want to publish a new version at every commit, but also want maximum info in the version identifier.
+
+``build-id`` corresponds to this format: ``tag(master):{major}.{minor}.{changes}+h{$*BUILD_ID:local}.{commitid}{dirty}``
+
+State this in your ``setup.py``::
+
+    setup(
+        versioning='build-id',
+        ...
+    )
+
+
+Now, every time you commit a change, setupmeta will use the number of commits since last git tag to determine the 'patch' part of your version.
+
+
+Example:
+
+======  ======  =====================  ====================================================================================
+Commit  Tag     Version                Note (command ran to add tag)
+======  ======  =====================  ====================================================================================
+none            0.0.0+initial          No commit yet (version defaults to 0.0.0)
+g1              0.0.1+hlocal.g1        Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
+g1              0.0.1+hlocal.g1.dirty  Same as above, only checkout was not clean anymore
+g1              0.0.1+h123.g1          ``$BUILD_ID`` was "123" (so presumably built on a CI server)
+g2              0.0.2+h124.g2
+g3              0.0.3+h125.g3
+g4      v0.1    0.1.0+hlocal.g4        ``bump --minor --commit``, clean, built locally
+g5              0.1.1+h130.g3          (1 commit since tag)
+g6              0.1.2+h140.g3
+g7      v0.2    0.2.0+h150.g3          ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g8              0.2.1+h160.g3
+g9      v1.0    1.0.0+h200.g3          ``bump --major --commit``
+g10             1.0.1+h300.g3
+======  ======  =====================  ====================================================================================
 
 
 Advanced

@@ -2,10 +2,12 @@
 History
 =======
 
-1.0.4 (2017-01-02)
+1.0.5 (2017-01-03)
 -------------------
 
-* Ready for 1.0, test coverage at 100%, added debug info via env var ``SETUPMETA_DEBUG=1``
+* Added pre-defined versioning strategy ``build-id``
+
+* Test coverage at 100%, added debug info via env var ``SETUPMETA_DEBUG=1``
 
 
 0.8.1 (2017-12-31)

@@ -10,12 +10,6 @@ from setupmeta.scm import Git, Version
 BUMPABLE = 'major minor patch'.split()
 RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^;/,]!?(.*))?$')
 
-DEFAULT_SEPARATOR = '+'
-DEFAULT_MAIN = '{major}.{minor}.{patch}{post}'
-CHANGES_MAIN = '{major}.{minor}.{changes}'
-DEFAULT_EXTRA = '{commitid}'
-DEFAULT_BRANCHES = 'master'
-
 
 def has_scm_mark(root, name):
     return os.path.isdir(os.path.join(root, '.%s' % name))
@@ -125,8 +119,8 @@ class Strategy:
             warnings.warn("Ignored fields for 'versioning': %s" % kwargs)
         self.main_bits = self.bits(main)
         self.extra_bits = self.bits(extra)
-        self.separator = separator or DEFAULT_SEPARATOR
-        self.branches = branches or DEFAULT_BRANCHES
+        self.separator = separator
+        self.branches = branches
         if self.branches and hasattr(self.branches, 'lstrip'):
             self.branches = self.branches.lstrip('(').rstrip(')')
         self.branches = setupmeta.listify(self.branches, separator=',')
@@ -245,13 +239,22 @@ class Strategy:
         if not given:
             return None
 
-        data = dict(main=DEFAULT_MAIN, extra=DEFAULT_EXTRA, separator=DEFAULT_SEPARATOR, branches=DEFAULT_BRANCHES)
+        data = dict(
+            main='{major}.{minor}.{patch}{post}',
+            extra='{commitid}',
+            separator='+',
+            branches='master'
+        )
 
         if isinstance(given, dict):
             data.update(given)
 
         elif given == 'changes':
-            data['main'] = CHANGES_MAIN
+            data['main'] = '{major}.{minor}.{changes}'
+
+        elif given == 'build-id':
+            data['main'] = '{major}.{minor}.{changes}'
+            data['extra'] = 'h{$*BUILD_ID:local}.{commitid}{dirty}'
 
         elif given != 'tag' and given is not True:
             m = RE_VERSIONING.match(given)

@@ -72,47 +72,11 @@ def test_no_extra():
     check_render(versioning, '1.0.None', c=2, d=True)
 
 
-def check_git(dirty):
-    meta = new_meta('changes', scm=conftest.MockGit(dirty))
-    versioning = meta.versioning
-    assert versioning.enabled
-    assert not versioning.problem
-    assert not versioning.strategy.problem
-    assert 'major' in str(versioning.strategy.main_bits)
-    assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+{commitid}"
-    if dirty:
-        assert meta.version == '0.1.3+g123'
-
-        with pytest.raises(setupmeta.UsageError):
-            # Can't effectively bump if there pending changes (version is dirty)
-            versioning.bump('minor', commit=True)
-
-    else:
-        assert meta.version == '0.1.3'
-
-    with conftest.capture_output() as out:
-        versioning.bump('major')
-        assert "Not committing bump, use --commit to commit" in out
-        assert 'git tag -a v1.0.0 -m "Version 1.0.0"' in out
-        assert "git push --tags origin" in out
-
-    with conftest.capture_output() as out:
-        versioning.bump('minor')
-        assert "Not committing bump, use --commit to commit" in out
-        assert 'git tag -a v0.2.0 -m "Version 0.2.0"' in out
-        assert "git push --tags origin" in out
-
-    with pytest.raises(setupmeta.UsageError):
-        versioning.bump('patch')
-
-    with pytest.raises(setupmeta.UsageError):
-        versioning.bump('foo')
-
-
-def test_git():
-    check_git(True)
-    check_git(False)
+def test_preconfigured_strategies():
+    check_strategy_changes(True)
+    check_strategy_changes(False)
+    check_strategy_build_id(True)
+    check_strategy_build_id(False)
 
 
 def extra_version(version):
@@ -156,3 +120,67 @@ def test_malformed():
     assert meta.version is None
     assert not versioning.enabled
     assert versioning.problem == "No versioning format specified"
+
+
+def check_strategy_changes(dirty):
+    meta = new_meta('changes', scm=conftest.MockGit(dirty))
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.problem
+    assert not versioning.strategy.problem
+    assert 'major' in str(versioning.strategy.main_bits)
+    assert 'commitid' in str(versioning.strategy.extra_bits)
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+{commitid}"
+    if dirty:
+        assert meta.version == '0.1.3+g123'
+
+        with pytest.raises(setupmeta.UsageError):
+            # Can't effectively bump if there pending changes (version is dirty)
+            versioning.bump('minor', commit=True)
+
+    else:
+        assert meta.version == '0.1.3'
+
+    with pytest.raises(setupmeta.UsageError):
+        versioning.bump('patch')
+
+    check_bump(versioning)
+
+
+def check_strategy_build_id(dirty):
+    meta = new_meta('build-id', scm=conftest.MockGit(dirty))
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.problem
+    assert not versioning.strategy.problem
+    assert 'major' in str(versioning.strategy.main_bits)
+    assert 'commitid' in str(versioning.strategy.extra_bits)
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+h{$*BUILD_ID:local}.{commitid}{dirty}"
+    if dirty:
+        assert meta.version == '0.1.3+hlocal.g123.dirty'
+
+        with pytest.raises(setupmeta.UsageError):
+            # Can't effectively bump when version is dirty (meaning: pending changes)
+            versioning.bump('minor', commit=True)
+
+    else:
+        assert meta.version == '0.1.3'
+
+    check_bump(versioning)
+
+
+def check_bump(versioning):
+    with conftest.capture_output() as out:
+        versioning.bump('major')
+        assert "Not committing bump, use --commit to commit" in out
+        assert 'git tag -a v1.0.0 -m "Version 1.0.0"' in out
+        assert "git push --tags origin" in out
+
+    with conftest.capture_output() as out:
+        versioning.bump('minor')
+        assert "Not committing bump, use --commit to commit" in out
+        assert 'git tag -a v0.2.0 -m "Version 0.2.0"' in out
+        assert "git push --tags origin" in out
+
+    with pytest.raises(setupmeta.UsageError):
+        versioning.bump('foo')
