@@ -202,7 +202,7 @@ build-id
 
 This is similar to changes_ (described above), so well suited if you want to publish a new version at every commit, but also want maximum info in the version identifier.
 
-``build-id`` corresponds to this format: ``tag(master):{major}.{minor}.{changes}+h{$*BUILD_ID:local}.{commitid}{dirty}``
+``build-id`` corresponds to this format: ``tag(master):{major}.{minor}.{changes}+!h{$*BUILD_ID:local}.{commitid}{dirty}``
 
 State this in your ``setup.py``::
 

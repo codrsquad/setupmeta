@@ -73,10 +73,12 @@ def test_no_extra():
 
 
 def test_preconfigured_strategies():
+    os.environ['BUILD_ID'] = '543'
     check_strategy_changes(True)
     check_strategy_changes(False)
     check_strategy_build_id(True)
     check_strategy_build_id(False)
+    del os.environ['BUILD_ID']
 
 
 def extra_version(version):
@@ -155,16 +157,16 @@ def check_strategy_build_id(dirty):
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+h{$*BUILD_ID:local}.{commitid}{dirty}"
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+!h{$*BUILD_ID:local}.{commitid}{dirty}"
     if dirty:
-        assert meta.version == '0.1.3+hlocal.g123.dirty'
+        assert meta.version == '0.1.3+h543.g123.dirty'
 
         with pytest.raises(setupmeta.UsageError):
             # Can't effectively bump when version is dirty (meaning: pending changes)
             versioning.bump('minor', commit=True)
 
     else:
-        assert meta.version == '0.1.3'
+        assert meta.version == '0.1.3+h543.g123'
 
     check_bump(versioning)
 

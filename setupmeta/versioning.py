@@ -254,7 +254,7 @@ class Strategy:
 
         elif given == 'build-id':
             data['main'] = '{major}.{minor}.{changes}'
-            data['extra'] = 'h{$*BUILD_ID:local}.{commitid}{dirty}'
+            data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
 
         elif given != 'tag' and given is not True:
             m = RE_VERSIONING.match(given)
