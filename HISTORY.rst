@@ -2,7 +2,7 @@
 History
 =======
 
-1.0.5 (2017-01-03)
+1.0.7 (2017-01-04)
 -------------------
 
 * Added pre-defined versioning strategy ``build-id``
