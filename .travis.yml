@@ -31,8 +31,8 @@ deploy:
       repo: zsimic/setupmeta
       tags: true
     distributions: "sdist bdist_wheel"
-  - <<: *pypi
-    on:
-      repo: zsimic/setupmeta
-      tags: true
-    distributions: "bdist_egg"
+#  - <<: *pypi
+#    on:
+#      repo: zsimic/setupmeta
+#      tags: true
+#    distributions: "bdist_egg"
