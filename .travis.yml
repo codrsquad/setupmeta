@@ -30,7 +30,7 @@ deploy:
       python: 2.7
       repo: zsimic/setupmeta
       tags: true
-    distributions: "sdist bdist_wheel"
+    distributions: "sdist bdist_wheel --universal"
   - <<: *pypi
     on:
       repo: zsimic/setupmeta
