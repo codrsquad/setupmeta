@@ -111,21 +111,22 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-======  ======  ================  =============================================================================
-Commit  Tag     Version           Note (command ran to add tag)
-======  ======  ================  =============================================================================
-none            0.0.0+initial     No commit yet
-g1              0.0.0.post1+g1    Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
-g2              0.0.0.post2+g2
-g3              0.0.0.post3+g3
-g4      v0.1.0  0.1.0             ``bump --minor --commit``
-g5              0.1.0.post1       (1 commit since tag)
-g6              0.1.0.post2
-g7      v0.1.1  0.1.1             ``bump --patch --commit``
-g8              0.1.1.post1
-g9      v1.0.0  1.0.0             ``bump --major --commit``
-g10             1.0.0.post1
-======  ======  ================  =============================================================================
+=======  ======  ================  =============================================================================
+Commit   Tag     Version           Note (command ran to add tag)
+=======  ======  ================  =============================================================================
+no .git          0.0.0             Version defaults to 0.0.0 if no ``.git`` folder present
+none             0.0.0+initial     No commit yet (but ``git init`` was ran)
+g1               0.0.0.post1+g1    Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
+g2               0.0.0.post2+g2
+g3               0.0.0.post3+g3
+g4       v0.1.0  0.1.0             ``bump --minor --commit``
+g5               0.1.0.post1       (1 commit since tag)
+g6               0.1.0.post2
+g7       v0.1.1  0.1.1             ``bump --patch --commit``
+g8               0.1.1.post1
+g9       v1.0.0  1.0.0             ``bump --major --commit``
+g10              1.0.0.post1
+=======  ======  ================  =============================================================================
 
 * Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
 
@@ -164,21 +165,22 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-======  ======  ================  =============================================================================
-Commit  Tag     Version           Note (command ran to add tag)
-======  ======  ================  =============================================================================
-none            0.0.0+initial     No commit yet
-g1              0.0.1+g1          Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
-g2              0.0.2+g2
-g3              0.0.3+g3
-g4      v0.1    0.1.0             ``bump --minor --commit``
-g5              0.1.1             (1 commit since tag)
-g6              0.1.2
-g7      v0.2    0.2.0             ``bump --minor --commit`` (note: can't bump "patch" with this format)
-g8              0.2.1
-g9      v1.0    1.0.0             ``bump --major --commit``
-g10             1.0.1
-======  ======  ================  =============================================================================
+=======  ======  ================  =============================================================================
+Commit   Tag     Version           Note (command ran to add tag)
+=======  ======  ================  =============================================================================
+no .git          0.0.0             Version defaults to 0.0.0 if no ``.git`` folder present
+none             0.0.0+initial     No commit yet (but ``git init`` was ran)
+g1               0.0.1+g1          Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
+g2               0.0.2+g2
+g3               0.0.3+g3
+g4       v0.1    0.1.0             ``bump --minor --commit``
+g5               0.1.1             (1 commit since tag)
+g6               0.1.2
+g7       v0.2    0.2.0             ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g8               0.2.1
+g9       v1.0    1.0.0             ``bump --major --commit``
+g10              1.0.1
+=======  ======  ================  =============================================================================
 
 * Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
 
@@ -217,23 +219,24 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-======  ======  =====================  ====================================================================================
-Commit  Tag     Version                Note (command ran to add tag)
-======  ======  =====================  ====================================================================================
-none            0.0.0+initial          No commit yet (version defaults to 0.0.0)
-g1              0.0.1+hlocal.g1        Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
-g1              0.0.1+hlocal.g1.dirty  Same as above, only checkout was not clean anymore
-g1              0.0.1+h123.g1          ``$BUILD_ID`` was "123" (so presumably built on a CI server)
-g2              0.0.2+h124.g2
-g3              0.0.3+h125.g3
-g4      v0.1    0.1.0+hlocal.g4        ``bump --minor --commit``, clean, built locally
-g5              0.1.1+h130.g3          (1 commit since tag)
-g6              0.1.2+h140.g3
-g7      v0.2    0.2.0+h150.g3          ``bump --minor --commit`` (note: can't bump "patch" with this format)
-g8              0.2.1+h160.g3
-g9      v1.0    1.0.0+h200.g3          ``bump --major --commit``
-g10             1.0.1+h300.g3
-======  ======  =====================  ====================================================================================
+=======  ======  ==========================  ====================================================================================
+Commit   Tag     Version                     Note (command ran to add tag)
+=======  ======  ==========================  ====================================================================================
+no .git          0.0.0                       Version defaults to 0.0.0 if no ``.git`` folder present
+none             0.0.0+hlocal.initial.dirty  No commit yet (but ``git init`` was ran)
+g1               0.0.1+hlocal.g1             Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
+g1               0.0.1+hlocal.g1.dirty       Same as above, only checkout was not clean anymore
+g1               0.0.1+h123.g1               ``$BUILD_ID`` was "123" (so presumably built on a CI server)
+g2               0.0.2+h124.g2
+g3               0.0.3+h125.g3
+g4       v0.1    0.1.0+hlocal.g4             ``bump --minor --commit``, clean, built locally
+g5               0.1.1+h130.g3               (1 commit since tag)
+g6               0.1.2+h140.g3
+g7       v0.2    0.2.0+h150.g3               ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g8               0.2.1+h160.g3
+g9       v1.0    1.0.0+h200.g3               ``bump --major --commit``
+g10              1.0.1+h300.g3
+=======  ======  ==========================  ====================================================================================
 
 
 Advanced
