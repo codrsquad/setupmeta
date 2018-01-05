@@ -28,7 +28,7 @@ def valid_scenarios(folder):
         full_path = os.path.join(folder, name)
         setup_py = os.path.join(full_path, 'setup.py')
         if os.path.isdir(full_path) and os.path.isfile(setup_py):
-            result.append(full_path)
+            result.append(conftest.relative_path(full_path))
     return result
 
 
@@ -76,7 +76,7 @@ class Scenario:
     _ignored_errors = 'debugger UserWarning warnings.warn'.split()
 
     def __init__(self, folder):
-        self.folder = folder
+        self.folder = os.path.join(conftest.PROJECT_DIR, folder)
         self.commands = []
         self.commands.extend(SCENARIO_COMMANDS)
         self.target = folder
@@ -168,7 +168,8 @@ class Scenario:
         return os.path.join(self.folder, 'expected.txt')
 
     def expected_contents(self):
-        return load_contents(self.expected_path()).strip()
+        content = load_contents(self.expected_path())
+        return content and content.strip()
 
     def refresh_example(self, dryrun):
         logging.info("Refreshing %s" % self)
