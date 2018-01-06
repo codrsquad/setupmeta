@@ -213,6 +213,10 @@ def project_path(*relative_paths):
     return os.path.join(MetaDefs.project_dir, *relative_paths)
 
 
+def relative_path(full_path):
+    return full_path[len(MetaDefs.project_dir) + 1:] if full_path and full_path.startswith(MetaDefs.project_dir) else full_path
+
+
 def meta_command_init(self, dist, **kwargs):
     """ Custom __init__ injected to commands decorated with @MetaCommand """
     self.setupmeta = getattr(dist, '_setupmeta', None)

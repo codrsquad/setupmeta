@@ -2,7 +2,9 @@
 Commands contributed by setupmeta
 """
 
+import collections
 import os
+import shutil
 import sys
 
 import setuptools
@@ -16,7 +18,7 @@ def abort(message):
 
 
 def MetaCommand(cls):
-    """ Decorator allowing for less boilerplate in our commands """
+    """Decorator allowing for less boilerplate in our commands"""
     return setupmeta.MetaDefs.register_command(cls)
 
 
@@ -37,7 +39,7 @@ class Console:
 
 @MetaCommand
 class BumpCommand(setuptools.Command):
-    """ Bump version managed by setupmeta """
+    """Bump version managed by setupmeta"""
 
     user_options = [
         ('major', 'M', "bump major part of version"),
@@ -69,7 +71,7 @@ class BumpCommand(setuptools.Command):
 
 @MetaCommand
 class ExplainCommand(setuptools.Command):
-    """ Show a report of where key/values setup(attr) come from """
+    """Show a report of where key/values setup(attr) come from"""
 
     user_options = [
         ('chars=', 'c', "max chars to show"),
@@ -106,7 +108,7 @@ class ExplainCommand(setuptools.Command):
 
 @MetaCommand
 class EntryPointsCommand(setuptools.Command):
-    """ List entry points for pygradle consumption """
+    """List entry points for pygradle consumption"""
 
     def run(self):
         entry_points = self.setupmeta.value('entry_points')
@@ -124,9 +126,7 @@ class EntryPointsCommand(setuptools.Command):
 
 
 def get_console_scripts(entry_points):
-    """
-    pygradle's 'entrypoints' are misnamed: they really mean 'consolescripts'
-    """
+    """pygradle's 'entrypoints' are misnamed: they really mean 'consolescripts'"""
     if not entry_points:
         return None
     if isinstance(entry_points, dict):
@@ -143,3 +143,60 @@ def get_console_scripts(entry_points):
                 result.append(line)
         return result
     return get_console_scripts(entry_points.split('\n'))
+
+
+@MetaCommand
+class CleanCommand(setuptools.Command):
+    """Clean build artifacts and virtual envs"""
+
+    direct = set(".cache .tox build dist venv".split())
+    ignored = set(".git .gradle .idea .venv".split())
+    dirs = set("__pycache__".split())
+    extensions = set("egg-info pyc pyo pyd".split())
+
+    deleted = 0
+    by_ext = None
+
+    def delete(self, full_path):
+        if os.path.isdir(full_path):
+            shutil.rmtree(full_path)
+            print("deleted %s" % setupmeta.relative_path(full_path))
+        else:
+            os.unlink(full_path)
+            self.by_ext[full_path.rpartition('.')[2]] += 1
+        self.deleted += 1
+
+    def clean_direct(self):
+        for target in self.direct:
+            full_path = setupmeta.project_path(target)
+            if os.path.exists(full_path):
+                self.delete(full_path)
+
+    def run(self):
+        self.deleted = 0
+        self.by_ext = collections.defaultdict(int)
+        self.clean_direct()
+        for dirpath, dirnames, filenames in os.walk(setupmeta.MetaDefs.project_dir):
+            remove = []
+            for dname in dirnames:
+                if dname in self.ignored:
+                    remove.append(dname)
+                elif dname in self.dirs:
+                    remove.append(dname)
+                    self.delete(os.path.join(dirpath, dname))
+                else:
+                    ext = dname.rpartition('.')[2]
+                    if ext in self.extensions:
+                        remove.append(dname)
+                        self.delete(os.path.join(dirpath, dname))
+            for dname in remove:
+                dirnames.remove(dname)
+            for fname in filenames:
+                ext = fname.rpartition('.')[2]
+                if ext in self.extensions:
+                    self.delete(os.path.join(dirpath, fname))
+        if self.by_ext:
+            info = ["%s .%s files" % (v, k) for k, v in sorted(self.by_ext.items())]
+            print("deleted %s" % ', '.join(info))
+        if self.deleted == 0:
+            print("all clean, no deletable files found")

@@ -23,6 +23,7 @@ ENTRY_POINTS = """
 bump = {t}.commands:BumpCommand
 explain = {t}.commands:ExplainCommand
 entrypoints = {t}.commands:EntryPointsCommand
+cleanall = {t}.commands:CleanCommand
 
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register
