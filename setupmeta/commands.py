@@ -74,16 +74,33 @@ class ExplainCommand(setuptools.Command):
     """Show a report of where key/values setup(attr) come from"""
 
     user_options = [
+        ('recommend', 'r', "show more recommendations"),
         ('chars=', 'c', "max chars to show"),
     ]
 
     def initialize_options(self):
+        self.recommend = False
         self.chars = Console.columns()
+
+    def check_recommend(self, key, hint=None):
+        if key not in self.setupmeta.definitions:
+            hint = ", %s" % hint if hint else ''
+            self.setupmeta.auto_fill(key, "- Consider specifying '%s'%s" % (key, hint), "missing")
 
     def run(self):
         self.chars = setupmeta.to_int(self.chars, default=Console.columns())
 
         definitions = self.setupmeta.definitions
+        self.check_recommend('name')
+        self.check_recommend('version', "you can use setupmeta's versioning='...'")
+        self.check_recommend('description', "add a README or a docstring to your module")
+        self.check_recommend('long_description', "add a README file")
+        if self.recommend:
+            self.check_recommend('author')
+            self.check_recommend('classifiers')
+            self.check_recommend('download_url')
+            self.check_recommend('license')
+            self.check_recommend('url')
         if definitions:
             longest_key = min(24, max(len(key) for key in definitions))
             sources = sum((d.sources for d in definitions.values()), [])

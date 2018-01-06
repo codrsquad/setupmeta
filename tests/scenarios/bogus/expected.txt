@@ -1,7 +1,14 @@
 running explain
-      name: (explicit) bogus
-   version: (git     ) 1.0
-versioning: (explicit) {extra: [], main: function 'main_part'}
+          author: (missing ) - Consider specifying 'author'
+     classifiers: (missing ) - Consider specifying 'classifiers'
+     description: (missing ) - Consider specifying 'description', add a README or a docstring to your module
+    download_url: (missing ) - Consider specifying 'download_url'
+         license: (missing ) - Consider specifying 'license'
+long_description: (missing ) - Consider specifying 'long_description', add a README file
+            name: (explicit) bogus
+             url: (missing ) - Consider specifying 'url'
+         version: (git     ) 1.0
+      versioning: (explicit) {extra: [], main: function 'main_part'}
 
 running entrypoints
 

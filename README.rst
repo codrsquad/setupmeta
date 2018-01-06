@@ -69,9 +69,9 @@ The goal of this project is to:
 
 * Point out missing important info (example: version) in ``setup.py explain``
 
-* Support tag-based versioning_ (like setuptools_scm_, but with super simple defaults and automated bump capability)
+* Support tag-based versioning_ (like setuptools_scm_, but with super simple configuration/defaults and automated ``bump`` capability)
 
-* Provide useful Commands_ to see the metadata, bump versions etc
+* Provide useful Commands_ to see the metadata (**explain**), **bump** versions, **cleanall** etc
 
 
 How it works?

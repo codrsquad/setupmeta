@@ -1,5 +1,8 @@
 running explain
+          author: (missing   ) - Consider specifying 'author'
+     classifiers: (missing   ) - Consider specifying 'classifiers'
      description: (README:1  ) Several readme files
+    download_url: (missing   ) - Consider specifying 'download_url'
             foo*: (setup.py:2) bar
          license: (auto-fill ) MIT
 long_description: (README    ) # Several readme files  [//]: # (.. [[end long_description]])
@@ -7,5 +10,7 @@ long_description: (README    ) # Several readme files  [//]: # (.. [[end long_de
               \_: (README.md ) readmes: foo  No useful short description on 1st line here
             name: (explicit  ) readmes
   setup_requires: (explicit  ) ['setupmeta']
+             url: (missing   ) - Consider specifying 'url'
+         version: (missing   ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
 running entrypoints

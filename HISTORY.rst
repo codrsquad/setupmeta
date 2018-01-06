@@ -2,10 +2,10 @@
 History
 =======
 
-1.1.0 (2017-01-07)
+1.1.1 (2017-01-07)
 -------------------
 
-* Added 'cleanall' command
+* Added 'cleanall' command, added ``explain --recommend``
 
 
 1.0.8 (2017-01-05)

@@ -82,6 +82,25 @@ Typical usage::
     python setup.py bump --minor --commit   # Effectively bump
 
 
+cleanall
+========
+
+Handily clean build artifacts. Cleans the usual suspects: ``.cache/ .tox/ build/ dist/ venv/ __pycache__/ *.egg-info *.py[cod]``. Example:
+
+    ~/dev/github/setupmeta: ./setup.py cleanall
+    running cleanall
+    deleted .tox
+    deleted setupmeta.egg-info
+    deleted examples/direct/__pycache__
+    deleted examples/hierarchical/__pycache__
+    deleted examples/single/__pycache__
+    deleted setupmeta/__pycache__
+    deleted tests/__pycache__
+    deleted tests/scenarios/complex/tests/__pycache__
+    deleted tests/scenarios/readmes/__pycache__
+    deleted 14 .pyc files
+
+
 entrypoints
 ===========
 
@@ -92,4 +111,3 @@ This will simply show you your ``entry_points/console_scripts``. I added it beca
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 
 .. _pygradle: https://github.com/linkedin/pygradle/
-
