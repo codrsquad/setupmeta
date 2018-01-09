@@ -94,6 +94,14 @@ def represented_args(args):
     return ' '.join(result)
 
 
+def merged(output, error):
+    if output and error:
+        return "%s\n%s" % (output, error)
+    if not output and error:
+        return error
+    return output
+
+
 def run_program(program, *args, **kwargs):
     """
     Run 'program' with 'args'
@@ -114,13 +122,13 @@ def run_program(program, *args, **kwargs):
 
     if dryrun:
         print("Would run: %s" % represented)
-        return None if capture is True else 0
+        return None if capture else 0
 
     problem = None if full_path else "'%s' is not installed" % program
     if problem:
         if fatal:
             sys.exit(problem)
-        return None if capture is True else 1
+        return None if capture else 1
 
     if capture is None:
         print("Running: %s" % represented)
@@ -141,8 +149,8 @@ def run_program(program, *args, **kwargs):
         trace_msg = "%s, error: [%s]" % (trace_msg, error.strip())
     trace(trace_msg)
 
-    if capture is True:
-        return output
+    if capture:
+        return merged(output, error if capture == 'all' else None)
 
     if p.returncode and fatal:
         print("%s exited with code %s" % (represented, p.returncode))

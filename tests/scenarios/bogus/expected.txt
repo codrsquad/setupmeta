@@ -13,5 +13,5 @@ long_description: (missing ) - Consider specifying 'long_description', add a REA
 running entrypoints
 
 running bump
-'bump -p' exited with code 1:
+'setup.py bump -p' exited with code 1:
 error: Main format is not a list: function 'main_part'

@@ -72,6 +72,7 @@ def test_run_program():
         assert setupmeta.run_program('ls', capture=False, dryrun=True) == 0
         assert setupmeta.run_program('ls', 'foo/does/not/exist', capture=None) != 0
         assert setupmeta.run_program('ls', 'foo/does/not/exist', capture=True) == ''
+        assert "No such file or directory" in setupmeta.run_program('ls', 'foo/does/not/exist', capture='all')
         assert setupmeta.run_program('/foo/does/not/exist', capture=True, dryrun=True) is None
         assert setupmeta.run_program('/foo/does/not/exist', capture=False) != 0
 

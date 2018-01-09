@@ -24,6 +24,7 @@ bump = {t}.commands:BumpCommand
 explain = {t}.commands:ExplainCommand
 entrypoints = {t}.commands:EntryPointsCommand
 cleanall = {t}.commands:CleanCommand
+twine = {t}.commands:TwineCommand
 
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register

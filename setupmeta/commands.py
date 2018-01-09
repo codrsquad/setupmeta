@@ -217,3 +217,81 @@ class CleanCommand(setuptools.Command):
             print("deleted %s" % ', '.join(info))
         if self.deleted == 0:
             print("all clean, no deletable files found")
+
+
+@MetaCommand
+class TwineCommand(setuptools.Command):
+    """upload binary package to PyPI using twine"""
+
+    user_options = [
+        ('commit', 'c', "commit publishing (dryrun by default)"),
+        ('rebuild', 'r', "clean and rebuild before publishing"),
+        ('egg=', 'e', "build/publish egg"),
+        ('sdist=', 's', "build/publish source distribution"),
+        ('wheel=', 'w', "build/publish wheel"),
+    ]
+
+    def initialize_options(self):
+        major, minor = (sys.version_info.major, sys.version_info.minor)
+        self.current_python = ["%s.%s" % (major, minor), "%s%s" % (major, minor)]
+        self.commit = 0
+        self.rebuild = 0
+        self.egg = None
+        self.sdist = None
+        self.wheel = None
+
+    def clean(self, *relative_paths):
+        for relative_path in relative_paths:
+            path = setupmeta.project_path(relative_path)
+            if not os.path.exists(path):
+                continue
+            if self.commit:
+                print('Deleting %s...' % path)
+                shutil.rmtree(path)
+            else:
+                print("Would delete %s" % path)
+
+    def should_run(self, value):
+        return value == 'all' or value in self.current_python
+
+    def run_command(self, message, *args):
+        if not self.commit:
+            print("Would %s: %s" % (message, setupmeta.represented_args(args)))
+            return
+
+        first, _, rest = message.partition(' ')
+        first = "%s%s" % (first[0].upper(), first[1:])
+        message = '%sing %s...' % (first, rest)
+        print(message)
+        setupmeta.run_program(*args, fatal=True)
+
+    def run(self):
+        if not self.egg and not self.sdist and not self.wheel:
+            abort("Specify at least one of: --egg, --dist or --wheel")
+
+        twine = setupmeta.which('twine') if self.commit else 'twine'
+        if not twine:
+            abort("twine is not installed")
+
+        if not self.commit:
+            print("Dryrun, use --commit to effectively build/publish")
+
+        dist = setupmeta.project_path('dist')
+        self.clean('dist', 'build')
+
+        if self.should_run(self.egg):
+            self.run_command("build egg distribution", sys.executable, 'setup.py', 'bdist_egg')
+
+        if self.should_run(self.sdist):
+            self.run_command("build source distribution", sys.executable, 'setup.py', 'sdist')
+
+        if self.should_run(self.wheel):
+            self.run_command("build wheel distribution", sys.executable, 'setup.py', 'bdist_wheel', '--universal')
+
+        if self.commit and not os.path.exists(dist):
+            abort("No files found in %s" % dist)
+
+        files = [os.path.join(dist, name) for name in os.listdir(dist)] if self.commit else ['dist/*']
+        self.run_command("upload to PyPi via twine", twine, 'upload', *files)
+
+        self.clean('build')

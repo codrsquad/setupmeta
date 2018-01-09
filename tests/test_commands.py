@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import sys
 import tempfile
 
 from mock import patch
@@ -14,18 +13,13 @@ from . import conftest
 
 def run_setup_py(args, expected, folder=conftest.PROJECT_DIR):
     expected = expected.splitlines()
-    setup_py = os.path.join(folder, 'setup.py')
-    with conftest.capture_output() as out:
-        setupmeta.DEBUG = True
-        setupmeta.run_program(sys.executable, setup_py, *args, capture=True, fatal=True)
-        setupmeta.DEBUG = False
-        output = out.to_string()
-        for line in expected:
-            line = line.strip()
-            if not line:
-                continue
-            m = re.search(line, output)
-            assert m, "'%s' not present in output of '%s': %s" % (line, ' '.join(args), output)
+    output = conftest.run_setup_py(folder, *args)
+    for line in expected:
+        line = line.strip()
+        if not line:
+            continue
+        m = re.search(line, output)
+        assert m, "'%s' not present in output of '%s': %s" % (line, ' '.join(args), output)
 
 
 def test_explain():
@@ -108,3 +102,82 @@ def test_clean():
     # Run a 2nd time: nothing to be cleaned anymore
     run_setup_py(['cleanall'], "all clean, no deletable files found", folder=temp)
     shutil.rmtree(temp)
+
+
+def copy_to(src, dest, basename=None):
+    basename = basename or os.path.basename(src)
+    d = os.path.join(dest, basename)
+    if os.path.isdir(src):
+        shutil.copytree(src, d)
+        return
+    shutil.copy2(src, d)
+
+
+def test_twine():
+    temp = tempfile.mkdtemp()
+
+    try:
+        copy_to(setupmeta.project_path('examples', 'single', 'setup.py'), temp)
+        copy_to(setupmeta.project_path('examples', 'single', 'single.py'), temp)
+
+        run_setup_py(['twine'], "Specify at least one of: --egg, --dist or --wheel", folder=temp)
+        run_setup_py(['twine', '--commit', '--egg=all'], "twine is not installed", folder=temp)
+
+        copy_to(setupmeta.project_path('tests', 'mock-twine'), temp, basename='twine')
+
+        run_setup_py(
+            ['twine', '--egg=all'],
+            """
+                Dryrun, use --commit to effectively build/publish
+                Would build egg distribution: .*python.* setup.py bdist_egg
+                Would upload to PyPi via twine: twine upload dist/
+            """,
+            folder=temp
+        )
+
+        run_setup_py(
+            ['twine', '--commit', '--egg=all', '--wheel=1.0'],
+            """
+                python.* setup.py bdist_egg
+                Uploading to PyPi via twine
+                Running: <target>/twine upload <target>/dist/single-0.1.0-.+.egg
+                Deleting <target>/build
+            """,
+            folder=temp
+        )
+
+        run_setup_py(
+            ['twine', '--egg=all'],
+            """
+                Would delete .*/dist
+                Would build egg distribution: .*python.* setup.py bdist_egg
+                Would upload to PyPi via twine: twine upload dist/
+            """,
+            folder=temp
+        )
+
+        run_setup_py(
+            ['twine', '--commit', '--rebuild', '--egg=all', '--sdist=all', '--wheel=all'],
+            """
+                Deleting <target>/dist
+                python.* setup.py bdist_egg
+                python.* setup.py sdist
+                python.* setup.py bdist_wheel
+                Uploading to PyPi via twine
+                Running: <target>/twine upload <target>/dist
+                Deleting .+/build
+            """,
+            folder=temp
+        )
+
+        run_setup_py(
+            ['twine', '--commit', '--rebuild', '--egg=1.0'],
+            """
+                Deleting <target>/dist
+                No files found in <target>/dist
+            """,
+            folder=temp
+        )
+
+    finally:
+        shutil.rmtree(temp)

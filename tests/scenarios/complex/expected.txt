@@ -46,7 +46,7 @@ running entrypoints
 a=b
 
 running bump
-'bump -p' exited with code 1:
+'setup.py bump -p' exited with code 1:
 error: Can't bump 'patch', it's out of scope of main format '[{major}, '.', {minor}, '.', {changes}]'
 
 running bump
@@ -61,7 +61,7 @@ Would run: git commit -m "Version 1.3.0"
 Would run: git push origin
 Would run: git tag -a v1.3.0 -m "Version 1.3.0"
 Would run: git push --tags origin
-Would run: <tmp>/bump-hook
+Would run: <target>/bump-hook
 
 running bump
 Not committing bump, use --commit to commit
@@ -75,7 +75,7 @@ Would run: git commit -m "Version 2.0.0"
 Would run: git push origin
 Would run: git tag -a v2.0.0 -m "Version 2.0.0"
 Would run: git push --tags origin
-Would run: <tmp>/bump-hook
+Would run: <target>/bump-hook
 
 running bump
 src/complex/__init__.py:7 already has the right version
@@ -84,7 +84,7 @@ Running: git commit -m "Version 1.3.0"
 Running: git push origin
 Running: git tag -a v1.3.0 -m "Version 1.3.0"
 Running: git push --tags origin
-Running: <tmp>/bump-hook
+Running: <target>/bump-hook
 
 running bump
 Running: git add complex/__init__.py complex/__version__.py setup.py src/complex/__init__.py
@@ -92,7 +92,7 @@ Running: git commit -m "Version 2.0.0"
 Running: git push origin
 Running: git tag -a v2.0.0 -m "Version 2.0.0"
 Running: git push --tags origin
-Running: <tmp>/bump-hook
+Running: <target>/bump-hook
 
 running explain
           author: (auto-adjust              ) Zoran Simic

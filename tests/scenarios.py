@@ -1,9 +1,7 @@
 import argparse
-import imp
 import logging
 import os
 import shutil
-import sys
 import tempfile
 from io import open
 
@@ -50,20 +48,6 @@ def copytree(src, dst):
             shutil.copy2(s, d)
 
 
-def load_module(full_path):
-    """ Load module pointed to by 'full_path' """
-    fp = None
-    try:
-        folder = os.path.dirname(full_path)
-        basename = os.path.basename(full_path).replace('.py', '')
-        fp, pathname, description = imp.find_module(basename, [folder])
-        imp.load_module(basename, fp, pathname, description)
-
-    finally:
-        if fp:
-            fp.close()
-
-
 class Scenario:
 
     folder = None           # type: str # Folder where scenario is defined
@@ -104,17 +88,6 @@ class Scenario:
         )
         return output
 
-    def cleaned_output(self, text):
-        text = conftest.decode(text)
-        if not text:
-            return text
-        result = []
-        for line in text.splitlines():
-            line = line.rstrip()
-            if line and all(m not in line for m in self._ignored_errors):
-                result.append(line.replace(self.target, '<tmp>'))
-        return '\n'.join(result)
-
     def prepare(self):
         if self.target:
             return
@@ -139,30 +112,16 @@ class Scenario:
             shutil.rmtree(self.temp)
 
     def replay(self):
-        old_argv = sys.argv
         try:
             self.prepare()
-            setup_py = os.path.join(self.target, 'setup.py')
             result = []
             for command in self.commands:
-                with conftest.capture_output() as logged:
-                    sys.argv = [setup_py] + command.split()
-                    run_output = ''
-                    try:
-                        load_module(setup_py)
-
-                    except SystemExit as e:
-                        run_output += "'%s' exited with code 1:\n" % command
-                        run_output += "%s\n" % e
-
-                    run_output = "%s\n%s" % (logged.to_string().strip(), run_output.strip())
-                    result.append(self.cleaned_output(run_output))
+                result.append(conftest.run_setup_py(self.target, *command.split()))
 
             return "\n\n".join(result)
 
         finally:
             self.clean()
-            sys.argv = old_argv
 
     def expected_path(self):
         return os.path.join(self.folder, 'expected.txt')

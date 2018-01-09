@@ -228,8 +228,8 @@ class SimpleModule(Settings):
                         docstring_marker = None
                         if docstring:
                             self.scan_docstring(docstring, line_number=docstring_start - 1)
-                        continue
-                    docstring.append(line)
+                    else:
+                        docstring.append(line)
                     continue
                 if line.startswith('"""') or line.startswith("'''"):
                     docstring_marker = line[:3]

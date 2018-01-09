@@ -1,14 +1,17 @@
+import imp
 import os
 import sys
 
 from six import StringIO
 
+import setupmeta
 from setupmeta import decode
 from setupmeta.scm import Git
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
+IGNORED_OUTPUT = set("debugger UserWarning warnings.warn".split())
 
 
 def resouce(*relative_path):
@@ -62,6 +65,62 @@ class capture_output:
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
         return result
+
+
+def cleaned_output(text, folder=None):
+    text = decode(text)
+    if not text:
+        return text
+    result = []
+    for line in text.splitlines():
+        line = line.rstrip()
+        if line and all(m not in line for m in IGNORED_OUTPUT):
+            if folder:
+                line = line.replace(folder, '<target>')
+            result.append(line)
+    return '\n'.join(result)
+
+
+def run_setup_py(folder, *args):
+    if folder == setupmeta.project_path() or not os.path.isabs(folder):
+        os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, 'setup.py'), *args, capture='all', fatal=True).strip())
+
+    return run_internal_setup_py(folder, *args)
+
+
+def run_internal_setup_py(folder, *args):
+    """Run setup.py without an external process, to record coverage properly"""
+    old_cd = os.getcwd()
+    old_argv = sys.argv
+    old_pd = setupmeta.MetaDefs.project_dir
+    sys.dont_write_bytecode = True
+    setupmeta.DEBUG = False
+    fp = None
+    try:
+        os.chdir(folder)
+        setup_py = os.path.join(folder, 'setup.py')
+        with capture_output() as logged:
+            sys.argv = [setup_py] + list(args)
+            run_output = ''
+            try:
+                basename = 'setup'
+                fp, pathname, description = imp.find_module(basename, [folder])
+                imp.load_module(basename, fp, pathname, description)
+
+            except SystemExit as e:
+                run_output += "'setup.py %s' exited with code 1:\n" % ' '.join(args)
+                run_output += "%s\n" % e
+
+            run_output = "%s\n%s" % (logged.to_string().strip(), run_output.strip())
+            return cleaned_output(run_output, folder)
+
+    finally:
+        if fp:
+            fp.close()
+        setupmeta.MetaDefs.project_dir = old_pd
+        sys.argv = old_argv
+        os.chdir(old_cd)
 
 
 class MockGit(Git):
