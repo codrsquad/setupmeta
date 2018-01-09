@@ -14,6 +14,10 @@ PROJECT_DIR = os.path.dirname(TESTS)
 IGNORED_OUTPUT = set("debugger UserWarning warnings.warn".split())
 
 
+os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+sys.dont_write_bytecode = True
+
+
 def resouce(*relative_path):
     """ Full path for 'relative_path' """
     return os.path.join(TESTS, *relative_path)
@@ -83,7 +87,6 @@ def cleaned_output(text, folder=None):
 
 def run_setup_py(folder, *args):
     if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
         return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, 'setup.py'), *args, capture='all', fatal=True).strip())
 
     return run_internal_setup_py(folder, *args)
@@ -94,7 +97,6 @@ def run_internal_setup_py(folder, *args):
     old_cd = os.getcwd()
     old_argv = sys.argv
     old_pd = setupmeta.MetaDefs.project_dir
-    sys.dont_write_bytecode = True
     setupmeta.DEBUG = False
     fp = None
     try:

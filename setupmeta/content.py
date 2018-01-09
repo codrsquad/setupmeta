@@ -102,13 +102,10 @@ def load_list(relative_path, comment='#', limit=0):
     )
 
 
-def find_contents(relative_paths, loader=None, limit=0):
-    """ Return contents of first file found in 'relative_paths', globs OK
-
+def resolved_paths(relative_paths):
+    """
     :param list(str) relative_paths: Ex: "README.rst", "README*"
-    :param callable|None loader: Optional custom loader function
-    :param int limit: Max number of lines to load
-    :return str|None, str|None: Contents and path where they came from, if any
+    :return str|None: Contents of the first non-empty file found
     """
     candidates = []
     for path in relative_paths:
@@ -122,9 +119,20 @@ def find_contents(relative_paths, loader=None, limit=0):
             continue
         if path not in candidates:
             candidates.append(path)
+    return candidates
+
+
+def find_contents(relative_paths, loader=None, limit=0):
+    """ Return contents of first file found in 'relative_paths', globs OK
+
+    :param list(str) relative_paths: Ex: "README.rst", "README*"
+    :param callable|None loader: Optional custom loader function
+    :param int limit: Max number of lines to load
+    :return str|None, str|None: Contents and path where they came from, if any
+    """
     if loader is None:
         loader = load_contents
-    for relative_path in candidates:
+    for relative_path in resolved_paths(relative_paths):
         contents = loader(relative_path, limit=limit)
         if contents:
             return contents, relative_path

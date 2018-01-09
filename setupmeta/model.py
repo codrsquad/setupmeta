@@ -11,7 +11,7 @@ import sys
 import setuptools
 
 from setupmeta import listify, MetaDefs, project_path, short, trace
-from setupmeta.content import find_contents, load_list, load_readme
+from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
 
@@ -464,19 +464,20 @@ class SetupMeta(Settings):
         docstring_lead = self.definitions.pop('docstring_lead', None)
         if docstring_lead and not self.value('description'):
             self.auto_fill('description', docstring_lead.value, source=docstring_lead.source)
-        for readme in READMES:
+        for readme in resolved_paths(READMES):
             if self.value('long_description') and self.value('description'):
                 return
-            value, path = find_contents([readme], loader=load_readme)
+            value = load_readme(readme)
             if value:
                 short_desc = self.extract_short_description(value)
-                self.auto_fill('description', short_desc, source="%s:1" % path)
-                self.add_definition('long_description', value, path, override=short_desc)
+                self.auto_fill('description', short_desc, source="%s:1" % readme)
+                self.add_definition('long_description', value, readme, override=short_desc)
 
-    def auto_fill_entry_points(self):
-        value, path = find_contents(['entry_points.ini'])
+    def auto_fill_entry_points(self, key='entry_points'):
+        path = "%s.ini" % key
+        value = load_contents(path)
         if value:
-            self.add_definition('entry_points', value, path)
+            self.add_definition(key, value, path)
 
     def auto_fill_license(self, key='license'):
         """ Try to auto-determine the license """
