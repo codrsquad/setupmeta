@@ -170,7 +170,7 @@ def test_twine():
                 python.* setup.py bdist_wheel
                 Uploading to PyPi via twine
                 Running: <target>/twine upload <target>/dist
-                Deleting .+/build
+                Deleting <target>/build
             """,
             folder=temp
         )

@@ -283,19 +283,21 @@ class TwineCommand(setuptools.Command):
         dist = setupmeta.project_path('dist')
         self.clean('dist', 'build')
 
-        if self.should_run(self.egg):
-            self.run_command("build egg distribution", sys.executable, 'setup.py', 'bdist_egg')
+        try:
+            if self.should_run(self.egg):
+                self.run_command("build egg distribution", sys.executable, 'setup.py', 'bdist_egg')
 
-        if self.should_run(self.sdist):
-            self.run_command("build source distribution", sys.executable, 'setup.py', 'sdist')
+            if self.should_run(self.sdist):
+                self.run_command("build source distribution", sys.executable, 'setup.py', 'sdist')
 
-        if self.should_run(self.wheel):
-            self.run_command("build wheel distribution", sys.executable, 'setup.py', 'bdist_wheel', '--universal')
+            if self.should_run(self.wheel):
+                self.run_command("build wheel distribution", sys.executable, 'setup.py', 'bdist_wheel', '--universal')
 
-        if self.commit and not os.path.exists(dist):
-            abort("No files found in %s" % dist)
+            if self.commit and not os.path.exists(dist):
+                abort("No files found in %s" % dist)
 
-        files = [os.path.join(dist, name) for name in os.listdir(dist)] if self.commit else ['dist/*']
-        self.run_command("upload to PyPi via twine", twine, 'upload', *files)
+            files = [os.path.join(dist, name) for name in sorted(os.listdir(dist))] if self.commit else ['dist/*']
+            self.run_command("upload to PyPi via twine", twine, 'upload', *files)
 
-        self.clean('build')
+        finally:
+            self.clean('build')
