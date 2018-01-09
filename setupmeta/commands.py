@@ -273,7 +273,7 @@ class TwineCommand(setuptools.Command):
         if not self.egg and not self.sdist and not self.wheel:
             abort("Specify at least one of: --egg, --dist or --wheel")
 
-        twine = setupmeta.which('twine') if self.commit else 'twine'
+        twine = setupmeta.which('twine')
         if not twine:
             abort("twine is not installed")
 

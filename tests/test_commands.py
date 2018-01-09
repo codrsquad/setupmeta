@@ -126,7 +126,7 @@ def test_twine():
             return
 
         run_setup_py(['twine'], "Specify at least one of: --egg, --dist or --wheel", folder=temp)
-        run_setup_py(['twine', '--commit', '--egg=all'], "twine is not installed", folder=temp)
+        run_setup_py(['twine', '--egg=all'], "twine is not installed", folder=temp)
 
         copy_to(setupmeta.project_path('tests', 'mock-twine'), temp, basename='twine')
 
@@ -135,7 +135,7 @@ def test_twine():
             """
                 Dryrun, use --commit to effectively build/publish
                 Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine: twine upload dist/
+                Would upload to PyPi via twine
             """,
             folder=temp
         )
@@ -156,7 +156,7 @@ def test_twine():
             """
                 Would delete .*/dist
                 Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine: twine upload dist/
+                Would upload to PyPi via twine
             """,
             folder=temp
         )
