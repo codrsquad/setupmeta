@@ -123,7 +123,6 @@ entrypoints
 This will simply show you your ``entry_points/console_scripts``. I added it because pygradle_ requires it (if you use pygradle_, it'll come in handy...).
 
 
-
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
 
 .. _pygradle: https://github.com/linkedin/pygradle/

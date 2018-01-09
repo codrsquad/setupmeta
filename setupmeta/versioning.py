@@ -348,7 +348,7 @@ class Versioning:
 
         self.scm.apply_tag(commit, next_version)
 
-        hook = setupmeta.project_path('bump-hook')
+        hook = setupmeta.project_path('.hooks', 'bump')
         if not setupmeta.is_executable(hook):
             return
 
