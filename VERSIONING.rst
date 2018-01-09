@@ -22,7 +22,7 @@ In order to use setupmeta as a bridge to your git tags as versions, activate the
         ...
     )
 
-You can use then ``python setup.py bump`` to bump major/minor/patch (no need to assign tags manually).
+You can use then ``python setup.py version --bump`` to bump major/minor/patch (no need to assign tags manually).
 
 Note that if you still explicitly mention a ``__version__ = '...'``` in your ``__init__.py`` or ``__about__.py`` etc, setupmeta will find it and also bump it accordingly.
 This is done for convenience only, you don't need ``__version__`` anywhere if you use setupmeta versioning.
@@ -39,7 +39,7 @@ You can specify ``versioning``:
 
 * implicitly in your ``__init__.py``, ``__about__.py``, docstrings etc (setupmeta will show where ``versioning`` was defined, like any other value it handles)
 
-Tag-based versioning will take precedence on any other ``version`` specification you may have, and ``setup.py bump`` will modify those over values for ``version`` that you have (if any) accordingly.
+Tag-based versioning will take precedence on any other ``version`` specification you may have, and ``setup.py version --bump`` will modify those over values for ``version`` that you have (if any) accordingly.
 
 For example, if you have this:
 
@@ -67,11 +67,11 @@ Ie:
 
 * there are no local pending changes, so the "extra" part is not shown (by default)
 
-* ``__init__.py`` being static, it does not reflect this yet (but will if/when you ``setup.py bump``)
+* ``__init__.py`` being static, it does not reflect this yet (but will if/when you ``setup.py version --bump``)
 
 * note that this versioning scheme should play well with PEP-440_
 
-If you now run ``setup.py bump --patch --commit``, the following would happen:
+If you now run ``setup.py version --bump patch --commit``, the following would happen:
 
 * your ``__init__.py`` line 7 is modified to state ``__version__ = '1.0.1'``, and committed with description "Version 1.0.1"
 
@@ -119,12 +119,12 @@ none             0.0.0+initial     No commit yet (but ``git init`` was ran)
 g1               0.0.0.post1+g1    Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
 g2               0.0.0.post2+g2
 g3               0.0.0.post3+g3
-g4       v0.1.0  0.1.0             ``bump --minor --commit``
+g4       v0.1.0  0.1.0             ``version --bump minor --commit``
 g5               0.1.0.post1       (1 commit since tag)
 g6               0.1.0.post2
-g7       v0.1.1  0.1.1             ``bump --patch --commit``
+g7       v0.1.1  0.1.1             ``version --bump patch --commit``
 g8               0.1.1.post1
-g9       v1.0.0  1.0.0             ``bump --major --commit``
+g9       v1.0.0  1.0.0             ``version --bump major --commit``
 g10              1.0.0.post1
 =======  ======  ================  =============================================================================
 
@@ -138,9 +138,9 @@ g10              1.0.0.post1
 
 * Dirty checkouts (with changes pending) will get a version of the form ``0.1.0.post2+g123``
 
-* Use ``python setup.py bump --[major|minor|patch]`` whenever you want to bump major, minor or patch revision (this will assign a git tag accordingly)
+* Use ``python setup.py version --bump [major|minor|patch]`` whenever you want to bump major, minor or patch revision (this will assign a git tag accordingly)
 
-    * ``python setup.py bump --patch --commit`` -> tag "v0.1.1" is added, version is now ``0.1.1``
+    * ``python setup.py version --bump patch --commit`` -> tag "v0.1.1" is added, version is now ``0.1.1``
 
     * Next commit after that will be version ``0.1.1.post1`` etc
 
@@ -173,12 +173,12 @@ none             0.0.0+initial     No commit yet (but ``git init`` was ran)
 g1               0.0.1+g1          Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
 g2               0.0.2+g2
 g3               0.0.3+g3
-g4       v0.1    0.1.0             ``bump --minor --commit``
+g4       v0.1    0.1.0             ``version --bump minor --commit``
 g5               0.1.1             (1 commit since tag)
 g6               0.1.2
-g7       v0.2    0.2.0             ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g7       v0.2    0.2.0             ``version --bump minor --commit`` (note: can't bump "patch" with this format)
 g8               0.2.1
-g9       v1.0    1.0.0             ``bump --major --commit``
+g9       v1.0    1.0.0             ``version --bump major --commit``
 g10              1.0.1
 =======  ======  ================  =============================================================================
 
@@ -192,9 +192,9 @@ g10              1.0.1
 
 * Dirty checkouts (with changes pending) will get a version of the form ``0.1.2+g123``
 
-* Use ``python setup.py bump --[major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
+* Use ``python setup.py version --bump [major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
 
-    * ``python setup.py bump --minor --commit`` -> tag "v0.2" is added, version is now ``0.2.0``
+    * ``python setup.py version --bump minor --commit`` -> tag "v0.2" is added, version is now ``0.2.0``
 
     * Next commit after that will be version ``0.2.1`` etc
 
@@ -229,12 +229,12 @@ g1               0.0.1+hlocal.g1.dirty       Same as above, only checkout was no
 g1               0.0.1+h123.g1               ``$BUILD_ID`` was "123" (so presumably built on a CI server)
 g2               0.0.2+h124.g2
 g3               0.0.3+h125.g3
-g4       v0.1    0.1.0+hlocal.g4             ``bump --minor --commit``, clean, built locally
+g4       v0.1    0.1.0+hlocal.g4             ``version --bump minor --commit``, clean, built locally
 g5               0.1.1+h130.g3               (1 commit since tag)
 g6               0.1.2+h140.g3
-g7       v0.2    0.2.0+h150.g3               ``bump --minor --commit`` (note: can't bump "patch" with this format)
+g7       v0.2    0.2.0+h150.g3               ``version --bump minor --commit`` (note: can't bump "patch" with this format)
 g8               0.2.1+h160.g3
-g9       v1.0    1.0.0+h200.g3               ``bump --major --commit``
+g9       v1.0    1.0.0+h200.g3               ``version --bump major --commit``
 g10              1.0.1+h300.g3
 =======  ======  ==========================  ====================================================================================
 
@@ -265,7 +265,7 @@ Advanced
 
 * a **dict** with the following keys:
 
-    * ``main``: a **string** (see Formatting_) or callable (if callable given, **bump** command becomes unusable)
+    * ``main``: a **string** (see Formatting_) or callable (if callable given, **version --bump** functionality becomes unusable)
 
     * ``extra``: a **string** (see Formatting_) or callable (custom function yielding a string from a given ``Version``, see `Scm class`_)
 

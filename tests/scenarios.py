@@ -116,7 +116,8 @@ class Scenario:
             self.prepare()
             result = []
             for command in self.commands:
-                result.append(conftest.run_setup_py(self.target, *command.split()))
+                output = ":: %s\n%s" % (command, conftest.run_setup_py(self.target, *command.split()))
+                result.append(output)
 
             return "\n\n".join(result)
 

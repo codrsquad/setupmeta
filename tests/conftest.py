@@ -82,12 +82,12 @@ def cleaned_output(text, folder=None):
             if folder:
                 line = line.replace(folder, '<target>')
             result.append(line)
-    return '\n'.join(result)
+    return '\n'.join(result).strip()
 
 
 def run_setup_py(folder, *args):
     if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, 'setup.py'), *args, capture='all', fatal=True).strip())
+        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, 'setup.py'), *args, capture='all', fatal=True))
 
     return run_internal_setup_py(folder, *args)
 

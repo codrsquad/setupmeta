@@ -1,6 +1,8 @@
 import os
 import sys
 
+from mock import patch
+
 from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path, SetupMeta
 
 
@@ -58,8 +60,8 @@ def test_empty():
     assert str(meta).startswith('0 definitions, ')
 
 
+@patch.dict(os.environ, {'PYGRADLE_PROJECT_VERSION': '1.2.3'})
 def test_pygradle_version():
-    os.environ['PYGRADLE_PROJECT_VERSION'] = '1.2.3'
     meta = bogus_project(name='pygradle_project')
     assert len(meta.definitions) == 2
     assert meta.value('name') == 'pygradle_project'
@@ -70,8 +72,6 @@ def test_pygradle_version():
 
     assert name.is_explicit
     assert not version.is_explicit
-
-    del os.environ['PYGRADLE_PROJECT_VERSION']
 
 
 def test_meta():

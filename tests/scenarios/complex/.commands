@@ -1,6 +1,8 @@
-bump -p
-bump -m
-bump -M
-bump --minor --commit
-bump --major --commit
+version
+version --bump patch
+version --bump minor
+version --bump major
+version --bump minor --commit
+version --bump major --commit
+version
 explain -c180

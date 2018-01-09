@@ -2,20 +2,22 @@
 History
 =======
 
+1.2.0 (2017-01-09)
+------------------
+
+* Renamed command ``bump`` to ``version``
+
+
 1.1.2 (2017-01-08)
--------------------
+------------------
 
-* Added 'twine' command
+* Added commands: 'twine', 'cleanall'
 
-
-1.1.1 (2017-01-07)
--------------------
-
-* Added 'cleanall' command, added ``explain --recommend``
+* Added ``explain --recommend``
 
 
 1.0.8 (2017-01-05)
--------------------
+------------------
 
 * Added pre-defined versioning strategy ``build-id``
 
@@ -23,7 +25,7 @@ History
 
 
 0.8.1 (2017-12-31)
--------------------
+------------------
 
 * Versioning is more easily customizable, using post-release marker by default (instead of beta)
 

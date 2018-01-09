@@ -1,3 +1,4 @@
+:: explain -c180 -r
 running explain
           author: (auto-adjust ) Someone
               \_: (single.py:5 ) Someone someone@somewhere.com
@@ -14,4 +15,5 @@ long_description: (README.rst  ) 1600 chars: single: A package implemented by a 
              url: (missing     ) - Consider specifying 'url'
          version: (single.py:8 ) 0.1.0
 
+:: entrypoints
 running entrypoints

@@ -29,7 +29,7 @@ class Console:
 
     @classmethod
     def columns(cls, default=160):
-        if cls._columns is None and sys.stdout.isatty():
+        if cls._columns is None and sys.stdout.isatty() and 'TERM' in os.environ:
             cols = os.popen('tput cols', 'r').read()    # nosec
             cols = setupmeta.decode(cols)
             cls._columns = setupmeta.to_int(cols, default=None)
@@ -39,32 +39,26 @@ class Console:
 
 
 @MetaCommand
-class BumpCommand(setuptools.Command):
-    """Bump version managed by setupmeta"""
+class VersionCommand(setuptools.Command):
+    """show/bump version managed by setupmeta"""
 
     user_options = [
-        ('major', 'M', "bump major part of version"),
-        ('minor', 'm', "bump minor part of version"),
-        ('patch', 'p', "bump patch part of version"),
-        ('commit', 'c', "commit changes"),
-        ('simulate-branch=', 'b', "simulate branch name (useful for testing)"),
+        ("bump=", 'b', "bump specified part of version"),
+        ('commit', 'c', "commit bump"),
+        ('simulate-branch=', 's', "simulate branch name (useful for testing)"),
     ]
 
     def initialize_options(self):
-        self.major = 0
-        self.minor = 0
-        self.patch = 0
+        self.bump = None
         self.commit = 0
-        self.simulate_branch = 0
+        self.simulate_branch = None
 
     def run(self):
-        flags = self.major + self.minor + self.patch
-        if flags != 1:
-            abort("Specify exactly one of --major, --minor or --patch")
-
-        what = 'major' if self.major else 'minor' if self.minor else 'patch'
         try:
-            self.setupmeta.versioning.bump(what, self.commit, self.simulate_branch)
+            if self.bump:
+                self.setupmeta.versioning.bump(self.bump, self.commit, self.simulate_branch)
+            else:
+                print(self.setupmeta.version)
 
         except setupmeta.UsageError as e:
             abort(e)

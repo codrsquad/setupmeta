@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from mock import patch
 
 import setupmeta
 import setupmeta.versioning
@@ -72,13 +73,12 @@ def test_no_extra():
     check_render(versioning, '1.0.None', c=2, d=True)
 
 
+@patch.dict(os.environ, {'BUILD_ID': '543'})
 def test_preconfigured_strategies():
-    os.environ['BUILD_ID'] = '543'
     check_strategy_changes(True)
     check_strategy_changes(False)
     check_strategy_build_id(True)
     check_strategy_build_id(False)
-    del os.environ['BUILD_ID']
 
 
 def extra_version(version):

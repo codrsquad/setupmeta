@@ -37,12 +37,11 @@ def test_explain():
     )
 
 
-def test_bump():
-    run_setup_py(['bump'], "Specify exactly one of --major, --minor or --patch")
-    run_setup_py(['bump', '--major', '--simulate-branch=HEAD'], "Can't bump branch 'HEAD'")
+def test_version():
+    run_setup_py(['version', '--bump', 'major', '--simulate-branch=HEAD'], "Can't bump branch 'HEAD'")
 
     run_setup_py(
-        ['bump', '--major', '--simulate-branch=master'],
+        ['version', '--bump', 'major', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
@@ -51,7 +50,7 @@ def test_bump():
     )
 
     run_setup_py(
-        ['bump', '--minor', '--simulate-branch=master'],
+        ['version', '--bump', 'minor', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
@@ -60,7 +59,7 @@ def test_bump():
     )
 
     run_setup_py(
-        ['bump', '-p', '--simulate-branch=master'],
+        ['version', '-b', 'patch', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
@@ -71,6 +70,7 @@ def test_bump():
 
 @patch('sys.stdout.isatty', return_value=True)
 @patch('os.popen', return_value=StringIO('60'))
+@patch.dict(os.environ, {'TERM': 'testing'})
 def test_console(*_):
     Console._columns = None
     assert Console.columns() == 60

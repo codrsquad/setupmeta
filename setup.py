@@ -20,11 +20,11 @@ EGG = os.path.join(HERE, '%s.egg-info' % __title__)
 
 ENTRY_POINTS = """
 [distutils.commands]
-bump = {t}.commands:BumpCommand
-explain = {t}.commands:ExplainCommand
-entrypoints = {t}.commands:EntryPointsCommand
 cleanall = {t}.commands:CleanCommand
+entrypoints = {t}.commands:EntryPointsCommand
+explain = {t}.commands:ExplainCommand
 twine = {t}.commands:TwineCommand
+version = {t}.commands:VersionCommand
 
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register
