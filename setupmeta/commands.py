@@ -4,6 +4,7 @@ Commands contributed by setupmeta
 
 import collections
 import os
+import platform
 import shutil
 import sys
 
@@ -266,6 +267,9 @@ class TwineCommand(setuptools.Command):
         setupmeta.run_program(*args, fatal=True)
 
     def run(self):
+        if platform.python_implementation() != "CPython":
+            abort("twine command not supported on %s" % platform.python_implementation())
+
         if not self.egg and not self.sdist and not self.wheel:
             abort("Specify at least one of: --egg, --dist or --wheel")
 

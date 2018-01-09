@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 import shutil
 import tempfile
@@ -119,6 +120,10 @@ def test_twine():
     try:
         copy_to(setupmeta.project_path('examples', 'single', 'setup.py'), temp)
         copy_to(setupmeta.project_path('examples', 'single', 'single.py'), temp)
+
+        if platform.python_implementation() != "CPython":
+            run_setup_py(['twine'], "twine command not supported on ", folder=temp)
+            return
 
         run_setup_py(['twine'], "Specify at least one of: --egg, --dist or --wheel", folder=temp)
         run_setup_py(['twine', '--commit', '--egg=all'], "twine is not installed", folder=temp)
