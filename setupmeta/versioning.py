@@ -352,7 +352,14 @@ class Versioning:
         if not setupmeta.is_executable(hook):
             return
 
-        setupmeta.run_program(hook, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
+        args = [hook]
+        if commit:
+            args.append('--commit')
+        args.append('--branch')
+        args.append(branch)
+        args.append('--version')
+        args.append(next_version)
+        setupmeta.run_program(*args, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
     def update_sources(self, next_version, commit, vdefs):
         modified = []

@@ -13,12 +13,9 @@ Simplify your setup.py
     :target: https://codecov.io/gh/zsimic/setupmeta
     :alt: codecov
 
-.. image:: https://img.shields.io/github/languages/top/zsimic/setupmeta.svg
-    :target: https://github.com/zsimic/setupmeta
-    :alt: github
-
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
-    :alt: Python versions tested
+    :target: https://github.com/zsimic/setupmeta
+    :alt: Python versions tested (link to github project)
 
 ----
 
