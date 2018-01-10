@@ -29,12 +29,30 @@ def test_disabled():
         versioning.bump('major', commit=False)
 
 
+def test_project_scm():
+    assert setupmeta.versioning.find_scm_root(None, 'git') is None
+    assert setupmeta.versioning.find_scm_root("", 'git') is None
+    assert setupmeta.versioning.find_scm_root("/", 'git') is None
+    assert setupmeta.versioning.find_scm_root(conftest.TESTS, 'git') == conftest.PROJECT_DIR
+    assert setupmeta.versioning.find_scm_root(conftest.resouce('scenarios', 'complex', 'src', 'complex'), 'git') == conftest.PROJECT_DIR
+
+
+def test_find_scm_in_parent():
+    meta = new_meta('tag')
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.problem
+    assert setupmeta.project_path() == conftest.TESTS
+    assert versioning.scm.root == conftest.PROJECT_DIR
+
+
 def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
     version = Version(main=m, changes=c, commitid=cid, dirty=d)
     assert v.strategy.rendered(version) == expected
 
 
-def test_no_scm():
+@patch('setupmeta.versioning.find_scm_root', return_value=None)
+def test_no_scm(_):
     fmt = "tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
     meta = new_meta(fmt)
     versioning = meta.versioning

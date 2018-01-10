@@ -11,8 +11,15 @@ BUMPABLE = 'major minor patch'.split()
 RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$')
 
 
-def has_scm_mark(root, name):
-    return os.path.isdir(os.path.join(root, '.%s' % name))
+def find_scm_root(root, name):
+    if not root:
+        return None
+    if os.path.isdir(os.path.join(root, '.%s' % name)):
+        return root
+    parent = os.path.dirname(root)
+    if parent == root:
+        return None
+    return find_scm_root(parent, name)
 
 
 def project_scm(root):
@@ -20,8 +27,9 @@ def project_scm(root):
     :param str root: Path to project folder
     :return setupmeta.scm.Scm: SCM used by project, if any
     """
-    if has_scm_mark(root, 'git'):
-        return Git(root)
+    scm_root = find_scm_root(os.path.abspath(root), 'git')
+    if scm_root:
+        return Git(scm_root)
     setupmeta.trace("could not determine SCM for '%s'" % root)
     return None
 

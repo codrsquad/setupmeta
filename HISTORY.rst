@@ -2,6 +2,12 @@
 History
 =======
 
+1.2.5 (2017-01-10)
+------------------
+
+* Support setup.py in a subfolder of a git checkout
+
+
 1.2.4 (2017-01-09)
 ------------------
 

@@ -7,7 +7,7 @@ from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path, Setup
 
 
 def bogus_project(**attrs):
-    return SetupMeta(dict(_setup_py_path='foo/bar/setup.py', **attrs))
+    return SetupMeta(dict(_setup_py_path='/foo/bar/shouldnotexist/setup.py', **attrs))
 
 
 def test_setup_py_determination():
