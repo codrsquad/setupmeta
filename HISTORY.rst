@@ -2,7 +2,7 @@
 History
 =======
 
-1.2.2 (2017-01-09)
+1.2.3 (2017-01-09)
 ------------------
 
 * Renamed command ``bump`` to ``version``, optional bump hook in ``./hooks/bump``
