@@ -111,12 +111,12 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-=======  ======  ================  =============================================================================
+=======  ======  ================  =====================================================================================
 Commit   Tag     Version           Note (command ran to add tag)
-=======  ======  ================  =============================================================================
-no .git          0.0.0             Version defaults to 0.0.0 if no ``.git`` folder present
+=======  ======  ================  =====================================================================================
+no .git          0.0.0             Version defaults to 0.0.0 (when no tag yet)
 none             0.0.0+initial     No commit yet (but ``git init`` was ran)
-g1               0.0.0.post1+g1    Initial commit, no tag yet defaults to 0.0.0 but is considered dirty (no tag)
+g1               0.0.0.post1+g1    Initial commit, is considered dirty (because no tag)
 g2               0.0.0.post2+g2
 g3               0.0.0.post3+g3
 g4       v0.1.0  0.1.0             ``version --bump minor --commit``
@@ -126,7 +126,7 @@ g7       v0.1.1  0.1.1             ``version --bump patch --commit``
 g8               0.1.1.post1
 g9       v1.0.0  1.0.0             ``version --bump major --commit``
 g10              1.0.0.post1
-=======  ======  ================  =============================================================================
+=======  ======  ================  =====================================================================================
 
 * Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
 
@@ -168,9 +168,9 @@ Example:
 =======  ======  ================  =========================================================================================================
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =========================================================================================================
-no .git          0.0.0             Version defaults to 0.0 if no ``.git`` folder present
+no .git          0.0.0             Version defaults to 0.0 (when no tag yet)
 none             0.0.0+initial     No commit yet (but ``git init`` was ran)
-g1               0.0.1+g1          Initial commit, no tag yet, 0.0.1 means default v0.0 + 1 change, and is considered dirty (because no tag)
+g1               0.0.1+g1          Initial commit, 0.0.1 means default v0.0 + 1 change, and is considered dirty (because no tag)
 g2               0.0.2+g2
 g3               0.0.3+g3
 g4       v0.1    0.1.0             ``setup.py version --bump minor --commit``
@@ -220,7 +220,7 @@ Example:
 =======  ======  ==========================  ====================================================================================
 Commit   Tag     Version                     Note (command ran to add tag)
 =======  ======  ==========================  ====================================================================================
-no .git          0.0.0                       Version defaults to 0.0 if no ``.git`` folder present
+no .git          0.0.0                       Version defaults to 0.0 (when no tag yet)
 none             0.0.0+hlocal.initial.dirty  No commit yet (but ``git init`` was ran)
 g1               0.0.1+hlocal.g1             Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
 g1               0.0.1+hlocal.g1.dirty       Same as above, only checkout was not clean anymore
