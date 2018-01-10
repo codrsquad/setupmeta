@@ -261,7 +261,7 @@ Advanced
 
     * you can add an exclamation point ``!`` after separator to force the extra part to always be shown (even when checkout is not dirty)
 
-    * characters that can be used as separators are: `` +@#%^;/,`` (space can be used as a demarcation, but will not be rendered in the version per se)
+    * characters that can be used as separators are: `` +@#%^/`` (space can be used as a demarcation, but will not be rendered in the version per se)
 
 * a **dict** with the following keys:
 

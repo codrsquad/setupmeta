@@ -8,7 +8,7 @@ from setupmeta.scm import Git, Version
 
 
 BUMPABLE = 'major minor patch'.split()
-RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^;/,]!?(.*))?$')
+RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$')
 
 
 def has_scm_mark(root, name):
@@ -112,7 +112,7 @@ class VersionBit:
 
 class Strategy:
 
-    def __init__(self, main, extra, separator, branches, **kwargs):
+    def __init__(self, main, extra, separator, branches, hook, **kwargs):
         self.main = main
         self.extra = extra
         if kwargs:
@@ -121,6 +121,7 @@ class Strategy:
         self.extra_bits = self.bits(extra)
         self.separator = separator
         self.branches = branches
+        self.hook = hook
         if self.branches and hasattr(self.branches, 'lstrip'):
             self.branches = self.branches.lstrip('(').rstrip(')')
         self.branches = setupmeta.listify(self.branches, separator=',')
@@ -243,28 +244,34 @@ class Strategy:
             main='{major}.{minor}.{patch}{post}',
             extra='{commitid}',
             separator='+',
-            branches='master'
+            branches='master',
+            hook=None,
         )
 
         if isinstance(given, dict):
             data.update(given)
 
-        elif given == 'changes':
-            data['main'] = '{major}.{minor}.{changes}'
-
-        elif given == 'build-id':
-            data['main'] = '{major}.{minor}.{changes}'
-            data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
-
-        elif given != 'tag' and given is not True:
+        elif given not in ('tag', 'default') and given is not True:
             m = RE_VERSIONING.match(given)
             if m.group(2):
                 data['branches'] = m.group(2)
-            data['main'] = m.group(3)
+
+            main = m.group(3)
+            if main in ('changes', 'build-id'):
+                main = '{major}.{minor}.{changes}'
+                if main == 'build-id':
+                    data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
+
+            if main not in ('tag', 'default'):
+                data['main'] = main
+
             extra = m.group(4)
             if extra:
                 data['separator'] = extra[0]
                 data['extra'] = extra[1:]
+            hook = m.group(7)
+            if hook:
+                data['hook'] = hook
 
         return cls(**data)
 
@@ -348,11 +355,12 @@ class Versioning:
 
         self.scm.apply_tag(commit, next_version)
 
-        hook = setupmeta.project_path('.hooks', 'bump')
-        if not setupmeta.is_executable(hook):
+        if not self.strategy.hook:
             return
 
-        setupmeta.run_program(hook, self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
+        hook = setupmeta.project_path(self.strategy.hook)
+        if setupmeta.is_executable(hook):
+            setupmeta.run_program(hook, 'bump', self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
     def update_sources(self, next_version, commit, vdefs):
         modified = []
