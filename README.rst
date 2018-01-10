@@ -28,7 +28,7 @@ Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look l
 
     setup(
         name='myproject',
-        versioning='tag',               # This would activate tag-based versioning
+        versioning='tag',               # Optional, would activate tag-based versioning
         setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
