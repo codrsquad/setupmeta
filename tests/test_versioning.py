@@ -73,14 +73,6 @@ def test_no_extra():
     check_render(versioning, '1.0.None', c=2, d=True)
 
 
-@patch.dict(os.environ, {'BUILD_ID': '543'})
-def test_preconfigured_strategies():
-    check_strategy_changes(True)
-    check_strategy_changes(False)
-    check_strategy_build_id(True)
-    check_strategy_build_id(False)
-
-
 def extra_version(version):
     if version.dirty:
         return 'extra'
@@ -122,6 +114,14 @@ def test_malformed():
     assert meta.version is None
     assert not versioning.enabled
     assert versioning.problem == "No versioning format specified"
+
+
+@patch.dict(os.environ, {'BUILD_ID': '543'})
+def test_preconfigured_strategies():
+    check_strategy_changes(True)
+    check_strategy_changes(False)
+    check_strategy_build_id(True)
+    check_strategy_build_id(False)
 
 
 def check_strategy_changes(dirty):

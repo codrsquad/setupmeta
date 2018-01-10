@@ -258,11 +258,11 @@ class Strategy:
 
             main = m.group(3)
             if main in ('changes', 'build-id'):
-                main = '{major}.{minor}.{changes}'
                 if main == 'build-id':
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
+                main = '{major}.{minor}.{changes}'
 
-            if main not in ('tag', 'default'):
+            if main not in ('', 'tag', 'default'):
                 data['main'] = main
 
             extra = m.group(4)
