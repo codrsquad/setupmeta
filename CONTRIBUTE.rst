@@ -55,7 +55,7 @@ Run ``tox ; tox -e coverage``, then open ``.tox/test-reports/coverage/index.html
 Refreshing the test scenarios
 =============================
 
-If you've modified the code, and the tests don't pass anymore because you added/removed/something, you can refresh the test scenario replays by:
+If you've modified the code, and the tests don't pass anymore because you added/removed/changed something, you can refresh the test scenario replays by:
 
 * Running ``tox -e refreshscenarios``
 
