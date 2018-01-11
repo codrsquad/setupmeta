@@ -229,7 +229,8 @@ class Strategy:
         bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
         if what not in bumpable:
             msg = "Can't bump '%s', it's out of scope" % what
-            msg += " of main format '%s'" % self.main_bits
+            msg += " of main format '%s'" % self.main
+            msg += " acceptable values: %s" % ', '.join(bumpable)
             setupmeta.abort(msg)
 
         major, minor, rev = current_version.bump_triplet()

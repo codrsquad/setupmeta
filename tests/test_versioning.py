@@ -213,6 +213,7 @@ def check_strategy_changes(dirty):
         assert meta.version == '0.1.3'
 
     with pytest.raises(setupmeta.UsageError):
+        # Can't bump 'patch' with 'changes' format
         versioning.bump('patch')
 
     check_bump(versioning)

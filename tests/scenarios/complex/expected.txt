@@ -54,7 +54,7 @@ running version
 :: version --bump patch
 running version
 'setup.py version --bump patch' exited with code 1:
-error: Can't bump 'patch', it's out of scope of main format '[{major}, '.', {minor}, '.', {changes}]'
+error: Can't bump 'patch', it's out of scope of main format '{major}.{minor}.{changes}' acceptable values: major, minor
 
 :: version --bump minor
 running version
