@@ -22,3 +22,7 @@ long_description: (README.rst           ) 611 chars: direct: A package implement
 :: entrypoints
 running entrypoints
 direct = direct:main
+
+:: version
+running version
+1.0.0

@@ -1,0 +1,7 @@
+pytest
+
+# This one is a dupe (also mentioned in requirements.txt):
+-e git+https://somewhere.com/foo.git#egg=wonka-0.0.0
+
+# This one is new:
+-e git+https://somewhere.com/test.git#egg=mytest-0.1.0

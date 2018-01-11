@@ -17,3 +17,7 @@ long_description: (README.rst  ) 1600 chars: single: A package implemented by a 
 
 :: entrypoints
 running entrypoints
+
+:: version
+running version
+0.1.0

@@ -2,6 +2,12 @@
 History
 =======
 
+1.2.6 (2017-01-10)
+------------------
+
+* Parse correctly complex requirements.txt files
+
+
 1.2.5 (2017-01-10)
 ------------------
 

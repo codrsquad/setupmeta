@@ -25,3 +25,7 @@ long_description: (README.rst                     ) 616 chars: hierarchical: A h
 running entrypoints
 hierarchical = hierarchical:main
 subm = hierarchical.submodule:main
+
+:: version
+running version
+1.0.0

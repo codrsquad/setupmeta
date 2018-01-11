@@ -10,7 +10,7 @@ import sys
 
 import setuptools
 
-from setupmeta import listify, MetaDefs, project_path, short, trace
+from setupmeta import listify, MetaDefs, project_path, relative_path, short, trace
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -285,15 +285,53 @@ class SimpleModule(Settings):
 class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
-    def __init__(self, reqs, source):
-        self.reqs = reqs
-        self.source = source
+    def __init__(self, path):
+        self.source = relative_path(path)
+        self.reqs = load_list(path)
+        self.links = None
+
+        if any(self.is_complex_requirement(line) for line in self.reqs):
+            reqs, links = self.parse_requirements(path)
+            if reqs:
+                self.reqs = reqs
+                self.links = links
+
+    @staticmethod
+    def is_complex_requirement(line):
+        """Allows to save importing pip for very simple requirements.txt files"""
+        if line:
+            return line.startswith('-') or ':' in line
+
+    @staticmethod
+    def parse_requirements(path):
+        """Parse a requirements file with pip"""
+        try:
+            # Note: we can't assume pip is installed
+            from pip.req import parse_requirements
+            from pip.download import PipSession
+
+            reqs = []
+            links = []
+            session = PipSession()
+            for ir in parse_requirements(path, session=session):
+                if ir.link:
+                    if ir.name:
+                        reqs.append(ir.name)
+                    links.append(ir.link.url)
+                else:
+                    reqs.append(str(ir.req))
+
+            return reqs, links
+
+        except ImportError:     # pragma: no cover
+            return None, None   # pragma: no cover
 
 
 class Requirements:
     """ Allows to auto-fill requires from requirements.txt """
 
     def __init__(self):
+        self.links_source = None
         self.install = self.get_requirements('requirements.txt', 'pinned.txt')
         self.test = self.get_requirements(
             'tests/requirements.txt',
@@ -301,15 +339,26 @@ class Requirements:
             'dev-requirements.txt',
             'test-requirements.txt'
         )
+        self.links = []
+        self.add_links(self.install)
+        self.add_links(self.test)
+
+    def add_links(self, entries):
+        if entries and entries.links:
+            if not self.links_source:
+                self.links_source = entries.source
+            for link in entries.links:
+                if link not in self.links:
+                    self.links.append(link)
 
     @staticmethod
     def get_requirements(*relative_paths):
         """ Read old-school requirements.txt type file """
-        contents, path = find_contents(relative_paths, loader=load_list)
-        if contents:
-            trace("found requirements: %s" % path)
-            return RequirementsEntry(contents, path)
-        return None
+        for path in relative_paths:
+            path = project_path(path)
+            if os.path.isfile(path):
+                trace("found requirements: %s" % path)
+                return RequirementsEntry(path)
 
 
 class SetupMeta(Settings):
@@ -382,6 +431,8 @@ class SetupMeta(Settings):
         self.requirements = Requirements()
         self.auto_fill_requires('install', 'install_requires')
         self.auto_fill_requires('test', 'tests_require')
+        if self.requirements.links:
+            self.auto_fill('dependency_links', self.requirements.links, self.requirements.links_source)
 
         self.auto_fill_classifiers()
         self.auto_fill_entry_points()

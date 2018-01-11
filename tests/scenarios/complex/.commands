@@ -1,4 +1,3 @@
-version
 version --bump patch
 version --bump minor
 version --bump major
