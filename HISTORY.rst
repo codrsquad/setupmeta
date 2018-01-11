@@ -7,21 +7,9 @@ History
 
 * Don't consider lack of version tag as dirty checkout (it's confusing otherwise)
 
-
-1.2.6 (2017-01-10)
-------------------
-
 * Parse correctly complex requirements.txt files
 
-
-1.2.5 (2017-01-10)
-------------------
-
 * Support setup.py in a subfolder of a git checkout
-
-
-1.2.4 (2017-01-09)
-------------------
 
 * Renamed command ``bump`` to ``version``, optional bump hook in ``./hooks/bump``
 

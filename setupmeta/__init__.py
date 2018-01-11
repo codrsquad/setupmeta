@@ -35,10 +35,12 @@ def to_int(text, default=None):
         return default
 
 
-def short(text, c=64):
+def short(text, c=None):
     """ Short representation of 'text' """
     if not text:
         return "%s" % text
+    if c is None:
+        c = Console.columns()
     result = stringify(text).strip()
     result = result.replace(USER_HOME, '~').replace('\n', ' ')
     if c and len(result) > c:
@@ -322,3 +324,18 @@ class MetaDefs:
             setattr(dist.metadata, key, value)
         elif hasattr(dist, key):
             setattr(dist, key, value)
+
+
+class Console:
+
+    _columns = None
+
+    @classmethod
+    def columns(cls, default=160):
+        if cls._columns is None and sys.stdout.isatty() and 'TERM' in os.environ:
+            cols = os.popen('tput cols', 'r').read()    # nosec
+            cols = decode(cols)
+            cls._columns = to_int(cols, default=None)
+        if cls._columns is None:
+            cls._columns = default
+        return cls._columns

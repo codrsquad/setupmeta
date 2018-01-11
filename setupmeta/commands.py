@@ -23,21 +23,6 @@ def MetaCommand(cls):
     return setupmeta.MetaDefs.register_command(cls)
 
 
-class Console:
-
-    _columns = None
-
-    @classmethod
-    def columns(cls, default=160):
-        if cls._columns is None and sys.stdout.isatty() and 'TERM' in os.environ:
-            cols = os.popen('tput cols', 'r').read()    # nosec
-            cols = setupmeta.decode(cols)
-            cls._columns = setupmeta.to_int(cols, default=None)
-        if cls._columns is None:
-            cls._columns = default
-        return cls._columns
-
-
 @MetaCommand
 class VersionCommand(setuptools.Command):
     """show/bump version managed by setupmeta"""
@@ -75,7 +60,7 @@ class ExplainCommand(setuptools.Command):
 
     def initialize_options(self):
         self.recommend = False
-        self.chars = Console.columns()
+        self.chars = setupmeta.Console.columns()
 
     def check_recommend(self, key, hint=None):
         if key not in self.setupmeta.definitions:
@@ -83,7 +68,7 @@ class ExplainCommand(setuptools.Command):
             self.setupmeta.auto_fill(key, "- Consider specifying '%s'%s" % (key, hint), "missing")
 
     def run(self):
-        self.chars = setupmeta.to_int(self.chars, default=Console.columns())
+        self.chars = setupmeta.to_int(self.chars, default=setupmeta.Console.columns())
 
         definitions = self.setupmeta.definitions
         self.check_recommend('name')

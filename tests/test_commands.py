@@ -8,7 +8,6 @@ from mock import patch
 from six import StringIO
 
 import setupmeta
-from setupmeta.commands import Console
 from . import conftest
 
 
@@ -72,8 +71,8 @@ def test_version():
 @patch('os.popen', return_value=StringIO('60'))
 @patch.dict(os.environ, {'TERM': 'testing'})
 def test_console(*_):
-    Console._columns = None
-    assert Console.columns() == 60
+    setupmeta.Console._columns = None
+    assert setupmeta.Console.columns() == 60
 
 
 def touch(folder, isdir, *paths):
