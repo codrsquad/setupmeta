@@ -259,24 +259,28 @@ class Strategy:
         if isinstance(given, dict):
             data.update(given)
 
-        elif given not in ('tag', 'default') and given is not True:
+        elif given not in ('tag', 'default', 'post') and given is not True:
             m = RE_VERSIONING.match(given)
             if m.group(2):
                 data['branches'] = m.group(2)
 
             main = m.group(3)
-            if main in ('changes', 'build-id'):
+            if main in ('changes', 'distance', 'build-id'):
                 if main == 'build-id':
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
                 main = '{major}.{minor}.{changes}'
 
-            if main not in ('', 'tag', 'default'):
+            if main not in ('', 'tag', 'default', 'post'):
                 data['main'] = main
 
             extra = m.group(4)
             if extra:
                 data['separator'] = extra[0]
-                data['extra'] = extra[1:]
+                extra = extra[1:]
+                if extra == 'build-id':
+                    data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
+                else:
+                    data['extra'] = extra
             hook = m.group(7)
             if hook:
                 data['hook'] = hook

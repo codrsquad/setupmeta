@@ -112,7 +112,6 @@ class Git(Scm):
                 commitid = setupmeta.strip_dash(m.group(3))
 
         if not text or not main:
-            dirty = True
             commitid = self.get_output('rev-parse', '--short', 'HEAD')
             commitid = 'g%s' % commitid if commitid else ''
             changes = self.get_output('rev-list', 'HEAD')
@@ -146,7 +145,7 @@ class Version:
     major = 0           # type: int # Major part of version
     minor = 0           # type: int # Minor part of version
     patch = 0           # type: int # Patch part of version
-    changes = 0         # type: int # Number of changes since last version tag
+    changes = 0         # type: int # Number of changes since last version tag (also called 'distance' sometimes)
     commitid = None     # type: str # Commit id
     dirty = ''          # type: str # Dirty marker
 
@@ -192,3 +191,8 @@ class Version:
         if self.changes:
             return '.post%s' % self.changes
         return ''
+
+    @property
+    def distance(self):
+        """Synonym for 'changes'"""
+        return self.changes

@@ -134,6 +134,57 @@ def test_malformed():
     assert versioning.problem == "No versioning format specified"
 
 
+def test_distance_marker():
+    meta = new_meta('{major}.{minor}.{distance}', scm=conftest.MockGit())
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.problem
+    assert not versioning.strategy.problem
+    assert meta.version == '0.1.3+g123'
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+{commitid}"
+
+
+def test_preconfigured_build_id():
+    """Verify that short notations expand to the expected format"""
+    check_preconfigured(
+        "tag(master):{major}.{minor}.{patch}{post}+{commitid}",
+        "tag",
+        "post",
+        "default",
+    )
+
+    check_preconfigured(
+        "tag(master):{major}.{minor}.{changes}+{commitid}",
+        "changes",
+        "distance",
+    )
+
+    check_preconfigured(
+        "tag(master):{major}.{minor}.{changes}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
+        "build-id",
+        "changes+build-id",
+        "distance+build-id",
+    )
+
+    check_preconfigured(
+        "tag(master):{major}.{minor}.{patch}{post}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
+        "+build-id",
+        "tag+build-id",
+        "default+build-id",
+        "post+build-id",
+    )
+
+
+def check_preconfigured(expected, *shorts):
+    for short in shorts:
+        meta = new_meta(short, scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert versioning.enabled
+        assert not versioning.problem
+        assert not versioning.strategy.problem
+        assert str(versioning.strategy) == expected
+
+
 @patch.dict(os.environ, {'BUILD_ID': '543'})
 def test_preconfigured_strategies():
     check_strategy_changes(True)

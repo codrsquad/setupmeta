@@ -116,9 +116,10 @@ Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =====================================================================================
 no .git          0.0.0             Version defaults to 0.0.0 (when no tag yet)
 none             0.0.0+initial     No commit yet (but ``git init`` was ran)
-g1               0.0.0.post1+g1    Initial commit, is considered dirty (because no tag)
-g2               0.0.0.post2+g2
-g3               0.0.0.post3+g3
+g1               0.0.0.post1       Initial commit
+g1               0.0.0.post1+g1    Same as above, only checkout was not clean anymore
+g2               0.0.0.post2
+g3               0.0.0.post3
 g4       v0.1.0  0.1.0             ``version --bump minor --commit``
 g5               0.1.0.post1       (1 commit since tag)
 g6               0.1.0.post2
@@ -128,7 +129,7 @@ g9       v1.0.0  1.0.0             ``version --bump major --commit``
 g10              1.0.0.post1
 =======  ======  ================  =====================================================================================
 
-* Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
+* Without any tag, version defaults to ``0.0.0``
 
 * First tag here is ``v0.1.0``, ``git describe`` will yield ``v0.1.0`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag as-is)
 
@@ -170,9 +171,10 @@ Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =========================================================================================================
 no .git          0.0.0             Version defaults to 0.0 (when no tag yet)
 none             0.0.0+initial     No commit yet (but ``git init`` was ran)
-g1               0.0.1+g1          Initial commit, 0.0.1 means default v0.0 + 1 change, and is considered dirty (because no tag)
-g2               0.0.2+g2
-g3               0.0.3+g3
+g1               0.0.1             Initial commit, 0.0.1 means default v0.0 + 1 change
+g1               0.0.1.g1          Same as above, only checkout was not clean anymore
+g2               0.0.2
+g3               0.0.3
 g4       v0.1    0.1.0             ``setup.py version --bump minor --commit``
 g5               0.1.1             (1 commit since tag)
 g6               0.1.2
@@ -183,7 +185,7 @@ g10      v1.0    1.0.0             ``setup.py version --bump major --commit``
 g11              1.0.1
 =======  ======  ================  =========================================================================================================
 
-* Without any tag, version defaults to ``0.0.0`` and is always considered "dirty"
+* Without any tag, version defaults to ``0.0.*``
 
 * First tag here is ``v0.1``, ``git describe`` will yield ``v0.1`` (no changes since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 changes)
 

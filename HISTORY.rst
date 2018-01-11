@@ -2,6 +2,12 @@
 History
 =======
 
+1.2.7 (2017-01-11)
+------------------
+
+* Don't consider lack of version tag as dirty checkout (it's confusing otherwise)
+
+
 1.2.6 (2017-01-10)
 ------------------
 
