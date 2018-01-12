@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 
 import pytest
 from mock import patch
@@ -37,6 +39,32 @@ def test_project_scm():
     assert setupmeta.versioning.find_scm_root(conftest.resouce('scenarios', 'complex', 'src', 'complex'), 'git') == conftest.PROJECT_DIR
 
 
+def test_snapshot():
+    temp = tempfile.mkdtemp()
+    try:
+        with open(os.path.join(temp, setupmeta.VERSION_FILE), 'w') as fh:
+            fh.write('v1.2.3-4-g1234567')
+
+        setup_py = os.path.join(temp, 'setup.py')
+        meta = SetupMeta(dict(_setup_py_path=setup_py, versioning='tag', setup_requires='setupmeta'))
+        versioning = meta.versioning
+        assert meta.version == '1.2.3.post4'
+        assert not versioning.in_subfolder
+
+        assert versioning.scm.program is None
+        assert str(versioning.scm).startswith('None ')
+        assert not versioning.scm.is_dirty()
+        assert versioning.scm.get_branch() == 'HEAD'
+
+        # Trigger artificial rewriting of version file
+        versioning.in_subfolder = True
+        versioning.auto_fill_version()
+
+    finally:
+        shutil.rmtree(temp)
+
+
+@patch.dict(os.environ, {'SETUPMETA_SUBFOLDER_DISABLED': '1'})
 def test_find_scm_in_parent():
     meta = new_meta('tag')
     versioning = meta.versioning
@@ -51,7 +79,7 @@ def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
     assert v.strategy.rendered(version) == expected
 
 
-@patch('setupmeta.versioning.find_scm_root', return_value=None)
+@patch('setupmeta.versioning.project_scm', return_value=None)
 def test_no_scm(_):
     fmt = "tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
     meta = new_meta(fmt)

@@ -1,13 +1,15 @@
+import os
 import re
 from distutils.version import LooseVersion
 
 import setupmeta
 
 
+RE_GIT_DESCRIBE = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?$', re.IGNORECASE)    # Output expected from git describe
+
+
 class Scm:
-    """
-    API used by setupmeta for versioning using SCM tags
-    """
+    """API used by setupmeta for versioning using SCM tags"""
 
     program = None      # type: str # Program name (like 'git' or 'hg')
 
@@ -17,6 +19,9 @@ class Scm:
         """
         self.root = root
 
+    def __repr__(self):
+        return '%s %s' % (self.program, self.root)
+
     def get_branch(self):
         """
         :return str: Current branch name
@@ -25,7 +30,7 @@ class Scm:
 
     def get_version(self):
         """
-        :return str: Current version as computed from latest SCM version tag
+        :return Version: Current version as computed from latest SCM version tag
         """
         pass
 
@@ -76,15 +81,47 @@ class Scm:
         return self.get_output(*args, capture=capture, fatal=fatal, dryrun=not commit, **kwargs)
 
 
+class Snapshot(Scm):
+    """
+    Implementation for cases where project lives in a subfolder of a git checkout
+
+    If one runs: python -m pip wheel ...
+    pip copies current folder to a temp location, and invokes setup.py there, any .git info is lost in that case
+    This implementation allows to still be able to properly determine version even in that case
+    """
+
+    program = None
+
+    def is_dirty(self):
+        """Assume snapshots are not dirty..."""
+        return False
+
+    def get_branch(self):
+        """Consider branch to be always HEAD for snapshots"""
+        return 'HEAD'
+
+    def get_version(self):
+        path = os.path.join(self.root, setupmeta.VERSION_FILE)
+        with open(path) as fh:
+            return Git.parsed_version(fh.readline(), False)
+
+
 class Git(Scm):
-    """
-    Implementation for git
-    """
+    """Implementation for git"""
 
     program = 'git'
 
-    # Output expected from git describe
-    re_describe = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?$', re.IGNORECASE)
+    @staticmethod
+    def parsed_version(text, dirty):
+        if text:
+            m = RE_GIT_DESCRIBE.match(text)
+            if m:
+                main = m.group(1)
+                changes = setupmeta.strip_dash(m.group(2))
+                changes = setupmeta.to_int(changes, default=0)
+                commitid = setupmeta.strip_dash(m.group(3))
+                return Version(main, changes, commitid, dirty, text)
+        return None
 
     def is_dirty(self):
         """
@@ -99,25 +136,18 @@ class Git(Scm):
 
     def get_version(self):
         main = None
-        changes = None
-        commitid = None
         dirty = self.is_dirty()
         text = self.get_output('describe', '--tags', '--long', '--match', 'v*.*')
-        if text:
-            m = self.re_describe.match(text)
-            if m:
-                main = m.group(1)
-                changes = setupmeta.strip_dash(m.group(2))
-                changes = setupmeta.to_int(changes, default=0)
-                commitid = setupmeta.strip_dash(m.group(3))
+        version = self.parsed_version(text, dirty)
+        if version:
+            return version
 
-        if not text or not main:
-            commitid = self.get_output('rev-parse', '--short', 'HEAD')
-            commitid = 'g%s' % commitid if commitid else ''
-            changes = self.get_output('rev-list', 'HEAD')
-            changes = changes.count('\n') + 1 if changes else 0
-
-        return Version(main, changes, commitid, dirty, text)
+        # Try harder
+        commitid = self.get_output('rev-parse', '--short', 'HEAD')
+        commitid = 'g%s' % commitid if commitid else ''
+        changes = self.get_output('rev-list', 'HEAD')
+        changes = changes.count('\n') + 1 if changes else 0
+        return Version(main, changes, commitid, dirty)
 
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:

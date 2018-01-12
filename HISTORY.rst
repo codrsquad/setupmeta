@@ -2,6 +2,12 @@
 History
 =======
 
+1.3.0 (2017-01-11)
+------------------
+
+* Better support cases where project is in a subfolder of a git checkout
+
+
 1.2.7 (2017-01-11)
 ------------------
 

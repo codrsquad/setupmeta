@@ -10,10 +10,10 @@ import sys
 
 import setuptools
 
+import setupmeta.versioning
 from setupmeta import listify, MetaDefs, project_path, relative_path, short, trace
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
-from setupmeta.versioning import project_scm, Versioning
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -418,8 +418,8 @@ class SetupMeta(Settings):
                     SimpleModule('src', package, '__init__.py'),
                 )
 
-        scm = scm or project_scm(MetaDefs.project_dir)
-        self.versioning = Versioning(self, scm)
+        scm = scm or setupmeta.versioning.project_scm(MetaDefs.project_dir)
+        self.versioning = setupmeta.versioning.Versioning(self, scm)
         self.versioning.auto_fill_version()
 
         self.fill_urls()

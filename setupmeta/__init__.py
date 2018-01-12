@@ -15,6 +15,7 @@ import setuptools
 
 USER_HOME = os.path.expanduser('~')         # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get('SETUPMETA_DEBUG')
+VERSION_FILE = '.setupmeta.version'         # File used to work with projects that are in a subfolder of a git checkout
 
 
 def abort(msg):

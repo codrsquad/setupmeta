@@ -4,7 +4,7 @@ import re
 import warnings
 
 import setupmeta
-from setupmeta.scm import Git, Version
+from setupmeta.scm import Git, Snapshot, Version
 
 
 BUMPABLE = 'major minor patch'.split()
@@ -30,6 +30,9 @@ def project_scm(root):
     scm_root = find_scm_root(os.path.abspath(root), 'git')
     if scm_root:
         return Git(scm_root)
+    snapshot = os.path.join(root, setupmeta.VERSION_FILE)
+    if os.path.isfile(snapshot):
+        return Snapshot(root)
     setupmeta.trace("could not determine SCM for '%s'" % root)
     return None
 
@@ -300,6 +303,7 @@ class Versioning:
         self.strategy = Strategy.from_meta(given)
         self.enabled = bool(given and self.strategy and not self.strategy.problem)
         self.scm = scm
+        self.in_subfolder = scm and scm.root != setupmeta.MetaDefs.project_dir and not os.environ.get('SETUPMETA_SUBFOLDER_DISABLED')
         self.problem = None
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
@@ -335,6 +339,11 @@ class Versioning:
             return
 
         gv = self.scm.get_version()
+        if self.in_subfolder:
+            path = setupmeta.project_path(setupmeta.VERSION_FILE)
+            with open(path, 'w') as fh:
+                fh.write("%s" % gv)
+
         rendered = self.strategy.rendered(gv)
         if cv and rendered and not rendered.startswith(cv):
             source = vdef.sources[0].source
