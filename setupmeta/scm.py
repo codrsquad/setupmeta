@@ -115,6 +115,7 @@ class Git(Scm):
     """Implementation for git"""
 
     program = 'git'
+    _has_remote = None
 
     @staticmethod
     def parsed_version(text, dirty=None):
@@ -156,19 +157,26 @@ class Git(Scm):
         changes = changes.count('\n') + 1 if changes else 0
         return Version(main, changes, commitid, dirty)
 
+    def has_remote(self):
+        if self._has_remote is None:
+            self._has_remote = bool(self.get_output('config', '--get', 'remote.origin.url'))
+        return self._has_remote
+
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
             return
         relative_paths = sorted(set(relative_paths))
         self.run(commit, 'add', *relative_paths)
         self.run(commit, 'commit', '-m', "Version %s" % next_version)
-        self.run(commit, 'push', 'origin')
+        if self.has_remote():
+            self.run(commit, 'push', 'origin')
 
     def apply_tag(self, commit, next_version):
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
         self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
-        self.run(commit, 'push', '--tags', 'origin')
+        if self.has_remote():
+            self.run(commit, 'push', '--tags', 'origin')
 
 
 class Version:

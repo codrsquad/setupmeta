@@ -2,7 +2,7 @@
 History
 =======
 
-1.3.1 (2017-01-11)
+1.3.2 (2017-01-12)
 ------------------
 
 * Better support cases where project is in a subfolder of a git checkout

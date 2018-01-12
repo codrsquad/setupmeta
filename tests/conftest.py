@@ -144,5 +144,7 @@ class MockGit(Git):
             return self.commitid
         if cmd == 'rev-list':
             return self.commitid.split()
+        if cmd == 'config':
+            return args[1]
         assert kwargs.get('dryrun') is True
         return Git.get_output(self, cmd, *args, **kwargs)
