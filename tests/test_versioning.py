@@ -52,7 +52,7 @@ def test_snapshot():
         assert not versioning.generate_version_file
 
         assert versioning.scm.program is None
-        assert str(versioning.scm).startswith('None ')
+        assert str(versioning.scm).startswith('snapshot ')
         assert not versioning.scm.is_dirty()
         assert versioning.scm.get_branch() == 'HEAD'
 
@@ -64,7 +64,7 @@ def test_snapshot():
         shutil.rmtree(temp)
 
 
-@patch.dict(os.environ, {'GIT_DESCRIBE': '1'})
+@patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: '1'})
 def test_find_scm_in_parent():
     meta = new_meta('tag')
     versioning = meta.versioning
@@ -109,7 +109,7 @@ def test_no_scm(_):
         versioning.bump('patch')
 
 
-@patch.dict(os.environ, {'GIT_DESCRIBE': 'v1.2.3-4-g1234567-dirty'})
+@patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: 'v1.2.3-4-g1234567-dirty'})
 @patch('setupmeta.versioning.find_scm_root', return_value=None)
 def test_version_from_env_var(*_):
     meta = new_meta('tag')

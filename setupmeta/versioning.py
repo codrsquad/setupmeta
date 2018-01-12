@@ -30,7 +30,7 @@ def project_scm(root):
     scm_root = find_scm_root(os.path.abspath(root), 'git')
     if scm_root:
         return Git(scm_root)
-    if os.environ.get('GIT_DESCRIBE'):
+    if os.environ.get(setupmeta.SCM_DESCRIBE):
         return Snapshot(root)
     snapshot = os.path.join(root, setupmeta.VERSION_FILE)
     if os.path.isfile(snapshot):
@@ -305,7 +305,7 @@ class Versioning:
         self.strategy = Strategy.from_meta(given)
         self.enabled = bool(given and self.strategy and not self.strategy.problem)
         self.scm = scm
-        self.generate_version_file = scm and scm.root != setupmeta.MetaDefs.project_dir and not os.environ.get('GIT_DESCRIBE')
+        self.generate_version_file = scm and scm.root != setupmeta.MetaDefs.project_dir and not os.environ.get(setupmeta.SCM_DESCRIBE)
         self.problem = None
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
@@ -352,7 +352,7 @@ class Versioning:
             expected = rendered[:len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
             warnings.warn(msg)
-        self.meta.auto_fill('version', rendered, 'git', override=True)
+        self.meta.auto_fill('version', rendered, self.scm.name, override=True)
 
     def bump(self, what, commit=False, simulate_branch=None):
         if self.problem:
@@ -365,7 +365,9 @@ class Versioning:
         gv = self.scm.get_version()
         if gv and gv.dirty:
             if commit:
-                setupmeta.abort("You have pending git changes, can't bump")
+                setupmeta.abort("You have pending changes, can't bump")
+            else:
+                print("Note: you have pending changes, commit (or stash) them before using --commit")
             print("Commit your pending changes before running bump --commit")
 
         next_version = self.strategy.bumped(what, gv)

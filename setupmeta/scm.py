@@ -20,7 +20,11 @@ class Scm:
         self.root = root
 
     def __repr__(self):
-        return '%s %s' % (self.program, self.root)
+        return '%s %s' % (self.name, self.root)
+
+    @property
+    def name(self):
+        return self.__class__.__name__.lower()
 
     def get_branch(self):
         """
@@ -93,7 +97,7 @@ class Snapshot(Scm):
     program = None
 
     def is_dirty(self):
-        v = os.environ.get('GIT_DESCRIBE')
+        v = os.environ.get(setupmeta.SCM_DESCRIBE)
         if v and 'dirty' in v:
             return True
         return False
@@ -103,7 +107,7 @@ class Snapshot(Scm):
         return 'HEAD'
 
     def get_version(self):
-        v = os.environ.get('GIT_DESCRIBE')
+        v = os.environ.get(setupmeta.SCM_DESCRIBE)
         if v:
             return Git.parsed_version(v)
         path = os.path.join(self.root, setupmeta.VERSION_FILE)
