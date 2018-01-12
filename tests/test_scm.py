@@ -36,6 +36,8 @@ def test_git():
         git.apply_tag(False, '2.0')
         assert "Would run: git add foo" in out
         assert 'Would run: git commit -m "Version 2.0"' in out
-        assert 'Would run: git push origin' not in out
         assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
+        assert "Not running 'git push --tags origin' as you don't have an origin" in out
+
+        assert 'Would run: git push origin' not in out
         assert 'Would run: git push --tags origin' not in out
