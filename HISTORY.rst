@@ -9,10 +9,6 @@ History
 
 * Better support cases where project is in a subfolder of a git checkout
 
-
-1.2.7 (2017-01-11)
-------------------
-
 * Don't consider lack of version tag as dirty checkout (it's confusing otherwise)
 
 * Parse correctly complex requirements.txt files
@@ -21,57 +17,29 @@ History
 
 * Renamed command ``bump`` to ``version``, optional bump hook in ``./hooks/bump``
 
-
-1.1.2 (2017-01-08)
-------------------
-
 * Added commands: 'twine', 'cleanall'
 
 * Added ``explain --recommend``
-
-
-1.0.8 (2017-01-05)
-------------------
 
 * Added pre-defined versioning strategy ``build-id``
 
 * Test coverage at 100%, added debug info via env var ``SETUPMETA_DEBUG=1``
 
 
-0.8.1 (2017-12-31)
+0.8.0 (2017-12-31)
 ------------------
 
 * Versioning is more easily customizable, using post-release marker by default (instead of beta)
 
-
-0.7.11 (2017-12-27)
--------------------
-
 * Better defined versioning strategies
-
-
-0.6.3 (2017-12-21)
-------------------
 
 * Fully using setupmeta's own versioning scheme (no more "backup" version stated in ``__init__.py``)
 
 * Versioning compatible with PEP-440
 
-
-0.5.2 (2017-12-20)
-------------------
-
 * Using ``versioning`` on setupmeta, which can now bump itself
 
-
-0.4.8 (2017-12-18)
-------------------
-
 * Added support for ``versioning`` key in setup.py, setupmeta can now compute version from git tags, and bump that version
-
-
-0.3.1 (2017-12-15)
-------------------
 
 * Removed support for Pipfile
 
