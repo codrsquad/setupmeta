@@ -30,6 +30,8 @@ def project_scm(root):
     scm_root = find_scm_root(os.path.abspath(root), 'git')
     if scm_root:
         return Git(scm_root)
+    if os.environ.get('GIT_DESCRIBE'):
+        return Snapshot(root)
     snapshot = os.path.join(root, setupmeta.VERSION_FILE)
     if os.path.isfile(snapshot):
         return Snapshot(root)
@@ -303,7 +305,7 @@ class Versioning:
         self.strategy = Strategy.from_meta(given)
         self.enabled = bool(given and self.strategy and not self.strategy.problem)
         self.scm = scm
-        self.in_subfolder = scm and scm.root != setupmeta.MetaDefs.project_dir and not os.environ.get('SETUPMETA_SUBFOLDER_DISABLED')
+        self.generate_version_file = scm and scm.root != setupmeta.MetaDefs.project_dir and not os.environ.get('GIT_DESCRIBE')
         self.problem = None
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
@@ -339,7 +341,7 @@ class Versioning:
             return
 
         gv = self.scm.get_version()
-        if self.in_subfolder:
+        if self.generate_version_file:
             path = setupmeta.project_path(setupmeta.VERSION_FILE)
             with open(path, 'w') as fh:
                 fh.write("%s" % gv)

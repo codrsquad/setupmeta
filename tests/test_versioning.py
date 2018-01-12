@@ -49,7 +49,7 @@ def test_snapshot():
         meta = SetupMeta(dict(_setup_py_path=setup_py, versioning='tag', setup_requires='setupmeta'))
         versioning = meta.versioning
         assert meta.version == '1.2.3.post4'
-        assert not versioning.in_subfolder
+        assert not versioning.generate_version_file
 
         assert versioning.scm.program is None
         assert str(versioning.scm).startswith('None ')
@@ -57,14 +57,14 @@ def test_snapshot():
         assert versioning.scm.get_branch() == 'HEAD'
 
         # Trigger artificial rewriting of version file
-        versioning.in_subfolder = True
+        versioning.generate_version_file = True
         versioning.auto_fill_version()
 
     finally:
         shutil.rmtree(temp)
 
 
-@patch.dict(os.environ, {'SETUPMETA_SUBFOLDER_DISABLED': '1'})
+@patch.dict(os.environ, {'GIT_DESCRIBE': '1'})
 def test_find_scm_in_parent():
     meta = new_meta('tag')
     versioning = meta.versioning
@@ -107,6 +107,18 @@ def test_no_scm(_):
 
     with pytest.raises(setupmeta.UsageError):
         versioning.bump('patch')
+
+
+@patch.dict(os.environ, {'GIT_DESCRIBE': 'v1.2.3-4-g1234567-dirty'})
+@patch('setupmeta.versioning.find_scm_root', return_value=None)
+def test_version_from_env_var(*_):
+    meta = new_meta('tag')
+    versioning = meta.versioning
+    assert meta.version == '1.2.3.post4+g1234567'
+    assert versioning.enabled
+    assert not versioning.generate_version_file
+    assert not versioning.problem
+    assert versioning.scm.is_dirty()
 
 
 def test_no_extra():

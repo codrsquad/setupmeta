@@ -5,7 +5,7 @@ from distutils.version import LooseVersion
 import setupmeta
 
 
-RE_GIT_DESCRIBE = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?$', re.IGNORECASE)    # Output expected from git describe
+RE_GIT_DESCRIBE = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$', re.IGNORECASE)    # Output expected from git describe
 
 
 class Scm:
@@ -93,7 +93,9 @@ class Snapshot(Scm):
     program = None
 
     def is_dirty(self):
-        """Assume snapshots are not dirty..."""
+        v = os.environ.get('GIT_DESCRIBE')
+        if v and 'dirty' in v:
+            return True
         return False
 
     def get_branch(self):
@@ -101,6 +103,9 @@ class Snapshot(Scm):
         return 'HEAD'
 
     def get_version(self):
+        v = os.environ.get('GIT_DESCRIBE')
+        if v:
+            return Git.parsed_version(v)
         path = os.path.join(self.root, setupmeta.VERSION_FILE)
         with open(path) as fh:
             return Git.parsed_version(fh.readline(), False)
@@ -112,7 +117,7 @@ class Git(Scm):
     program = 'git'
 
     @staticmethod
-    def parsed_version(text, dirty):
+    def parsed_version(text, dirty=None):
         if text:
             m = RE_GIT_DESCRIBE.match(text)
             if m:
@@ -120,6 +125,8 @@ class Git(Scm):
                 changes = setupmeta.strip_dash(m.group(2))
                 changes = setupmeta.to_int(changes, default=0)
                 commitid = setupmeta.strip_dash(m.group(3))
+                if dirty is None:
+                    dirty = m.group(4) == '-dirty'
                 return Version(main, changes, commitid, dirty, text)
         return None
 
