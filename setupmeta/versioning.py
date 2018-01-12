@@ -366,9 +366,7 @@ class Versioning:
         if gv and gv.dirty:
             if commit:
                 setupmeta.abort("You have pending changes, can't bump")
-            else:
-                print("Note: you have pending changes, commit (or stash) them before using --commit")
-            print("Commit your pending changes before running bump --commit")
+            print("Note: you have pending changes, commit (or stash) them before using --commit")
 
         next_version = self.strategy.bumped(what, gv)
 
