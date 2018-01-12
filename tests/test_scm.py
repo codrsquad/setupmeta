@@ -3,7 +3,7 @@ from . import conftest
 
 
 def test_scm():
-    scm = setupmeta.scm.Scm(conftest.resouce())
+    scm = setupmeta.scm.Scm(conftest.TESTS)
     assert scm.get_branch() is None
     assert scm.get_version() is None
     assert scm.commit_files(False, None, None) is None
@@ -20,6 +20,22 @@ def test_git():
         assert not out.to_string()
 
         git.commit_files(False, ['foo'], '2.0')
-        assert "Would run" in out
-        assert "git add foo" in out
-        assert 'git commit -m "Version 2.0"' in out
+        git.apply_tag(False, '2.0')
+        assert "Would run: git add foo" in out
+        assert 'Would run: git commit -m "Version 2.0"' in out
+        assert 'Would run: git push origin' in out
+        assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
+        assert 'Would run: git push --tags origin' in out
+
+    git._has_remote = ''
+    with conftest.capture_output() as out:
+        git.commit_files(False, [], '2.0')
+        assert not out.to_string()
+
+        git.commit_files(False, ['foo'], '2.0')
+        git.apply_tag(False, '2.0')
+        assert "Would run: git add foo" in out
+        assert 'Would run: git commit -m "Version 2.0"' in out
+        assert 'Would run: git push origin' not in out
+        assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
+        assert 'Would run: git push --tags origin' not in out

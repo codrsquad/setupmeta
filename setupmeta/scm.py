@@ -174,6 +174,8 @@ class Git(Scm):
         self.run(commit, 'commit', '-m', "Version %s" % next_version)
         if self.has_remote():
             self.run(commit, 'push', 'origin')
+        else:
+            print("Not running 'git push origin' as you don't have an origin")
 
     def apply_tag(self, commit, next_version):
         bump_msg = "Version %s" % next_version
@@ -181,6 +183,8 @@ class Git(Scm):
         self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
         if self.has_remote():
             self.run(commit, 'push', '--tags', 'origin')
+        else:
+            print("Not running 'git push --tags origin' as you don't have an origin")
 
 
 class Version:

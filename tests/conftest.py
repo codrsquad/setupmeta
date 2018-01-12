@@ -131,7 +131,7 @@ class MockGit(Git):
         self.describe = describe
         self.branch = branch
         self.commitid = commitid
-        Git.__init__(self, resouce())
+        Git.__init__(self, TESTS)
 
     def get_output(self, cmd, *args, **kwargs):
         if cmd == 'diff':

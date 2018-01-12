@@ -2,7 +2,7 @@
 History
 =======
 
-1.3.4 (2017-01-12)
+1.3.5 (2017-01-12)
 ------------------
 
 * Env var ``SCM_DESCRIBE`` used if available and no SCM checkout folder (like ``.git``) detected
