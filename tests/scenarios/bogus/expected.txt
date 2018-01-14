@@ -1,15 +1,16 @@
 :: explain -c180 -r
 running explain
-          author: (missing    ) - Consider specifying 'author'
-     classifiers: (missing    ) - Consider specifying 'classifiers'
-     description: (README.md:1) bogus versioning spec
-    download_url: (missing    ) - Consider specifying 'download_url'
-         license: (missing    ) - Consider specifying 'license'
-long_description: (README.md  ) # bogus versioning spec  This scenario tests a bogus `versioning` specification in `setup.py`
-            name: (explicit   ) bogus
-             url: (missing    ) - Consider specifying 'url'
-         version: (git        ) 1.0
-      versioning: (explicit   ) {extra: [], main: function 'main_part'}
+          author: (missing         ) - Consider specifying 'author'
+     classifiers: (missing         ) - Consider specifying 'classifiers'
+     description: (README.md:1     ) bogus versioning spec
+    download_url: (missing         ) - Consider specifying 'download_url'
+install_requires: (requirements.txt) []
+         license: (missing         ) - Consider specifying 'license'
+long_description: (README.md       ) # bogus versioning spec  This scenario tests a bogus `versioning` specification in `setup.py`
+            name: (explicit        ) bogus
+             url: (missing         ) - Consider specifying 'url'
+         version: (git             ) 1.0
+      versioning: (explicit        ) {extra: [], main: function 'main_part'}
 
 :: entrypoints
 running entrypoints

@@ -75,7 +75,7 @@ def extract_list(content, comment='#'):
     :param str|None comment: Optional comment marker
     :return list(str)|None: Contents, if any
     """
-    if not content:
+    if content is None:
         return None
     result = []
     for line in content.strip().split('\n'):

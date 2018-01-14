@@ -184,8 +184,6 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if not key or not value:
-            return
         if key == 'keywords':
             value = listify(value, separator=',')
         definition = self.definitions.get(key)
@@ -543,7 +541,7 @@ class SetupMeta(Settings):
 
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)
-        if req:
+        if req is not None:
             self.auto_fill(attr, req.reqs, req.source)
 
     @property
@@ -569,7 +567,7 @@ class SetupMeta(Settings):
 
     def auto_fill(self, field, value, source='auto-fill', override=False):
         """ Auto-fill 'field' with 'value' """
-        if value and (override or value != self.value(field)):
+        if value is not None and (override or value != self.value(field)):
             override = override or (field not in self.attrs)
             self.add_definition(field, value, source, override=override)
 
