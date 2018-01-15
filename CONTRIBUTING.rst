@@ -12,7 +12,7 @@ To get going locally, simply do this::
     git clone https://github.com/zsimic/setupmeta.git
     cd setupmeta
 
-    tox -e dev
+    tox -e venv
 
     # You have a venv now in ./.venv, use it, open it with pycharm etc
     source .venv/bin/activate
@@ -26,7 +26,7 @@ To get going locally, simply do this::
     deactivate
 
 
-You can get into setupmeta's virtualenv also via ``tox -e dev bash``, use ``exit`` (or ``CTRL+D``) to exit in that case (not ``deactivate``).
+You can get into setupmeta's virtualenv also via ``tox -e venv bash``, use ``exit`` (or ``CTRL+D``) to exit in that case (not ``deactivate``).
 
 
 Running the tests
