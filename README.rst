@@ -94,17 +94,27 @@ How it works?
 
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
 
-    * With ``versioning='changes'``, your git tags will be of the form ``v{major}.{minor}``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
+        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.0.post5+g123"
 
-        * tag "v1.0", no commits since tag -> version is "1.0.0"
+    * With ``versioning='distance'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
-        * tag "v1.0", 5 commits since tag -> version is "1.0.5"
+        * tag "v1.0.0", no commits since tag -> version is "1.0.0"
 
-    * When checkout is dirty (has pending changes), by default ``+{commitid}`` will be added:
+        * tag "v1.0.0", 5 commits since tag -> version is "1.0.5"
 
-        * version is "1.0.0", checkout is dirty -> version is "1.0.0+g123"
+        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.5.post5+g123"
 
-        * version is "1.0.0.post5", checkout is dirty -> version is "1.0.0.post5+g123"
+    * With ``versioning='build-id'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
+
+        * tag "v1.0.0", no commits since tag, ``BUILD_ID=12`` -> version is "1.0.0+h12.g123"
+
+        * tag "v1.0.0", no commits since tag, ``BUILD_ID`` not defined -> version is "1.0.0+hlocal.g123"
+
+        * tag "v1.0.0", 5 commits since tag, ``BUILD_ID=12`` -> version is "1.0.5+h12.g456"
+
+        * tag "v1.0.0", 5 commits since tag, ``BUILD_ID`` not defined -> version is "1.0.5+hlocal.g456"
+
+        * if checkout is dirty, ``.dirty`` is added -> version would be "1.0.5+hlocal.g456.dirty"
 
     * Use the **bump** command (see commands_) to easily bump (ie: increment major, minor or patch + apply git tag)
 

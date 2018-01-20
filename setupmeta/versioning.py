@@ -271,10 +271,10 @@ class Strategy:
                 data['branches'] = m.group(2)
 
             main = m.group(3)
-            if main in ('changes', 'distance', 'build-id'):
+            if main in ('distance', 'build-id', 'changes'):
                 if main == 'build-id':
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
-                main = '{major}.{minor}.{changes}'
+                main = '{major}.{minor}.{distance}'
 
             if main not in ('', 'tag', 'default', 'post'):
                 data['main'] = main

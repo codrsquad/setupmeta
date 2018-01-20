@@ -2,6 +2,12 @@
 History
 =======
 
+1.4.0 (2017-01-20)
+------------------
+
+* Renamed ``changes`` versioning strategy to ``distance``, as that better conveys its intent
+
+
 1.3.6 (2017-01-14)
 ------------------
 

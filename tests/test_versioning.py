@@ -74,8 +74,8 @@ def test_find_scm_in_parent():
     assert versioning.scm.root == conftest.PROJECT_DIR
 
 
-def check_render(v, expected, m='1.0', c=None, cid=None, d=False):
-    version = Version(main=m, changes=c, commitid=cid, dirty=d)
+def check_render(v, expected, main='1.0', distance=None, cid=None, dirty=False):
+    version = Version(main=main, distance=distance, commitid=cid, dirty=dirty)
     assert v.strategy.rendered(version) == expected
 
 
@@ -96,12 +96,12 @@ def test_no_scm(_):
     assert 'BAZ:z' in str(versioning.strategy.extra_bits)
 
     check_render(versioning, '1.0.0.z')
-    check_render(versioning, '1.0.0.post2.z', c=2)
-    check_render(versioning, '1.0.0.post2.z.dirty', c=2, d=True)
+    check_render(versioning, '1.0.0.post2.z', distance=2)
+    check_render(versioning, '1.0.0.post2.z.dirty', distance=2, dirty=True)
 
     os.environ['TEST_FOO1'] = 'bar'
     os.environ['TEST_FOO2'] = 'baz'
-    check_render(versioning, '1.0.0.post2.bar.z.dirty', c=2, d=True)
+    check_render(versioning, '1.0.0.post2.bar.z.dirty', distance=2, dirty=True)
     del os.environ['TEST_FOO1']
     del os.environ['TEST_FOO2']
 
@@ -127,15 +127,15 @@ def test_no_extra():
     assert meta.version == '0.1.None'
     assert str(versioning.strategy) == "tag(master):{major}.{minor}.{$FOO}+"
     check_render(versioning, '1.0.None')
-    check_render(versioning, '1.0.None', c=2)
-    check_render(versioning, '1.0.None', c=2, d=True)
+    check_render(versioning, '1.0.None', distance=2)
+    check_render(versioning, '1.0.None', distance=2, dirty=True)
 
 
 def extra_version(version):
     if version.dirty:
         return 'extra'
-    if version.changes:
-        return 'c%s' % version.changes
+    if version.distance:
+        return 'd%s' % version.distance
     return ''
 
 
@@ -148,8 +148,8 @@ def test_invalid_part():
     assert versioning.problem == "invalid versioning part 'foo'"
     assert str(versioning.strategy) == "tag(master):{foo}.{major}.{minor}{-function 'extra_version'"
     check_render(versioning, 'invalid.1.0')
-    check_render(versioning, 'invalid.1.0-c2', c=2)
-    check_render(versioning, 'invalid.1.0-extra', c=2, d=True)
+    check_render(versioning, 'invalid.1.0-d2', distance=2)
+    check_render(versioning, 'invalid.1.0-extra', distance=2, dirty=True)
 
     with pytest.raises(setupmeta.UsageError):
         versioning.bump('minor')
@@ -160,8 +160,8 @@ def test_invalid_main():
     versioning = meta.versioning
     assert str(versioning.strategy) == "tag(master):function 'extra_version' "
     check_render(versioning, '')
-    check_render(versioning, 'c2', c=2)
-    check_render(versioning, 'extra', c=2, d=True)
+    check_render(versioning, 'd2', distance=2)
+    check_render(versioning, 'extra', distance=2, dirty=True)
     with pytest.raises(setupmeta.UsageError):
         versioning.bump('minor')
 
@@ -194,15 +194,13 @@ def test_preconfigured_build_id():
     )
 
     check_preconfigured(
-        "tag(master):{major}.{minor}.{changes}+{commitid}",
-        "changes",
+        "tag(master):{major}.{minor}.{distance}+{commitid}",
         "distance",
     )
 
     check_preconfigured(
-        "tag(master):{major}.{minor}.{changes}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
+        "tag(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
         "build-id",
-        "changes+build-id",
         "distance+build-id",
     )
 
@@ -227,33 +225,33 @@ def check_preconfigured(expected, *shorts):
 
 @patch.dict(os.environ, {'BUILD_ID': '543'})
 def test_preconfigured_strategies():
-    check_strategy_changes(True)
-    check_strategy_changes(False)
+    check_strategy_distance(True)
+    check_strategy_distance(False)
     check_strategy_build_id(True)
     check_strategy_build_id(False)
 
 
-def check_strategy_changes(dirty):
-    meta = new_meta('changes', scm=conftest.MockGit(dirty))
+def check_strategy_distance(dirty):
+    meta = new_meta('distance', scm=conftest.MockGit(dirty))
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.problem
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+{commitid}"
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+{commitid}"
     if dirty:
         assert meta.version == '0.1.3+g123'
 
         with pytest.raises(setupmeta.UsageError):
-            # Can't effectively bump if there pending changes (version is dirty)
+            # Can't effectively bump if checkout is dirty
             versioning.bump('minor', commit=True)
 
     else:
         assert meta.version == '0.1.3'
 
     with pytest.raises(setupmeta.UsageError):
-        # Can't bump 'patch' with 'changes' format
+        # Can't bump 'patch' with 'distance' format
         versioning.bump('patch')
 
     check_bump(versioning)
@@ -267,12 +265,12 @@ def check_strategy_build_id(dirty):
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{changes}+!h{$*BUILD_ID:local}.{commitid}{dirty}"
+    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}"
     if dirty:
         assert meta.version == '0.1.3+h543.g123.dirty'
 
         with pytest.raises(setupmeta.UsageError):
-            # Can't effectively bump when version is dirty (meaning: pending changes)
+            # Can't effectively bump when checkout is dirty
             versioning.bump('minor', commit=True)
 
     else:

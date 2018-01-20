@@ -127,17 +127,17 @@ class Git(Scm):
             m = RE_GIT_DESCRIBE.match(text)
             if m:
                 main = m.group(1)
-                changes = setupmeta.strip_dash(m.group(2))
-                changes = setupmeta.to_int(changes, default=0)
+                distance = setupmeta.strip_dash(m.group(2))
+                distance = setupmeta.to_int(distance, default=0)
                 commitid = setupmeta.strip_dash(m.group(3))
                 if dirty is None:
                     dirty = m.group(4) == '-dirty'
-                return Version(main, changes, commitid, dirty, text)
+                return Version(main, distance, commitid, dirty, text)
         return None
 
     def is_dirty(self):
         """
-        :return bool: Is checkout folder self.root currently dirty? (ie: has pending changes)
+        :return bool: Is checkout folder self.root currently dirty?
         """
         exitcode = self.get_output('diff', '--quiet', '--ignore-submodules', capture=False)
         return exitcode != 0
@@ -157,9 +157,9 @@ class Git(Scm):
         # Try harder
         commitid = self.get_output('rev-parse', '--short', 'HEAD')
         commitid = 'g%s' % commitid if commitid else ''
-        changes = self.get_output('rev-list', 'HEAD')
-        changes = changes.count('\n') + 1 if changes else 0
-        return Version(main, changes, commitid, dirty)
+        distance = self.get_output('rev-list', 'HEAD')
+        distance = distance.count('\n') + 1 if distance else 0
+        return Version(main, distance, commitid, dirty)
 
     def has_remote(self):
         if self._has_remote is None:
@@ -196,23 +196,23 @@ class Version:
     major = 0           # type: int # Major part of version
     minor = 0           # type: int # Minor part of version
     patch = 0           # type: int # Patch part of version
-    changes = 0         # type: int # Number of changes since last version tag (also called 'distance' sometimes)
+    distance = 0        # type: int # Number of commits since last version tag
     commitid = None     # type: str # Commit id
     dirty = ''          # type: str # Dirty marker
 
-    def __init__(self, main=None, changes=0, commitid=None, dirty=False, text=None):
+    def __init__(self, main=None, distance=0, commitid=None, dirty=False, text=None):
         """
         :param str|None main: Main part of the version (example: "1.0.0")
-        :param int changes: Number of commits since last version tag
+        :param int distance: Number of commits since last version tag
         :param str|None commitid: Current commit id (example: g1234567)
-        :param bool dirty: Whether checkout has pending changes currently or not
+        :param bool dirty: Whether checkout is dirty or not
         :param str|None text: Version text as received from SCM
         """
-        self.changes = changes or 0
+        self.distance = distance or 0
         self.commitid = (commitid or 'initial').strip()
         self.dirty = '.dirty' if dirty else ''
         main = (main or '0.0.0').strip()
-        self.text = text or "v%s-%s-%s" % (main, self.changes, self.commitid)
+        self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)
         self.version = LooseVersion(main)
         triplet = self.bump_triplet()
         self.major = triplet[0]
@@ -237,13 +237,8 @@ class Version:
         """
         {post} marker for this version
 
-        :return str: '.post{changes}' for changes > 0, empty string otherwise
+        :return str: '.post{distance}' for distance > 0, empty string otherwise
         """
-        if self.changes:
-            return '.post%s' % self.changes
+        if self.distance:
+            return '.post%s' % self.distance
         return ''
-
-    @property
-    def distance(self):
-        """Synonym for 'changes'"""
-        return self.changes
