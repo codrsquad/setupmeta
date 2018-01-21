@@ -5,7 +5,9 @@ History
 1.4.0 (2017-01-20)
 ------------------
 
-* Renamed ``changes`` versioning strategy to ``distance``, as that better conveys its intent
+* Added pre-defined versioning strategy ``post``
+
+* Renamed pre-defined versioning strategies, to better convey their intent: ``changes`` -> ``distance`` and ``tag`` -> ``post``
 
 
 1.3.6 (2017-01-14)

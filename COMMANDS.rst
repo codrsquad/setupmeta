@@ -31,7 +31,7 @@ For example, this is what setupmeta says about itself (it's self-using)::
               title*: (setup.py:16            ) setupmeta
                  url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
              version: (git                    ) 1.1.2.post1+g816252c
-          versioning: (explicit               ) tag
+          versioning: (explicit               ) post
             zip_safe: (explicit               ) True
 
 In the above output:
@@ -62,7 +62,7 @@ In the above output:
 
 * ``packages`` was auto-filled to ``['setupmeta']``
 
-* ``version`` was determined from git tag (due to ``versioning='tag'`` in setup.py), in this case ``1.1.2.post1+g816252c`` means:
+* ``version`` was determined from git tag (due to ``versioning='post'`` in setup.py), in this case ``1.1.2.post1+g816252c`` means:
 
     * latest tag was 1.1.2
 

@@ -11,14 +11,14 @@ The functionality is optional and has to be explicitly enabled, note that:
 
 * It can be a drop-in replacement for setuptools_scm_
 
-* 3 strategies are pre-configured: tag_, distance_ and build-id_, they yield versions that play well with PEP-440_ (while remaining very simple).
+* 3 strategies are pre-configured: post_, distance_ and build-id_, they yield versions that play well with PEP-440_ (while remaining very simple).
 
 * See Advanced_ for more info
 
 In order to use setupmeta as a bridge to your git tags as versions, activate the feature by specifying one of the strategies in your ``setup.py`` like so::
 
     setup(
-        versioning='tag',
+        versioning='post',
         ...
     )
 
@@ -43,7 +43,7 @@ Tag-based versioning will take precedence on any other ``version`` specification
 
 For example, if you have this:
 
-* ``setup(versioning='tag')`` in your ``setup.py``
+* ``setup(versioning='post')`` in your ``setup.py``
 
 * ``__version__ = '1.0.0'`` in your ``__init__.py`` line 7
 
@@ -83,7 +83,7 @@ If you now run ``setup.py version --bump patch --commit``, the following would h
          \_: (__init__.py:7) 1.0.1
 
 Note that you do NOT need any ``__version__ = ...`` stated anywhere, we're showing this only here for illustration purposes.
-In general, you should simply use ``versioning='tag'`` (or any other format you like).
+In general, you should simply use ``versioning='post'`` (or any other format you like).
 
 You could leverage this ``__version__`` possibility if you have specific use case for that
 (like: you'd like to show which version your code is at without using something like ``import pkg_resources``)
@@ -92,21 +92,21 @@ You could leverage this ``__version__`` possibility if you have specific use cas
 Preconfigured formats
 =====================
 
-tag
----
+post
+----
 
 This is well suited if you don't plan to publish often, and have a tag for each release.
 
-``tag`` corresponds to this format: ``tag(master):{major}.{minor}.{patch}{post}+{commitid}``
+``post`` corresponds to this format: ``branch(master):{major}.{minor}.{patch}{post}+{commitid}``
 
 State this in your ``setup.py``::
 
     setup(
-        versioning='tag',
+        versioning='post',
         ...
     )
 
-Now, every time you commit a change, setupmeta will use the number of commits since last git tag to determine the 'post' part of your version.
+Now, every time you commit a change, setupmeta will use the number of commits since last git tag to determine the ``post`` part of your version.
 
 
 Example:
@@ -151,7 +151,7 @@ distance
 
 This is well suited if you want to publish a new version at every commit (but don't want to keep bumping version in code for every commit).
 
-``distance`` corresponds to this format: ``tag(master):{major}.{minor}.{distance}+{commitid}``
+``distance`` corresponds to this format: ``branch(master):{major}.{minor}.{distance}+{commitid}``
 
 State this in your ``setup.py``::
 
@@ -207,7 +207,7 @@ build-id
 
 This is similar to distance_ (described above), so well suited if you want to publish a new version at every commit, but also want maximum info in the version identifier.
 
-``build-id`` corresponds to this format: ``tag(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}``
+``build-id`` corresponds to this format: ``branch(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}``
 
 State this in your ``setup.py``::
 
@@ -240,7 +240,7 @@ g10              1.0.1+h300.g3
 
 * Similar to distance_, except that the ``extra`` part is always shown and will reflect whether build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
 
-* Can be easily made to act like tag_ instead for the **main*** part of the version via ``versioning='tag+build-id'``
+* Can be easily made to act like post_ instead for the **main*** part of the version via ``versioning='post+build-id'``
 
 
 Advanced
@@ -250,12 +250,12 @@ Advanced
 
 * a **string** can be of the form:
 
-    * ``tag`` or ``distance`` for pre-configured version formats (see tag_ or distance_ above)
+    * One of the pre-configured formats above, or a meaningful combination like ``post+build-id`` (the part after the `+` will be used to determine strategy for ``extra`` part only)
 
-    * a version format specified of the form ``tag(<branches>):<main><separator><extra>``
+    * a version format specified of the form ``branch(<branches>):<main><separator><extra>``
 
-    * ``tag(<branches>):`` is optional, and you would use this full form only if you wanted version bumps to be possible on branches other than master,
-      if you want bumps to be possible on both ``master`` and ``test`` branches for example, you would use ``tag(master,test):...``
+    * ``branch(<branches>):`` is optional, and you would use this full form only if you wanted version bumps to be possible on branches other than master,
+      if you want bumps to be possible on both ``master`` and ``test`` branches for example, you would use ``branch(master,test):...``
 
     * See Formatting_ below to see what's usable for ``<main>`` and ``<extra>``
 
@@ -278,7 +278,7 @@ Advanced
     * ``branches``: list of branch names (or csv) where to allow **bump**
 
 
-This is what ``versioning='tag'`` is a shortcut for::
+This is what ``versioning='post'`` is a shortcut for::
 
     setup(
         versioning={

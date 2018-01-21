@@ -46,7 +46,7 @@ def test_snapshot():
             fh.write('v1.2.3-4-g1234567')
 
         setup_py = os.path.join(temp, 'setup.py')
-        meta = SetupMeta(dict(_setup_py_path=setup_py, versioning='tag', setup_requires='setupmeta'))
+        meta = SetupMeta(dict(_setup_py_path=setup_py, versioning='post', setup_requires='setupmeta'))
         versioning = meta.versioning
         assert meta.version == '1.2.3.post4'
         assert not versioning.generate_version_file
@@ -66,7 +66,7 @@ def test_snapshot():
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: '1'})
 def test_find_scm_in_parent():
-    meta = new_meta('tag')
+    meta = new_meta('post')
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.problem
@@ -81,7 +81,7 @@ def check_render(v, expected, main='1.0', distance=None, cid=None, dirty=False):
 
 @patch('setupmeta.versioning.project_scm', return_value=None)
 def test_no_scm(_):
-    fmt = "tag(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
+    fmt = "branch(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
     meta = new_meta(fmt)
     versioning = meta.versioning
 
@@ -112,7 +112,7 @@ def test_no_scm(_):
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: 'v1.2.3-4-g1234567-dirty'})
 @patch('setupmeta.versioning.find_scm_root', return_value=None)
 def test_version_from_env_var(*_):
-    meta = new_meta('tag')
+    meta = new_meta('post')
     versioning = meta.versioning
     assert meta.version == '1.2.3.post4+g1234567'
     assert versioning.enabled
@@ -125,7 +125,7 @@ def test_no_extra():
     meta = new_meta('{major}.{minor}.{$FOO}+', scm=conftest.MockGit(True))
     versioning = meta.versioning
     assert meta.version == '0.1.None'
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{$FOO}+"
+    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{$FOO}+"
     check_render(versioning, '1.0.None')
     check_render(versioning, '1.0.None', distance=2)
     check_render(versioning, '1.0.None', distance=2, dirty=True)
@@ -146,7 +146,7 @@ def test_invalid_part():
     assert 'invalid' in str(versioning.strategy.main_bits)
     assert meta.version is None
     assert versioning.problem == "invalid versioning part 'foo'"
-    assert str(versioning.strategy) == "tag(master):{foo}.{major}.{minor}{-function 'extra_version'"
+    assert str(versioning.strategy) == "branch(master):{foo}.{major}.{minor}{-function 'extra_version'"
     check_render(versioning, 'invalid.1.0')
     check_render(versioning, 'invalid.1.0-d2', distance=2)
     check_render(versioning, 'invalid.1.0-extra', distance=2, dirty=True)
@@ -158,7 +158,7 @@ def test_invalid_part():
 def test_invalid_main():
     meta = new_meta(dict(main=extra_version, extra='', separator=' '), scm=conftest.MockGit())
     versioning = meta.versioning
-    assert str(versioning.strategy) == "tag(master):function 'extra_version' "
+    assert str(versioning.strategy) == "branch(master):function 'extra_version' "
     check_render(versioning, '')
     check_render(versioning, 'd2', distance=2)
     check_render(versioning, 'extra', distance=2, dirty=True)
@@ -181,33 +181,31 @@ def test_distance_marker():
     assert not versioning.problem
     assert not versioning.strategy.problem
     assert meta.version == '0.1.3+g123'
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+{commitid}"
+    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
 
 
 def test_preconfigured_build_id():
     """Verify that short notations expand to the expected format"""
     check_preconfigured(
-        "tag(master):{major}.{minor}.{patch}{post}+{commitid}",
-        "tag",
+        "branch(master):{major}.{minor}.{patch}{post}+{commitid}",
         "post",
         "default",
     )
 
     check_preconfigured(
-        "tag(master):{major}.{minor}.{distance}+{commitid}",
+        "branch(master):{major}.{minor}.{distance}+{commitid}",
         "distance",
     )
 
     check_preconfigured(
-        "tag(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
+        "branch(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
         "build-id",
         "distance+build-id",
     )
 
     check_preconfigured(
-        "tag(master):{major}.{minor}.{patch}{post}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
+        "branch(master):{major}.{minor}.{patch}{post}+!h{$*BUILD_ID:local}.{commitid}{dirty}",
         "+build-id",
-        "tag+build-id",
         "default+build-id",
         "post+build-id",
     )
@@ -239,7 +237,7 @@ def check_strategy_distance(dirty):
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+{commitid}"
+    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
     if dirty:
         assert meta.version == '0.1.3+g123'
 
@@ -265,7 +263,7 @@ def check_strategy_build_id(dirty):
     assert not versioning.strategy.problem
     assert 'major' in str(versioning.strategy.main_bits)
     assert 'commitid' in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "tag(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}"
+    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}"
     if dirty:
         assert meta.version == '0.1.3+h543.g123.dirty'
 

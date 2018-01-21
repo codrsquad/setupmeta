@@ -8,7 +8,7 @@ from setupmeta.scm import Git, Snapshot, Version
 
 
 BUMPABLE = 'major minor patch'.split()
-RE_VERSIONING = re.compile(r'^(tag(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$')
+RE_VERSIONING = re.compile(r'^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$')
 
 
 def find_scm_root(root, name):
@@ -160,7 +160,7 @@ class Strategy:
         if extra:
             result += setupmeta.stringify(extra)
         if branches:
-            result = 'tag(%s):%s' % (branches, result)
+            result = 'branch(%s):%s' % (branches, result)
         return result
 
     def bits(self, fmt):
@@ -265,7 +265,7 @@ class Strategy:
         if isinstance(given, dict):
             data.update(given)
 
-        elif given not in ('tag', 'default', 'post') and given is not True:
+        elif given not in ('default', 'post', 'tag') and given is not True:
             m = RE_VERSIONING.match(given)
             if m.group(2):
                 data['branches'] = m.group(2)
@@ -276,7 +276,7 @@ class Strategy:
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
                 main = '{major}.{minor}.{distance}'
 
-            if main not in ('', 'tag', 'default', 'post'):
+            if main not in ('', 'default', 'post', 'tag'):
                 data['main'] = main
 
             extra = m.group(4)

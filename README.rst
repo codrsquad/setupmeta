@@ -28,7 +28,7 @@ Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look l
 
     setup(
         name='myproject',
-        versioning='tag',               # Optional, would activate tag-based versioning
+        versioning='distance',          # Optional, would activate tag-based versioning
         setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
@@ -52,7 +52,7 @@ You can use the **explain** command (see commands_) to see what setupmeta_ deduc
           py_modules: (auto-fill       ) ['myproject']
       setup_requires: (explicit        ) ['setupmeta']
              version: (git             ) 1.2.3.post2
-          versioning: (explicit        ) tag
+          versioning: (explicit        ) distance
 
 See examples_ for more.
 
@@ -88,14 +88,6 @@ How it works?
 
 * ``version`` can be stated explicitly, or be computed from git tags using ``versioning=...`` (see versioning_ for more info):
 
-    * With ``versioning='tag'``, your git tags will be of the form ``v{major}.{minor}.{patch}``, a "post" addendum will be present if there are commits since latest version tag:
-
-        * tag "v1.0.0", no commits since tag -> version is "1.0.0"
-
-        * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
-
-        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.0.post5+g123"
-
     * With ``versioning='distance'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
         * tag "v1.0.0", no commits since tag -> version is "1.0.0"
@@ -103,6 +95,14 @@ How it works?
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.5"
 
         * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.5.post5+g123"
+
+    * With ``versioning='post'``, your git tags will be of the form ``v{major}.{minor}.{patch}``, a "post" addendum will be present if there are commits since latest version tag:
+
+        * tag "v1.0.0", no commits since tag -> version is "1.0.0"
+
+        * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
+
+        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.0.post5+g123"
 
     * With ``versioning='build-id'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
