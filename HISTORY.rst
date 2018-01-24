@@ -2,6 +2,12 @@
 History
 =======
 
+1.4.1 (2017-01-23)
+------------------
+
+* Hook earlier, into ``parse_command_line`` instead of ``get_option_dict`` in order for ``setup.py --version`` (and similar) to work
+
+
 1.4.0 (2017-01-20)
 ------------------
 

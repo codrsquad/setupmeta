@@ -7,15 +7,15 @@ import distutils.dist
 from setupmeta.model import MetaDefs, SetupMeta
 
 
-# Reference to original distutils.dist.Distribution.get_option_dict
-dd_original = distutils.dist.Distribution.get_option_dict
+# Reference to original distutils.dist.Distribution.parse_command_line
+dd_original = distutils.dist.Distribution.parse_command_line
 
 
-def distutils_hook(dist, command, *args, **kwargs):
-    """ distutils.dist.Distribution.get_option_dict replacement
+def distutils_hook(dist, *args, **kwargs):
+    """ distutils.dist.Distribution.parse_command_line replacement
 
     distutils calls this right after having processed 'setup_requires'
-    It really calls self.get_option_dict(command), we jump in
+    It really calls self.parse_command_line(command), we jump in
     so we can decorate the 'dist' object appropriately for our own commands
     """
     if dist.script_args and not hasattr(dist, '_setupmeta'):
@@ -23,11 +23,11 @@ def distutils_hook(dist, command, *args, **kwargs):
         # (distutils calls this several times, we need only one)
         dist._setupmeta = SetupMeta(dist)
         MetaDefs.fill_dist(dist, dist._setupmeta.to_dict())
-    return dd_original(dist, command, *args, **kwargs)
+    return dd_original(dist, *args, **kwargs)
 
 
-# Replace Distribution.get_option_dict so we can inject our parsing
-distutils.dist.Distribution.get_option_dict = distutils_hook
+# Replace Distribution.parse_command_line so we can inject our parsing
+distutils.dist.Distribution.parse_command_line = distutils_hook
 
 
 def register(*args, **kwargs):
