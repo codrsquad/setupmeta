@@ -115,7 +115,7 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =====================================================================================
 no .git          0.0.0             Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0+initial     No commit yet (but ``git init`` was ran)
+none             0.0.0+g0000000    No commit yet (but ``git init`` was ran)
 g1               0.0.0.post1       Initial commit
 g1               0.0.0.post1+g1    Same as above, only checkout was not clean anymore
 g2               0.0.0.post2
@@ -170,7 +170,7 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =========================================================================================================
 no .git          0.0.0             Version defaults to 0.0 (when no tag yet)
-none             0.0.0+initial     No commit yet (but ``git init`` was ran)
+none             0.0.0+g0000000    No commit yet (but ``git init`` was ran)
 g1               0.0.1             Initial commit, 0.0.1 means default v0.0 + 1 change
 g1               0.0.1.g1          Same as above, only checkout was not clean anymore
 g2               0.0.2
@@ -219,24 +219,24 @@ State this in your ``setup.py``::
 
 Example:
 
-=======  ======  ==========================  ====================================================================================
-Commit   Tag     Version                     Note (command ran to add tag)
-=======  ======  ==========================  ====================================================================================
-no .git          0.0.0                       Version defaults to 0.0 (when no tag yet)
-none             0.0.0+hlocal.initial.dirty  No commit yet (but ``git init`` was ran)
-g1               0.0.1+hlocal.g1             Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
-g1               0.0.1+hlocal.g1.dirty       Same as above, only checkout was not clean anymore
-g1               0.0.1+h123.g1               ``$BUILD_ID`` was "123" (so presumably built on a CI server)
+=======  ======  ==========================   ====================================================================================
+Commit   Tag     Version                      Note (command ran to add tag)
+=======  ======  ==========================   ====================================================================================
+no .git          0.0.0                        Version defaults to 0.0 (when no tag yet)
+none             0.0.0+hlocal.g0000000.dirty  No commit yet (but ``git init`` was ran)
+g1               0.0.1+hlocal.g1              Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
+g1               0.0.1+hlocal.g1.dirty        Same as above, only checkout was not clean anymore
+g1               0.0.1+h123.g1                ``$BUILD_ID`` was "123" (so presumably built on a CI server)
 g2               0.0.2+h124.g2
 g3               0.0.3+h125.g3
-g4       v0.1.0  0.1.0+hlocal.g4             ``version --bump minor --commit``, clean, built locally
-g5               0.1.1+h130.g3               (1 commit since tag)
+g4       v0.1.0  0.1.0+hlocal.g4              ``version --bump minor --commit``, clean, built locally
+g5               0.1.1+h130.g3                (1 commit since tag)
 g6               0.1.2+h140.g3
-g7       v0.2.0  0.2.0+h150.g3               ``version --bump minor --commit`` (note: can't bump "patch" with this format)
+g7       v0.2.0  0.2.0+h150.g3                ``version --bump minor --commit`` (note: can't bump "patch" with this format)
 g8               0.2.1+h160.g3
-g9       v1.0.0  1.0.0+h200.g3               ``version --bump major --commit``
+g9       v1.0.0  1.0.0+h200.g3                ``version --bump major --commit``
 g10              1.0.1+h300.g3
-=======  ======  ==========================  ====================================================================================
+=======  ======  ==========================   ====================================================================================
 
 * Similar to distance_, except that the ``extra`` part is always shown and will reflect whether build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
 

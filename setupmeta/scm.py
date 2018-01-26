@@ -209,7 +209,7 @@ class Version:
         :param str|None text: Version text as received from SCM
         """
         self.distance = distance or 0
-        self.commitid = (commitid or 'initial').strip()
+        self.commitid = (commitid or 'g0000000').strip()
         self.dirty = '.dirty' if dirty else ''
         main = (main or '0.0.0').strip()
         self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)

@@ -2,6 +2,12 @@
 History
 =======
 
+1.4.2 (2017-01-25)
+------------------
+
+* Use ``g0000000`` as commit-id instead of ``initial`` when no commit took place yet
+
+
 1.4.1 (2017-01-23)
 ------------------
 
