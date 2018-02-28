@@ -2,10 +2,12 @@
 History
 =======
 
-1.4.3 (2017-02-27)
+1.4.4 (2017-02-27)
 ------------------
 
 * Accept git version tags of the form ``M.m.p`` (don't require git tags to start with a ``v`` prefix)
+
+* Support pip 10.0
 
 
 1.4.2 (2017-01-25)

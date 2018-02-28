@@ -305,8 +305,13 @@ class RequirementsEntry:
         """Parse a requirements file with pip"""
         try:
             # Note: we can't assume pip is installed
-            from pip.req import parse_requirements
-            from pip.download import PipSession
+            try:
+                from pip.req import parse_requirements
+                from pip.download import PipSession
+            except ImportError:
+                # pip 10.0
+                from pip._internal.req import parse_requirements    # pragma: no cover
+                from pip._internal.download import PipSession       # pragma: no cover
 
             reqs = []
             links = []
