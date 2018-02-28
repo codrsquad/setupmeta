@@ -147,9 +147,8 @@ class Git(Scm):
         return branch and branch.strip()
 
     def get_version(self):
-        main = None
         dirty = self.is_dirty()
-        text = self.get_output('describe', '--tags', '--long', '--match', 'v*.*')
+        text = self.get_output('describe', '--tags', '--long', '--match', '*.*')
         version = self.parsed_version(text, dirty)
         if version:
             return version
@@ -159,7 +158,7 @@ class Git(Scm):
         commitid = 'g%s' % commitid if commitid else ''
         distance = self.get_output('rev-list', 'HEAD')
         distance = distance.count('\n') + 1 if distance else 0
-        return Version(main, distance, commitid, dirty)
+        return Version(None, distance, commitid, dirty)
 
     def has_remote(self):
         if self._has_remote is None:
