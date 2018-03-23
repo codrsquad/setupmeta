@@ -9,21 +9,9 @@ History
 
 * Support pip 10.0
 
-
-1.4.2 (2017-01-25)
-------------------
-
 * Use ``g0000000`` as commit-id instead of ``initial`` when no commit took place yet
 
-
-1.4.1 (2017-01-23)
-------------------
-
 * Hook earlier, into ``parse_command_line`` instead of ``get_option_dict`` in order for ``setup.py --version`` (and similar) to work
-
-
-1.4.0 (2017-01-20)
-------------------
 
 * Added pre-defined versioning strategy ``post``
 
