@@ -1,4 +1,4 @@
 -i https://somewhere.net/pypi/
 
 beautifulsoup4>=4.4.0
--e git+https://somewhere.com/foo.git#egg=wonka-0.0.0
+-e git+https://somewhere.com/foo.git#egg=wonka

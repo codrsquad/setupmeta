@@ -111,7 +111,7 @@ def run_program(program, *args, **kwargs):
     Run 'program' with 'args'
 
     :param str program: Path to program to run
-    :param list(str) args: Arguments to pass to program
+    :param args: Arguments to pass to program
     :param bool dryrun: When True, do not run, just print what would be ran
     :param bool fatal: When True, exit immediately on return code != 0
     :param bool capture: None: let output pass through, return exit code

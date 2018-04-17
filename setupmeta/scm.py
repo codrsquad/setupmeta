@@ -62,8 +62,8 @@ class Scm:
         Run SCM's CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
         Command is ran with cwd being 'self.root'
 
-        :param list(str) args: CLI arguments (example: describe --tags)
-        :param dict kwargs: Additional named arguments
+        :param args: CLI arguments (example: describe --tags)
+        :param kwargs: Additional named arguments
         :return str|int: Output if kwargs['capture'] is True, exit code otherwise
         """
         capture = kwargs.pop('capture', True)
@@ -76,8 +76,8 @@ class Scm:
         Output is "passed through" to stdout/stderr.
 
         :param bool commit: Effectively run the command if True, otherwise just print "Would run: ..."
-        :param list(str) args: CLI arguments (example: push origin)
-        :param dict kwargs: Additional named arguments
+        :param args: CLI arguments (example: push origin)
+        :param kwargs: Additional named arguments
         :return int: Exit code (always zero, unless fatal=False is passed explicitly in kwargs)
         """
         fatal = kwargs.pop('fatal', True)

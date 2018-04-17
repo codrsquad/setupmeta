@@ -2,7 +2,7 @@
 running explain
           author: (missing             ) - Consider specifying 'author'
      classifiers: (missing             ) - Consider specifying 'classifiers'
-dependency_links: (requirements.txt    ) ['git+https://somewhere.com/foo.git#egg=wonka-0.0.0', 'git+https://somewhere.com/test.git#egg=mytest-0.1.0']
+dependency_links: (requirements.txt    ) ['git+https://somewhere.com/foo.git#egg=wonka', 'git+https://somewhere.com/test.git#egg=mytest']
      description: (README.md:1         ) Project with a complex requirements.txt file
     download_url: (missing             ) - Consider specifying 'download_url'
 install_requires: (requirements.txt    ) ['beautifulsoup4>=4.4.0', 'wonka']

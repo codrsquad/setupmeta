@@ -9,6 +9,7 @@ import setupmeta
 import setupmeta.versioning
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Version
+
 from . import conftest
 
 

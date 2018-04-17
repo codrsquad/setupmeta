@@ -2,7 +2,7 @@
 History
 =======
 
-1.4.4 (2017-02-27)
+1.4.5 (2017-04-17)
 ------------------
 
 * Accept git version tags of the form ``M.m.p`` (don't require git tags to start with a ``v`` prefix)

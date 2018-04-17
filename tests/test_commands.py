@@ -8,6 +8,7 @@ from mock import patch
 from six import StringIO
 
 import setupmeta
+
 from . import conftest
 
 
