@@ -384,7 +384,7 @@ class Versioning:
 
         hook = setupmeta.project_path(self.strategy.hook)
         if setupmeta.is_executable(hook):
-            setupmeta.run_program(hook, 'bump', self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
+            setupmeta.run_program(hook, self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
     def update_sources(self, next_version, commit, vdefs):
         modified = []
