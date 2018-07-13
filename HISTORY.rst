@@ -5,7 +5,7 @@ History
 1.5.1 (2018-07-13)
 ------------------
 
-* Test against python 3.7
+* Test against python 3.7, dropped support for 3.4 as it's not available on travis Xenial
 
 * Don't pass redundant ``bump`` cli arg to bump hook
 
