@@ -2,13 +2,15 @@
 History
 =======
 
-1.5.0 (2018-06-08)
+1.5.1 (2018-07-13)
 ------------------
+
+* Test against python 3.7
 
 * Don't pass redundant ``bump`` cli arg to bump hook
 
 
-1.4.5 (2017-04-17)
+1.4.5 (2018-04-17)
 ------------------
 
 * Accept git version tags of the form ``M.m.p`` (don't require git tags to start with a ``v`` prefix)
@@ -24,7 +26,7 @@ History
 * Renamed pre-defined versioning strategies, to better convey their intent: ``changes`` -> ``distance`` and ``tag`` -> ``post``
 
 
-1.3.6 (2017-01-14)
+1.3.6 (2018-01-14)
 ------------------
 
 * Env var ``SCM_DESCRIBE`` used if available and no SCM checkout folder (like ``.git``) detected
