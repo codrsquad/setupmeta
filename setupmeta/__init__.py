@@ -256,13 +256,14 @@ class MetaDefs:
     # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
     metadata_fields = listify("""
         author author_email classifiers description download_url keywords
-        license long_description maintainer maintainer_email name obsoletes
+        license long_description long_description_content_type
+        maintainer maintainer_email name obsoletes
         platforms provides requires url version
     """)
     dist_fields = listify("""
         cmdclass contact contact_email dependency_links eager_resources
         entry_points exclude_package_data extras_require include_package_data
-        install_requires libraries long_description_content_type
+        install_requires libraries
         namespace_packages package_data package_dir packages py_modules
         python_requires scripts setup_requires tests_require test_suite
         versioning zip_safe

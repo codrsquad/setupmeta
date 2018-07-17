@@ -7,8 +7,6 @@ running explain
             foo*: (setup.py:2) bar
          license: (auto-fill ) MIT
 long_description: (README    ) # Several readme files  [//]: # (.. [[end long_description]])
-              \_: (README.rst) 314 chars: foo ===================================================================================================================================...
-              \_: (README.md ) 153 chars: readmes: foo  No useful short description on 1st line here  This scenario tests edge cases around finding a suitable short description ...
             name: (explicit  ) readmes
   setup_requires: (explicit  ) ['setupmeta']
              url: (missing   ) - Consider specifying 'url'

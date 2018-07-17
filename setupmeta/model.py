@@ -522,10 +522,21 @@ class SetupMeta(Settings):
             if self.value('long_description') and self.value('description'):
                 return
             value = load_readme(readme)
-            if value:
-                short_desc = self.extract_short_description(value)
-                self.auto_fill('description', short_desc, source="%s:1" % readme)
-                self.add_definition('long_description', value, readme, override=short_desc)
+            if not value:
+                continue
+            short_desc = self.extract_short_description(value)
+            if not short_desc:
+                continue
+            self.auto_fill('description', short_desc, source="%s:1" % readme)
+            self.add_definition('long_description', value, readme, override=short_desc)
+            if readme.endswith(".rst"):
+                content_type = "text/x-rst"
+            elif readme.endswith(".md"):
+                content_type = "text/markdown"
+            else:
+                content_type = None
+            if content_type:
+                self.add_definition("long_description_content_type", content_type, readme, override=short_desc)
 
     def auto_fill_entry_points(self, key='entry_points'):
         path = "%s.ini" % key
