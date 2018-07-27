@@ -2,7 +2,7 @@
 History
 =======
 
-1.6.0 (2018-07-16)
+1.6.2 (2018-07-16)
 ------------------
 
 * Auto-fill long_description_content_type when applicable
