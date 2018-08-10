@@ -161,7 +161,7 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =====================================================================================
 no .git          0.0.0.dev0        Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0.dev0+g00000 No commit yet (but ``git init`` was ran)
+none             0.0.0.dev0+g0000  No commit yet (but ``git init`` was ran)
 g1               0.0.0.dev1        Initial commit
 g1               0.0.0.dev1+g1     Same as above, only checkout was not clean anymore
 g2               0.0.0.dev2
