@@ -79,14 +79,14 @@ class VersionBit:
     def rendered_attr_auto_bumped(self, version):
         """
         :param Version version: Version to render
-        :return str: Rendered version bit, with component auto-bumped
+        :return str: Auto-bumped if possible
         """
+        value = self.rendered_attr(version)
         try:
-            value = getattr(version, self.text, None)
             return str(int(value) + 1)
 
         except ValueError:
-            return self.rendered_attr(version)
+            return value
 
     def rendered_attr(self, version):
         """
@@ -228,6 +228,7 @@ class Strategy:
             # Support for '.dev' versioning scheme: apply it only for:
             # - regular versioning (no special hook)
             # - only if it's "simple enough", ie: last bit is "dev", and the bit before that is bumpable
+            bits = list(bits)
             last = bits[-1]
             prelast = bits[-2]
             if last and last.text == "dev" and prelast and prelast.text in BUMPABLE:
