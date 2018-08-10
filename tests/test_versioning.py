@@ -126,7 +126,8 @@ def quick_check(versioning, expected, dirty=True, describe='v0.1.2-5-g123'):
     assert versioning.scm.is_dirty() == dirty
 
 
-def test_versioning_variants():
+@patch.dict(os.environ, {'BUILD_ID': '543'})
+def test_versioning_variants(*_):
     quick_check("{major}.{minor}", "0.1+g123")
     quick_check("{major}.{minor}+", "0.1")
     quick_check("{major}.{minor}{dirty}", "0.1.dirty+g123")
@@ -137,8 +138,8 @@ def test_versioning_variants():
     quick_check("post", "0.1.2.post5+g123")
     quick_check("dev", "0.1.3.dev5+g123")
     quick_check("tag+dev", "0.1.3.dev5+g123")
-    quick_check("build-id", "0.1.5+hlocal.g123.dirty")
-    quick_check("dev+build-id", "0.1.3.dev5+hlocal.g123.dirty")
+    quick_check("build-id", "0.1.5+h543.g123.dirty")
+    quick_check("dev+build-id", "0.1.3.dev5+h543.g123.dirty")
 
     # Patch is not bumpable
     quick_check("dev", "0.1.rc.dev5+g123", describe='v0.1.rc-5-g123')
@@ -211,7 +212,8 @@ def test_distance_marker():
     assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
 
 
-def test_preconfigured_build_id():
+@patch.dict(os.environ, {'BUILD_ID': '543'})
+def test_preconfigured_build_id(*_):
     """Verify that short notations expand to the expected format"""
     check_preconfigured(
         "branch(master):{major}.{minor}.{patch}{post}+{commitid}",
@@ -249,7 +251,7 @@ def check_preconfigured(expected, *shorts):
 
 
 @patch.dict(os.environ, {'BUILD_ID': '543'})
-def test_preconfigured_strategies():
+def test_preconfigured_strategies(*_):
     check_strategy_distance(True)
     check_strategy_distance(False)
     check_strategy_build_id(True)
