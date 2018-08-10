@@ -383,8 +383,11 @@ class RequirementsEntry:
             if (not line_section or line_section == 'abstract') and '==' in line:
                 i = line.index('==')
                 line = line[:i].strip()
-                if not note and line_section:
-                    note = "in '%s' section" % line_section
+                if not note:
+                    if line_section:
+                        note = "in '%s' section" % line_section
+                    else:
+                        note = "abstracted by default"
             if note:
                 self.notes[line] = note or "abstract by default"
             self.reqs.append(line)

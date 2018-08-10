@@ -47,7 +47,7 @@ maintainer_email: (auto-adjust              ) me@myplace.com
 running explain
     install_requires=[
         "a",
-        "b",
+        "b",     # abstracted by default
         "c",     # 'abstract' stated on line
         "d>1",
         "e==1",
