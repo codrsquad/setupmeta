@@ -153,7 +153,9 @@ Similar to post_, with the following differences:
 
 - ``.dev`` prefix is used instead of ``post``, this makes untagged versions considered pre-release (have to use ``pip install --pre`` to get them)
 
-- right-most bumpable component (typically **path**) is assumed to be the next one that is going to be bumped...
+- right-most bumpable component (typically **patch**) is assumed to be the next one that is going to be bumped...
+  (this just means that if your current version is ``0.8.1``, you would get a ``0.8.2.dev1`` etc;
+  even though you may be planning your next tag to be ``0.9.0``, and not ``0.8.2``)
 
 Example:
 
