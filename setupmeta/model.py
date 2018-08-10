@@ -363,8 +363,8 @@ class RequirementsEntry:
         self.notes = {}
         self.reqs = []
         for line in load_list(path, comment=None):
-            if line.startswith('# '):
-                word = first_word(line[2:])
+            if line.startswith('#'):
+                word = first_word(line[1:])
                 if word in KNOWN_SECTIONS:
                     current_section = word
                 continue
