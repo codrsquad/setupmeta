@@ -45,6 +45,7 @@ maintainer_email: (auto-adjust              ) me@myplace.com
 
 :: explain -d
 running explain
+    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
         "a",
         "b",     # abstracted by default

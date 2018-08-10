@@ -18,8 +18,9 @@ long_description_content_type: (README.rst  ) text/x-rst
 
 :: explain -d
 running explain
-    install_requires=None,
-    tests_require=None,
+    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
+    install_requires=None,   # no auto-fill
+    tests_require=None,   # no auto-fill
 
 :: entrypoints
 running entrypoints

@@ -81,7 +81,7 @@ class ExplainCommand(setuptools.Command):
         :param str setup_key: Name of corresponding key in 'setup()'
         :param RequirementsEntry requirements:
         """
-        content = "None"
+        content = "None,   # no auto-fill"
         if requirements and requirements.reqs:
             names = []
             notes = []
@@ -95,11 +95,12 @@ class ExplainCommand(setuptools.Command):
                     content.append(self.represented_req(names[i], notes[i], longest_name))
             else:
                 content = [self.represented_req(name) for name in names]
-            content = "[\n        %s\n    ]" % "\n        ".join(content).strip()
-        print('    %s=%s,' % (setup_key, content))
+            content = "[\n        %s\n    ]," % "\n        ".join(content).strip()
+        print('    %s=%s' % (setup_key, content))
 
     def run(self):
         if self.dependencies:
+            print("    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py")
             install = None
             test = None
             if self.setupmeta.requirements:

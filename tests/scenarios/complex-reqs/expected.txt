@@ -17,6 +17,7 @@ long_description_content_type: (README.md           ) text/markdown
 
 :: explain -d
 running explain
+    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
         "beautifulsoup4>=4.4.0",
         "wonka",
