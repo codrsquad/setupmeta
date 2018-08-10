@@ -7,11 +7,12 @@ import io
 import os
 import re
 import sys
+import warnings
 
 import setuptools
 
 import setupmeta.versioning
-from setupmeta import listify, MetaDefs, project_path, relative_path, short, trace
+from setupmeta import listify, MetaDefs, project_path, relative_path, short, temp_resource, trace
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 
@@ -34,6 +35,20 @@ RE_DESCRIPTION = re.compile(
     r'^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$',
     re.IGNORECASE
 )
+
+KNOWN_SECTIONS = set("abstract pinned indirect".split())
+
+
+def first_word(text):
+    """
+    :param str|None text: Text to extract first word from
+    :return str: Lower case of first word from 'text', if any
+    """
+    if text:
+        text = text.strip()
+    if not text:
+        return text
+    return text.split()[0].lower()
 
 
 def is_setup_py_path(path):
@@ -280,54 +295,99 @@ class SimpleModule(Settings):
         self.add_pair(key, value, line_number)
 
 
+def get_pip():  # pragma: no cover
+    """We can't assume pip is installed"""
+    try:
+        import pip  # noqa
+
+    except ImportError:
+        # pip is not installed at all
+        return None, None
+
+    try:
+        # pip < 10.0
+        from pip.req import parse_requirements
+        from pip.download import PipSession
+        return parse_requirements, PipSession
+
+    except ImportError:
+        pass
+
+    try:
+        # pip >= 10.0
+        from pip._internal.req import parse_requirements
+        from pip._internal.download import PipSession
+        return parse_requirements, PipSession
+
+    except ImportError:
+        warnings.warn("Can't find PipSession, won't auto-fill requirements")
+        return None, None
+
+
+def parse_requirements(requirements):
+    """Parse requirements with pip"""
+    # Note: we can't assume pip is installed
+    pip_parse_requirements, pip_session = get_pip()
+    if not pip_parse_requirements:
+        return None, None
+
+    reqs = []
+    links = []
+    session = pip_session()
+    with temp_resource(is_folder=False) as temp:
+        with open(temp, 'wt') as fh:
+            fh.write("\n".join(requirements))
+        for ir in pip_parse_requirements(temp, session=session):
+            if ir.link:
+                if ir.name:
+                    reqs.append(ir.name)
+                links.append(ir.link.url)
+            else:
+                reqs.append(str(ir.req))
+
+    return reqs, links
+
+
+def is_complex_requirement(line):
+    """Allows to save importing pip for very simple requirements.txt files"""
+    if line:
+        return line.startswith('-') or ':' in line
+
+
 class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
     def __init__(self, path):
         self.source = relative_path(path)
-        self.reqs = load_list(path)
+        current_section = 'abstract'
+        self.reqs = []
+        for line in load_list(path, comment=None):
+            if line.startswith('# '):
+                word = first_word(line[2:])
+                if word in KNOWN_SECTIONS:
+                    current_section = word
+                continue
+            line_section = current_section
+            if ' # ' in line:
+                i = line.index(' # ')
+                word = first_word(line[i + 3:])
+                line = line[:i].strip()
+                if word in KNOWN_SECTIONS:
+                    # Allow to override section line by line
+                    line_section = word
+            if line_section == 'indirect':
+                continue
+            if line_section == 'abstract' and '==' in line:
+                i = line.index('==')
+                line = line[:i].strip()
+            self.reqs.append(line)
         self.links = None
 
-        if any(self.is_complex_requirement(line) for line in self.reqs):
-            reqs, links = self.parse_requirements(path)
+        if any(is_complex_requirement(line) for line in self.reqs):
+            reqs, links = parse_requirements(self.reqs)
             if reqs:
                 self.reqs = reqs
                 self.links = links
-
-    @staticmethod
-    def is_complex_requirement(line):
-        """Allows to save importing pip for very simple requirements.txt files"""
-        if line:
-            return line.startswith('-') or ':' in line
-
-    @staticmethod
-    def parse_requirements(path):
-        """Parse a requirements file with pip"""
-        try:
-            # Note: we can't assume pip is installed
-            try:
-                from pip.req import parse_requirements
-                from pip.download import PipSession
-            except ImportError:
-                # pip 10.0
-                from pip._internal.req import parse_requirements    # pragma: no cover
-                from pip._internal.download import PipSession       # pragma: no cover
-
-            reqs = []
-            links = []
-            session = PipSession()
-            for ir in parse_requirements(path, session=session):
-                if ir.link:
-                    if ir.name:
-                        reqs.append(ir.name)
-                    links.append(ir.link.url)
-                else:
-                    reqs.append(str(ir.req))
-
-            return reqs, links
-
-        except ImportError:     # pragma: no cover
-            return None, None   # pragma: no cover
 
 
 class Requirements:

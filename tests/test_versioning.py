@@ -1,6 +1,4 @@
 import os
-import shutil
-import tempfile
 
 import pytest
 from mock import patch
@@ -13,7 +11,7 @@ from setupmeta.scm import Version
 from . import conftest
 
 
-setupmeta.versioning.warnings.warn = lambda *x: None
+setupmeta.versioning.warnings.warn = lambda *_, **__: None
 
 
 def new_meta(versioning, scm=None, setup_py=None, **kwargs):
@@ -41,8 +39,7 @@ def test_project_scm():
 
 
 def test_snapshot():
-    temp = tempfile.mkdtemp()
-    try:
+    with setupmeta.temp_resource() as temp:
         with open(os.path.join(temp, setupmeta.VERSION_FILE), 'w') as fh:
             fh.write('v1.2.3-4-g1234567')
 
@@ -60,9 +57,6 @@ def test_snapshot():
         # Trigger artificial rewriting of version file
         versioning.generate_version_file = True
         versioning.auto_fill_version()
-
-    finally:
-        shutil.rmtree(temp)
 
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: '1'})
@@ -120,6 +114,38 @@ def test_version_from_env_var(*_):
     assert not versioning.generate_version_file
     assert not versioning.problem
     assert versioning.scm.is_dirty()
+
+
+def quick_check(versioning, expected, dirty=True, describe='v0.1.2-5-g123'):
+    meta = new_meta(versioning, scm=conftest.MockGit(dirty, describe=describe))
+    assert meta.version == expected
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.generate_version_file
+    assert not versioning.problem
+    assert versioning.scm.is_dirty() == dirty
+
+
+def test_versioning_variants():
+    quick_check("{major}.{minor}", "0.1+g123")
+    quick_check("{major}.{minor}+", "0.1")
+    quick_check("{major}.{minor}{dirty}", "0.1.dirty+g123")
+    quick_check("{major}.{minor}{dirty}+", "0.1.dirty")
+    quick_check("{major}.{minor}", "0.1", dirty=False)
+
+    quick_check("distance", "0.1.5+g123")
+    quick_check("post", "0.1.2.post5+g123")
+    quick_check("dev", "0.1.3.dev5+g123")
+    quick_check("tag+dev", "0.1.3.dev5+g123")
+    quick_check("build-id", "0.1.5+hlocal.g123.dirty")
+    quick_check("dev+build-id", "0.1.3.dev5+hlocal.g123.dirty")
+
+    # Patch is not bumpable
+    quick_check("dev", "0.1.rc.dev5+g123", describe='v0.1.rc-5-g123')
+
+    # On tag
+    quick_check("dev", "0.1.2", describe='v0.1.2-0-g123', dirty=False)
+    quick_check("dev", "0.1.3.dev0+g123", describe='v0.1.2-0-g123', dirty=True)
 
 
 def test_no_extra():

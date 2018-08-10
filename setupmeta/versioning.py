@@ -68,6 +68,26 @@ class VersionBit:
             text = " [%s]" % self.problem
         return text
 
+    def auto_bumped(self):
+        """
+        :return VersionBit: Instance of this version bit, but with auto-next renderer
+        """
+        result = VersionBit(self.strategy, self.text, alternative=self.alternative, constant=self.constant)
+        result.renderer = result.rendered_attr_auto_bumped
+        return result
+
+    def rendered_attr_auto_bumped(self, version):
+        """
+        :param Version version: Version to render
+        :return str: Rendered version bit, with component auto-bumped
+        """
+        try:
+            value = getattr(version, self.text, None)
+            return str(int(value) + 1)
+
+        except ValueError:
+            return self.rendered_attr(version)
+
     def rendered_attr(self, version):
         """
         :param Version version: Version to render
@@ -203,7 +223,16 @@ class Strategy:
         :param bool extra: Render extra part?
         :return str: Rendered version
         """
-        result = self.rendered_bits(version, self.main_bits) or []
+        bits = self.main_bits
+        if isinstance(bits, list) and len(bits) > 1 and (version.distance > 0 or version.dirty):
+            # Support for '.dev' versioning scheme: apply it only for:
+            # - regular versioning (no special hook)
+            # - only if it's "simple enough", ie: last bit is "dev", and the bit before that is bumpable
+            last = bits[-1]
+            prelast = bits[-2]
+            if last and last.text == "dev" and prelast and prelast.text in BUMPABLE:
+                bits[-2] = prelast.auto_bumped()
+        result = self.rendered_bits(version, bits) or []
         if extra and self.needs_extra(version):
             extra = self.rendered_bits(version, self.extra_bits)
             if extra:
@@ -276,17 +305,29 @@ class Strategy:
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
                 main = '{major}.{minor}.{distance}'
 
-            if main not in ('', 'default', 'post', 'tag'):
-                data['main'] = main
+            elif main == "dev":
+                main = "{major}.{minor}.{patch}{dev}"
+
+            elif main in ('', 'default', 'post', 'tag'):
+                main = data['main']
 
             extra = m.group(4)
             if extra:
                 data['separator'] = extra[0]
                 extra = extra[1:]
-                if extra == 'build-id':
+                if extra == 'dev':
+                    if "{post}" in main:
+                        # Convenience: allow for stuff like: build-id+dev
+                        main = main.replace("{post}", "{dev}")
+
+                elif extra == 'build-id':
                     data['extra'] = '!h{$*BUILD_ID:local}.{commitid}{dirty}'
+
                 else:
                     data['extra'] = extra
+
+            data['main'] = main
+
             hook = m.group(7)
             if hook:
                 data['hook'] = hook

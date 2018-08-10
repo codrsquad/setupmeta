@@ -56,7 +56,7 @@ def run_bootstrap(message):
 
 def complete_args(args):
     args['setup_requires'] = [__title__]
-    args['versioning'] = 'post'
+    args['versioning'] = 'dev'
 
 
 if __name__ == "__main__":

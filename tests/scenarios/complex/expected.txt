@@ -14,7 +14,7 @@ running explain
     entry_points: (explicit                 ) {console_scripts: a=b}
               \_: (entry_points.ini         ) [foo]  [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
   extras_require: (explicit                 ) {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', 'abbreviated']}
-install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
+install_requires: (pinned.txt               ) ['a', 'b', 'c', 'd>1', 'e==1', 'f', 'g', 'h', 'i==1']
         keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (setup.py:5               ) ['setup', 'docstring']
               \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
@@ -125,7 +125,7 @@ running explain
     entry_points: (explicit                 ) {console_scripts: a=b}
               \_: (entry_points.ini         ) [foo]  [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
   extras_require: (explicit                 ) {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', 'abbreviated']}
-install_requires: (pinned.txt               ) ['arrow==0.10.0', 'click==6.7']
+install_requires: (pinned.txt               ) ['a', 'b', 'c', 'd>1', 'e==1', 'f', 'g', 'h', 'i==1']
         keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
               \_: (setup.py:5               ) ['setup', 'docstring']
               \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']

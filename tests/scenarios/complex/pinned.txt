@@ -1,2 +1,19 @@
-arrow==0.10.0
-click==6.7
+-i https://pypi.python.org/simple/
+a
+b==1
+c==1 # abstract (edge case: abstract within implicit abstract section)
+d>1
+x>1 # indirect (edge case: indirect line in abstract section)
+
+# pinned - this is our pinned section
+e==1
+f
+g==1 # abstract (explicitly abstract in a pinned section)
+
+# abstract - edge case: go back to abstract section
+h==1
+i==1 # pinned (explicitly pinned in an abstract section)
+
+# indirect
+j==1
+k>=1

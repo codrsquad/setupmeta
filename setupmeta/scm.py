@@ -241,3 +241,14 @@ class Version:
         if self.distance:
             return '.post%s' % self.distance
         return ''
+
+    @property
+    def dev(self):
+        """
+        {dev} marker for this version
+
+        :return str: '.dev{distance}' for distance > 0, empty string otherwise
+        """
+        if self.distance or self.dirty:
+            return '.dev%s' % self.distance
+        return ''

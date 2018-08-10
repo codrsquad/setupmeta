@@ -7,8 +7,10 @@ author: Zoran Simic zoran@simicweb.com
 """
 
 import os
+import shutil
 import subprocess       # nosec
 import sys
+import tempfile
 
 import setuptools
 
@@ -227,6 +229,27 @@ def project_path(*relative_paths):
 
 def relative_path(full_path):
     return full_path[len(MetaDefs.project_dir) + 1:] if full_path and full_path.startswith(MetaDefs.project_dir) else full_path
+
+
+class temp_resource:
+    """
+    Context manager for creating / auto-deleting a temp working folder
+    """
+    def __init__(self, is_folder=True):
+        self.is_folder = is_folder
+        if is_folder:
+            self.path = tempfile.mkdtemp()
+        else:
+            _, self.path = tempfile.mkstemp()
+
+    def __enter__(self):
+        return self.path
+
+    def __exit__(self, *args):
+        if self.is_folder:
+            shutil.rmtree(self.path)
+        else:
+            os.unlink(self.path)
 
 
 def meta_command_init(self, dist, **kwargs):

@@ -2,6 +2,14 @@
 History
 =======
 
+2.0.0 (2018-08-10)
+------------------
+
+* Auto-fill dependencies accordingly to recommendations in https://packaging.python.org/discussions/install-requires-vs-requirements/
+
+* Added support for ``.dev`` versioning
+
+
 1.6.2 (2018-07-16)
 ------------------
 

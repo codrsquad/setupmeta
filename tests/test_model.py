@@ -3,11 +3,17 @@ import sys
 
 from mock import patch
 
-from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path, SetupMeta
+from setupmeta.model import Definition, DefinitionEntry, first_word, is_setup_py_path, parse_requirements, SetupMeta
 
 
 def bogus_project(**attrs):
     return SetupMeta(dict(_setup_py_path='/foo/bar/shouldnotexist/setup.py', **attrs))
+
+
+def test_first_word():
+    assert first_word(None) is None
+    assert first_word("") == ""
+    assert first_word("FOO bar") == "foo"
 
 
 def test_setup_py_determination():
@@ -81,3 +87,8 @@ def test_meta():
 
     assert is_setup_py_path('/foo/setup.py')
     assert is_setup_py_path('/foo/setup.pyc')
+
+
+@patch('setupmeta.model.get_pip', return_value=(None, None))
+def test_no_pip(*_):
+    assert parse_requirements(None) == (None, None)

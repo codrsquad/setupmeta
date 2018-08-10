@@ -1,18 +1,20 @@
-# Settings
-.discovery.lock
-.python-version
+# Various
+*~
+\#*#
+.\#*
+*.lock
+.*version
 
 # Build artifacts
 __pycache__/
 *.py[cod]
-*.egg-info
-build/
-dist/
+*.egg*
 .tox/
 .venv/
+build/
+dist/
 
 # Caches
 .DS_Store
 .cache/
-.eggs/
 .idea/

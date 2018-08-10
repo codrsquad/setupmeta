@@ -1,8 +1,6 @@
 import os
-import platform
 import re
 import shutil
-import tempfile
 
 from mock import patch
 from six import StringIO
@@ -87,22 +85,21 @@ def touch(folder, isdir, *paths):
 
 
 def test_clean():
-    temp = tempfile.mkdtemp()
-    touch(temp, True, '.idea', 'build', 'dd', 'dd/__pycache__', 'foo.egg-info')
-    touch(temp, False, 'foo', 'a.pyc', '.pyo', 'bar.pyc', 'setup.py', 'dd/__pycache__/a.pyc')
-    run_setup_py(
-        ['cleanall'],
-        """
-        deleted build
-        deleted foo.egg-info
-        deleted dd/__pycache__
-        deleted 2 .pyc files, 1 .pyo files
-        """,
-        folder=temp
-    )
-    # Run a 2nd time: nothing to be cleaned anymore
-    run_setup_py(['cleanall'], "all clean, no deletable files found", folder=temp)
-    shutil.rmtree(temp)
+    with setupmeta.temp_resource() as temp:
+        touch(temp, True, '.idea', 'build', 'dd', 'dd/__pycache__', 'foo.egg-info')
+        touch(temp, False, 'foo', 'a.pyc', '.pyo', 'bar.pyc', 'setup.py', 'dd/__pycache__/a.pyc')
+        run_setup_py(
+            ['cleanall'],
+            """
+            deleted build
+            deleted foo.egg-info
+            deleted dd/__pycache__
+            deleted 2 .pyc files, 1 .pyo files
+            """,
+            folder=temp
+        )
+        # Run a 2nd time: nothing to be cleaned anymore
+        run_setup_py(['cleanall'], "all clean, no deletable files found", folder=temp)
 
 
 def copy_to(src, dest, basename=None):
@@ -115,15 +112,9 @@ def copy_to(src, dest, basename=None):
 
 
 def test_twine():
-    temp = tempfile.mkdtemp()
-
-    try:
+    with setupmeta.temp_resource() as temp:
         copy_to(setupmeta.project_path('examples', 'single', 'setup.py'), temp)
         copy_to(setupmeta.project_path('examples', 'single', 'single.py'), temp)
-
-        if platform.python_implementation() != "CPython":
-            run_setup_py(['twine'], "twine command not supported on ", folder=temp)
-            return
 
         run_setup_py(['twine'], "Specify at least one of: --egg, --dist or --wheel", folder=temp)
         run_setup_py(['twine', '--egg=all'], "twine is not installed", folder=temp)
@@ -184,5 +175,10 @@ def test_twine():
             folder=temp
         )
 
-    finally:
-        shutil.rmtree(temp)
+
+@patch('platform.python_implementation', return_value="pypy")
+def test_unsupported_twine(*_):
+    with setupmeta.temp_resource() as temp:
+        copy_to(setupmeta.project_path('examples', 'single', 'setup.py'), temp)
+        copy_to(setupmeta.project_path('examples', 'single', 'single.py'), temp)
+        run_setup_py(['twine'], "twine command not supported on pypy", folder=temp)
