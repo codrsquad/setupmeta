@@ -9,6 +9,8 @@ History
 
 * Added support for ``.dev`` versioning
 
+* Added ``--dependencies`` to ``explain`` command
+
 
 1.6.2 (2018-07-16)
 ------------------

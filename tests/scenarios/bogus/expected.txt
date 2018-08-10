@@ -13,6 +13,11 @@ long_description_content_type: (README.md       ) text/markdown
                       version: (git             ) 1.0
                    versioning: (explicit        ) {extra: [], main: function 'main_part'}
 
+:: explain -d
+running explain
+    install_requires=None,
+    tests_require=None,
+
 :: entrypoints
 running entrypoints
 

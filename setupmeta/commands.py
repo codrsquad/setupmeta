@@ -54,11 +54,13 @@ class ExplainCommand(setuptools.Command):
     """Show a report of where key/values setup(attr) come from"""
 
     user_options = [
+        ('dependencies', 'd', "show auto-filled dependencies"),
         ('recommend', 'r', "show more recommendations"),
         ('chars=', 'c', "max chars to show"),
     ]
 
     def initialize_options(self):
+        self.dependencies = False
         self.recommend = False
         self.chars = setupmeta.Console.columns()
 
@@ -67,7 +69,46 @@ class ExplainCommand(setuptools.Command):
             hint = ", %s" % hint if hint else ''
             self.setupmeta.auto_fill(key, "- Consider specifying '%s'%s" % (key, hint), "missing")
 
+    def represented_req(self, name, note=None, align=None):
+        name = '"%s",' % name
+        if note:
+            fmt = "%%-%ss# %%s" % align
+            name = fmt % (name, note)
+        return name
+
+    def show_requirements(self, setup_key, requirements):
+        """
+        :param str setup_key: Name of corresponding key in 'setup()'
+        :param RequirementsEntry requirements:
+        """
+        content = "None"
+        if requirements and requirements.reqs:
+            names = []
+            notes = []
+            for req in requirements.reqs:
+                names.append(req)
+                notes.append(requirements.notes.get(req) or "")
+            if any(len(note) for note in notes):
+                longest_name = max(len(name) for name in names) + 5
+                content = []
+                for i in range(len(names)):
+                    content.append(self.represented_req(names[i], notes[i], longest_name))
+            else:
+                content = [self.represented_req(name) for name in names]
+            content = "[\n        %s\n    ]" % "\n        ".join(content).strip()
+        print('    %s=%s,' % (setup_key, content))
+
     def run(self):
+        if self.dependencies:
+            install = None
+            test = None
+            if self.setupmeta.requirements:
+                install = self.setupmeta.requirements.install
+                test = self.setupmeta.requirements.test
+            self.show_requirements("install_requires", install)
+            self.show_requirements("tests_require", test)
+            return
+
         self.chars = setupmeta.to_int(self.chars, default=setupmeta.Console.columns())
 
         definitions = self.setupmeta.definitions

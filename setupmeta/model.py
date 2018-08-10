@@ -359,7 +359,8 @@ class RequirementsEntry:
 
     def __init__(self, path):
         self.source = relative_path(path)
-        current_section = 'abstract'
+        current_section = None
+        self.notes = {}
         self.reqs = []
         for line in load_list(path, comment=None):
             if line.startswith('# '):
@@ -368,6 +369,7 @@ class RequirementsEntry:
                     current_section = word
                 continue
             line_section = current_section
+            note = None
             if ' # ' in line:
                 i = line.index(' # ')
                 word = first_word(line[i + 3:])
@@ -375,11 +377,16 @@ class RequirementsEntry:
                 if word in KNOWN_SECTIONS:
                     # Allow to override section line by line
                     line_section = word
+                    note = "'%s' stated on line" % word
             if line_section == 'indirect':
                 continue
-            if line_section == 'abstract' and '==' in line:
+            if (not line_section or line_section == 'abstract') and '==' in line:
                 i = line.index('==')
                 line = line[:i].strip()
+                if not note and line_section:
+                    note = "in '%s' section" % line_section
+            if note:
+                self.notes[line] = note or "abstract by default"
             self.reqs.append(line)
         self.links = None
 

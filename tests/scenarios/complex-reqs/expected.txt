@@ -15,6 +15,18 @@ long_description_content_type: (README.md           ) text/markdown
                           url: (missing             ) - Consider specifying 'url'
                       version: (missing             ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
+:: explain -d
+running explain
+    install_requires=[
+        "beautifulsoup4>=4.4.0",
+        "wonka",
+    ],
+    tests_require=[
+        "pytest",
+        "wonka",
+        "mytest",
+    ],
+
 :: entrypoints
 running entrypoints
 
