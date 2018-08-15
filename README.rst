@@ -177,7 +177,7 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
-.. _versioning: https://github.com/zsimic/setupmeta/blob/master/VERSIONING.rst
+.. _versioning: https://github.com/zsimic/setupmeta/blob/master/docs/versioning.rst
 
 .. _commands: https://github.com/zsimic/setupmeta/blob/master/COMMANDS.rst
 
