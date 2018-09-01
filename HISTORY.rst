@@ -2,6 +2,12 @@
 History
 =======
 
+2.0.1 (2018-08-31)
+------------------
+
+* Make sure local tags match remote before pushing a new bumped version tag
+
+
 2.0.0 (2018-08-10)
 ------------------
 
