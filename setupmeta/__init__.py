@@ -8,17 +8,17 @@ author: Zoran Simic zoran@simicweb.com
 
 import os
 import shutil
-import subprocess       # nosec
+import subprocess  # nosec
 import sys
 import tempfile
 
 import setuptools
 
 
-USER_HOME = os.path.expanduser('~')         # Used to pretty-print subfolders of ~
-DEBUG = os.environ.get('SETUPMETA_DEBUG')
-VERSION_FILE = '.setupmeta.version'         # File used to work with projects that are in a subfolder of a git checkout
-SCM_DESCRIBE = 'SCM_DESCRIBE'               # Name of env var used as pass-through for cases where git checkout is not available
+USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
+DEBUG = os.environ.get("SETUPMETA_DEBUG")
+VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
+SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
 
 
 def abort(msg):
@@ -46,12 +46,12 @@ def short(text, c=None):
     if c is None:
         c = Console.columns()
     result = stringify(text).strip()
-    result = result.replace(USER_HOME, '~').replace('\n', ' ')
+    result = result.replace(USER_HOME, "~").replace("\n", " ")
     if c and len(result) > c:
         if isinstance(text, dict):
-            summary = '%s keys' % len(text)
+            summary = "%s keys" % len(text)
         elif isinstance(text, list):
-            summary = '%s items' % len(text)
+            summary = "%s items" % len(text)
         else:
             summary = "%s chars" % len(result)
         cutoff = c - len(summary) - 5
@@ -65,7 +65,7 @@ def strip_dash(text):
     """ Strip leading dashes from 'text' """
     if not text:
         return text
-    return text.strip('-')
+    return text.strip("-")
 
 
 def is_executable(path):
@@ -79,7 +79,7 @@ def which(program):
         if is_executable(program):
             return program
         return None
-    for p in os.environ.get('PATH', '').split(':'):
+    for p in os.environ.get("PATH", "").split(":"):
         fp = os.path.join(p, program)
         if is_executable(fp):
             return fp
@@ -92,12 +92,12 @@ def which(program):
 def represented_args(args):
     result = []
     for text in args:
-        if not text or ' ' in text:
+        if not text or " " in text:
             sep = "'" if '"' in text else '"'
             result.append("%s%s%s" % (sep, text, sep))
         else:
             result.append(text)
-    return ' '.join(result)
+    return " ".join(result)
 
 
 def merged(output, error):
@@ -121,9 +121,9 @@ def run_program(program, *args, **kwargs):
                          True: return exit code and output/error
     """
     full_path = which(program)
-    fatal = kwargs.pop('fatal', False)
-    dryrun = kwargs.pop('dryrun', False)
-    capture = kwargs.pop('capture', None)
+    fatal = kwargs.pop("fatal", False)
+    dryrun = kwargs.pop("dryrun", False)
+    capture = kwargs.pop("capture", None)
     represented = "%s %s" % (program, represented_args(args))
 
     if dryrun:
@@ -140,10 +140,10 @@ def run_program(program, *args, **kwargs):
         print("Running: %s" % represented)
 
     else:
-        kwargs['stdout'] = subprocess.PIPE
-        kwargs['stderr'] = subprocess.PIPE
+        kwargs["stdout"] = subprocess.PIPE
+        kwargs["stderr"] = subprocess.PIPE
 
-    p = subprocess.Popen([full_path] + list(args), **kwargs)    # nosec
+    p = subprocess.Popen([full_path] + list(args), **kwargs)  # nosec
     output, error = p.communicate()
     output = decode(output)
     error = decode(error)
@@ -156,7 +156,7 @@ def run_program(program, *args, **kwargs):
     trace(trace_msg)
 
     if capture:
-        return merged(output, error if capture == 'all' else None)
+        return merged(output, error if capture == "all" else None)
 
     if p.returncode and fatal:
         print("%s exited with code %s" % (represented, p.returncode))
@@ -168,7 +168,7 @@ def run_program(program, *args, **kwargs):
 def decode(value):
     """ Python 2/3 friendly decoding of output """
     if isinstance(value, bytes):
-        return value.decode('utf-8')
+        return value.decode("utf-8")
     return value
 
 
@@ -182,7 +182,7 @@ def stringify_dict(data):
     result = []
     for k, v in sorted(data.items()):
         result.append("%s: %s" % (stringify(k), stringify(v)))
-    return "{%s}" % ', '.join(result)
+    return "{%s}" % ", ".join(result)
 
 
 def stringify(value):
@@ -199,13 +199,16 @@ def stringify(value):
 
 
 if sys.version_info[0] < 3:
+
     def simplify_str(value):
         value = decode(value)
-        if isinstance(value, unicode):      # noqa
-            return value.encode('ascii', 'ignore')
+        if isinstance(value, unicode):  # noqa
+            return value.encode("ascii", "ignore")
         return str(value)
 
+
 else:
+
     def simplify_str(value):
         """ Pretty string representation of 'text' for python3 """
         return str(decode(value))
@@ -218,7 +221,7 @@ def listify(text, separator=None):
     if isinstance(text, (set, tuple)):
         return list(text)
     if separator:
-        text = text.replace('\n', separator)
+        text = text.replace("\n", separator)
     return [s.strip() for s in text.split(separator) if s.strip()]
 
 
@@ -235,6 +238,7 @@ class temp_resource:
     """
     Context manager for creating / auto-deleting a temp working folder
     """
+
     def __init__(self, is_folder=True):
         self.is_folder = is_folder
         if is_folder:
@@ -254,9 +258,10 @@ class temp_resource:
 
 def meta_command_init(self, dist, **kwargs):
     """ Custom __init__ injected to commands decorated with @MetaCommand """
-    self.setupmeta = getattr(dist, '_setupmeta', None)
+    self.setupmeta = getattr(dist, "_setupmeta", None)
     if not self.setupmeta:
         from distutils.errors import DistutilsClassError
+
         raise DistutilsClassError("Missing setupmeta information")
     setuptools.Command.__init__(self, dist, **kwargs)
 
@@ -296,13 +301,13 @@ class MetaDefs:
     @classmethod
     def register_command(cls, command):
         """ Register our own 'command' """
-        command.description = command.__doc__.strip().split('\n')[0]
+        command.description = command.__doc__.strip().split("\n")[0]
         command.__init__ = meta_command_init
         if command.initialize_options == setuptools.Command.initialize_options:
             command.initialize_options = lambda x: None
         if command.finalize_options == setuptools.Command.finalize_options:
             command.finalize_options = lambda x: None
-        if not hasattr(command, 'user_options'):
+        if not hasattr(command, "user_options"):
             command.user_options = []
         cls.commands.append(command)
         return command
@@ -358,8 +363,8 @@ class Console:
 
     @classmethod
     def columns(cls, default=160):
-        if cls._columns is None and sys.stdout.isatty() and 'TERM' in os.environ:
-            cols = os.popen('tput cols', 'r').read()    # nosec
+        if cls._columns is None and sys.stdout.isatty() and "TERM" in os.environ:
+            cols = os.popen("tput cols", "r").read()  # nosec
             cols = decode(cols)
             cls._columns = to_int(cols, default=None)
         if cls._columns is None:

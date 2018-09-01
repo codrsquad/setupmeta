@@ -12,11 +12,10 @@ Like the Shadoks say: why do simple when one can do complicated?
 import re
 
 
-RE_VERSION = re.compile(r'version (\d+(.\d+)?)', re.IGNORECASE)
+RE_VERSION = re.compile(r"version (\d+(.\d+)?)", re.IGNORECASE)
 
 
 class License:
-
     def __init__(self, short, match=None, classifier=None):
         self.short = short
         self._match = match or short
@@ -27,8 +26,8 @@ class License:
     def match(self, contents):
         if not contents or any(m not in contents for m in self._match):
             return None, None
-        pre = ''
-        post = ''
+        pre = ""
+        post = ""
         short = self.short
         classifier = self.classifier
 
@@ -37,35 +36,32 @@ class License:
         if m:
             version = m.group(1)
 
-        if self.short == 'GNU':
+        if self.short == "GNU":
             # The GNU guys are extra-allergic to simplicity
-            if 'LESSER' in contents:
-                pre = 'Lesser '
-            elif 'AFFERO' in contents:
-                pre = 'Affero '
+            if "LESSER" in contents:
+                pre = "Lesser "
+            elif "AFFERO" in contents:
+                pre = "Affero "
             if version:
-                post = 'v%s' % version[0]
-            short = '%sGPL%s' % (pre and pre[0], post)
+                post = "v%s" % version[0]
+            short = "%sGPL%s" % (pre and pre[0], post)
             classifier = "GNU %sGeneral Public License (%s)" % (pre, short)
-        if short == 'Apache' and version:
+        if short == "Apache" and version:
             # Most project seem to abbreviate this to "Apache 2.0"
             short = "%s %s" % (self.short, version)
         return short, "License :: OSI Approved :: %s" % classifier
 
 
 # BSD is not even mentioning "BSD" in the legalese... sigh
-BSD_CHATTER = [
-    'Redistribution and use in source and binary forms',
-    'permitted provided that the following conditions',
-]
+BSD_CHATTER = ["Redistribution and use in source and binary forms", "permitted provided that the following conditions"]
 
 
 KNOWN_LICENSES = [
-    License('MIT', 'MIT License', 'MIT License'),
-    License('Apache', 'apache.org/licenses', 'Apache Software License'),
-    License('GNU'),
-    License('MPL', 'Mozilla Public License'),
-    License('BSD', BSD_CHATTER, 'BSD License'),
+    License("MIT", "MIT License", "MIT License"),
+    License("Apache", "apache.org/licenses", "Apache Software License"),
+    License("GNU"),
+    License("MPL", "Mozilla Public License"),
+    License("BSD", BSD_CHATTER, "BSD License"),
 ]
 
 

@@ -18,23 +18,20 @@ from setupmeta.license import determined_license
 
 
 # Used to mark which key/values were provided explicitly in setup.py
-EXPLICIT = 'explicit'
-READMES = ['README.rst', 'README.md', 'README*']
+EXPLICIT = "explicit"
+READMES = ["README.rst", "README.md", "README*"]
 
 # Accept reasonable variations of name + some separator + email
-RE_EMAIL = re.compile(r'(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)')
+RE_EMAIL = re.compile(r"(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)")
 
 # Finds simple values of the form: __author__ = 'Someone'
 RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 
 # Finds simple docstring entries like: author: Zoran Simic
-RE_DOC_VALUE = re.compile(r'^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$')
+RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 
 # Beautify short description
-RE_DESCRIPTION = re.compile(
-    r'^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$',
-    re.IGNORECASE
-)
+RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
 
 KNOWN_SECTIONS = set("abstract pinned indirect".split())
 
@@ -56,7 +53,7 @@ def is_setup_py_path(path):
     if not path:
         return False
     # Accept also setup.pyc
-    return os.path.basename(path).startswith('setup.py')
+    return os.path.basename(path).startswith("setup.py")
 
 
 def find_packages(name, subfolder=None):
@@ -68,7 +65,7 @@ def find_packages(name, subfolder=None):
     else:
         path = project_path(name)
         trace("looking for packages in '%s'" % name)
-    init_py = os.path.join(path, '__init__.py')
+    init_py = os.path.join(path, "__init__.py")
     if os.path.isfile(init_py):
         result.add(name)
         trace("found package '%s'" % name)
@@ -109,7 +106,7 @@ class Definition(object):
         """
         self.key = key
         self.value = None
-        self.sources = []           # type: list(DefinitionEntry)
+        self.sources = []  # type: list(DefinitionEntry)
 
     def __repr__(self):
         if len(self.sources) == 1:
@@ -171,7 +168,7 @@ class Settings:
     """ Collection of key/value pairs with info on where they came from """
 
     def __init__(self):
-        self.definitions = {}                       # type: dict(Definition)
+        self.definitions = {}  # type: dict(Definition)
 
     def __repr__(self):
         project_dir = short(MetaDefs.project_dir)
@@ -199,8 +196,8 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if key == 'keywords':
-            value = listify(value, separator=',')
+        if key == "keywords":
+            value = listify(value, separator=",")
         definition = self.definitions.get(key)
         if definition is None:
             definition = Definition(key)
@@ -228,7 +225,7 @@ class SimpleModule(Settings):
         if not self.exists:
             return
 
-        with io.open(self.full_path, encoding='utf-8') as fh:
+        with io.open(self.full_path, encoding="utf-8") as fh:
             docstring_marker = None
             docstring_start = None
             docstring = []
@@ -273,7 +270,7 @@ class SimpleModule(Settings):
                 line = lines.pop(0).rstrip()
                 line_number += 1
                 if len(line) > 5 and line[0].isalnum():
-                    self.add_pair('docstring_lead', line, line_number)
+                    self.add_pair("docstring_lead", line, line_number)
         if lines and not lines[0]:
             # Skip blank line after lead, if any
             lines.pop(0)
@@ -308,6 +305,7 @@ def get_pip():  # pragma: no cover
         # pip < 10.0
         from pip.req import parse_requirements
         from pip.download import PipSession
+
         return parse_requirements, PipSession
 
     except ImportError:
@@ -317,6 +315,7 @@ def get_pip():  # pragma: no cover
         # pip >= 10.0
         from pip._internal.req import parse_requirements
         from pip._internal.download import PipSession
+
         return parse_requirements, PipSession
 
     except ImportError:
@@ -335,7 +334,7 @@ def parse_requirements(requirements):
     links = []
     session = pip_session()
     with temp_resource(is_folder=False) as temp:
-        with open(temp, 'wt') as fh:
+        with open(temp, "wt") as fh:
             fh.write("\n".join(requirements))
         for ir in pip_parse_requirements(temp, session=session):
             if ir.link:
@@ -351,7 +350,7 @@ def parse_requirements(requirements):
 def is_complex_requirement(line):
     """Allows to save importing pip for very simple requirements.txt files"""
     if line:
-        return line.startswith('-') or ':' in line
+        return line.startswith("-") or ":" in line
 
 
 class RequirementsEntry:
@@ -363,25 +362,25 @@ class RequirementsEntry:
         self.notes = {}
         self.reqs = []
         for line in load_list(path, comment=None):
-            if line.startswith('#'):
+            if line.startswith("#"):
                 word = first_word(line[1:])
                 if word in KNOWN_SECTIONS:
                     current_section = word
                 continue
             line_section = current_section
             note = None
-            if ' # ' in line:
-                i = line.index(' # ')
+            if " # " in line:
+                i = line.index(" # ")
                 word = first_word(line[i + 3:])
                 line = line[:i].strip()
                 if word in KNOWN_SECTIONS:
                     # Allow to override section line by line
                     line_section = word
                     note = "'%s' stated on line" % word
-            if line_section == 'indirect':
+            if line_section == "indirect":
                 continue
-            if (not line_section or line_section == 'abstract') and '==' in line:
-                i = line.index('==')
+            if (not line_section or line_section == "abstract") and "==" in line:
+                i = line.index("==")
                 line = line[:i].strip()
                 if not note:
                     if line_section:
@@ -405,13 +404,8 @@ class Requirements:
 
     def __init__(self):
         self.links_source = None
-        self.install = self.get_requirements('requirements.txt', 'pinned.txt')
-        self.test = self.get_requirements(
-            'tests/requirements.txt',
-            'requirements-dev.txt',
-            'dev-requirements.txt',
-            'test-requirements.txt'
-        )
+        self.install = self.get_requirements("requirements.txt", "pinned.txt")
+        self.test = self.get_requirements("tests/requirements.txt", "requirements-dev.txt", "dev-requirements.txt", "test-requirements.txt")
         self.links = []
         self.add_links(self.install)
         self.add_links(self.test)
@@ -444,51 +438,51 @@ class SetupMeta(Settings):
         Settings.__init__(self)
         self.attrs = MetaDefs.dist_to_dict(upstream)
 
-        self.find_project_dir(self.attrs.pop('_setup_py_path', None))
-        scm = self.attrs.pop('scm', None)
+        self.find_project_dir(self.attrs.pop("_setup_py_path", None))
+        scm = self.attrs.pop("scm", None)
 
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
             self.add_definition(key, value, EXPLICIT)
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
-        self.merge(SimpleModule('setup.py'))
-        title = self.definitions.get('title')
+        self.merge(SimpleModule("setup.py"))
+        title = self.definitions.get("title")
         if title:
-            self.auto_fill('name', title.value, source=title.source)
+            self.auto_fill("name", title.value, source=title.source)
 
-        packages = self.attrs.get('packages', [])
-        py_modules = self.attrs.get('py_modules', [])
+        packages = self.attrs.get("packages", [])
+        py_modules = self.attrs.get("py_modules", [])
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
             direct_packages = find_packages(self.name)
-            src_packages = find_packages(self.name, subfolder='src')
+            src_packages = find_packages(self.name, subfolder="src")
             packages = sorted(direct_packages | src_packages)
 
             if src_packages:
-                self.auto_fill('package_dir', {'': 'src'})
+                self.auto_fill("package_dir", {"": "src"})
             if packages:
-                self.auto_fill('packages', packages)
+                self.auto_fill("packages", packages)
 
-            if os.path.isfile(project_path('%s.py' % self.name)):
+            if os.path.isfile(project_path("%s.py" % self.name)):
                 py_modules = [self.name]
-                self.auto_fill('py_modules', py_modules)
+                self.auto_fill("py_modules", py_modules)
 
         # Scan the usual/conventional places
         for py_module in py_modules:
-            self.merge(SimpleModule('%s.py' % py_module))
+            self.merge(SimpleModule("%s.py" % py_module))
 
         for package in packages:
-            if package and '.' not in package:
+            if package and "." not in package:
                 # Look at top level modules only
                 self.merge(
-                    SimpleModule(package, '__about__.py'),
-                    SimpleModule(package, '__version__.py'),
-                    SimpleModule(package, '__init__.py'),
-                    SimpleModule('src', package, '__about__.py'),
-                    SimpleModule('src', package, '__version__.py'),
-                    SimpleModule('src', package, '__init__.py'),
+                    SimpleModule(package, "__about__.py"),
+                    SimpleModule(package, "__version__.py"),
+                    SimpleModule(package, "__init__.py"),
+                    SimpleModule("src", package, "__about__.py"),
+                    SimpleModule("src", package, "__version__.py"),
+                    SimpleModule("src", package, "__init__.py"),
                 )
 
         scm = scm or setupmeta.versioning.project_scm(MetaDefs.project_dir)
@@ -497,15 +491,15 @@ class SetupMeta(Settings):
 
         self.fill_urls()
 
-        self.auto_adjust('author', self.extract_email)
-        self.auto_adjust('contact', self.extract_email)
-        self.auto_adjust('maintainer', self.extract_email)
+        self.auto_adjust("author", self.extract_email)
+        self.auto_adjust("contact", self.extract_email)
+        self.auto_adjust("maintainer", self.extract_email)
 
         self.requirements = Requirements()
-        self.auto_fill_requires('install', 'install_requires')
-        self.auto_fill_requires('test', 'tests_require')
+        self.auto_fill_requires("install", "install_requires")
+        self.auto_fill_requires("test", "tests_require")
         if self.requirements.links:
-            self.auto_fill('dependency_links', self.requirements.links, self.requirements.links_source)
+            self.auto_fill("dependency_links", self.requirements.links, self.requirements.links_source)
 
         self.auto_fill_classifiers()
         self.auto_fill_entry_points()
@@ -515,16 +509,16 @@ class SetupMeta(Settings):
 
     def fill_urls(self):
         """ Auto-fill url and download_url """
-        url = self.value('url')
-        download_url = self.value('download_url')
+        url = self.value("url")
+        download_url = self.value("download_url")
 
         if url and self.name:
-            parts = url.split('/')
-            if len(parts) == 4 and 'github.com' == parts[2]:
+            parts = url.split("/")
+            if len(parts) == 4 and "github.com" == parts[2]:
                 # Convenience: auto-complete url with package name
                 url = os.path.join(url, self.name)
 
-        if download_url and url and '://' not in download_url:
+        if download_url and url and "://" not in download_url:
             # Convenience: auto-complete relative download_url
             download_url = os.path.join(url, download_url)
 
@@ -536,8 +530,8 @@ class SetupMeta(Settings):
             # Convenience: allow {name} and {version} in download_url
             download_url = download_url.format(name=self.name, version=self.version)
 
-        self.auto_fill('url', url)
-        self.auto_fill('download_url', download_url)
+        self.auto_fill("url", url)
+        self.auto_fill("download_url", download_url)
 
     def find_project_dir(self, setup_py_path):
         """
@@ -567,12 +561,12 @@ class SetupMeta(Settings):
         :param str contents: Readme file contents
         :return str|None:
         """
-        description = contents.strip().partition('\n')[0].strip()
+        description = contents.strip().partition("\n")[0].strip()
         size = len(description)
         if size < 4 or size > 256:
             return None
         m = RE_DESCRIPTION.match(description)
-        name = (self.name or '').lower()
+        name = (self.name or "").lower()
         if m:
             lead = m.group(3)
             if lead and lead.lower() == name:
@@ -585,11 +579,11 @@ class SetupMeta(Settings):
 
     def auto_fill_long_description(self):
         """ Auto-fille descriptions from README file """
-        docstring_lead = self.definitions.pop('docstring_lead', None)
-        if docstring_lead and not self.value('description'):
-            self.auto_fill('description', docstring_lead.value, source=docstring_lead.source)
+        docstring_lead = self.definitions.pop("docstring_lead", None)
+        if docstring_lead and not self.value("description"):
+            self.auto_fill("description", docstring_lead.value, source=docstring_lead.source)
         for readme in resolved_paths(READMES):
-            if self.value('long_description') and self.value('description'):
+            if self.value("long_description") and self.value("description"):
                 return
             value = load_readme(readme)
             if not value:
@@ -597,8 +591,8 @@ class SetupMeta(Settings):
             short_desc = self.extract_short_description(value)
             if not short_desc:
                 continue
-            self.auto_fill('description', short_desc, source="%s:1" % readme)
-            self.add_definition('long_description', value, readme, override=short_desc)
+            self.auto_fill("description", short_desc, source="%s:1" % readme)
+            self.add_definition("long_description", value, readme, override=short_desc)
             if readme.endswith(".rst"):
                 content_type = "text/x-rst"
             elif readme.endswith(".md"):
@@ -608,19 +602,19 @@ class SetupMeta(Settings):
             if content_type:
                 self.add_definition("long_description_content_type", content_type, readme, override=short_desc)
 
-    def auto_fill_entry_points(self, key='entry_points'):
+    def auto_fill_entry_points(self, key="entry_points"):
         path = "%s.ini" % key
         value = load_contents(path)
         if value:
             self.add_definition(key, value, path)
 
-    def auto_fill_license(self, key='license'):
+    def auto_fill_license(self, key="license"):
         """ Try to auto-determine the license """
-        contents, _ = find_contents(['LICENSE*'], limit=20)
+        contents, _ = find_contents(["LICENSE*"], limit=20)
         short, classifier = determined_license(contents)
         if short:
-            self.auto_fill('license', short)
-            classifiers = self.value('classifiers')
+            self.auto_fill("license", short)
+            classifiers = self.value("classifiers")
             if classifiers and isinstance(classifiers, list):
                 if classifier not in classifiers:
                     classifiers.append(classifier)
@@ -632,26 +626,26 @@ class SetupMeta(Settings):
 
     @property
     def name(self):
-        return self.value('name')
+        return self.value("name")
 
     @property
     def version(self):
-        return self.value('version')
+        return self.value("version")
 
     def auto_fill_classifiers(self):
         """ Add classifiers from classifiers.txt, if present """
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        classifiers = load_list('classifiers.txt')
+        classifiers = load_list("classifiers.txt")
         if classifiers:
-            self.add_definition('classifiers', classifiers, 'classifiers.txt')
+            self.add_definition("classifiers", classifiers, "classifiers.txt")
 
     def sort_classifiers(self):
         """ Sort classifiers alphabetically """
-        classifiers = self.definitions.get('classifiers')
+        classifiers = self.definitions.get("classifiers")
         if classifiers and isinstance(classifiers.value, list):
             classifiers.value = sorted(classifiers.value)
 
-    def auto_fill(self, field, value, source='auto-fill', override=False):
+    def auto_fill(self, field, value, source="auto-fill", override=False):
         """ Auto-fill 'field' with 'value' """
         if value is not None and (override or value != self.value(field)):
             override = override or (field not in self.attrs)
@@ -661,11 +655,11 @@ class SetupMeta(Settings):
         """ Auto-adjust 'field' using 'adjust' function """
         for key, value in adjust(field):
             if value:
-                self.add_definition(key, value, 'auto-adjust', override=True)
+                self.add_definition(key, value, "auto-adjust", override=True)
 
     def extract_email(self, field):
         """ Convenience: one line user+email specification """
-        field_email = field + '_email'
+        field_email = field + "_email"
         user_email = self.value(field_email)
         if user_email:
             # Caller already separated email, nothing to do

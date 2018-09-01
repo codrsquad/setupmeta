@@ -11,7 +11,7 @@ import setupmeta
 
 
 # Recognized README tokens
-RE_README_TOKEN = re.compile(r'(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?')
+RE_README_TOKEN = re.compile(r"(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?")
 
 
 def load_contents(relative_path, limit=0):
@@ -23,14 +23,14 @@ def load_contents(relative_path, limit=0):
     """
     try:
         full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, encoding='utf-8') as fh:
+        with io.open(full_path, encoding="utf-8") as fh:
             lines = []
             for line in fh:
                 limit -= 1
                 if limit == 0:
                     break
                 lines.append(line)
-            return ''.join(lines).strip()
+            return "".join(lines).strip()
 
     except IOError:
         pass
@@ -41,7 +41,7 @@ def load_readme(relative_path, limit=0):
     content = []
     try:
         full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, encoding='utf-8') as fh:
+        with io.open(full_path, encoding="utf-8") as fh:
             for line in fh.readlines():
                 m = RE_README_TOKEN.search(line)
                 if not m:
@@ -52,23 +52,23 @@ def load_readme(relative_path, limit=0):
                 post = post and post.strip()
                 if pre or post:
                     content.append(line)
-                    continue    # Not beginning/end, or no spaces around
+                    continue  # Not beginning/end, or no spaces around
                 action = m.group(2)
                 param = m.group(3)
-                if action == 'end' and param == 'long_description':
+                if action == "end" and param == "long_description":
                     break
-                if action == 'include':
+                if action == "include":
                     included = load_readme(param, limit=limit)
                     if included:
                         content.append(included)
 
-            return ''.join(content).strip()
+            return "".join(content).strip()
 
     except IOError:
         return None
 
 
-def extract_list(content, comment='#'):
+def extract_list(content, comment="#"):
     """ List of non-comment, non-empty strings from 'content'
 
     :param str|None content: Text content
@@ -78,7 +78,7 @@ def extract_list(content, comment='#'):
     if content is None:
         return None
     result = []
-    for line in content.strip().split('\n'):
+    for line in content.strip().split("\n"):
         if comment and comment in line:
             i = line.index(comment)
             line = line[:i]
@@ -88,7 +88,7 @@ def extract_list(content, comment='#'):
     return result
 
 
-def load_list(relative_path, comment='#', limit=0):
+def load_list(relative_path, comment="#", limit=0):
     """ List of non-comment, non-empty strings from file
 
     :param str relative_path: Relative path to file
@@ -96,10 +96,7 @@ def load_list(relative_path, comment='#', limit=0):
     :param int limit: Max number of lines to load
     :return list(str)|None: Contents, if any
     """
-    return extract_list(
-        load_contents(relative_path, limit=limit),
-        comment=comment
-    )
+    return extract_list(load_contents(relative_path, limit=limit), comment=comment)
 
 
 def resolved_paths(relative_paths):
@@ -110,7 +107,7 @@ def resolved_paths(relative_paths):
     candidates = []
     for path in relative_paths:
         # De-dupe and respect order (especially for globbed paths)
-        if '*' in path:
+        if "*" in path:
             full_path = setupmeta.project_path(path)
             for expanded in glob.glob(full_path):
                 relative_path = os.path.basename(expanded)

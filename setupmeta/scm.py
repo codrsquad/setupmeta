@@ -5,13 +5,13 @@ from distutils.version import LooseVersion
 import setupmeta
 
 
-RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)    # Output expected from git describe
+RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
 
 
 class Scm:
     """API used by setupmeta for versioning using SCM tags"""
 
-    program = None      # type: str # Program name (like git or hg)
+    program = None  # type: str # Program name (like 'git' or 'hg')
 
     def __init__(self, root):
         """

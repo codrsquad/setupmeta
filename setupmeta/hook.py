@@ -18,7 +18,7 @@ def distutils_hook(dist, *args, **kwargs):
     It really calls self.parse_command_line(command), we jump in
     so we can decorate the 'dist' object appropriately for our own commands
     """
-    if dist.script_args and not hasattr(dist, '_setupmeta'):
+    if dist.script_args and not hasattr(dist, "_setupmeta"):
         # Add our ._setupmeta object
         # (distutils calls this several times, we need only one)
         dist._setupmeta = SetupMeta(dist)
