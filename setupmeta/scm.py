@@ -5,13 +5,13 @@ from distutils.version import LooseVersion
 import setupmeta
 
 
-RE_GIT_DESCRIBE = re.compile(r'^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$', re.IGNORECASE)    # Output expected from git describe
+RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)    # Output expected from git describe
 
 
 class Scm:
     """API used by setupmeta for versioning using SCM tags"""
 
-    program = None      # type: str # Program name (like 'git' or 'hg')
+    program = None      # type: str # Program name (like git or hg)
 
     def __init__(self, root):
         """
@@ -20,7 +20,7 @@ class Scm:
         self.root = root
 
     def __repr__(self):
-        return '%s %s' % (self.name, self.root)
+        return "%s %s" % (self.name, self.root)
 
     @property
     def name(self):
@@ -66,8 +66,8 @@ class Scm:
         :param kwargs: Additional named arguments
         :return str|int: Output if kwargs['capture'] is True, exit code otherwise
         """
-        capture = kwargs.pop('capture', True)
-        cwd = kwargs.pop('cwd', self.root)
+        capture = kwargs.pop("capture", True)
+        cwd = kwargs.pop("cwd", self.root)
         return setupmeta.run_program(self.program, *args, capture=capture, cwd=cwd, **kwargs)
 
     def run(self, commit, *args, **kwargs):
@@ -80,8 +80,8 @@ class Scm:
         :param kwargs: Additional named arguments
         :return int: Exit code (always zero, unless fatal=False is passed explicitly in kwargs)
         """
-        fatal = kwargs.pop('fatal', True)
-        capture = kwargs.pop('capture', None)
+        fatal = kwargs.pop("fatal", True)
+        capture = kwargs.pop("capture", None)
         return self.get_output(*args, capture=capture, fatal=fatal, dryrun=not commit, **kwargs)
 
 
@@ -98,13 +98,13 @@ class Snapshot(Scm):
 
     def is_dirty(self):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
-        if v and 'dirty' in v:
+        if v and "dirty" in v:
             return True
         return False
 
     def get_branch(self):
         """Consider branch to be always HEAD for snapshots"""
-        return 'HEAD'
+        return "HEAD"
 
     def get_version(self):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
@@ -118,8 +118,8 @@ class Snapshot(Scm):
 class Git(Scm):
     """Implementation for git"""
 
-    program = 'git'
-    _has_remote = None
+    program = "git"
+    _has_origin = None
 
     @staticmethod
     def parsed_version(text, dirty=None):
@@ -131,7 +131,7 @@ class Git(Scm):
                 distance = setupmeta.to_int(distance, default=0)
                 commitid = setupmeta.strip_dash(m.group(3))
                 if dirty is None:
-                    dirty = m.group(4) == '-dirty'
+                    dirty = m.group(4) == "-dirty"
                 return Version(main, distance, commitid, dirty, text)
         return None
 
@@ -139,47 +139,57 @@ class Git(Scm):
         """
         :return bool: Is checkout folder self.root currently dirty?
         """
-        exitcode = self.get_output('diff', '--quiet', '--ignore-submodules', capture=False)
+        exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", capture=False)
         return exitcode != 0
 
     def get_branch(self):
-        branch = self.get_output('rev-parse', '--abbrev-ref', 'HEAD')
+        branch = self.get_output("rev-parse", "--abbrev-ref", "HEAD")
         return branch and branch.strip()
 
     def get_version(self):
         dirty = self.is_dirty()
-        text = self.get_output('describe', '--tags', '--long', '--match', '*.*')
+        text = self.get_output("describe", "--tags", "--long", "--match", "*.*")
         version = self.parsed_version(text, dirty)
         if version:
             return version
 
         # Try harder
-        commitid = self.get_output('rev-parse', '--short', 'HEAD')
-        commitid = 'g%s' % commitid if commitid else ''
-        distance = self.get_output('rev-list', 'HEAD')
-        distance = distance.count('\n') + 1 if distance else 0
+        commitid = self.get_output("rev-parse", "--short", "HEAD")
+        commitid = "g%s" % commitid if commitid else ""
+        distance = self.get_output("rev-list", "HEAD")
+        distance = distance.count("\n") + 1 if distance else 0
         return Version(None, distance, commitid, dirty)
 
-    def has_remote(self):
-        if self._has_remote is None:
-            self._has_remote = bool(self.get_output('config', '--get', 'remote.origin.url'))
-        return self._has_remote
+    def has_origin(self):
+        if self._has_origin is None:
+            self._has_origin = bool(self.get_output("config", "--get", "remote.origin.url"))
+        return self._has_origin
 
     def commit_files(self, commit, relative_paths, next_version):
         if not relative_paths:
             return
         relative_paths = sorted(set(relative_paths))
-        self.run(commit, 'add', *relative_paths)
-        self.run(commit, 'commit', '-m', "Version %s" % next_version)
-        if self.has_remote():
-            self.run(commit, 'push', 'origin')
+        self.run(commit, "add", *relative_paths)
+        self.run(commit, "commit", "-m", "Version %s" % next_version)
+        if self.has_origin():
+            self.run(commit, "push", "origin")
 
     def apply_tag(self, commit, next_version):
+        """
+        :param bool commit: Effectively apply tag if True, dryrun otherwise
+        :param str next_version: Next version to apply
+        """
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
-        self.run(commit, 'tag', '-a', tag, '-m', bump_msg)
-        if self.has_remote():
-            self.run(commit, 'push', '--tags', 'origin')
+
+        if self.has_origin():
+            self.run(commit, "fetch", "origin", "--prune", "--prune-tags")
+
+        self.run(commit, "tag", "-a", tag, "-m", bump_msg)
+
+        if self.has_origin():
+            self.run(commit, "push", "--tags", "origin")
+
         else:
             print("Not running 'git push --tags origin' as you don't have an origin")
 
@@ -197,7 +207,7 @@ class Version:
     patch = 0           # type: int # Patch part of version
     distance = 0        # type: int # Number of commits since last version tag
     commitid = None     # type: str # Commit id
-    dirty = ''          # type: str # Dirty marker
+    dirty = ""          # type: str # Dirty marker
 
     def __init__(self, main=None, distance=0, commitid=None, dirty=False, text=None):
         """
@@ -208,9 +218,9 @@ class Version:
         :param str|None text: Version text as received from SCM
         """
         self.distance = distance or 0
-        self.commitid = (commitid or 'g0000000').strip()
-        self.dirty = '.dirty' if dirty else ''
-        main = (main or '0.0.0').strip()
+        self.commitid = (commitid or "g0000000").strip()
+        self.dirty = ".dirty" if dirty else ""
+        main = (main or "0.0.0").strip()
         self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)
         self.version = LooseVersion(main)
         triplet = self.bump_triplet()
@@ -239,8 +249,8 @@ class Version:
         :return str: '.post{distance}' for distance > 0, empty string otherwise
         """
         if self.distance:
-            return '.post%s' % self.distance
-        return ''
+            return ".post%s" % self.distance
+        return ""
 
     @property
     def dev(self):
@@ -250,5 +260,5 @@ class Version:
         :return str: '.dev{distance}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return '.dev%s' % self.distance
-        return ''
+            return ".dev%s" % self.distance
+        return ""

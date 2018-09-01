@@ -13,32 +13,32 @@ def test_scm():
 
 
 def test_git():
-    git = conftest.MockGit(describe=None, commitid='abc123')
-    assert str(git.get_version()) == 'v0.0.0-1-gabc123'
+    git = conftest.MockGit(describe=None, commitid="abc123")
+    assert str(git.get_version()) == "v0.0.0-1-gabc123"
 
     with conftest.capture_output() as out:
-        git.commit_files(False, [], '2.0')
+        git.commit_files(False, [], "2.0")
         assert not out.to_string()
 
-        git.commit_files(False, ['foo'], '2.0')
-        git.apply_tag(False, '2.0')
+        git.commit_files(False, ["foo"], "2.0")
+        git.apply_tag(False, "2.0")
         assert "Would run: git add foo" in out
         assert 'Would run: git commit -m "Version 2.0"' in out
-        assert 'Would run: git push origin' in out
+        assert "Would run: git push origin" in out
         assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
-        assert 'Would run: git push --tags origin' in out
+        assert "Would run: git push --tags origin" in out
 
-    git._has_remote = ''
+    git._has_origin = ""
     with conftest.capture_output() as out:
-        git.commit_files(False, [], '2.0')
+        git.commit_files(False, [], "2.0")
         assert not out.to_string()
 
-        git.commit_files(False, ['foo'], '2.0')
-        git.apply_tag(False, '2.0')
+        git.commit_files(False, ["foo"], "2.0")
+        git.apply_tag(False, "2.0")
         assert "Would run: git add foo" in out
         assert 'Would run: git commit -m "Version 2.0"' in out
         assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
         assert "Not running 'git push --tags origin' as you don't have an origin" in out
 
-        assert 'Would run: git push origin' not in out
-        assert 'Would run: git push --tags origin' not in out
+        assert "Would run: git push origin" not in out
+        assert "Would run: git push --tags origin" not in out
