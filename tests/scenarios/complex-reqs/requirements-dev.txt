@@ -1,4 +1,5 @@
-pytest
+# This req will not get abstracted, as we abstract 'install_requires' only
+pytest==3.7.4 # abstract
 
 # This one is a dupe (also mentioned in requirements.txt):
 -e git+https://somewhere.com/foo.git#egg=wonka

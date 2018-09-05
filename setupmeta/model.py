@@ -370,28 +370,43 @@ class RequirementsEntry:
         self.ignored = []
         for line in load_list(path, comment=None):
             if not abstract:
-                self.reqs.append(line)
+                # Not abstracting, just trim away comments
+                if line.startswith("#"):
+                    continue
+                if "# " in line:
+                    i = line.index("# ")
+                    line = line[:i].strip()
+                if line:
+                    self.reqs.append(line)
                 continue
+
+            # We're abstracting, allow comments to tweak how we do that
             if line.startswith("#"):
+                # Lines containing only a comment can start a "section", all requirements below this will respect that section
                 word = first_word(line[1:])
                 if word in KNOWN_SECTIONS:
                     current_section = word
                 continue
+
             line_section = current_section
             note = None
-            if " # " in line:
-                i = line.index(" # ")
-                word = first_word(line[i + 3:])
+            if "# " in line:
+                # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
+                i = line.index("# ")
+                word = first_word(line[i + 2:])
                 line = line[:i].strip()
                 if word in KNOWN_SECTIONS:
-                    # Allow to override section line by line
                     line_section = word
                     note = "'%s' stated on line" % word
+
             if line_section == "indirect":
-                self.ignored.append(line)
+                # 'indirect' means the pinning was done to satisfy some indirect dependency,
+                # but should not be considered as our project's dep
+                self.ignored.append("%s # %s" % (line, note or "indirect section"))
                 continue
+
             if (not line_section or line_section == "abstract") and "==" in line:
-                self.abstracted.append(line)
+                # By default (or if in explicit 'abstract' section), trim away simple '==' pinning
                 i = line.index("==")
                 line = line[:i].strip()
                 if not note:
@@ -399,11 +414,20 @@ class RequirementsEntry:
                         note = "in '%s' section" % line_section
                     else:
                         note = "abstracted by default"
-            elif not line.startswith("-i"):
-                self.untouched.append(line)
+                self.abstracted.append("%s # %s" % (line, note))
+
+            elif line and line[0].isalpha() or line.startswith("-e"):
+                # Count as untouched only actual deps (ignore flags such as -i)
+                if note:
+                    self.untouched.append("%s # %s" % (line, note))
+                else:
+                    self.untouched.append(line)
+
             if note:
                 self.notes[line] = note or "abstract by default"
+
             self.reqs.append(line)
+
         self.links = None
 
         if any(is_complex_requirement(line) for line in self.reqs):

@@ -11,7 +11,7 @@ running explain
 long_description_content_type: (README.md           ) text/markdown
                          name: (explicit            ) complex-reqs
                setup_requires: (explicit            ) ['setupmeta']
-                tests_require: (requirements-dev.txt) ['pytest', 'wonka', 'mytest']
+                tests_require: (requirements-dev.txt) ['pytest==3.7.4', 'wonka', 'mytest']
                           url: (missing             ) - Consider specifying 'url'
                       version: (missing             ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
@@ -23,7 +23,7 @@ running explain
         "wonka",
     ],
     tests_require=[
-        "pytest",
+        "pytest==3.7.4",
         "wonka",
         "mytest",
     ],
