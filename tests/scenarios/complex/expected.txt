@@ -62,6 +62,10 @@ running explain
         "pytest",
     ],
 
+:: check
+running check
+[setupmeta] install_requires: 4 abstracted, 3 ignored, 5 untouched
+
 :: entrypoints
 running entrypoints
 a=b

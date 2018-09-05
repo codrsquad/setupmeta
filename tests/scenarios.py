@@ -17,7 +17,7 @@ else:
 SCENARIOS = os.path.join(conftest.TESTS, 'scenarios')
 EXAMPLES = os.path.join(conftest.PROJECT_DIR, 'examples')
 
-SCENARIO_COMMANDS = ['explain -c180 -r', 'explain -d', 'entrypoints', 'version']
+SCENARIO_COMMANDS = ['explain -c180 -r', 'explain -d', "check", 'entrypoints', 'version']
 
 
 def valid_scenarios(folder):

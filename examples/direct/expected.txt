@@ -28,6 +28,9 @@ running explain
     ],
     tests_require=None,   # no auto-fill
 
+:: check
+running check
+
 :: entrypoints
 running entrypoints
 direct = direct:main

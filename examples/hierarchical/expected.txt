@@ -31,6 +31,9 @@ running explain
     ],
     tests_require=None,   # no auto-fill
 
+:: check
+running check
+
 :: entrypoints
 running entrypoints
 hierarchical = hierarchical:main

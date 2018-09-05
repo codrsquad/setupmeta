@@ -7,6 +7,7 @@ import os
 import platform
 import shutil
 import sys
+from distutils.command.check import check
 
 import setuptools
 
@@ -22,6 +23,28 @@ def abort(message):
 def MetaCommand(cls):
     """Decorator allowing for less boilerplate in our commands"""
     return setupmeta.MetaDefs.register_command(cls)
+
+
+@MetaCommand
+class CheckCommand(check):
+    """Perform checks on the package"""
+
+    def _show_requirements_synopsis(self):
+        """Show how many requirements were auto-abstracted or ignored, if any"""
+        if not self.setupmeta or not self.setupmeta.requirements:
+            return
+        install_requires = self.setupmeta.requirements.install
+        if not install_requires or not (install_requires.abstracted or install_requires.ignored):
+            return
+        print("[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
+            len(install_requires.abstracted),
+            len(install_requires.ignored),
+            len(install_requires.untouched),
+        ))
+
+    def run(self):
+        check.run(self)
+        self._show_requirements_synopsis()
 
 
 @MetaCommand

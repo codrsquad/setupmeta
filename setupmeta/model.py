@@ -361,6 +361,9 @@ class RequirementsEntry:
         current_section = None
         self.notes = {}
         self.reqs = []
+        self.abstracted = []
+        self.untouched = []
+        self.ignored = []
         for line in load_list(path, comment=None):
             if line.startswith("#"):
                 word = first_word(line[1:])
@@ -378,8 +381,10 @@ class RequirementsEntry:
                     line_section = word
                     note = "'%s' stated on line" % word
             if line_section == "indirect":
+                self.ignored.append(line)
                 continue
             if (not line_section or line_section == "abstract") and "==" in line:
+                self.abstracted.append(line)
                 i = line.index("==")
                 line = line[:i].strip()
                 if not note:
@@ -387,6 +392,8 @@ class RequirementsEntry:
                         note = "in '%s' section" % line_section
                     else:
                         note = "abstracted by default"
+            elif not line.startswith("-i"):
+                self.untouched.append(line)
             if note:
                 self.notes[line] = note or "abstract by default"
             self.reqs.append(line)

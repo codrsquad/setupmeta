@@ -22,6 +22,10 @@ running explain
     install_requires=None,   # no auto-fill
     tests_require=None,   # no auto-fill
 
+:: check
+running check
+warning: CheckCommand: missing required meta-data: url
+
 :: entrypoints
 running entrypoints
 
