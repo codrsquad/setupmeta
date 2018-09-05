@@ -2,7 +2,7 @@
 History
 =======
 
-2.0.2 (2018-09-04)
+2.0.3 (2018-09-05)
 ------------------
 
 * Show how many requirements_ were abstracted/skipped (if any) in ``setup.py check``

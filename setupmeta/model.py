@@ -356,7 +356,11 @@ def is_complex_requirement(line):
 class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
-    def __init__(self, path):
+    def __init__(self, path, abstract=False):
+        """
+        :param str path: Path to req file
+        :param bool abstract: If True, abstract away simple pinning (applicable to install_requires only)
+        """
         self.source = relative_path(path)
         current_section = None
         self.notes = {}
@@ -365,6 +369,9 @@ class RequirementsEntry:
         self.untouched = []
         self.ignored = []
         for line in load_list(path, comment=None):
+            if not abstract:
+                self.reqs.append(line)
+                continue
             if line.startswith("#"):
                 word = first_word(line[1:])
                 if word in KNOWN_SECTIONS:
@@ -411,8 +418,19 @@ class Requirements:
 
     def __init__(self):
         self.links_source = None
-        self.install = self.get_requirements("requirements.txt", "pinned.txt")
-        self.test = self.get_requirements("tests/requirements.txt", "requirements-dev.txt", "dev-requirements.txt", "test-requirements.txt")
+        self.install = self.get_requirements(
+            True,
+            "requirements.txt",
+            "pinned.txt"
+        )
+        self.test = self.get_requirements(
+            False,
+            "tests/requirements.txt",  # Preferred
+            "requirements-dev.txt",  # Also accept other common variations
+            "dev-requirements.txt",
+            "test-requirements.txt",
+            "requirements-test.txt",
+        )
         self.links = []
         self.add_links(self.install)
         self.add_links(self.test)
@@ -426,13 +444,13 @@ class Requirements:
                     self.links.append(link)
 
     @staticmethod
-    def get_requirements(*relative_paths):
+    def get_requirements(abstract, *relative_paths):
         """ Read old-school requirements.txt type file """
         for path in relative_paths:
             path = project_path(path)
             if os.path.isfile(path):
                 trace("found requirements: %s" % path)
-                return RequirementsEntry(path)
+                return RequirementsEntry(path, abstract=abstract)
 
 
 class SetupMeta(Settings):
