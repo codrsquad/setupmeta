@@ -32,10 +32,12 @@ Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look l
         setup_requires='setupmeta'      # This is where setupmeta comes in
     )
 
-And that should be it - setupmeta_ will take it from there, extracting everything else from the rest of your project (following typical conventions commonly used).
+And that should be it - setupmeta_ will take it from there, extracting everything else from the rest of your project
+(following typical conventions commonly used).
 
-You can use the **explain** command (see commands_) to see what setupmeta_ deduced from your project, for the above it would look something like this
-(you can see which file and which line each setting came from, note that a lot of info is typically extracted from your project, if you follow usual conventions)::
+You can use the **explain** command (see commands_) to see what setupmeta_ deduced from your project,
+for the above it would look something like this (you can see which file and which line each setting came from,
+note that a lot of info is typically extracted from your project, if you follow usual conventions)::
 
     ~/myproject: python setup.py explain
 
@@ -68,13 +70,15 @@ The goal of this project is to:
 
 * Support tag-based versioning_ (like setuptools_scm_, but with super simple configuration/defaults and automated ``bump`` capability)
 
-* Provide useful Commands_ to see the metadata (**explain**), **version** (including support for bumping versions), **cleanall**, **twine**, etc
+* Provide useful Commands_ to see the metadata (**explain**), **version** (including support for bumping versions),
+  **cleanall**, **twine**, etc
 
 
 How it works?
 =============
 
-* Everything that you explicitly provide in your original ``setuptools.setup()`` call is taken as-is (never changed), and internally labelled as ``explicit``.
+* Everything that you explicitly provide in your original ``setuptools.setup()`` call is taken as-is (never changed),
+  and internally labelled as ``explicit``.
   So if you don't like something that setupmeta_ deduces, you can always explicitly state it.
 
 * ``name`` is auto-filled from your setup.py's ``__title__`` (if there is one, sometimes having a constant is quite handy...)
@@ -83,12 +87,33 @@ How it works?
 
 * ``py_modules`` is auto-filled if you have a ``<name>.py`` file
 
+* ``classifiers`` is auto-filled from file ``classifiers.txt`` (one classification per line, ignoring empty lines and python style comments)
+
+* ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
+
+* ``install_requires`` is auto-filled if you have a ``requirements.txt`` (or ``pinned.txt``) file,
+  pinning is abstracted away by default as per `community recommendation`_, see requirements_ for more info.
+
+* ``tests_require`` is auto-filled if you have a ``tests/requirements.txt``, or ``requirements-dev.txt``,
+  or ``dev-requirements.txt``, or ``test-requirements.txt`` file
+
 * ``description`` will be the 1st line of your README (unless that 1st line is too short, or is just the project's name),
   or the 1st line of the first docstring found in the scanned files (see list below)
 
+* ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``,
+  then ``README*``, first one found wins).
+  Special tokens can be used (notation aimed at them easily being `rst comments`_):
+
+    * ``.. [[end long_description]]`` as end marker, so you don't have to use the entire file as long description
+
+    * ``.. [[include <relative-path>]]`` if you want another file included as well (for example, people like to add ``HISTORY.txt`` as well)
+
+    * these tokens must appear either at beginning/end of line, or be after/before at least one space character
+
 * ``version`` can be stated explicitly, or be computed from git tags using ``versioning=...`` (see versioning_ for more info):
 
-    * With ``versioning='distance'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
+    * With ``versioning='distance'``, your git tags will be of the form ``v{major}.{minor}.0``,
+      the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
         * tag "v1.0.0", no commits since tag -> version is "1.0.0"
 
@@ -96,7 +121,8 @@ How it works?
 
         * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.5.post5+g123"
 
-    * With ``versioning='post'``, your git tags will be of the form ``v{major}.{minor}.{patch}``, a "post" addendum will be present if there are commits since latest version tag:
+    * With ``versioning='post'``, your git tags will be of the form ``v{major}.{minor}.{patch}``,
+      a "post" addendum will be present if there are commits since latest version tag:
 
         * tag "v1.0.0", no commits since tag -> version is "1.0.0"
 
@@ -104,7 +130,8 @@ How it works?
 
         * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.0.post5+g123"
 
-    * With ``versioning='build-id'``, your git tags will be of the form ``v{major}.{minor}.0``, the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
+    * With ``versioning='build-id'``, your git tags will be of the form ``v{major}.{minor}.0``,
+      the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
         * tag "v1.0.0", no commits since tag, ``BUILD_ID=12`` -> version is "1.0.0+h12.g123"
 
@@ -120,9 +147,11 @@ How it works?
 
     * Version format can be customized, see versioning_ for more info
 
-* ``version``, ``versioning``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``, and ``platforms`` will be auto-filled from:
+* ``version``, ``versioning``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``,
+  and ``platforms`` will be auto-filled from:
 
-    * Lines of the form ``__key__ = "value"`` in your modules (simple constants only, expressions are ignored - the modules are not imported but scanned using regexes)
+    * Lines of the form ``__key__ = "value"`` in your modules (simple constants only,
+      expressions are ignored - the modules are not imported but scanned using regexes)
 
     * Lines of the form ``key: value`` in your docstring
 
@@ -144,32 +173,18 @@ How it works?
 
         * ``url`` may use ``{name}``, it will be expanded appropriately
 
-        * if ``url`` points to your general github repo (like: https://github.com/zsimic), the ``name`` of your project is auto-appended to it
+        * if ``url`` points to your general github repo (like: https://github.com/zsimic),
+          the ``name`` of your project is auto-appended to it
 
         * if ``download_url`` is a relative path, it is auto-filled by prefixing it with ``url``
 
         * ``download_url`` may use ``{name}`` and/or ``{version}``, those will be expanded appropriately
 
-    * ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line (setupmeta_ will figure out the email part and auto-fill it properly)
+    * ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line
+      (setupmeta_ will figure out the email part and auto-fill it properly)
 
         * i.e.: ``author: Bob D bob@d.com`` will yield the proper ``author`` and ``author_email`` settings
 
-* ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``, then ``README*``, first one found wins).
-  Special tokens can be used (notation aimed at them easily being `rst comments`_):
-
-    * ``.. [[end long_description]]`` as end marker, so you don't have to use the entire file as long description
-
-    * ``.. [[include <relative-path>]]`` if you want another file included as well (for example, people like to add ``HISTORY.txt`` as well)
-
-    * these tokens must appear either at beginning/end of line, or be after/before at least one space character
-
-* ``classifiers`` is auto-filled from file ``classifiers.txt`` (one classification per line, ignoring empty lines and python style comments)
-
-* ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
-
-* ``install_requires`` is auto-filled if you have a ``requirements.txt`` (or ``pinned.txt``) file
-
-* ``tests_require`` is auto-filled if you have a ``tests/requirements.txt``, or ``requirements-dev.txt``, or ``dev-requirements.txt``, or ``test-requirements.txt`` file
 
 This should hopefully work nicely for the vast majority of python projects out there.
 If you need advanced stuff, you can still leverage setupmeta_ for all the usual stuff above, and go explicit wherever needed.
@@ -177,9 +192,13 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
+.. _commands: https://github.com/zsimic/setupmeta/blob/master/docs/commands.rst
+
+.. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
+
 .. _versioning: https://github.com/zsimic/setupmeta/blob/master/docs/versioning.rst
 
-.. _commands: https://github.com/zsimic/setupmeta/blob/master/COMMANDS.rst
+.. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
 
 .. _packaging: https://python-packaging.readthedocs.io/en/latest/
 
@@ -204,16 +223,6 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 .. [[end long_description]]
 
 
-Current code coverage
-=====================
-
-.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graphs/sunburst.svg
-    :target: https://codecov.io/gh/zsimic/setupmeta
-    :alt: Code coverage overview
-
-We aim for 100% test coverage
-
-
 Motivation
 ==========
 
@@ -221,7 +230,7 @@ My motivation was to:
 
 * stop having to boilerplate my setup.py's
 
-* learn how to publish to pypi (and do it right)
+* learn how to publish to pypi (and do it right, once and for all)
 
 * have a nice workflow for when I want to publish to pypi (``setup.py explain`` to see what's up at a glance)
 
@@ -235,8 +244,6 @@ I noticed that most open-source projects out there do the same thing over and ov
 
 * All kinds of creative things to get the ``description``
 
-* Very few ``setup.py`` specimens out there even have a docstring
-
 * etc.
 
 I didn't want to keep doing this anymore myself, so I decided to try and do something about it with this project.
@@ -246,3 +253,17 @@ Roadmap
 =======
 
 * Support more SCMs, like ``hg``
+
+
+Test coverage
+=============
+
+Since setupmeta is designed to be used as ``setup_requires``, it is important it doesn't break in any edge case,
+as that would be disruptive to all clients.
+
+Test coverage is at 100%, and should remain at that at all times. If you are contributing, please craft test cases
+that exercise all possible edge cases.
+
+.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graphs/sunburst.svg
+    :target: https://codecov.io/gh/zsimic/setupmeta
+    :alt: Code coverage overview

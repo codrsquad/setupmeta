@@ -2,6 +2,12 @@
 History
 =======
 
+2.0.2 (2018-09-04)
+------------------
+
+* Show how many requirements_ were abstracted/skipped (if any) in ``setup.py check``
+
+
 2.0.1 (2018-08-31)
 ------------------
 
@@ -114,3 +120,6 @@ History
 * Allow to use portion of README via ``.. [[end long_description]]``
 
 * Allow to use include other files in long description via something like ``.. [[include HISTORY.rst]]``
+
+
+.. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
