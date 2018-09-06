@@ -2,16 +2,16 @@
 running explain
                        author: (missing             ) - Consider specifying 'author'
                   classifiers: (missing             ) - Consider specifying 'classifiers'
-             dependency_links: (requirements.txt    ) ['git+https://somewhere.com/foo.git#egg=wonka', 'git+https://somewhere.com/test.git#egg=mytest']
+             dependency_links: (requirements.txt    ) 3 items: ['git+https://somewhere.com/foo.git#egg=wonka', 'git+https://foo.com/test.git#egg=bar', 'git+https://somewhere.com...
                   description: (README.md:1         ) Project with a complex requirements.txt file
                  download_url: (missing             ) - Consider specifying 'download_url'
-             install_requires: (requirements.txt    ) ['beautifulsoup4>=4.4.0', 'wonka']
+             install_requires: (requirements.txt    ) ['1and1', '1337<1.0.0', 'beautifulsoup4>=4.4.0', 'wonka', 'bar']
                       license: (missing             ) - Consider specifying 'license'
              long_description: (README.md           ) 158 chars: # Project with a complex requirements.txt file  This scenario tests parsing of a complex requirements.txt file (...
 long_description_content_type: (README.md           ) text/markdown
                          name: (explicit            ) complex-reqs
                setup_requires: (explicit            ) ['setupmeta']
-                tests_require: (requirements-dev.txt) ['pytest==3.7.4', 'wonka', 'mytest']
+                tests_require: (requirements-dev.txt) ['1337', 'pytest==3.7.4', 'wonka', 'mytest']
                           url: (missing             ) - Consider specifying 'url'
                       version: (missing             ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
@@ -19,10 +19,14 @@ long_description_content_type: (README.md           ) text/markdown
 running explain
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
+        "1and1",                  # abstracted by default
+        "1337<1.0.0",
         "beautifulsoup4>=4.4.0",
         "wonka",
+        "bar",
     ],
     tests_require=[
+        "1337",
         "pytest==3.7.4",
         "wonka",
         "mytest",
@@ -30,6 +34,7 @@ running explain
 
 :: check
 running check
+[setupmeta] install_requires: 1 abstracted, 0 ignored, 4 untouched, 3 dependency links
 warning: CheckCommand: missing required meta-data: version, url
 warning: CheckCommand: missing meta-data: either (author and author_email) or (maintainer and maintainer_email) must be supplied
 

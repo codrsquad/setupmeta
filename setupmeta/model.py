@@ -416,7 +416,7 @@ class RequirementsEntry:
                         note = "abstracted by default"
                 self.abstracted.append("%s # %s" % (line, note))
 
-            elif line and line[0].isalpha() or line.startswith("-e"):
+            elif line and (line[0].isalnum() or line.startswith("-e")):
                 # Count as untouched only actual deps (ignore flags such as -i)
                 if note:
                     self.untouched.append("%s # %s" % (line, note))
