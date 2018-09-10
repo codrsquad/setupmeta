@@ -90,7 +90,7 @@ src/complex/__init__.py:7 already has the right version
 Would run: git add complex/__init__.py complex/__version__.py setup.py
 Would run: git commit -m "Version 1.3.0"
 Would run: git push origin
-Would run: git fetch origin --prune --prune-tags
+Would run: git fetch origin --prune
 Would run: git tag -a v1.3.0 -m "Version 1.3.0"
 Would run: git push --tags origin
 Would run: <target>/.hooks/bump complex master 1.3.0
@@ -106,7 +106,7 @@ Would update src/complex/__init__.py:7 with '__version__ = '2.0.0''
 Would run: git add complex/__init__.py complex/__version__.py setup.py src/complex/__init__.py
 Would run: git commit -m "Version 2.0.0"
 Would run: git push origin
-Would run: git fetch origin --prune --prune-tags
+Would run: git fetch origin --prune
 Would run: git tag -a v2.0.0 -m "Version 2.0.0"
 Would run: git push --tags origin
 Would run: <target>/.hooks/bump complex master 2.0.0
@@ -117,7 +117,7 @@ src/complex/__init__.py:7 already has the right version
 Running: git add complex/__init__.py complex/__version__.py setup.py
 Running: git commit -m "Version 1.3.0"
 Running: git push origin
-Running: git fetch origin --prune --prune-tags
+Running: git fetch origin --prune
 Running: git tag -a v1.3.0 -m "Version 1.3.0"
 Running: git push --tags origin
 Running: <target>/.hooks/bump complex master 1.3.0
@@ -127,7 +127,7 @@ running version
 Running: git add complex/__init__.py complex/__version__.py setup.py src/complex/__init__.py
 Running: git commit -m "Version 2.0.0"
 Running: git push origin
-Running: git fetch origin --prune --prune-tags
+Running: git fetch origin --prune
 Running: git tag -a v2.0.0 -m "Version 2.0.0"
 Running: git push --tags origin
 Running: <target>/.hooks/bump complex master 2.0.0

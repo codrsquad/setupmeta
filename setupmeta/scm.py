@@ -183,7 +183,7 @@ class Git(Scm):
         tag = "v%s" % next_version
 
         if self.has_origin():
-            self.run(commit, "fetch", "origin", "--prune", "--prune-tags")
+            self.run(commit, "fetch", "origin", "--prune")
 
         self.run(commit, "tag", "-a", tag, "-m", bump_msg)
 
