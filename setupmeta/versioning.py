@@ -150,6 +150,10 @@ class Strategy:
         if kwargs:
             warnings.warn("Ignored fields for 'versioning': %s" % kwargs)
         self.main_bits = self.bits(main)
+        if isinstance(self.main_bits, list):
+            self.bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
+        else:
+            self.bumpable = []
         self.extra_bits = self.bits(extra)
         self.separator = separator
         self.branches = branches
@@ -260,11 +264,10 @@ class Strategy:
         if not isinstance(self.main_bits, list):
             setupmeta.abort("Main format is not a list: %s" % setupmeta.stringify(self.main_bits))
 
-        bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
-        if what not in bumpable:
+        if what not in self.bumpable:
             msg = "Can't bump '%s', it's out of scope" % what
             msg += " of main format '%s'" % self.main
-            msg += " acceptable values: %s" % ", ".join(bumpable)
+            msg += " acceptable values: %s" % ", ".join(self.bumpable)
             setupmeta.abort(msg)
 
         major, minor, rev = current_version.bump_triplet()
@@ -386,6 +389,11 @@ class Versioning:
             path = setupmeta.project_path(setupmeta.VERSION_FILE)
             with open(path, "w") as fh:
                 fh.write("%s" % gv)
+
+        if gv.patch and "patch" not in self.strategy.bumpable:
+            msg = "patch version component should be .0 for versioning strategy '%s', " % self.strategy
+            msg += "'.%s' from current version tag '%s' will be ignored" % (gv.patch, gv)
+            warnings.warn(msg)
 
         rendered = self.strategy.rendered(gv)
         if cv and rendered and not rendered.startswith(cv):
