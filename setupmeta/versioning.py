@@ -1,7 +1,6 @@
 import io
 import os
 import re
-import warnings
 
 import setupmeta
 from setupmeta.scm import Git, Snapshot, Version
@@ -148,7 +147,7 @@ class Strategy:
         self.main = main
         self.extra = extra
         if kwargs:
-            warnings.warn("Ignored fields for 'versioning': %s" % kwargs)
+            setupmeta.warn("Ignored fields for 'versioning': %s" % kwargs)
         self.main_bits = self.bits(main)
         if isinstance(self.main_bits, list):
             self.bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
@@ -380,7 +379,7 @@ class Versioning:
             if not cv:
                 self.meta.auto_fill("version", "0.0.0", "missing")
             if self.strategy:
-                warnings.warn(self.problem)
+                setupmeta.warn(self.problem)
             setupmeta.trace("not auto-filling version due to problem: [%s]" % self.problem)
             return
 
@@ -393,14 +392,14 @@ class Versioning:
         if gv.patch and "patch" not in self.strategy.bumpable:
             msg = "patch version component should be .0 for versioning strategy '%s', " % self.strategy
             msg += "'.%s' from current version tag '%s' will be ignored" % (gv.patch, gv)
-            warnings.warn(msg)
+            setupmeta.warn(msg)
 
         rendered = self.strategy.rendered(gv)
         if cv and rendered and not rendered.startswith(cv):
             source = vdef.sources[0].source
             expected = rendered[: len(cv)]
             msg = "In %s version should be %s, not %s" % (source, expected, cv)
-            warnings.warn(msg)
+            setupmeta.warn(msg)
         self.meta.auto_fill("version", rendered, self.scm.name, override=True)
 
     def bump(self, what, commit=False, simulate_branch=None):

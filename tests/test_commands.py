@@ -30,7 +30,7 @@ def test_explain():
             description:.+ Simplify your setup.py
             license:.+ MIT
             url:.+ https://github.com/zsimic/setupmeta
-            version:.+ [0-9]+\.[0-9]
+            version:.+ [0-9]+\\.[0-9]
         """
     )
 
@@ -42,7 +42,7 @@ def test_version():
         ['version', '--bump', 'major', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
+            Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
             Would run: git push --tags origin
         """
     )
@@ -51,7 +51,7 @@ def test_version():
         ['version', '--bump', 'minor', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
+            Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
             Would run: git push --tags origin
         """
     )
@@ -60,7 +60,7 @@ def test_version():
         ['version', '-b', 'patch', '--simulate-branch=master'],
         """
             Not committing bump, use --commit to commit
-            Would run: git tag -a v[\d.]+ -m "Version [\d.]+"
+            Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
             Would run: git push --tags origin
         """
     )

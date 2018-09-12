@@ -182,9 +182,6 @@ class Git(Scm):
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
 
-        if self.has_origin():
-            self.run(commit, "fetch", "origin", "--prune")
-
         self.run(commit, "tag", "-a", tag, "-m", bump_msg)
 
         if self.has_origin():

@@ -1,6 +1,7 @@
 import imp
 import os
 import sys
+import warnings
 
 from six import StringIO
 
@@ -11,20 +12,24 @@ from setupmeta.scm import Git
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
-IGNORED_OUTPUT = set("debugger UserWarning warnings.warn".split())
 
-
+setupmeta.TESTING = True
 os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
 sys.dont_write_bytecode = True
 
 
 def resouce(*relative_path):
-    """ Full path for 'relative_path' """
+    """Full path for 'relative_path'"""
     return os.path.join(TESTS, *relative_path)
 
 
 def relative_path(full_path):
     return full_path[len(PROJECT_DIR) + 1:]
+
+
+def print_warning(message, *_, **__):
+    """Print simplified warnings for capture in testing, instead of letting warnings do its funky thing"""
+    print("WARNING: %s" % setupmeta.short(message, -58))
 
 
 class capture_output:
@@ -38,37 +43,59 @@ class capture_output:
         ... do something that generates output ...
         assert "some message" in logged
     """
-    def __init__(self, stdout=True, stderr=True):
-        self.old_out = sys.stdout
-        self.old_err = sys.stderr
-        sys.stdout = self.out_buffer = StringIO() if stdout else self.old_out
-        sys.stderr = self.err_buffer = StringIO() if stderr else self.old_err
-
-    def __repr__(self):
-        return self.to_string()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *args):
-        sys.stdout = self.old_out
-        sys.stderr = self.old_err
+    def __init__(self, stdout=True, stderr=True, ownwarn=False):
+        """
+        :param bool stdout: If True, capture stdout
+        :param bool stderr: If True, capture stderr
+        :param bool ownwarn: If True, capture only setupmeta's warnings (drop the rest)
+        """
+        self.old_out = sys.stdout if stdout else None
+        self.old_err = sys.stderr if stderr else None
+        self.ownwarn = ownwarn
+        self.old_warnings = warnings.warn
+        self.old_setupmeta_warnings = setupmeta.warn
         self.out_buffer = None
         self.err_buffer = None
 
-    def __contains__(self, item):
-        return item is not None and item in self.to_string()
-
-    def __add__(self, other):
-        return "%s %s" % (self, other)
-
-    def to_string(self):
-        result = ''
+    def __repr__(self):
+        result = ""
         if self.out_buffer:
             result += decode(self.out_buffer.getvalue())
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
-        return result
+        return result.strip()
+
+    def __enter__(self):
+        if self.old_out is not None:
+            sys.stdout = self.out_buffer = StringIO()
+        if self.old_err is not None:
+            sys.stderr = self.err_buffer = StringIO()
+
+        if self.ownwarn:
+            # Only let setupmeta's own warning through
+            setupmeta.warn = print_warning
+            warnings.warn = lambda *_, **__: None
+
+        else:
+            warnings.warn = print_warning
+
+        return self
+
+    def __exit__(self, *args):
+        if self.old_out is not None:
+            sys.stdout = self.old_out
+        if self.old_err is not None:
+            sys.stderr = self.old_err
+        self.out_buffer = None
+        self.err_buffer = None
+        warnings.warn = self.old_warnings
+        setupmeta.warn = self.old_setupmeta_warnings
+
+    def __contains__(self, item):
+        return item is not None and item in str(self)
+
+    def __add__(self, other):
+        return "%s %s" % (self, other)
 
 
 def cleaned_output(text, folder=None):
@@ -78,7 +105,7 @@ def cleaned_output(text, folder=None):
     result = []
     for line in text.splitlines():
         line = line.rstrip()
-        if line and all(m not in line for m in IGNORED_OUTPUT):
+        if line and not line.startswith("pydev debugger:"):
             if folder:
                 line = line.replace(folder, '<target>')
             result.append(line)
@@ -102,7 +129,7 @@ def run_internal_setup_py(folder, *args):
     try:
         os.chdir(folder)
         setup_py = os.path.join(folder, 'setup.py')
-        with capture_output() as logged:
+        with capture_output(ownwarn=True) as logged:
             sys.argv = [setup_py] + list(args)
             run_output = ''
             try:
@@ -114,7 +141,7 @@ def run_internal_setup_py(folder, *args):
                 run_output += "'setup.py %s' exited with code 1:\n" % ' '.join(args)
                 run_output += "%s\n" % e
 
-            run_output = "%s\n%s" % (logged.to_string().strip(), run_output.strip())
+            run_output = "%s\n%s" % (logged, run_output.strip())
             return cleaned_output(run_output, folder)
 
     finally:

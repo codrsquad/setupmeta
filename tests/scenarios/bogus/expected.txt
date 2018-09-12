@@ -1,4 +1,5 @@
 :: explain -c180 -r
+WARNING: patch version component should be .0 for versioning strategy ...
 running explain
                        author: (missing         ) - Consider specifying 'author'
                   classifiers: (missing         ) - Consider specifying 'classifiers'
@@ -14,32 +15,39 @@ long_description_content_type: (README.md       ) text/markdown
                    versioning: (explicit        ) {extra: [], main: function 'main_part'}
 
 :: explain -d
+WARNING: patch version component should be .0 for versioning strategy ...
 running explain
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=None,   # no auto-fill
     tests_require=None,   # no auto-fill
 
 :: check
+WARNING: patch version component should be .0 for versioning strategy ...
 running check
 warning: CheckCommand: missing required meta-data: url
 warning: CheckCommand: missing meta-data: either (author and author_email) or (maintainer and maintainer_email) must be supplied
 
 :: entrypoints
+WARNING: patch version component should be .0 for versioning strategy ...
 running entrypoints
 
 :: version
+WARNING: patch version component should be .0 for versioning strategy ...
 running version
 1.0
 
 :: version
+WARNING: patch version component should be .0 for versioning strategy ...
 running version
 1.0
 
 :: version --bump patch
+WARNING: patch version component should be .0 for versioning strategy ...
 running version
 'setup.py version --bump patch' exited with code 1:
 error: Main format is not a list: function 'main_part'
 
 :: version
+WARNING: patch version component should be .0 for versioning strategy ...
 running version
 1.0

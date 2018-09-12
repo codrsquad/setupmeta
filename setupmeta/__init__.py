@@ -11,6 +11,7 @@ import shutil
 import subprocess  # nosec
 import sys
 import tempfile
+import warnings
 
 import setuptools
 
@@ -19,16 +20,24 @@ USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get("SETUPMETA_DEBUG")
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
+TESTING = False  # Set to True while running tests
 
 
-def abort(msg):
-    raise UsageError(msg)
+def abort(message):
+    """Abort execution with 'message'"""
+    raise UsageError(message)
 
 
-def trace(msg):
+def warn(message):
+    """Issue a warning (coming from setupmeta itself)"""
+    warnings.warn(message)
+
+
+def trace(message):
+    """Output 'message' if tracing is on"""
     if not DEBUG:
         return
-    sys.stderr.write(":: %s\n" % msg)
+    sys.stderr.write(":: %s\n" % message)
     sys.stderr.flush()
 
 
@@ -47,7 +56,9 @@ def short(text, c=None):
         c = Console.columns()
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~").replace("\n", " ")
-    if c and len(result) > c:
+    if c and len(result) > abs(c):
+        if c < 0:
+            return "%s..." % result[:3 - c]
         if isinstance(text, dict):
             summary = "%s keys" % len(text)
         elif isinstance(text, list):
@@ -138,6 +149,11 @@ def run_program(program, *args, **kwargs):
 
     if capture is None:
         print("Running: %s" % represented)
+        if TESTING:
+            # Avoid pass-through chatter in tests
+            DEVNULL = open(os.devnull, 'w')
+            kwargs["stdout"] = DEVNULL
+            kwargs["stderr"] = DEVNULL
 
     else:
         kwargs["stdout"] = subprocess.PIPE

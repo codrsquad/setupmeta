@@ -1,9 +1,11 @@
 import os
 import sys
 
-from mock import patch
+from mock import MagicMock, patch
 
-from setupmeta.model import Definition, DefinitionEntry, first_word, is_setup_py_path, parse_requirements, SetupMeta
+from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, parse_requirements, SetupMeta
+
+from . import conftest
 
 
 def bogus_project(**attrs):
@@ -89,6 +91,18 @@ def test_meta():
     assert is_setup_py_path('/foo/setup.pyc')
 
 
-@patch('setupmeta.model.get_pip', return_value=(None, None))
-def test_no_pip(*_):
-    assert parse_requirements(None) == (None, None)
+def test_no_pip():
+    with conftest.capture_output() as logged:
+        # Simulate pip < 10.0
+        with patch.dict("sys.modules", {"pip.req": MagicMock(), "pip.download": MagicMock()}):
+            assert get_pip()
+
+        # Simulate pip not installed at all
+        with patch.dict("sys.modules", {"pip": None}):
+            assert get_pip() == (None, None)
+
+        # Simulate unknown pip API
+        with patch.dict("sys.modules", {"pip": os}):
+            assert parse_requirements(None) == (None, None)
+
+        assert "Can't find PipSession" in logged

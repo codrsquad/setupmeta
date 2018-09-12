@@ -160,7 +160,7 @@ class ExplainCommand(setuptools.Command):
                 count = 0
                 for source in definition.sources:
                     if count:
-                        prefix = "\_"
+                        prefix = "\\_"
                     elif source.key not in setupmeta.MetaDefs.all_fields:
                         prefix = "%s*" % source.key
                     else:

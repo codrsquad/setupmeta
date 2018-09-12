@@ -1,4 +1,6 @@
 :: explain -c180 -r
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running explain
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
@@ -44,6 +46,8 @@ maintainer_email: (auto-adjust              ) me@myplace.com
       versioning: (explicit                 ) distance;.hooks/bump
 
 :: explain -d
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running explain
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
@@ -63,23 +67,33 @@ running explain
     ],
 
 :: check
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running check
 [setupmeta] install_requires: 4 abstracted, 3 ignored, 5 untouched
 
 :: entrypoints
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running entrypoints
 a=b
 
 :: version
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running version
 1.2.0
 
 :: version --bump patch
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running version
 'setup.py version --bump patch' exited with code 1:
 error: Can't bump 'patch', it's out of scope of main format '{major}.{minor}.{distance}' acceptable values: major, minor
 
 :: version --bump minor
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running version
 Not committing bump, use --commit to commit
 Would update setup.py:6 with 'version: 1.3.0'
@@ -90,12 +104,13 @@ src/complex/__init__.py:7 already has the right version
 Would run: git add complex/__init__.py complex/__version__.py setup.py
 Would run: git commit -m "Version 1.3.0"
 Would run: git push origin
-Would run: git fetch origin --prune
 Would run: git tag -a v1.3.0 -m "Version 1.3.0"
 Would run: git push --tags origin
 Would run: <target>/.hooks/bump complex master 1.3.0
 
 :: version --bump major
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running version
 Not committing bump, use --commit to commit
 Would update setup.py:6 with 'version: 2.0.0'
@@ -106,18 +121,18 @@ Would update src/complex/__init__.py:7 with '__version__ = '2.0.0''
 Would run: git add complex/__init__.py complex/__version__.py setup.py src/complex/__init__.py
 Would run: git commit -m "Version 2.0.0"
 Would run: git push origin
-Would run: git fetch origin --prune
 Would run: git tag -a v2.0.0 -m "Version 2.0.0"
 Would run: git push --tags origin
 Would run: <target>/.hooks/bump complex master 2.0.0
 
 :: version --bump minor --commit
+WARNING: patch version component should be .0 for versioning strategy ...
+WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 running version
 src/complex/__init__.py:7 already has the right version
 Running: git add complex/__init__.py complex/__version__.py setup.py
 Running: git commit -m "Version 1.3.0"
 Running: git push origin
-Running: git fetch origin --prune
 Running: git tag -a v1.3.0 -m "Version 1.3.0"
 Running: git push --tags origin
 Running: <target>/.hooks/bump complex master 1.3.0
@@ -127,7 +142,6 @@ running version
 Running: git add complex/__init__.py complex/__version__.py setup.py src/complex/__init__.py
 Running: git commit -m "Version 2.0.0"
 Running: git push origin
-Running: git fetch origin --prune
 Running: git tag -a v2.0.0 -m "Version 2.0.0"
 Running: git push --tags origin
 Running: <target>/.hooks/bump complex master 2.0.0

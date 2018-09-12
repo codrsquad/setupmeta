@@ -18,7 +18,7 @@ def test_git():
 
     with conftest.capture_output() as out:
         git.commit_files(False, [], "2.0")
-        assert not out.to_string()
+        assert not str(out)
 
         git.commit_files(False, ["foo"], "2.0")
         git.apply_tag(False, "2.0")
@@ -31,7 +31,7 @@ def test_git():
     git._has_origin = ""
     with conftest.capture_output() as out:
         git.commit_files(False, [], "2.0")
-        assert not out.to_string()
+        assert not str(out)
 
         git.commit_files(False, ["foo"], "2.0")
         git.apply_tag(False, "2.0")

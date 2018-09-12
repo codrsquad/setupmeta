@@ -57,8 +57,6 @@ class Scenario:
     temp = None             # type: str # Optional temp folder used
     origin = None           # type: str # Temp SCM origin to use
 
-    _ignored_errors = 'debugger UserWarning warnings.warn'.split()
-
     def __init__(self, folder):
         self.folder = os.path.join(conftest.PROJECT_DIR, folder)
         self.commands = []

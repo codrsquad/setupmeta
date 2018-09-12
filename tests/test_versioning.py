@@ -11,9 +11,6 @@ from setupmeta.scm import Version
 from . import conftest
 
 
-setupmeta.versioning.warnings.warn = lambda *_, **__: None
-
-
 def new_meta(versioning, scm=None, setup_py=None, **kwargs):
     setup_py = setup_py or conftest.resouce('setup.py')
     upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
@@ -76,32 +73,35 @@ def check_render(v, expected, main='1.0', distance=None, cid=None, dirty=False):
 
 @patch('setupmeta.versioning.project_scm', return_value=None)
 def test_no_scm(_):
-    fmt = "branch(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
-    meta = new_meta(fmt)
-    versioning = meta.versioning
+    with conftest.capture_output() as logged:
+        fmt = "branch(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
+        meta = new_meta(fmt)
+        versioning = meta.versioning
 
-    assert versioning.enabled
-    assert versioning.problem == "project not under a supported SCM"
-    assert meta.version == '0.0.0'
-    assert versioning.strategy
-    assert versioning.strategy.branches == ['a', 'b']
-    assert not versioning.strategy.problem
+        assert "project not under a supported SCM" in logged
 
-    assert str(versioning.strategy) == fmt
-    assert 'BAZ:z' in str(versioning.strategy.extra_bits)
+        assert versioning.enabled
+        assert versioning.problem == "project not under a supported SCM"
+        assert meta.version == '0.0.0'
+        assert versioning.strategy
+        assert versioning.strategy.branches == ['a', 'b']
+        assert not versioning.strategy.problem
 
-    check_render(versioning, '1.0.0.z')
-    check_render(versioning, '1.0.0.post2.z', distance=2)
-    check_render(versioning, '1.0.0.post2.z.dirty', distance=2, dirty=True)
+        assert str(versioning.strategy) == fmt
+        assert 'BAZ:z' in str(versioning.strategy.extra_bits)
 
-    os.environ['TEST_FOO1'] = 'bar'
-    os.environ['TEST_FOO2'] = 'baz'
-    check_render(versioning, '1.0.0.post2.bar.z.dirty', distance=2, dirty=True)
-    del os.environ['TEST_FOO1']
-    del os.environ['TEST_FOO2']
+        check_render(versioning, '1.0.0.z')
+        check_render(versioning, '1.0.0.post2.z', distance=2)
+        check_render(versioning, '1.0.0.post2.z.dirty', distance=2, dirty=True)
 
-    with pytest.raises(setupmeta.UsageError):
-        versioning.bump('patch')
+        os.environ['TEST_FOO1'] = 'bar'
+        os.environ['TEST_FOO2'] = 'baz'
+        check_render(versioning, '1.0.0.post2.bar.z.dirty', distance=2, dirty=True)
+        del os.environ['TEST_FOO1']
+        del os.environ['TEST_FOO2']
+
+        with pytest.raises(setupmeta.UsageError):
+            versioning.bump('patch')
 
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: 'v1.2.3-4-g1234567-dirty'})
@@ -128,35 +128,41 @@ def quick_check(versioning, expected, dirty=True, describe='v0.1.2-5-g123'):
 
 @patch.dict(os.environ, {'BUILD_ID': '543'})
 def test_versioning_variants(*_):
-    quick_check("{major}.{minor}", "0.1+g123")
-    quick_check("{major}.{minor}+", "0.1")
-    quick_check("{major}.{minor}{dirty}", "0.1.dirty+g123")
-    quick_check("{major}.{minor}{dirty}+", "0.1.dirty")
-    quick_check("{major}.{minor}", "0.1", dirty=False)
+    with conftest.capture_output() as logged:
+        quick_check("{major}.{minor}", "0.1+g123")
+        quick_check("{major}.{minor}+", "0.1")
+        quick_check("{major}.{minor}{dirty}", "0.1.dirty+g123")
+        quick_check("{major}.{minor}{dirty}+", "0.1.dirty")
+        quick_check("{major}.{minor}", "0.1", dirty=False)
 
-    quick_check("distance", "0.1.5+g123")
-    quick_check("post", "0.1.2.post5+g123")
-    quick_check("dev", "0.1.3.dev5+g123")
-    quick_check("tag+dev", "0.1.3.dev5+g123")
-    quick_check("build-id", "0.1.5+h543.g123.dirty")
-    quick_check("dev+build-id", "0.1.3.dev5+h543.g123.dirty")
+        quick_check("distance", "0.1.5+g123")
+        quick_check("post", "0.1.2.post5+g123")
+        quick_check("dev", "0.1.3.dev5+g123")
+        quick_check("tag+dev", "0.1.3.dev5+g123")
+        quick_check("build-id", "0.1.5+h543.g123.dirty")
+        quick_check("dev+build-id", "0.1.3.dev5+h543.g123.dirty")
 
-    # Patch is not bumpable
-    quick_check("dev", "0.1.rc.dev5+g123", describe='v0.1.rc-5-g123')
+        # Patch is not bumpable
+        quick_check("dev", "0.1.rc.dev5+g123", describe='v0.1.rc-5-g123')
 
-    # On tag
-    quick_check("dev", "0.1.2", describe='v0.1.2-0-g123', dirty=False)
-    quick_check("dev", "0.1.3.dev0+g123", describe='v0.1.2-0-g123', dirty=True)
+        # On tag
+        quick_check("dev", "0.1.2", describe='v0.1.2-0-g123', dirty=False)
+        quick_check("dev", "0.1.3.dev0+g123", describe='v0.1.2-0-g123', dirty=True)
+
+        assert "patch version component should be .0" in logged
 
 
 def test_no_extra():
-    meta = new_meta('{major}.{minor}.{$FOO}+', scm=conftest.MockGit(True))
-    versioning = meta.versioning
-    assert meta.version == '0.1.None'
-    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{$FOO}+"
-    check_render(versioning, '1.0.None')
-    check_render(versioning, '1.0.None', distance=2)
-    check_render(versioning, '1.0.None', distance=2, dirty=True)
+    with conftest.capture_output() as logged:
+        meta = new_meta('{major}.{minor}.{$FOO}+', scm=conftest.MockGit(True))
+        versioning = meta.versioning
+        assert meta.version == '0.1.None'
+        assert str(versioning.strategy) == "branch(master):{major}.{minor}.{$FOO}+"
+        check_render(versioning, '1.0.None')
+        check_render(versioning, '1.0.None', distance=2)
+        check_render(versioning, '1.0.None', distance=2, dirty=True)
+
+        assert "patch version component should be .0" in logged
 
 
 def extra_version(version):
@@ -168,30 +174,36 @@ def extra_version(version):
 
 
 def test_invalid_part():
-    versioning = dict(foo='bar', main='{foo}.{major}.{minor}{', extra=extra_version, separator='-',)
-    meta = new_meta(versioning, scm=conftest.MockGit())
-    versioning = meta.versioning
-    assert 'invalid' in str(versioning.strategy.main_bits)
-    assert meta.version is None
-    assert versioning.problem == "invalid versioning part 'foo'"
-    assert str(versioning.strategy) == "branch(master):{foo}.{major}.{minor}{-function 'extra_version'"
-    check_render(versioning, 'invalid.1.0')
-    check_render(versioning, 'invalid.1.0-d2', distance=2)
-    check_render(versioning, 'invalid.1.0-extra', distance=2, dirty=True)
+    with conftest.capture_output() as logged:
+        versioning = dict(foo='bar', main='{foo}.{major}.{minor}{', extra=extra_version, separator='-',)
+        meta = new_meta(versioning, scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert 'invalid' in str(versioning.strategy.main_bits)
+        assert meta.version is None
+        assert versioning.problem == "invalid versioning part 'foo'"
+        assert str(versioning.strategy) == "branch(master):{foo}.{major}.{minor}{-function 'extra_version'"
+        check_render(versioning, 'invalid.1.0')
+        check_render(versioning, 'invalid.1.0-d2', distance=2)
+        check_render(versioning, 'invalid.1.0-extra', distance=2, dirty=True)
 
-    with pytest.raises(setupmeta.UsageError):
-        versioning.bump('minor')
+        assert "Ignored fields for 'versioning': {'foo': 'bar'}" in logged
+
+        with pytest.raises(setupmeta.UsageError):
+            versioning.bump('minor')
 
 
 def test_invalid_main():
-    meta = new_meta(dict(main=extra_version, extra='', separator=' '), scm=conftest.MockGit())
-    versioning = meta.versioning
-    assert str(versioning.strategy) == "branch(master):function 'extra_version' "
-    check_render(versioning, '')
-    check_render(versioning, 'd2', distance=2)
-    check_render(versioning, 'extra', distance=2, dirty=True)
-    with pytest.raises(setupmeta.UsageError):
-        versioning.bump('minor')
+    with conftest.capture_output() as logged:
+        meta = new_meta(dict(main=extra_version, extra='', separator=' '), scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert str(versioning.strategy) == "branch(master):function 'extra_version' "
+        check_render(versioning, '')
+        check_render(versioning, 'd2', distance=2)
+        check_render(versioning, 'extra', distance=2, dirty=True)
+        with pytest.raises(setupmeta.UsageError):
+            versioning.bump('minor')
+
+        assert "you have pending changes" in logged
 
 
 def test_malformed():
@@ -203,13 +215,14 @@ def test_malformed():
 
 
 def test_distance_marker():
-    meta = new_meta('{major}.{minor}.{distance}', scm=conftest.MockGit())
-    versioning = meta.versioning
-    assert versioning.enabled
-    assert not versioning.problem
-    assert not versioning.strategy.problem
-    assert meta.version == '0.1.3+g123'
-    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
+    with conftest.capture_output():
+        meta = new_meta('{major}.{minor}.{distance}', scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert versioning.enabled
+        assert not versioning.problem
+        assert not versioning.strategy.problem
+        assert meta.version == '0.1.3+g123'
+        assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
 
 
 @patch.dict(os.environ, {'BUILD_ID': '543'})
@@ -241,21 +254,23 @@ def test_preconfigured_build_id(*_):
 
 
 def check_preconfigured(expected, *shorts):
-    for short in shorts:
-        meta = new_meta(short, scm=conftest.MockGit())
-        versioning = meta.versioning
-        assert versioning.enabled
-        assert not versioning.problem
-        assert not versioning.strategy.problem
-        assert str(versioning.strategy) == expected
+    with conftest.capture_output():
+        for short in shorts:
+            meta = new_meta(short, scm=conftest.MockGit())
+            versioning = meta.versioning
+            assert versioning.enabled
+            assert not versioning.problem
+            assert not versioning.strategy.problem
+            assert str(versioning.strategy) == expected
 
 
 @patch.dict(os.environ, {'BUILD_ID': '543'})
 def test_preconfigured_strategies(*_):
-    check_strategy_distance(True)
-    check_strategy_distance(False)
-    check_strategy_build_id(True)
-    check_strategy_build_id(False)
+    with conftest.capture_output():
+        check_strategy_distance(True)
+        check_strategy_distance(False)
+        check_strategy_build_id(True)
+        check_strategy_build_id(False)
 
 
 def check_strategy_distance(dirty):

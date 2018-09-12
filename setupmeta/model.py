@@ -7,7 +7,6 @@ import io
 import os
 import re
 import sys
-import warnings
 
 import setuptools
 
@@ -292,15 +291,8 @@ class SimpleModule(Settings):
         self.add_pair(key, value, line_number)
 
 
-def get_pip():  # pragma: no cover
+def get_pip():
     """We can't assume pip is installed"""
-    try:
-        import pip  # noqa
-
-    except ImportError:
-        # pip is not installed at all
-        return None, None
-
     try:
         # pip < 10.0
         from pip.req import parse_requirements
@@ -319,7 +311,7 @@ def get_pip():  # pragma: no cover
         return parse_requirements, PipSession
 
     except ImportError:
-        warnings.warn("Can't find PipSession, won't auto-fill requirements")
+        setupmeta.warn("Can't find PipSession, won't auto-fill requirements")
         return None, None
 
 
