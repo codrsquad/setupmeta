@@ -13,26 +13,27 @@ For example, this is what setupmeta says about itself (it's self-using)::
 
     ~/dev/setupmeta: python setup.py explain
 
-              author: (auto-adjust            ) Zoran Simic
-                  \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
-        author_email: (auto-adjust            ) zoran@simicweb.com
-         classifiers: (classifiers.txt        ) 22 items: ['Development Status :: 5 - Production/Stable', 'Intended Audience :...
-         description: (setupmeta/__init__.py:2) Simplify your setup.py
-        download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/1.1.2.post1+g816252c.tar.gz
-                  \_: (setupmeta/__init__.py:5) archive/{version}.tar.gz
-        entry_points: (explicit               ) 349 chars: [distutils.commands] cleanall = setupmeta.commands:CleanCommand ent...
-            keywords: (setup.py:4             ) ['simple', 'DRY', 'setup.py']
-             license: (auto-fill              ) MIT
-    long_description: (README.rst             ) 9022 chars: Simplify your setup.py ======================  .. image:: https://...
-                name: (setup.py:16            ) setupmeta
-            packages: (auto-fill              ) ['setupmeta']
-      setup_requires: (explicit               ) ['setupmeta']
-       tests_require: (tests/requirements.txt ) ['mock', 'pytest-cov']
-              title*: (setup.py:16            ) setupmeta
-                 url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
-             version: (git                    ) 1.1.2.post1+g816252c
-          versioning: (explicit               ) post
-            zip_safe: (explicit               ) True
+                           author: (auto-adjust            ) Zoran Simic
+                               \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
+                     author_email: (auto-adjust            ) zoran@simicweb.com
+                      classifiers: (classifiers.txt        ) 21 items: ['Development Status :: 5 - Production/Stable', 'Intend...
+                      description: (setupmeta/__init__.py:2) Simplify your setup.py
+                     download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v2.0.6.tar.gz
+                               \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
+                     entry_points: (explicit               ) [distutils.commands] check = setupmeta.commands:CheckCommand clea...
+                         keywords: (setup.py:4             ) ['simple', 'DRY', 'setup.py']
+                          license: (auto-fill              ) MIT
+                 long_description: (README.rst             ) Simplify your setup.py ====================== .. image:: https://...
+    long_description_content_type: (README.rst             ) text/x-rst
+                             name: (setup.py:16            ) setupmeta
+                         packages: (auto-fill              ) ['setupmeta']
+                   setup_requires: (explicit               ) ['setupmeta']
+                    tests_require: (tests/requirements.txt ) ['mock', 'pytest-cov']
+                           title*: (setup.py:16            ) setupmeta
+                              url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
+                          version: (git                    ) 2.0.6
+                       versioning: (explicit               ) dev
+                         zip_safe: (explicit               ) True
 
 In the above output:
 

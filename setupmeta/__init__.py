@@ -2,11 +2,12 @@
 Simplify your setup.py
 
 url: https://github.com/zsimic/setupmeta
-download_url: archive/{version}.tar.gz
+download_url: archive/v{version}.tar.gz
 author: Zoran Simic zoran@simicweb.com
 """
 
 import os
+import re
 import shutil
 import subprocess  # nosec
 import sys
@@ -21,6 +22,7 @@ DEBUG = os.environ.get("SETUPMETA_DEBUG")
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
 TESTING = False  # Set to True while running tests
+RE_SPACES = re.compile(r"\s+")
 
 
 def abort(message):
@@ -56,15 +58,16 @@ def short(text, c=None):
         c = Console.columns()
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~").replace("\n", " ")
+    result = re.sub(RE_SPACES, " ", result)
     if c and len(result) > abs(c):
         if c < 0:
-            return "%s..." % result[:3 - c]
+            return "%s..." % result[:-c]
         if isinstance(text, dict):
             summary = "%s keys" % len(text)
         elif isinstance(text, list):
             summary = "%s items" % len(text)
         else:
-            summary = "%s chars" % len(result)
+            return "%s..." % result[:c-3]
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
             return summary
@@ -190,7 +193,7 @@ def decode(value):
 
 def stringify_dict(data):
     """
-    :param dict data: Some python versions don't sort by key...
+    :param data: Some python versions don't sort by key...
     :return str: Represented dict in a predictable manner
     """
     if not isinstance(data, dict):

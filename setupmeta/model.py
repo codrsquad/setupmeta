@@ -105,7 +105,7 @@ class Definition(object):
         """
         self.key = key
         self.value = None
-        self.sources = []  # type: list(DefinitionEntry)
+        self.sources = []  # type: list[DefinitionEntry]
 
     def __repr__(self):
         if len(self.sources) == 1:
@@ -136,7 +136,7 @@ class Definition(object):
         for entry in sources:
             if not self.value and entry.value:
                 self.value = entry.value
-                trace("[merge: %s] %s=%s" % (entry.source, self.key, entry.value))
+                trace("[-- %s] %s=%s" % (entry.source, self.key, entry.value))
             self.sources.append(entry)
 
     def add(self, value, source, override=False):
@@ -152,10 +152,10 @@ class Definition(object):
         entry = DefinitionEntry(self.key, value, source)
         if override:
             self.sources.insert(0, entry)
-            trace("[high: %s] %s=%s" % (source, self.key, short(value)))
+            trace("[<- %s] %s=%s" % (source, self.key, short(value)))
         else:
             self.sources.append(entry)
-            trace("[low: %s] %s=%s" % (source, self.key, short(value)))
+            trace("[-> %s] %s=%s" % (source, self.key, short(value)))
 
     @property
     def is_meaningful(self):
@@ -167,7 +167,7 @@ class Settings:
     """ Collection of key/value pairs with info on where they came from """
 
     def __init__(self):
-        self.definitions = {}  # type: dict(Definition)
+        self.definitions = {}  # type: dict[str, Definition]
 
     def __repr__(self):
         project_dir = short(MetaDefs.project_dir)

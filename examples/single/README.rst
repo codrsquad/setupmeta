@@ -3,6 +3,8 @@ single: A package implemented by a single .py file
 
 This example shows:
 
+* Unicode chars in the README: 😀 😎
+
 * `name` is the only thing defined in `setup.py`
 
 * Short description comes from this README

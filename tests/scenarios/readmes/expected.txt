@@ -6,7 +6,7 @@ running explain
     download_url: (missing   ) - Consider specifying 'download_url'
             foo*: (setup.py:2) bar
          license: (auto-fill ) MIT
-long_description: (README    ) # Several readme files  [//]: # (.. [[end long_description]])
+long_description: (README    ) # Several readme files [//]: # (.. [[end long_description]])
             name: (explicit  ) readmes
   setup_requires: (explicit  ) ['setupmeta']
              url: (missing   ) - Consider specifying 'url'

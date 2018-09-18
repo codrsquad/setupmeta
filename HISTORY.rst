@@ -2,10 +2,14 @@
 History
 =======
 
-2.0.3 (2018-09-05)
+2.0.7 (2018-09-18)
 ------------------
 
 * Show how many requirements_ were abstracted/skipped (if any) in ``setup.py check``
+
+* Warn if current version tag mention patch while versioning strategy doesn't
+
+* Fixed setupmeta's own download_url
 
 
 2.0.1 (2018-08-31)

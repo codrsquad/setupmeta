@@ -7,7 +7,7 @@ running explain
                  download_url: (missing             ) - Consider specifying 'download_url'
              install_requires: (requirements.txt    ) ['1and1', '1337<1.0.0', 'beautifulsoup4>=4.4.0', 'wonka', 'bar']
                       license: (missing             ) - Consider specifying 'license'
-             long_description: (README.md           ) 158 chars: # Project with a complex requirements.txt file  This scenario tests parsing of a complex requirements.txt file (...
+             long_description: (README.md           ) # Project with a complex requirements.txt file This scenario tests parsing of a complex requirements.txt file (and all othe...
 long_description_content_type: (README.md           ) text/markdown
                          name: (explicit            ) complex-reqs
                setup_requires: (explicit            ) ['setupmeta']

@@ -11,10 +11,13 @@ def test_shortening():
     assert setupmeta.short(None) == "None"
     assert setupmeta.short("") == ""
 
-    assert setupmeta.short("hello there", c=11) == "hello there"
-    assert setupmeta.short("hello there", c=8) == "11 chars"
-
-    assert setupmeta.short("hello there wild wonderful world", c=19) == "32 chars: hello ..."
+    assert setupmeta.short("hello  there", c=13) == "hello there"
+    assert setupmeta.short("hello  there", c=12) == "hello there"
+    assert setupmeta.short("hello  there", c=11) == "hello there"
+    assert setupmeta.short("hello  there", c=10) == "hello t..."
+    assert setupmeta.short("hello  there", c=-10) == "hello ther..."
+    assert setupmeta.short("hello there wild wonderful world", c=19) == "hello there wild..."
+    assert setupmeta.short("hello there wild wonderful world", c=-19) == "hello there wild wo..."
 
     assert setupmeta.short(["hello", "there", "wild", "wonderful  world"], c=34) == "4 items: ['hello', 'there', 'wi..."
 

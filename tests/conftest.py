@@ -29,7 +29,7 @@ def relative_path(full_path):
 
 def print_warning(message, *_, **__):
     """Print simplified warnings for capture in testing, instead of letting warnings do its funky thing"""
-    print("WARNING: %s" % setupmeta.short(message, -58))
+    print("WARNING: %s" % setupmeta.short(message, -60))
 
 
 class capture_output:
