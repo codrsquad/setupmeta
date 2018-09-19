@@ -18,6 +18,7 @@ from setupmeta.license import determined_license
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = "explicit"
+CLASSIFIERS = "classifiers.txt"
 READMES = ["README.rst", "README.md", "README*"]
 
 # Accept reasonable variations of name + some separator + email
@@ -49,10 +50,9 @@ def first_word(text):
 
 def is_setup_py_path(path):
     """ Is 'path' pointing to a setup.py module? """
-    if not path:
-        return False
-    # Accept also setup.pyc
-    return os.path.basename(path).startswith("setup.py")
+    if path:
+        # Accept also setup.pyc
+        return os.path.basename(path).startswith("setup.py")
 
 
 def find_packages(name, subfolder=None):
@@ -72,6 +72,16 @@ def find_packages(name, subfolder=None):
             result.add("%s.%s" % (name, subpackage))
             trace("found subpackage '%s.%s'" % (name, subpackage))
     return result
+
+
+def content_type_from_filename(filename):
+    """Determined content type from 'filename'"""
+    if filename:
+        if filename.endswith(".rst"):
+            return "text/x-rst"
+        if filename.endswith(".md"):
+            return "text/markdown"
+    return None
 
 
 class DefinitionEntry:
@@ -146,7 +156,8 @@ class Definition(object):
         :param bool override: If True, 'value' is forcibly taken
         """
         if isinstance(source, list):
-            return self.merge_sources(source)
+            self.merge_sources(source)
+            return
         if override or not self.value:
             self.value = value
         entry = DefinitionEntry(self.key, value, source)
@@ -176,9 +187,7 @@ class Settings:
     def value(self, key):
         """ Value currently associated to 'key', if any """
         definition = self.definitions.get(key)
-        if definition:
-            return definition.value
-        return None
+        return definition and definition.value
 
     def to_dict(self):
         """ Resolved attributes to pass to setuptools """
@@ -195,13 +204,14 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if key == "keywords":
-            value = listify(value, separator=",")
-        definition = self.definitions.get(key)
-        if definition is None:
-            definition = Definition(key)
-            self.definitions[key] = definition
-        definition.add(value, source, override=override)
+        if key and value:
+            if key == "keywords":
+                value = listify(value, separator=",")
+            definition = self.definitions.get(key)
+            if definition is None:
+                definition = Definition(key)
+                self.definitions[key] = definition
+            definition.add(value, source, override=override)
 
     def merge(self, *others):
         """ Merge settings from 'others' """
@@ -221,41 +231,40 @@ class SimpleModule(Settings):
         self.relative_path = os.path.join(*relative_paths)
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
-        if not self.exists:
-            return
-
-        with io.open(self.full_path, "rt") as fh:
-            docstring_marker = None
-            docstring_start = None
-            docstring = []
-            line_number = 0
-            for line in fh:
-                line_number += 1
-                line = line.rstrip()
-                if docstring_marker:
-                    if line.endswith(docstring_marker):
-                        docstring_marker = None
-                        if docstring:
-                            self.scan_docstring(docstring, line_number=docstring_start - 1)
-                    else:
-                        docstring.append(line)
-                    continue
-                if line.startswith('"""') or line.startswith("'''"):
-                    docstring_marker = line[:3]
-                    if len(line) > 3 and line.endswith(docstring_marker):
-                        # Single docstring line edge case
-                        docstring_marker = None
+        if self.exists:
+            with io.open(self.full_path, "rt") as fh:
+                docstring_marker = None
+                docstring_start = None
+                docstring = []
+                line_number = 0
+                for line in fh:
+                    line_number += 1
+                    line = line.rstrip()
+                    if docstring_marker:
+                        if line.endswith(docstring_marker):
+                            docstring_marker = None
+                            if docstring:
+                                self.scan_docstring(docstring, line_number=docstring_start - 1)
+                        else:
+                            docstring.append(line)
                         continue
-                    docstring_start = line_number
-                    docstring.append(line[3:])
-                    continue
-                self.scan_line(line, RE_PY_VALUE, line_number)
+                    if line.startswith('"""') or line.startswith("'''"):
+                        docstring_marker = line[:3]
+                        if len(line) > 3 and line.endswith(docstring_marker):
+                            # Single docstring line edge case
+                            docstring_marker = None
+                            continue
+                        docstring_start = line_number
+                        docstring.append(line[3:])
+                        continue
+                    self.scan_line(line, RE_PY_VALUE, line_number)
 
     def add_pair(self, key, value, line, **kwargs):
-        source = self.relative_path
-        if line:
-            source = "%s:%s" % (source, line)
-        self.add_definition(key, value, source, **kwargs)
+        if key and value:
+            source = self.relative_path
+            if line:
+                source = "%s:%s" % (source, line)
+            self.add_definition(key, value, source, **kwargs)
 
     def scan_docstring(self, lines, line_number=0):
         """ Scan docstring for definitions """
@@ -284,11 +293,12 @@ class SimpleModule(Settings):
     def scan_line(self, line, regex, line_number):
         """ Scan 'line' using 'regex', return True if no match found """
         m = regex.match(line)
-        if not m:
-            return True
-        key = m.group(1)
-        value = m.group(2)
-        self.add_pair(key, value, line_number)
+        if m:
+            key = m.group(1)
+            value = m.group(2)
+            self.add_pair(key, value, line_number)
+            return False
+        return True
 
 
 def get_pip():
@@ -341,8 +351,7 @@ def parse_requirements(requirements):
 
 def is_complex_requirement(line):
     """Allows to save importing pip for very simple requirements.txt files"""
-    if line:
-        return line.startswith("-") or ":" in line
+    return line and (line.startswith("-") or ":" in line)
 
 
 class RequirementsEntry:
@@ -623,31 +632,28 @@ class SetupMeta(Settings):
         docstring_lead = self.definitions.pop("docstring_lead", None)
         if docstring_lead and not self.value("description"):
             self.auto_fill("description", docstring_lead.value, source=docstring_lead.source)
+        best_content_type = None
+        best_readme = None
+        best_long = None
         for readme in resolved_paths(READMES):
-            if self.value("long_description") and self.value("description"):
-                return
             value = load_readme(readme)
             if not value:
                 continue
             short_desc = self.extract_short_description(value)
-            if not short_desc:
-                continue
-            self.auto_fill("description", short_desc, source="%s:1" % readme)
-            self.add_definition("long_description", value, readme, override=short_desc)
-            if readme.endswith(".rst"):
-                content_type = "text/x-rst"
-            elif readme.endswith(".md"):
-                content_type = "text/markdown"
-            else:
-                content_type = None
-            if content_type:
-                self.add_definition("long_description_content_type", content_type, readme, override=short_desc)
+            if not best_long or len(best_long) < 512 <= len(value):
+                # The best README is the 1st one found
+                best_content_type = content_type_from_filename(readme)
+                best_readme = readme
+                best_long = value
+            if short_desc:
+                self.auto_fill("description", short_desc, source="%s:1" % readme)
+                break
+        self.add_definition("long_description", best_long, best_readme)
+        self.add_definition("long_description_content_type", best_content_type, best_readme)
 
     def auto_fill_entry_points(self, key="entry_points"):
         path = "%s.ini" % key
-        value = load_contents(path)
-        if value:
-            self.add_definition(key, value, path)
+        self.add_definition(key, load_contents(path), path)
 
     def auto_fill_license(self, key="license"):
         """ Try to auto-determine the license """
@@ -662,7 +668,7 @@ class SetupMeta(Settings):
 
     def auto_fill_requires(self, field, attr):
         req = getattr(self.requirements, field)
-        if req is not None:
+        if req:
             self.auto_fill(attr, req.reqs, req.source)
 
     @property
@@ -676,9 +682,8 @@ class SetupMeta(Settings):
     def auto_fill_classifiers(self):
         """ Add classifiers from classifiers.txt, if present """
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        classifiers = load_list("classifiers.txt")
-        if classifiers:
-            self.add_definition("classifiers", classifiers, "classifiers.txt")
+        classifiers = load_list(CLASSIFIERS)
+        self.add_definition("classifiers", classifiers, CLASSIFIERS)
 
     def sort_classifiers(self):
         """ Sort classifiers alphabetically """
@@ -688,15 +693,14 @@ class SetupMeta(Settings):
 
     def auto_fill(self, field, value, source="auto-fill", override=False):
         """ Auto-fill 'field' with 'value' """
-        if value is not None and (override or value != self.value(field)):
-            override = override or (field not in self.attrs)
+        if value and (override or value != self.value(field)):
+            override = override or field not in self.attrs
             self.add_definition(field, value, source, override=override)
 
     def auto_adjust(self, field, adjust):
         """ Auto-adjust 'field' using 'adjust' function """
         for key, value in adjust(field):
-            if value:
-                self.add_definition(key, value, "auto-adjust", override=True)
+            self.add_definition(key, value, "auto-adjust", override=True)
 
     def extract_email(self, field):
         """ Convenience: one line user+email specification """

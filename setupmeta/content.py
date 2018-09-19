@@ -109,7 +109,7 @@ def resolved_paths(relative_paths):
         # De-dupe and respect order (especially for globbed paths)
         if "*" in path:
             full_path = setupmeta.project_path(path)
-            for expanded in glob.glob(full_path):
+            for expanded in sorted(glob.glob(full_path)):
                 relative_path = os.path.basename(expanded)
                 if relative_path not in candidates:
                     candidates.append(relative_path)

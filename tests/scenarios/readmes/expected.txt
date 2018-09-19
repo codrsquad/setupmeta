@@ -1,16 +1,17 @@
 :: explain -c180 -r
 running explain
-          author: (missing   ) - Consider specifying 'author'
-     classifiers: (missing   ) - Consider specifying 'classifiers'
-     description: (README:1  ) Several readme files
-    download_url: (missing   ) - Consider specifying 'download_url'
-            foo*: (setup.py:2) bar
-         license: (auto-fill ) MIT
-long_description: (README    ) # Several readme files [//]: # (.. [[end long_description]])
-            name: (explicit  ) readmes
-  setup_requires: (explicit  ) ["setupmeta"]
-             url: (missing   ) - Consider specifying 'url'
-         version: (missing   ) - Consider specifying 'version', you can use setupmeta's versioning='...'
+                       author: (missing   ) - Consider specifying 'author'
+                  classifiers: (missing   ) - Consider specifying 'classifiers'
+                  description: (README:1  ) Several readme files
+                 download_url: (missing   ) - Consider specifying 'download_url'
+                         foo*: (setup.py:2) bar
+                      license: (auto-fill ) MIT
+             long_description: (README.rst) foo =================================================================================================================================...
+long_description_content_type: (README.rst) text/x-rst
+                         name: (explicit  ) readmes
+               setup_requires: (explicit  ) ["setupmeta"]
+                          url: (missing   ) - Consider specifying 'url'
+                      version: (missing   ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
 :: explain -d
 running explain
