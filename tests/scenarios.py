@@ -1,9 +1,9 @@
 import argparse
+import io
 import logging
 import os
 import shutil
 import tempfile
-from io import open
 
 import setupmeta
 from setupmeta.content import load_contents
@@ -51,7 +51,7 @@ def copytree(src, dst):
 class Scenario:
 
     folder = None           # type: str # Folder where scenario is defined
-    commands = None         # type: list(str) # setup.py commands to run
+    commands = None         # type: list[str] # setup.py commands to run
     target = None           # type: str # Folder where to run the scenario (temp folder for full git modification support)
 
     temp = None             # type: str # Optional temp folder used
@@ -65,7 +65,7 @@ class Scenario:
         extra_commands = os.path.join(folder, '.commands')
         if os.path.isfile(extra_commands):
             self.target = None
-            with open(extra_commands) as fh:
+            with io.open(extra_commands, "rt") as fh:
                 for line in fh:
                     line = conftest.decode(line).strip()
                     if line:
@@ -135,7 +135,7 @@ class Scenario:
         if dryrun:
             print(output)
             return
-        with open(self.expected_path(), 'wt', encoding='utf-8') as fh:
+        with io.open(self.expected_path(), "wt") as fh:
             fh.write("%s\n" % output)
 
 

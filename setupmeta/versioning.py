@@ -448,7 +448,7 @@ class Versioning:
             changed = 0
             line_number = 0
             revised = None
-            with io.open(full_path, "rt", encoding="utf-8") as fh:
+            with io.open(full_path, "rt") as fh:
                 for line in fh.readlines():
                     line_number += 1
                     if line_number == target_line:
@@ -464,7 +464,7 @@ class Versioning:
             else:
                 modified.append(relative_path)
                 if commit:
-                    with io.open(full_path, "wt", encoding="utf-8") as fh:
+                    with io.open(full_path, "wt") as fh:
                         fh.writelines(lines)
                 else:
                     print("Would update %s with '%s'" % (vdef.source, revised.strip()))

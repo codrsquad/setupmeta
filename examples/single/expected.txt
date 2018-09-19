@@ -4,11 +4,11 @@ running explain
                            \_: (single.py:5 ) Someone someone@somewhere.com
                  author_email: (auto-adjust ) someone@somewhere.com
                   classifiers: (missing     ) - Consider specifying 'classifiers'
-                  description: (README.rst:1) A package implemented by a single .py file, 😊⚽ (unicode in readme)
+                  description: (README.rst:1) A package implemented by a single .py file
                            \_: (setup.py:3  ) Unicode chars in setup.py 😀 😎
                  download_url: (missing     ) - Consider specifying 'download_url'
                       license: (single.py:4 ) MIT
-             long_description: (README.rst  ) single: A package implemented by a single .py file, 😊⚽ (unicode in readme) ========================================================...
+             long_description: (README.rst  ) single: A package implemented by a single .py file ================================================== This example shows: * `name` ...
 long_description_content_type: (README.rst  ) text/x-rst
                          name: (explicit    ) single
                    py_modules: (auto-fill   ) ["single"]

@@ -1,9 +1,11 @@
-single: A package implemented by a single .py file, 😊⚽ (unicode in readme)
-===========================================================================
+single: A package implemented by a single .py file
+==================================================
 
 This example shows:
 
 * `name` is the only thing defined in `setup.py`
+
+*  😊 (unicode in readme)
 
 * Short description comes from this README
 

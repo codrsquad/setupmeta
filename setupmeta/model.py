@@ -224,7 +224,7 @@ class SimpleModule(Settings):
         if not self.exists:
             return
 
-        with io.open(self.full_path, "rt", encoding="utf-8") as fh:
+        with io.open(self.full_path, "rt") as fh:
             docstring_marker = None
             docstring_start = None
             docstring = []

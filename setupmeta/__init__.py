@@ -161,6 +161,10 @@ def run_program(program, *args, **kwargs):
     else:
         kwargs["stdout"] = subprocess.PIPE
         kwargs["stderr"] = subprocess.PIPE
+        if sys.version_info[0] < 3:
+            env = dict(os.environ)
+            env["PYTHONIOENCODING"] = "utf-8"
+            kwargs["env"] = env
 
     p = subprocess.Popen([full_path] + list(args), **kwargs)  # nosec
     output, error = p.communicate()
