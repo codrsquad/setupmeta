@@ -7,16 +7,16 @@ keywords: simple, DRY, setup.py
 # This library is self-using and auto-bootstraps itself
 
 import os
-import subprocess       # nosec
+import subprocess  # nosec
 import sys
 
 import setuptools
 
 
-__title__ = 'setupmeta'
+__title__ = "setupmeta"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-EGG = os.path.join(HERE, '%s.egg-info' % __title__)
+EGG = os.path.join(HERE, "%s.egg-info" % __title__)
 
 ENTRY_POINTS = """
 [distutils.commands]
@@ -30,22 +30,20 @@ version = {t}.commands:VersionCommand
 [distutils.setup_keywords]
 setup_requires = {t}.hook:register
 versioning = {t}.hook:register
-""".format(t=__title__)
+""".format(
+    t=__title__
+)
 
 
 def decode(text):
     if isinstance(text, bytes):
-        return text.decode('utf-8')
+        return text.decode("utf-8")
     return text
 
 
 def run_bootstrap(message):
     sys.stderr.write("--- Bootstrapping %s\n" % message)
-    p = subprocess.Popen(                           # nosec
-        [sys.executable, 'setup.py', 'egg_info'],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE
-    )
+    p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
     output, error = p.communicate()
     if p.returncode:
         print(output)
@@ -56,8 +54,8 @@ def run_bootstrap(message):
 
 
 def complete_args(args):
-    args['setup_requires'] = [__title__]
-    args['versioning'] = 'dev'
+    args["setup_requires"] = [__title__]
+    args["versioning"] = "dev"
 
 
 if __name__ == "__main__":
@@ -71,13 +69,13 @@ if __name__ == "__main__":
         # We're bootstrapped, we can self-refer
         complete_args(args)
 
-    if len(sys.argv) == 2 and sys.argv[1] == 'egg_info':
+    if len(sys.argv) == 2 and sys.argv[1] == "egg_info":
         # egg_info as lone command is bootstrap mode
         if not have_egg:
             # Very first bootstrap needs some help
             # We do want all subsequent runs to guess name, packages etc
-            args['name'] = __title__
-            args['packages'] = [__title__]
+            args["name"] = __title__
+            args["packages"] = [__title__]
 
         setuptools.setup(**args)
         sys.exit(0)

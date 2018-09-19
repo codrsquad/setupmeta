@@ -6,6 +6,6 @@ from setuptools import setup
 
 
 setup(
-    name='readmes',
-    setup_requires=['setupmeta']
+    name="readmes",
+    setup_requires=["setupmeta"],
 )

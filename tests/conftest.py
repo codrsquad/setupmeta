@@ -14,7 +14,7 @@ TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
 
 setupmeta.TESTING = True
-os.environ['PYTHONDONTWRITEBYTECODE'] = '1'
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 sys.dont_write_bytecode = True
 
 
@@ -43,6 +43,7 @@ class capture_output:
         ... do something that generates output ...
         assert "some message" in logged
     """
+
     def __init__(self, stdout=True, stderr=True, ownwarn=False):
         """
         :param bool stdout: If True, capture stdout
@@ -107,14 +108,14 @@ def cleaned_output(text, folder=None):
         line = line.rstrip()
         if line and not line.startswith("pydev debugger:"):
             if folder:
-                line = line.replace(folder, '<target>')
+                line = line.replace(folder, "<target>")
             result.append(line)
-    return '\n'.join(result).strip()
+    return "\n".join(result).strip()
 
 
 def run_setup_py(folder, *args):
     if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, 'setup.py'), *args, capture='all', fatal=True))
+        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, "setup.py"), *args, capture="all", fatal=True))
 
     return run_internal_setup_py(folder, *args)
 
@@ -128,17 +129,17 @@ def run_internal_setup_py(folder, *args):
     fp = None
     try:
         os.chdir(folder)
-        setup_py = os.path.join(folder, 'setup.py')
+        setup_py = os.path.join(folder, "setup.py")
         with capture_output(ownwarn=True) as logged:
             sys.argv = [setup_py] + list(args)
-            run_output = ''
+            run_output = ""
             try:
-                basename = 'setup'
+                basename = "setup"
                 fp, pathname, description = imp.find_module(basename, [folder])
                 imp.load_module(basename, fp, pathname, description)
 
             except SystemExit as e:
-                run_output += "'setup.py %s' exited with code 1:\n" % ' '.join(args)
+                run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)
                 run_output += "%s\n" % e
 
             run_output = "%s\n%s" % (logged, run_output.strip())
@@ -153,7 +154,7 @@ def run_internal_setup_py(folder, *args):
 
 
 class MockGit(Git):
-    def __init__(self, dirty=True, describe='v0.1.2-3-g123', branch='master', commitid='abc123'):
+    def __init__(self, dirty=True, describe="v0.1.2-3-g123", branch="master", commitid="abc123"):
         self.dirty = dirty
         self.describe = describe
         self.branch = branch
@@ -161,17 +162,17 @@ class MockGit(Git):
         Git.__init__(self, TESTS)
 
     def get_output(self, cmd, *args, **kwargs):
-        if cmd == 'diff':
+        if cmd == "diff":
             return 1 if self.dirty else 0
-        if cmd == 'describe':
+        if cmd == "describe":
             return self.describe
-        if cmd == 'rev-parse':
-            if '--abbrev-ref' in args:
+        if cmd == "rev-parse":
+            if "--abbrev-ref" in args:
                 return self.branch
             return self.commitid
-        if cmd == 'rev-list':
+        if cmd == "rev-list":
             return self.commitid.split()
-        if cmd == 'config':
+        if cmd == "config":
             return args[1]
-        assert kwargs.get('dryrun') is True
+        assert kwargs.get("dryrun") is True
         return Git.get_output(self, cmd, *args, **kwargs)

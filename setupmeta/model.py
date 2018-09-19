@@ -443,11 +443,7 @@ class Requirements:
 
     def __init__(self):
         self.links_source = None
-        self.install = self.get_requirements(
-            True,
-            "requirements.txt",
-            "pinned.txt"
-        )
+        self.install = self.get_requirements(True, "requirements.txt", "pinned.txt")
         self.test = self.get_requirements(
             False,
             "tests/requirements.txt",  # Preferred

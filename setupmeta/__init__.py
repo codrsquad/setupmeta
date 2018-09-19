@@ -67,7 +67,7 @@ def short(text, c=None):
         elif isinstance(text, list):
             summary = "%s items" % len(text)
         else:
-            return "%s..." % result[:c-3]
+            return "%s..." % result[:c - 3]
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
             return summary
@@ -154,7 +154,7 @@ def run_program(program, *args, **kwargs):
         print("Running: %s" % represented)
         if TESTING:
             # Avoid pass-through chatter in tests
-            DEVNULL = open(os.devnull, 'w')
+            DEVNULL = open(os.devnull, "w")
             kwargs["stdout"] = DEVNULL
             kwargs["stderr"] = DEVNULL
 

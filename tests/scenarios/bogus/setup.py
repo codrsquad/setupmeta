@@ -2,13 +2,13 @@ from setuptools import setup
 
 
 def main_part(version):
-    return '1.0'
+    return "1.0"
 
 
 setup(
-    name='bogus',
+    name="bogus",
     versioning={
-        'main': main_part,
-        'extra': [],
+        "main": main_part,
+        "extra": [],
     },
 )

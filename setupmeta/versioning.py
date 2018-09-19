@@ -290,7 +290,7 @@ class Strategy:
             extra="{commitid}",
             separator="+",
             branches="master",
-            hook=None
+            hook=None,
         )
 
         if isinstance(given, dict):
@@ -467,7 +467,7 @@ class Versioning:
                     with io.open(full_path, "wt") as fh:
                         fh.writelines(lines)
                 else:
-                    print("Would update %s with '%s'" % (vdef.source, revised.strip()))
+                    print("Would update %s with: %s" % (vdef.source, revised.strip()))
 
         if not modified:
             return
@@ -476,12 +476,20 @@ class Versioning:
 
 
 def updated_line(line, next_version, vdef):
-    if "=" in line:
-        sep = "="
-        next_version = "'%s'" % next_version
-    else:
-        sep = ":"
-
+    line = line.strip()
+    sep = "=" if "=" in line else ":"
+    space = ""
+    quote = ""
     key, _, value = line.partition(sep)
-    space = " " if value and value[0] == " " else ""
-    return "%s%s%s%s\n" % (key, sep, space, next_version)
+    if value and value[0] == " ":
+        space = " "
+    value = value.strip()
+    if value and value[0] == "'":
+        quote = "'"
+    elif value and value[0] == '"':
+        quote = '"'
+    comment = ""
+    if "#" in value:
+        i = value.index("#")
+        comment = "  #%s" % value[i + 1:]
+    return "%s%s%s%s%s%s%s\n" % (key, sep, space, quote, next_version, quote, comment)
