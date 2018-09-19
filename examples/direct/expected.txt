@@ -44,18 +44,18 @@ setup(
         "Programming Language :: Python"
     ],
     description="A package implemented by one direct (not under src/) module folder",
-    download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__
+    download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__,
     entry_points="""[console_scripts]
 direct = direct:main""",
     install_requires=["click>=6.7"],
     keywords=["direct", "package"],
     license="Apache 2.0",
-    long_description=open("README.rst").read()
+    long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
     name="direct",
     packages=["direct"],
     url="https://github.com/zsimic/simple",
-    version=__version__
+    version=__version__,
 )
 
 :: check

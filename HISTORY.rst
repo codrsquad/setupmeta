@@ -2,8 +2,10 @@
 History
 =======
 
-2.1.1 (2018-09-18)
+2.1.2 (2018-09-19)
 ------------------
+
+* Added ``--expand`` to command ``explain``
 
 * Better handling of unicode in ``README``-s and ``setup.py``-s
 

@@ -72,6 +72,16 @@ In the above output:
     * the ``+g816252c`` suffix means that the checkout wasn't clean when ``explain`` command was ran, local checkout was dirty at short git commit id "816252c"
 
 
+If you'd like to see what your ``setup.py`` would look like without setupmeta (and/or if you wish to get rid of setupmeta),
+you can run::
+
+    python setup.py explain --expand
+
+
+This will show you a copy-pastable ``setup.py`` that is the equivalent of not having setupmeta at all
+(obviously without support for versioning etc).
+
+
 version
 =======
 

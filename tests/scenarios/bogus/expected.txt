@@ -30,10 +30,11 @@ from setuptools import setup
 __version__ = "1.0"
 setup(
     description="bogus versioning spec",
-    long_description=open("README.md").read()
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     name="bogus",
-    version=__version__
+    version=__version__,
+    # versioning={"extra": [], "main": function 'main_part'},
 )
 
 :: check

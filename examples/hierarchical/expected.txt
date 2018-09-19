@@ -47,20 +47,20 @@ setup(
         "Programming Language :: Python"
     ],
     description="A hierarchical package (code under src/)",
-    download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__
+    download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__,
     entry_points="""[console_scripts]
 hierarchical = hierarchical:main
 subm = hierarchical.submodule:main""",
     install_requires=["arrow", "click>=6.7"],
     keywords=["hierarchical", "package"],
     license="MIT",
-    long_description=open("README.rst").read()
+    long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
     name="hierarchical",
     package_dir={"": "src"},
     packages=["hierarchical", "hierarchical.submodule"],
     url="https://github.com/zsimic/simple",
-    version=__version__
+    version=__version__,
 )
 
 :: check

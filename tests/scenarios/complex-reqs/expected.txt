@@ -46,7 +46,7 @@ setup(
     ],
     description="Project with a complex requirements.txt file",
     install_requires=["1and1", "1337<1.0.0", "beautifulsoup4>=4.4.0", "wonka", "bar"],
-    long_description=open("README.md").read()
+    long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     name="complex-reqs",
     tests_require=["1337", "pytest==3.7.4", "wonka", "mytest"],

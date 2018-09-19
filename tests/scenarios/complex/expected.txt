@@ -82,7 +82,7 @@ setup(
     contact="Zoran Simic",
     contact_email="me@myplace.com",
     description="Sample complex project",
-    download_url="https://github.com/zsimic/complex/archive/%s.tar.gz" % __version__
+    download_url="https://github.com/zsimic/complex/archive/%s.tar.gz" % __version__,
     entry_points={"console_scripts": "a=b"},
     extras_require={
         "bar": ["docutils"],
@@ -107,7 +107,7 @@ setup(
         "command"
     ],
     license="foo",
-    long_description=open("README").read()
+    long_description=open("README").read(),
     maintainer="Zoran Simic",
     maintainer_email="me@myplace.com",
     name="complex",
@@ -115,7 +115,8 @@ setup(
     packages=["complex", "complex.submodule"],
     tests_require=["flake8", "pytest"],
     url="https://github.com/zsimic/complex",
-    version=__version__
+    version=__version__,
+    # versioning="distance;.hooks/bump",
 )
 
 :: check

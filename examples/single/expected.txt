@@ -34,11 +34,11 @@ setup(
     author_email="someone@somewhere.com",
     description="A package implemented by a single .py file",
     license="MIT",
-    long_description=open("README.rst").read()
+    long_description=open("README.rst").read(),
     long_description_content_type="text/x-rst",
     name="single",
     py_modules=["single"],
-    version=__version__
+    version=__version__,
 )
 
 :: check
