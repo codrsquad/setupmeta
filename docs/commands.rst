@@ -16,22 +16,22 @@ For example, this is what setupmeta says about itself (it's self-using)::
                            author: (auto-adjust            ) Zoran Simic
                                \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
                      author_email: (auto-adjust            ) zoran@simicweb.com
-                      classifiers: (classifiers.txt        ) 21 items: ['Development Status :: 5 - Production/Stable', 'Intend...
+                      classifiers: (classifiers.txt        ) 21 items: ["Development Status :: 5 - Production/Stable", "Intend...
                       description: (setupmeta/__init__.py:2) Simplify your setup.py
-                     download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v2.0.6.tar.gz
+                     download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v2.1.1.tar.gz
                                \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
                      entry_points: (explicit               ) [distutils.commands] check = setupmeta.commands:CheckCommand clea...
-                         keywords: (setup.py:4             ) ['simple', 'DRY', 'setup.py']
+                         keywords: (setup.py:4             ) ["simple", "DRY", "setup.py"]
                           license: (auto-fill              ) MIT
                  long_description: (README.rst             ) Simplify your setup.py ====================== .. image:: https://...
     long_description_content_type: (README.rst             ) text/x-rst
                              name: (setup.py:16            ) setupmeta
-                         packages: (auto-fill              ) ['setupmeta']
-                   setup_requires: (explicit               ) ['setupmeta']
-                    tests_require: (tests/requirements.txt ) ['mock', 'pytest-cov']
+                         packages: (auto-fill              ) ["setupmeta"]
+                   setup_requires: (explicit               ) ["setupmeta"]
+                    tests_require: (tests/requirements.txt ) ["mock", "pytest-cov"]
                            title*: (setup.py:16            ) setupmeta
                               url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
-                          version: (git                    ) 2.0.6
+                          version: (git                    ) 2.1.1
                        versioning: (explicit               ) dev
                          zip_safe: (explicit               ) True
 

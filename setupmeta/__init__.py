@@ -189,7 +189,7 @@ def run_program(program, *args, **kwargs):
 
 
 def decode(value):
-    """ Python 2/3 friendly decoding of output """
+    """Python 2/3 friendly decoding of output"""
     if isinstance(value, bytes):
         return value.decode("utf-8")
     return value
@@ -197,19 +197,41 @@ def decode(value):
 
 def quoted(text):
     """Quoted text, with single or double-quotes"""
-    if text and '"' in text:
-        return "'%s'" % text
+    if text:
+        if "\n" in text:
+            return '"""%s"""' % text
+        if '"' in text:
+            return "'%s'" % text
     return '"%s"' % text
 
 
-def stringify(value, quote=False):
-    """ Avoid having the annoying u'..' in str() representations repr """
-    if isinstance(value, list):
-        return "[%s]" % ", ".join(stringify(s, quote=True) for s in value)
-    if isinstance(value, tuple):
-        return "(%s)" % ", ".join(stringify(s, quote=True) for s in value)
+def _strs(value, bracket, first, sep, quote, indent):
+    """Stringified iterable"""
     if isinstance(value, dict):
-        return "{%s}" % ", ".join("%s: %s" % (stringify(k), stringify(v)) for k, v in sorted(value.items()))
+        rep = sep.join("%s: %s" % (stringify(k, quote=quote), stringify(v, quote=quote, indent=indent)) for k, v in sorted(value.items()))
+        return "{%s%s%s}" % (first, rep, first[:-4])
+    quote = quote or quote is None
+    return "%s%s%s%s%s" % (bracket[0], first, sep.join(stringify(s, quote=quote, indent=indent) for s in value), first[:-4], bracket[1])
+
+
+def _strm(value, bracket, quote, indent, chars=80):
+    """Stringified iterable, multiline if representation > chars"""
+    result = _strs(value, bracket, "", ", ", quote, indent)
+    if len(value) <= 1 or len(result) <= chars:
+        return result
+    sep = ",\n%s" % indent if indent else ", "
+    first = "\n%s" % indent if indent else ""
+    return _strs(value, bracket, first, sep, quote, indent)
+
+
+def stringify(value, quote=None, indent=""):
+    """Avoid having the annoying u'..' in str() representations repr"""
+    if isinstance(value, list):
+        return _strm(value, "[]", quote=quote, indent=indent)
+    if isinstance(value, tuple):
+        return _strm(value, "()", quote=quote, indent=indent)
+    if isinstance(value, dict):
+        return _strm(value, "{}", quote=quote, indent=indent)
     if callable(value):
         return "function '%s'" % value.__name__
     if quote:
@@ -218,7 +240,7 @@ def stringify(value, quote=False):
 
 
 def listify(text, separator=None):
-    """ Turn 'text' into a list using 'separator' """
+    """Turn 'text' into a list using 'separator'"""
     if isinstance(text, list):
         return text
     if isinstance(text, (set, tuple)):
@@ -229,11 +251,12 @@ def listify(text, separator=None):
 
 
 def project_path(*relative_paths):
-    """ Full path corresponding to 'relative_paths' components """
+    """Full path corresponding to 'relative_paths' components"""
     return os.path.join(MetaDefs.project_dir, *relative_paths)
 
 
 def relative_path(full_path):
+    """Relative path to current project_dir"""
     return full_path[len(MetaDefs.project_dir) + 1:] if full_path and full_path.startswith(MetaDefs.project_dir) else full_path
 
 
@@ -260,7 +283,7 @@ class temp_resource:
 
 
 def meta_command_init(self, dist, **kwargs):
-    """ Custom __init__ injected to commands decorated with @MetaCommand """
+    """Custom __init__ injected to commands decorated with @MetaCommand"""
     self.setupmeta = getattr(dist, "_setupmeta", None)
     if not self.setupmeta:
         from distutils.errors import DistutilsClassError
