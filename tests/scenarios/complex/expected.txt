@@ -5,8 +5,8 @@ running explain
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
-     classifiers: (explicit                 ) ['Programming Language :: Python', 'License :: OSI Approved :: BSD License']
-              \_: (classifiers.txt          ) ['Programming Language :: Python', 'Intended Audience :: Developers', 'Operating System :: POSIX', 'Operating System :: Unix']
+     classifiers: (explicit                 ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
+              \_: (classifiers.txt          ) ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating System :: Unix"]
          contact: (complex/__init__.py:13   ) Zoran Simic
    contact_email: (complex/__init__.py:14   ) me@myplace.com
      description: (README:1                 ) Sample complex project
@@ -15,14 +15,14 @@ running explain
               \_: (setup.py:4               ) archive/{version}.tar.gz
     entry_points: (explicit                 ) {console_scripts: a=b}
               \_: (entry_points.ini         ) [foo] [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
-  extras_require: (explicit                 ) {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', 'abbreviated']}
-install_requires: (pinned.txt               ) ['a', 'b', 'c', 'd>1', 'e==1', 'f', 'g', 'h', 'i==1']
-        keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
-              \_: (setup.py:5               ) ['setup', 'docstring']
-              \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
-              \_: (complex/__version__.py:6 ) ['complex', 'version']
-              \_: (complex/__init__.py:16   ) ['complex', 'init']
-              \_: (src/complex/__init__.py:6) ['src', 'complex', 'init']
+  extras_require: (explicit                 ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+install_requires: (pinned.txt               ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
+        keywords: (explicit                 ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (setup.py:5               ) ["setup", "docstring"]
+              \_: (setup.py:13              ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (complex/__version__.py:6 ) ["complex", "version"]
+              \_: (complex/__init__.py:16   ) ["complex", "init"]
+              \_: (src/complex/__init__.py:6) ["src", "complex", "init"]
          license: (explicit                 ) foo
               \_: (auto-fill                ) BSD
 long_description: (README                   ) complex - Sample complex project README is a regular txt file HISTORY here.Done with README.
@@ -32,9 +32,9 @@ long_description: (README                   ) complex - Sample complex project R
 maintainer_email: (auto-adjust              ) me@myplace.com
             name: (explicit                 ) complex
      package_dir: (auto-fill                ) {: src}
-        packages: (auto-fill                ) ['complex', 'complex.submodule']
-  setup_requires: (explicit                 ) ['setupmeta']
-   tests_require: (requirements-dev.txt     ) ['flake8', 'pytest']
+        packages: (auto-fill                ) ["complex", "complex.submodule"]
+  setup_requires: (explicit                 ) ["setupmeta"]
+   tests_require: (requirements-dev.txt     ) ["flake8", "pytest"]
              url: (auto-fill                ) https://github.com/zsimic/complex
               \_: (setup.py:3               ) https://github.com/zsimic
          version: (git                      ) 1.2.0
@@ -155,8 +155,8 @@ running explain
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
-     classifiers: (explicit                 ) ['Programming Language :: Python', 'License :: OSI Approved :: BSD License']
-              \_: (classifiers.txt          ) ['Programming Language :: Python', 'Intended Audience :: Developers', 'Operating System :: POSIX', 'Operating System :: Unix']
+     classifiers: (explicit                 ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
+              \_: (classifiers.txt          ) ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating System :: Unix"]
          contact: (complex/__init__.py:13   ) Zoran Simic
    contact_email: (complex/__init__.py:14   ) me@myplace.com
      description: (README:1                 ) Sample complex project
@@ -165,14 +165,14 @@ running explain
               \_: (setup.py:4               ) archive/{version}.tar.gz
     entry_points: (explicit                 ) {console_scripts: a=b}
               \_: (entry_points.ini         ) [foo] [console_scripts] foo = complex.some_module:main_func bar = complex.some_module:bar
-  extras_require: (explicit                 ) {bar: ['docutils'], baz: ['some', 'long', 'list-of', 'requirements'], foo: ['long', 'enough', 'to-be', 'abbreviated']}
-install_requires: (pinned.txt               ) ['a', 'b', 'c', 'd>1', 'e==1', 'f', 'g', 'h', 'i==1']
-        keywords: (explicit                 ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
-              \_: (setup.py:5               ) ['setup', 'docstring']
-              \_: (setup.py:13              ) ['some', 'list', 'of', 'keywords', 'here', 'long', 'enough', 'to', 'be', 'abbreviated', 'by', 'the', 'explain', 'command']
-              \_: (complex/__version__.py:6 ) ['complex', 'version']
-              \_: (complex/__init__.py:16   ) ['complex', 'init']
-              \_: (src/complex/__init__.py:6) ['src', 'complex', 'init']
+  extras_require: (explicit                 ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+install_requires: (pinned.txt               ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
+        keywords: (explicit                 ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (setup.py:5               ) ["setup", "docstring"]
+              \_: (setup.py:13              ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (complex/__version__.py:6 ) ["complex", "version"]
+              \_: (complex/__init__.py:16   ) ["complex", "init"]
+              \_: (src/complex/__init__.py:6) ["src", "complex", "init"]
          license: (explicit                 ) foo
               \_: (auto-fill                ) BSD
 long_description: (README                   ) complex - Sample complex project README is a regular txt file HISTORY here.Done with README.
@@ -182,9 +182,9 @@ long_description: (README                   ) complex - Sample complex project R
 maintainer_email: (auto-adjust              ) me@myplace.com
             name: (explicit                 ) complex
      package_dir: (auto-fill                ) {: src}
-        packages: (auto-fill                ) ['complex', 'complex.submodule']
-  setup_requires: (explicit                 ) ['setupmeta']
-   tests_require: (requirements-dev.txt     ) ['flake8', 'pytest']
+        packages: (auto-fill                ) ["complex", "complex.submodule"]
+  setup_requires: (explicit                 ) ["setupmeta"]
+   tests_require: (requirements-dev.txt     ) ["flake8", "pytest"]
              url: (auto-fill                ) https://github.com/zsimic/complex
               \_: (setup.py:3               ) https://github.com/zsimic
          version: (git                      ) 2.0.0

@@ -4,15 +4,15 @@ running explain
                            \_: (single.py:5 ) Someone someone@somewhere.com
                  author_email: (auto-adjust ) someone@somewhere.com
                   classifiers: (missing     ) - Consider specifying 'classifiers'
-                  description: (README.rst:1) A package implemented by a single .py file
-                           \_: (single.py:2 ) This is a python package implemented by a single .py file
+                  description: (README.rst:1) A package implemented by a single .py file, 😊⚽ (unicode in readme)
+                           \_: (setup.py:3  ) Unicode chars in setup.py 😀 😎
                  download_url: (missing     ) - Consider specifying 'download_url'
                       license: (single.py:4 ) MIT
-             long_description: (README.rst  ) single: A package implemented by a single .py file ================================================== This example shows: * Unicode...
+             long_description: (README.rst  ) single: A package implemented by a single .py file, 😊⚽ (unicode in readme) ========================================================...
 long_description_content_type: (README.rst  ) text/x-rst
                          name: (explicit    ) single
-                   py_modules: (auto-fill   ) ['single']
-               setup_requires: (explicit    ) ['setupmeta']
+                   py_modules: (auto-fill   ) ["single"]
+               setup_requires: (explicit    ) ["setupmeta"]
                           url: (missing     ) - Consider specifying 'url'
                       version: (single.py:8 ) 0.1.0
 

@@ -8,7 +8,7 @@ running explain
          license: (auto-fill ) MIT
 long_description: (README    ) # Several readme files [//]: # (.. [[end long_description]])
             name: (explicit  ) readmes
-  setup_requires: (explicit  ) ['setupmeta']
+  setup_requires: (explicit  ) ["setupmeta"]
              url: (missing   ) - Consider specifying 'url'
          version: (missing   ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 

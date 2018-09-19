@@ -23,7 +23,7 @@ def load_contents(relative_path, limit=0):
     """
     try:
         full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, encoding="utf-8") as fh:
+        with io.open(full_path, "rt", encoding="utf-8") as fh:
             lines = []
             for line in fh:
                 limit -= 1
@@ -41,7 +41,7 @@ def load_readme(relative_path, limit=0):
     content = []
     try:
         full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, encoding="utf-8") as fh:
+        with io.open(full_path, "rt", encoding="utf-8") as fh:
             for line in fh.readlines():
                 m = RE_README_TOKEN.search(line)
                 if not m:

@@ -146,13 +146,19 @@ def main():
     parser = argparse.ArgumentParser(description=main.__doc__.strip())
     parser.add_argument('--debug', action='store_true', help="Show debug info")
     parser.add_argument('-n', '--dryrun', action='store_true', help="Print output rather, don't update expected.txt")
+    parser.add_argument('scenario', nargs="*", help="Scenarios to regenerate (default: all)")
     args = parser.parse_args()
 
     level = logging.DEBUG if args.debug else logging.INFO
     logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=level)
     logging.root.setLevel(level)
 
-    for folder in scenario_paths():
+    if not args.scenario:
+        args.scenario = scenario_paths()
+
+    os.chdir(conftest.PROJECT_DIR)
+
+    for folder in args.scenario:
         scenario = Scenario(folder)
         scenario.refresh_example(args.dryrun)
 

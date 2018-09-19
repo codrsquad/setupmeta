@@ -19,7 +19,7 @@ def test_shortening():
     assert setupmeta.short("hello there wild wonderful world", c=19) == "hello there wild..."
     assert setupmeta.short("hello there wild wonderful world", c=-19) == "hello there wild wo..."
 
-    assert setupmeta.short(["hello", "there", "wild", "wonderful  world"], c=34) == "4 items: ['hello', 'there', 'wi..."
+    assert setupmeta.short(["hello", "there", "wild", "wonderful  world"], c=34) == '4 items: ["hello", "there", "wi...'
 
     path = os.path.expanduser('~/foo/bar')
     assert setupmeta.short(path) == '~/foo/bar'
@@ -92,8 +92,18 @@ def test_run_program():
 
 
 def test_stringify():
-    assert setupmeta.stringify_dict('foo') == 'foo'
-    assert setupmeta.stringify((1, 2)) == "('1', '2')"
+    assert setupmeta.stringify((1, 2)) == '("1", "2")'
+    assert setupmeta.stringify(["1", "2"]) == '["1", "2"]'
+    assert setupmeta.stringify(("a b", "c d")) == '("a b", "c d")'
+
+    assert setupmeta.stringify("""quoted ("double"+'single')""", quote=True) == """'quoted ("double"+'single')'"""
+    assert setupmeta.stringify("""quoted 'single only'""", quote=True) == '''"quoted 'single only'"'''
+    assert setupmeta.stringify("no 'foo'") == "no 'foo'"
+    assert setupmeta.stringify("no 'foo'", quote=True) == '''"no 'foo'"'''
+
+    assert setupmeta.stringify({"bar": "no 'foo'"}) == """{bar: no 'foo'}"""
+    assert setupmeta.stringify({"bar": 'no "foo"'}) == """{bar: no "foo"}"""
+
     assert setupmeta.listify("a b") == ['a', 'b']
     assert sorted(setupmeta.listify(set("ab"))) == ['a', 'b']
     assert setupmeta.listify(("a", "b")) == ['a', 'b']
