@@ -6,8 +6,8 @@ running explain
                  download_url: (missing   ) - Consider specifying 'download_url'
                          foo*: (setup.py:2) bar
                       license: (auto-fill ) MIT
-             long_description: (README.rst) foo =================================================================================================================================...
-long_description_content_type: (README.rst) text/x-rst
+             long_description: (README.md ) readmes: foo No useful short description on 1st line here This scenario tests edge cases around finding a suitable short description ...
+long_description_content_type: (README.md ) text/markdown
                          name: (explicit  ) readmes
                setup_requires: (explicit  ) ["setupmeta"]
                           url: (missing   ) - Consider specifying 'url'
