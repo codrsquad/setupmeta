@@ -154,8 +154,10 @@ class ExplainCommand(setuptools.Command):
             if not definition.value or definition.key not in setupmeta.MetaDefs.all_fields:
                 continue
             if definition.key == "setup_requires":
-                if "setupmeta" in definition.value:
+                if isinstance(definition.value, list) and "setupmeta" in definition.value:
                     definition.value.remove("setupmeta")
+                if "setupmeta" == definition.value:
+                    continue
                 if definition.value:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
             elif definition.key == "download_url":
@@ -174,7 +176,7 @@ class ExplainCommand(setuptools.Command):
                 defs.append(definition)
 
         longest = max(len(d.value) for d in defs if "\n" not in d.value)
-        longest = min(longest, 60)
+        longest = min(longest, 70)
         for definition in defs:
             if definition.key == "versioning":
                 line = "    # versioning=%s," % definition.value
