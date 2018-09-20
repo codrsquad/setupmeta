@@ -131,6 +131,15 @@ class Definition(object):
         return isinstance(other, Definition) and self.key < other.key
 
     @property
+    def actual_source(self):
+        """Actual source, first non-adjusted source"""
+        for source in self.sources:
+            if source.source and not source.source.startswith("auto-"):
+                return source.source
+        if self.source and not self.source.startswith("auto-"):
+            return self.source
+
+    @property
     def source(self):
         """ Winning source """
         if self.sources:
