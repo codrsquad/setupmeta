@@ -136,8 +136,7 @@ class Definition(object):
         for source in self.sources:
             if source.source and not source.source.startswith("auto-"):
                 return source.source
-        if self.source and not self.source.startswith("auto-"):
-            return self.source
+        return self.source if self.source and not self.source.startswith("auto-") else None
 
     @property
     def source(self):
