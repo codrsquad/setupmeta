@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 
+import pytest
 from mock import patch
 from six import StringIO
 
@@ -93,7 +94,7 @@ def test_clean():
             """
             deleted build
             deleted foo.egg-info
-            deleted dd/__pycache__
+            deleted dd.__pycache__
             deleted 2 .pyc files, 1 .pyo files
             """,
             folder=temp,
@@ -111,6 +112,7 @@ def copy_to(src, dest, basename=None):
     shutil.copy2(src, d)
 
 
+@pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
 def test_twine():
     with setupmeta.temp_resource() as temp:
         copy_to(setupmeta.project_path("examples", "single", "setup.py"), temp)

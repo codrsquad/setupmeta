@@ -7,6 +7,7 @@ author: Zoran Simic zoran@simicweb.com
 """
 
 import os
+import platform
 import re
 import shutil
 import subprocess  # nosec
@@ -24,6 +25,8 @@ SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases 
 TESTING = False  # Set to True while running tests
 RE_SPACES = re.compile(r"\s+", re.MULTILINE)
 
+PLATFORM = platform.system().lower()
+WINDOWS = "windows" in PLATFORM
 
 def abort(message):
     """Abort execution with 'message'"""
@@ -83,17 +86,21 @@ def strip_dash(text):
 
 
 def is_executable(path):
-    return os.path.isfile(path) and os.access(path, os.X_OK)
+    if WINDOWS:
+        return path and os.path.isfile(path) and path.endswith(".exe")
+    return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
 
 def which(program):
     if not program:
         return None
+    if WINDOWS and not program.endswith(".exe"):
+        program += ".exe"
     if os.path.isabs(program):
         if is_executable(program):
             return program
         return None
-    for p in os.environ.get("PATH", "").split(":"):
+    for p in os.environ.get("PATH", "").split(os.pathsep):
         fp = os.path.join(p, program)
         if is_executable(fp):
             return fp
