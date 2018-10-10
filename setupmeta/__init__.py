@@ -28,6 +28,7 @@ RE_SPACES = re.compile(r"\s+", re.MULTILINE)
 PLATFORM = platform.system().lower()
 WINDOWS = "windows" in PLATFORM
 
+
 def abort(message):
     """Abort execution with 'message'"""
     raise UsageError(message)
