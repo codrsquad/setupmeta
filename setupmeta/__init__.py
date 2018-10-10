@@ -62,6 +62,8 @@ def short(text, c=None):
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~")
     result = re.sub(RE_SPACES, " ", result)
+    if WINDOWS:
+        result = result.replace("\\", "/")
     if c and len(result) > abs(c):
         if c < 0:
             return "%s..." % result[:-c]
@@ -283,10 +285,13 @@ class temp_resource:
         return self.path
 
     def __exit__(self, *args):
-        if self.is_folder:
-            shutil.rmtree(self.path)
-        else:
-            os.unlink(self.path)
+        try:
+            if self.is_folder:
+                shutil.rmtree(self.path)
+            else:
+                os.unlink(self.path)
+        except PermissionError:
+            pass
 
 
 def meta_command_init(self, dist, **kwargs):

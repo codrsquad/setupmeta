@@ -163,11 +163,11 @@ class ExplainCommand(setuptools.Command):
             elif definition.key == "download_url":
                 if version and version.value in definition.value:
                     definition.value = definition.value.replace(version.value, "%s")
-                    definition.value = "%s %% __version__" % setupmeta.stringify(definition.value, quote=True)
+                    definition.value = "%s %% __version__" % setupmeta.stringify(setupmeta.short(definition.value), quote=True)
                 else:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
             elif definition.key == "long_description":
-                definition.value = 'open(%s).read()' % setupmeta.stringify(definition.source, quote=True)
+                definition.value = 'open(%s).read()' % setupmeta.stringify(setupmeta.short(definition.source), quote=True)
             elif definition.key == "version":
                 definition.value = "__version__"
             else:
@@ -184,7 +184,7 @@ class ExplainCommand(setuptools.Command):
                 line = "    %s=%s," % (definition.key, definition.value)
             source = definition.actual_source
             if source and source != "explicit":
-                comment = "# from %s" % source
+                comment = "# from %s" % setupmeta.short(source)
                 rest, _, last_line = line.rpartition("\n")
                 if len(last_line) < longest:
                     padding = " " * (longest - len(last_line))
@@ -234,7 +234,7 @@ class ExplainCommand(setuptools.Command):
                         prefix = source.key
 
                     preview = setupmeta.short(source.value, c=max_chars)
-                    print(form % (prefix, source.source, preview))
+                    print(form % (prefix, setupmeta.short(source.source), preview))
                     count += 1
 
 

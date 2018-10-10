@@ -107,7 +107,10 @@ class Scenario:
 
     def clean(self):
         if self.temp:
-            shutil.rmtree(self.temp)
+            try:
+                shutil.rmtree(self.temp)
+            except PermissionError:
+                pass
 
     def replay(self):
         try:
