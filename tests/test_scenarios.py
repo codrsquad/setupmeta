@@ -5,6 +5,7 @@ Verify that ../examples/*/setup.py behave as expected
 import pytest
 
 import setupmeta
+
 from . import scenarios
 
 

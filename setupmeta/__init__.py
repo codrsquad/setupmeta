@@ -63,7 +63,7 @@ def short(text, c=None):
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~")
     result = re.sub(RE_SPACES, " ", result)
-    if WINDOWS:
+    if WINDOWS:  # pragma: no cover
         result = result.replace("\\", "/")
     if c and len(result) > abs(c):
         if c < 0:
@@ -89,7 +89,7 @@ def strip_dash(text):
 
 
 def is_executable(path):
-    if WINDOWS:
+    if WINDOWS:  # pragma: no cover
         return path and os.path.isfile(path) and path.endswith(".exe")
     return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
@@ -97,7 +97,7 @@ def is_executable(path):
 def which(program):
     if not program:
         return None
-    if WINDOWS and not program.endswith(".exe"):
+    if WINDOWS and not program.endswith(".exe"):  # pragma: no cover
         program += ".exe"
     if os.path.isabs(program):
         if is_executable(program):
@@ -291,7 +291,7 @@ class temp_resource:
                 shutil.rmtree(self.path)
             else:
                 os.unlink(self.path)
-        except PermissionError:
+        except PermissionError:  # pragma: no cover
             pass
 
 
