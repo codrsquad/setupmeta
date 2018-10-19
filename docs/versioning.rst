@@ -177,6 +177,29 @@ g9       v1.0.0  1.0.0             ``version --bump major --commit``
 g10              1.0.0.dev1
 =======  ======  ================  =====================================================================================
 
+devcommit
+---
+
+Similar to dev_, except that it uses the commit id instead of distance.
+
+Example:
+
+=======  ======  ================  =====================================================================================
+Commit   Tag     Version           Note (command ran to add tag)
+=======  ======  ================  =====================================================================================
+g1               0.0.0.dev-g1      Initial commit
+g1               0.0.0.dev-g1-dirty  Same as above, only checkout was not clean anymore
+g2               0.0.0.dev-g2
+g3               0.0.0.dev-g3
+g4       v0.1.0  0.1.0             ``version --bump minor --commit``
+g5               0.1.1.dev-g5        (1 commit since tag)
+g6               0.1.1.dev-g6
+g7       v0.1.1  0.1.1             ``version --bump patch --commit``
+g8               0.1.2.dev-g7
+g9       v1.0.0  1.0.0             ``version --bump major --commit``
+g10              1.0.0.dev-g10
+=======  ======  ================  =====================================================================================
+
 
 distance
 --------
