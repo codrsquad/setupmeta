@@ -233,7 +233,7 @@ class Strategy:
             bits = list(bits)
             last = bits[-1]
             prelast = bits[-2]
-            if last and last.text == "dev" and prelast and prelast.text in BUMPABLE:
+            if last and (last.text == "dev" or last.text == "devcommit") and prelast and prelast.text in BUMPABLE:
                 bits[-2] = prelast.auto_bumped()
         result = self.rendered_bits(version, bits) or []
         if extra and self.needs_extra(version):
@@ -309,6 +309,11 @@ class Strategy:
 
             elif main == "dev":
                 main = "{major}.{minor}.{patch}{dev}"
+
+            elif main == "devcommit":
+                main = "{major}.{minor}.{patch}{devcommit}"
+                data["extra"] = "-dirty"
+                data["separator"] = ""
 
             elif main in ("", "default", "post", "tag"):
                 main = data["main"]

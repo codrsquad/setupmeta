@@ -259,3 +259,14 @@ class Version:
         if self.distance or self.dirty:
             return ".dev%s" % self.distance
         return ""
+
+    @property
+    def devcommit(self):
+        """
+        {devcommit} marker for this version
+
+        :return str: '.dev-{commitid}' for distance > 0, empty string otherwise
+        """
+        if self.distance or self.dirty:
+            return ".dev-%s" % self.commitid
+        return ""
