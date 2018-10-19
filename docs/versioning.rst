@@ -178,27 +178,27 @@ g10              1.0.0.dev1
 =======  ======  ================  =====================================================================================
 
 devcommit
----
+---------
 
 Similar to dev_, except that it uses the commit id instead of distance.
 
 Example:
 
-=======  ======  ================  =====================================================================================
-Commit   Tag     Version           Note (command ran to add tag)
-=======  ======  ================  =====================================================================================
-g1               0.0.0.dev-g1      Initial commit
+=======  ======  ==================  ===================================================================================
+Commit   Tag     Version             Note (command ran to add tag)
+=======  ======  ==================  ===================================================================================
+g1               0.0.0.dev-g1        Initial commit
 g1               0.0.0.dev-g1-dirty  Same as above, only checkout was not clean anymore
 g2               0.0.0.dev-g2
 g3               0.0.0.dev-g3
-g4       v0.1.0  0.1.0             ``version --bump minor --commit``
+g4       v0.1.0  0.1.0               ``version --bump minor --commit``
 g5               0.1.1.dev-g5        (1 commit since tag)
 g6               0.1.1.dev-g6
-g7       v0.1.1  0.1.1             ``version --bump patch --commit``
+g7       v0.1.1  0.1.1               ``version --bump patch --commit``
 g8               0.1.2.dev-g7
-g9       v1.0.0  1.0.0             ``version --bump major --commit``
+g9       v1.0.0  1.0.0               ``version --bump major --commit``
 g10              1.0.0.dev-g10
-=======  ======  ================  =====================================================================================
+=======  ======  ==================  ===================================================================================
 
 
 distance
@@ -274,9 +274,9 @@ State this in your ``setup.py``::
 
 Example:
 
-=======  ======  ==========================   ====================================================================================
+=======  ======  ===========================  ====================================================================================
 Commit   Tag     Version                      Note (command ran to add tag)
-=======  ======  ==========================   ====================================================================================
+=======  ======  ===========================  ====================================================================================
 no .git          0.0.0                        Version defaults to 0.0 (when no tag yet)
 none             0.0.0+hlocal.g0000000.dirty  No commit yet (but ``git init`` was ran)
 g1               0.0.1+hlocal.g1              Initial commit, built locally (no ``$BUILD_ID`` env var defined), checkout was clean
@@ -291,7 +291,7 @@ g7       v0.2.0  0.2.0+h150.g3                ``version --bump minor --commit`` 
 g8               0.2.1+h160.g3
 g9       v1.0.0  1.0.0+h200.g3                ``version --bump major --commit``
 g10              1.0.1+h300.g3
-=======  ======  ==========================   ====================================================================================
+=======  ======  ===========================  ====================================================================================
 
 * Similar to distance_, except that the ``extra`` part is always shown and will reflect whether build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
 
@@ -359,7 +359,15 @@ The following can be used as format specifiers:
 
 * ``{distance}``: Number of commits since last version tag from current commit (0 if current commit is tagged)
 
-* ``{post}``: Designates a "post" release (PEP-440_ friendly), empty when current commit is version-tagged, otherwise ``.postN`` (wehre ``N`` is ``{distance}``)
+* ``{post}``: Designates a "post" release (PEP-440_ friendly), empty when current commit is version-tagged,
+  otherwise ``.postN`` (wehre ``N`` is ``{distance}``)
+
+* ``{dev}``: Designates a "dev" release (PEP-440_ friendly), empty when current commit is version-tagged,
+  otherwise ``[+1].devN`` (wehre ``N`` is ``{distance}``, a ``[+1]`` is the next revision of the right-most bumpable, usually ``patch``).
+  Example: ``1.2.dev3``.
+
+* ``{devcommit}``: Same as ``{dev}``, but with commit id instead of distance.
+  Example: ``1.2.dev-g12345``.
 
 * ``{commitid}``: short string identifying commit, like ``g3bf9221``
 
