@@ -407,6 +407,12 @@ class Versioning:
             setupmeta.warn(msg)
         self.meta.auto_fill("version", rendered, self.scm.name, override=True)
 
+    def get_bump(self, what):
+        if self.problem:
+            setupmeta.abort(self.problem)
+        gv = self.scm.get_version()
+        return self.strategy.bumped(what, gv)
+
     def bump(self, what, commit=False, simulate_branch=None):
         if self.problem:
             setupmeta.abort(self.problem)

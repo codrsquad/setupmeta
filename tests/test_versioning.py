@@ -196,6 +196,9 @@ def test_invalid_part():
         with pytest.raises(setupmeta.UsageError):
             versioning.bump("minor")
 
+        with pytest.raises(setupmeta.UsageError):
+            versioning.get_bump("minor")
+
 
 def test_invalid_main():
     with conftest.capture_output() as logged:
@@ -330,3 +333,11 @@ def check_bump(versioning):
 
     with pytest.raises(setupmeta.UsageError):
         versioning.bump("foo")
+
+
+def check_get_bump(versioning):
+    assert versioning.get_bump("major") == "1.0.0"
+    assert versioning.get_bump("minor") == "0.2.0"
+
+    with pytest.raises(setupmeta.UsageError):
+        versioning.get_bump("foo")

@@ -90,6 +90,7 @@ Typical usage::
 
     python setup.py version --help              # What were the options?
     python setup.py version                     # Show current version and exit
+    python setup.py version --show-next minor   # Show next minor version and exit
     python setup.py version --bump minor        # Dryrun bump: see what would be done
     python setup.py version --b minor --commit  # Effectively bump
 

@@ -56,6 +56,7 @@ class VersionCommand(setuptools.Command):
     user_options = [
         ("bump=", "b", "bump specified part of version"),
         ("commit", "c", "commit bump"),
+        ("show-next=", "n", "show what the next bump of the specified part of version will be"),
         ("simulate-branch=", "s", "simulate branch name (useful for testing)"),
     ]
 
@@ -63,10 +64,13 @@ class VersionCommand(setuptools.Command):
         self.bump = None
         self.commit = 0
         self.simulate_branch = None
+        self.show_next = None
 
     def run(self):
         try:
-            if self.bump:
+            if self.show_next:
+                print(self.setupmeta.versioning.get_bump(self.show_next))
+            elif self.bump:
                 self.setupmeta.versioning.bump(self.bump, self.commit, self.simulate_branch)
             else:
                 print(self.setupmeta.version)

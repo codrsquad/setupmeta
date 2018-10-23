@@ -66,6 +66,20 @@ def test_version():
         """,
     )
 
+    run_setup_py(
+        ["version", "-n", "patch"],
+        """
+            [\\d.]+
+        """,
+    )
+
+    run_setup_py(
+        ["version", "--show-next", "major"],
+        """
+            [\\d.]+
+        """,
+    )
+
 
 @patch("sys.stdout.isatty", return_value=True)
 @patch("os.popen", return_value=StringIO("60"))
