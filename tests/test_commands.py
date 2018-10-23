@@ -67,7 +67,7 @@ def test_version():
     )
 
     run_setup_py(
-        ["version", "-n", "patch"],
+        ["version", "-a", "patch"],
         """
             [\\d.]+
         """,

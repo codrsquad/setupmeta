@@ -56,7 +56,7 @@ class VersionCommand(setuptools.Command):
     user_options = [
         ("bump=", "b", "bump specified part of version"),
         ("commit", "c", "commit bump"),
-        ("show-next=", "n", "show what the next bump of the specified part of version will be"),
+        ("show-next=", "a", "show what the next bump of the specified part of version will be"),
         ("simulate-branch=", "s", "simulate branch name (useful for testing)"),
     ]
 
