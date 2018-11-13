@@ -20,6 +20,7 @@ import setuptools
 
 USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get("SETUPMETA_DEBUG")
+PKG_INFO = "PKG-INFO"
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
 TESTING = False  # Set to True while running tests

@@ -107,7 +107,7 @@ def cleaned_output(text, folder=None):
     for line in text.splitlines():
         line = line.rstrip()
         if setupmeta.WINDOWS:
-            if " \_: " not in line:
+            if " \\_: " not in line:
                 line = line.replace("\\", "/")
         if line and not line.startswith("pydev debugger:"):
             if folder:

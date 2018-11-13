@@ -31,8 +31,9 @@ def project_scm(root):
         return Git(scm_root)
     if os.environ.get(setupmeta.SCM_DESCRIBE):
         return Snapshot(root)
-    snapshot = os.path.join(root, setupmeta.VERSION_FILE)
-    if os.path.isfile(snapshot):
+    version_file = os.path.join(root, setupmeta.VERSION_FILE)
+    pkg_info = os.path.join(root, setupmeta.PKG_INFO)
+    if os.path.isfile(version_file) or os.path.isfile(pkg_info):
         return Snapshot(root)
     setupmeta.trace("could not determine SCM for '%s'" % root)
     return None

@@ -2,6 +2,12 @@
 History
 =======
 
+2.2.3 (2018-11-12)
+------------------
+
+* Added support for version determination from PKG-INFO
+
+
 2.2.1 (2018-10-23)
 ------------------
 
