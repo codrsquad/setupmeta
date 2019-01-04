@@ -2,7 +2,12 @@
 History
 =======
 
-2.2.2 (2018-11-12)
+2.3.1 (2019-01-04)
+------------------
+
+* Auto-fill ``bugtrack_url``
+
+2.3.0 (2018-11-12)
 ------------------
 
 * Added support for version determination from PKG-INFO

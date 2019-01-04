@@ -17,6 +17,9 @@ Simplify your setup.py
     :target: https://github.com/zsimic/setupmeta
     :alt: Python versions tested (link to github project)
 
+.. image:: https://img.shields.io/pypi/dm/setupmeta.svg
+    :alt: Downloads
+
 ----
 
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
@@ -147,7 +150,7 @@ How it works?
 
     * Version format can be customized, see versioning_ for more info
 
-* ``version``, ``versioning``, ``url``, ``download_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``,
+* ``version``, ``versioning``, ``url``, ``download_url``, ``bugtrack_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``,
   and ``platforms`` will be auto-filled from:
 
     * Lines of the form ``__key__ = "value"`` in your modules (simple constants only,
@@ -171,14 +174,12 @@ How it works?
 
     * URLs can be simplified:
 
-        * ``url`` may use ``{name}``, it will be expanded appropriately
-
         * if ``url`` points to your general github repo (like: https://github.com/zsimic),
           the ``name`` of your project is auto-appended to it
 
-        * if ``download_url`` is a relative path, it is auto-filled by prefixing it with ``url``
+        * relative urls are auto-filled by prefixing them with ``url``
 
-        * ``download_url`` may use ``{name}`` and/or ``{version}``, those will be expanded appropriately
+        * urls may use ``{name}`` and/or ``{version}`` markers, it will be expanded appropriately
 
     * ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line
       (setupmeta_ will figure out the email part and auto-fill it properly)
