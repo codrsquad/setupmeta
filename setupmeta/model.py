@@ -560,31 +560,36 @@ class SetupMeta(Settings):
         self.auto_fill_long_description()
         self.sort_classifiers()
 
+    def resolved_url(self, url, base=None):
+        """
+        :param str|None url: Url to resolve
+        :return str|None: Resolve {name} and {version} markers in given url
+        """
+        if base and url and "://" not in url:
+            # Convenience: auto-complete relative urls
+            url = os.path.join(base, url)
+
+        return url and url.format(name=self.name, version=self.version)
+
     def fill_urls(self):
         """ Auto-fill url and download_url """
         url = self.value("url")
         download_url = self.value("download_url")
+        bugtrack_url = self.value("bugtrack_url")
 
         if url and self.name:
-            parts = url.split("/")
-            if len(parts) == 4 and "github.com" == parts[2]:
+            parts = [s for s in url.split("/") if s]
+            if 3 <= len(parts) <= 4 and parts[1] == "github.com":
                 # Convenience: auto-complete url with package name
-                url = os.path.join(url, self.name)
+                if len(parts) == 3:
+                    url = os.path.join(url, "{name}")
 
-        if download_url and url and "://" not in download_url:
-            # Convenience: auto-complete relative download_url
-            download_url = os.path.join(url, download_url)
+                if not bugtrack_url:
+                    bugtrack_url = os.path.join(url, "issues")
 
-        if url:
-            # Convenience: allow {name} in url
-            url = url.format(name=self.name)
-
-        if download_url:
-            # Convenience: allow {name} and {version} in download_url
-            download_url = download_url.format(name=self.name, version=self.version)
-
-        self.auto_fill("url", url)
-        self.auto_fill("download_url", download_url)
+        self.auto_fill("url", self.resolved_url(url))
+        self.auto_fill("download_url", self.resolved_url(download_url, base=url))
+        self.auto_fill("bugtrack_url", self.resolved_url(bugtrack_url, base=url))
 
     def find_project_dir(self, setup_py_path):
         """

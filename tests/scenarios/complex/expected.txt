@@ -5,6 +5,7 @@ running explain
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
+    bugtrack_url: (auto-fill                ) https://github.com/zsimic/complex/issues
      classifiers: (explicit                 ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
               \_: (classifiers.txt          ) ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating System :: Unix"]
          contact: (complex/__init__.py:13   ) Zoran Simic
@@ -78,6 +79,7 @@ __version__ = "1.2.0"
 setup(
     author="Zoran Simic",                                             # from setup.py:2
     author_email="zoran@simicweb.com",
+    bugtrack_url="https://github.com/zsimic/complex/issues",
     classifiers=["License :: OSI Approved :: BSD License", "Programming Language :: Python"],
     contact="Zoran Simic",                                            # from complex/__init__.py:13
     contact_email="me@myplace.com",                                   # from complex/__init__.py:14
@@ -208,6 +210,7 @@ running explain
           author: (auto-adjust              ) Zoran Simic
               \_: (setup.py:2               ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust              ) zoran@simicweb.com
+    bugtrack_url: (auto-fill                ) https://github.com/zsimic/complex/issues
      classifiers: (explicit                 ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
               \_: (classifiers.txt          ) ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating System :: Unix"]
          contact: (complex/__init__.py:13   ) Zoran Simic

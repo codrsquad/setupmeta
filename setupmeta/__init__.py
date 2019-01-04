@@ -323,7 +323,7 @@ class MetaDefs:
 
     # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
     metadata_fields = listify("""
-        author author_email classifiers description download_url keywords
+        author author_email bugtrack_url classifiers description download_url keywords
         license long_description long_description_content_type
         maintainer maintainer_email name obsoletes
         platforms provides requires url version
