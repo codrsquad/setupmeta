@@ -18,6 +18,7 @@ Simplify your setup.py
     :alt: Python versions tested (link to github project)
 
 .. image:: https://img.shields.io/pypi/dm/setupmeta.svg
+    :target: https://pypistats.org/packages/setupmeta
     :alt: Downloads
 
 ----
