@@ -32,8 +32,7 @@ def project_scm(root):
     if os.environ.get(setupmeta.SCM_DESCRIBE):
         return Snapshot(root)
     version_file = os.path.join(root, setupmeta.VERSION_FILE)
-    pkg_info = os.path.join(root, setupmeta.PKG_INFO)
-    if os.path.isfile(version_file) or os.path.isfile(pkg_info):
+    if os.path.isfile(version_file):
         return Snapshot(root)
     setupmeta.trace("could not determine SCM for '%s'" % root)
     return None
@@ -380,6 +379,10 @@ class Versioning:
             return
 
         vdef = self.meta.definitions.get("version")
+        if vdef and vdef.source and vdef.source.lower().endswith("-info"):
+            # We already got version from PKG-INFO
+            return
+
         cv = vdef.sources[0].value if vdef and vdef.sources else None
         if self.problem:
             if not cv:

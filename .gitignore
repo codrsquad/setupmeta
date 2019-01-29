@@ -8,7 +8,7 @@
 # Build artifacts
 __pycache__/
 *.py[cod]
-*.egg*
+/*.egg*
 .tox/
 .venv/
 build/

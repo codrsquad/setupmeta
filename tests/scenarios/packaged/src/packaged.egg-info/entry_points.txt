@@ -1,0 +1,2 @@
+[console_scripts]
+packaged-test = packaged:main

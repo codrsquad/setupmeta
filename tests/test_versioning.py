@@ -56,27 +56,6 @@ def test_snapshot_with_version_file():
         versioning.auto_fill_version()
 
 
-def test_snapshot_with_pkg_info():
-    with setupmeta.temp_resource() as temp:
-        with open(os.path.join(temp, setupmeta.PKG_INFO), "w") as fh:
-            fh.write("Metadata-Version: 2.1\nVersion: 1.2.3-4-g1234567\n")
-
-        setup_py = os.path.join(temp, "setup.py")
-        meta = SetupMeta(dict(_setup_py_path=setup_py, versioning="post", setup_requires="setupmeta"))
-
-        versioning = meta.versioning
-        assert meta.version == "1.2.3.post4"
-        assert not versioning.generate_version_file
-        assert versioning.scm.program is None
-        assert str(versioning.scm).startswith("snapshot ")
-        assert not versioning.scm.is_dirty()
-        assert versioning.scm.get_branch() == "HEAD"
-
-        # Trigger artificial rewriting of version file
-        versioning.generate_version_file = True
-        versioning.auto_fill_version()
-
-
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1"})
 def test_find_scm_in_parent():
     meta = new_meta("post")

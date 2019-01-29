@@ -3,7 +3,6 @@ import re
 from distutils.version import LooseVersion
 
 import setupmeta
-from setupmeta.content import load_contents
 
 
 RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
@@ -111,19 +110,9 @@ class Snapshot(Scm):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
         if v:
             return Git.parsed_version(v)
-        path = os.path.join(self.root, setupmeta.PKG_INFO)
-        if os.path.isfile(path):
-            return self.get_version_from_pkg_info(path)
         path = os.path.join(self.root, setupmeta.VERSION_FILE)
         with open(path) as fh:
             return Git.parsed_version(fh.readline(), False)
-
-    def get_version_from_pkg_info(self, path):
-        lines = load_contents(path)
-        if lines:
-            for line in lines.split("\n"):
-                if line and line.startswith("Version: "):
-                    return Git.parsed_version(line[9:].strip(), False)
 
 
 class Git(Scm):

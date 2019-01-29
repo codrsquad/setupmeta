@@ -2,10 +2,17 @@
 History
 =======
 
+2.3.2 (2019-01-28)
+------------------
+
+* Extract all relevant info from ``PKG-INFO`` (not just version)
+
+
 2.3.1 (2019-01-04)
 ------------------
 
 * Auto-fill ``bugtrack_url``
+
 
 2.3.0 (2018-11-12)
 ------------------

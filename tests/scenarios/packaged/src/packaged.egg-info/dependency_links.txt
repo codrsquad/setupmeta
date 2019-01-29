@@ -1,0 +1,2 @@
+git+https://somewhere.com/foo.git#egg=wonka
+git+https://somewhere.com/test.git#egg=mytest

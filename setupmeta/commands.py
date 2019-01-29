@@ -223,7 +223,7 @@ class ExplainCommand(setuptools.Command):
         if definitions:
             longest_key = min(30, max(len(key) for key in definitions))
             sources = sum((d.sources for d in definitions.values()), [])
-            longest_source = min(32, max(len(s.source) for s in sources))
+            longest_source = min(40, max(len(s.source) for s in sources))
             form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
             max_chars = max(60, self.chars - longest_key - longest_source - 5)
 

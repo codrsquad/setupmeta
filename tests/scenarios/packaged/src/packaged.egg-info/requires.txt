@@ -1,0 +1,4 @@
+beautifulsoup4>=4.4.0
+pytest
+wonka
+mytest

@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: packaged
+Version: 1.3.2.dev4
+Summary: An example test case with info coming from PKG-INFO
+Home-page: http://somewhere.net/packaged
+Author: Zoran Simic
+Author-email: zoran@simicweb.com
+License: MIT
+Download-URL: http://somewhere.net/packaged/releases/download/v1.7.1/pickley
+Description: # An example test case with info coming from PKG-INFO
+        
+        Most of the metadata for this project comes from the ``.egg-info`` folder
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python
+Description-Content-Type: text/markdown
+this is a bogus line and shouldn't be here in PKG-INFO

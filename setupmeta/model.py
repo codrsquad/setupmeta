@@ -361,6 +361,100 @@ def is_complex_requirement(line):
     return line and (line.startswith("-") or ":" in line)
 
 
+class PackageInfo:
+    """Retrieves info from PKG-INFO"""
+
+    _canonical_names = {
+        "classifier": "classifiers",
+        "description": "long_description",
+        "description_content_type": "long_description_content_type",
+        "home_page": "url",
+        "summary": "description",
+    }
+    _list_types = ["classifiers", "long_description"]
+
+    def __init__(self, root):
+        self.path = os.path.join(root, "PKG-INFO")
+        self.info = {}
+        self.name = None
+        self.dependency_links_txt = None
+        self.entry_points_txt = None
+        self.requires_txt = None
+        lines = load_contents(self.path)
+        if not lines:
+            return
+
+        # Parse PKG-INFO when present
+        line_number = 0
+        key = None
+        for line in lines.split("\n"):
+            line_number += 1
+            if line.startswith(" "):
+                self.info[key].append(line[8:])
+                continue
+
+            if ": " in line:
+                key, _, value = line.partition(": ")
+                key = self.canonical_key(key)
+                if key is None:
+                    continue
+                if key in self._list_types:
+                    if key not in self.info:
+                        self.info[key] = []
+                    self.info[key].append(value)
+
+                else:
+                    self.info[key] = value
+
+                continue
+
+            setupmeta.trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
+
+        self.name = self.info.get("name")
+        self.info["long_description"] = "\n".join(self.info.get("long_description", []))
+        self.load_more_info(root)
+
+    def canonical_key(self, key):
+        """
+        :param str key: Key from PKG-INFO
+        :return str|None: Corresponding key for setuptools.setup(), if any
+        """
+        key = key.lower().replace("-", "_")
+        key = self._canonical_names.get(key, key)
+        if key in MetaDefs.all_fields:
+            return key
+
+    def load_more_info(self, folder, depth=3):
+        """
+        :param str folder: Folder to scan for .egg-info file
+        :param int depth: Do not scan folder for more than 'depth'
+        :return bool: True when .egg-info was found and leveraged
+        """
+        if not self.name or not os.path.isdir(folder) or depth <= 0:
+            return False
+
+        path = os.path.join(folder, "%s.egg-info" % self.name)
+        if os.path.isdir(path):
+            self.dependency_links_txt = self.checked_file(path, "dependency_links.txt")
+            self.entry_points_txt = self.checked_file(path, "entry_points.txt")
+            self.requires_txt = self.checked_file(path, "requires.txt")
+            return True
+
+        for fname in os.listdir(folder):
+            if self.load_more_info(os.path.join(folder, fname), depth=depth - 1):
+                return True
+
+    def checked_file(self, folder, filename):
+        """
+        :param str folder: Folder
+        :param str filename: Basename
+        :return str|None: Full path to file, if it exists
+        """
+        path = os.path.join(folder, filename)
+        if os.path.exists(path):
+            return path
+
+
 class RequirementsEntry:
     """ Keeps track of where requirements came from """
 
@@ -448,9 +542,12 @@ class RequirementsEntry:
 class Requirements:
     """ Allows to auto-fill requires from requirements.txt """
 
-    def __init__(self):
+    def __init__(self, pkg_info):
+        """
+        :param PackageInfo pkg_info: PKG-INFO, when available
+        """
         self.links_source = None
-        self.install = self.get_requirements(True, "requirements.txt", "pinned.txt")
+        self.install = self.get_requirements(True, pkg_info.requires_txt, "requirements.txt", "pinned.txt")
         self.test = self.get_requirements(
             False,
             "tests/requirements.txt",  # Preferred
@@ -459,9 +556,15 @@ class Requirements:
             "test-requirements.txt",
             "requirements-test.txt",
         )
-        self.links = []
-        self.add_links(self.install)
-        self.add_links(self.test)
+
+        if pkg_info.dependency_links_txt:
+            self.links_source = setupmeta.relative_path(pkg_info.dependency_links_txt)
+            self.links = load_list(pkg_info.dependency_links_txt)
+
+        else:
+            self.links = []
+            self.add_links(self.install)
+            self.add_links(self.test)
 
     def add_links(self, entries):
         if entries and entries.links:
@@ -475,10 +578,11 @@ class Requirements:
     def get_requirements(abstract, *relative_paths):
         """ Read old-school requirements.txt type file """
         for path in relative_paths:
-            path = project_path(path)
-            if os.path.isfile(path):
-                trace("found requirements: %s" % path)
-                return RequirementsEntry(path, abstract=abstract)
+            if path:
+                path = project_path(path)
+                if os.path.isfile(path):
+                    trace("found requirements: %s" % path)
+                    return RequirementsEntry(path, abstract=abstract)
 
 
 class SetupMeta(Settings):
@@ -497,6 +601,12 @@ class SetupMeta(Settings):
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
             self.add_definition(key, value, EXPLICIT)
+
+        # Add definitions from PKG-INFO, when available
+        self.pkg_info = PackageInfo(MetaDefs.project_dir)
+        for key, value in self.pkg_info.info.items():
+            if key in MetaDefs.all_fields:
+                self.add_definition(key, value, setupmeta.relative_path(self.pkg_info.path))
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
         self.merge(SimpleModule("setup.py"))
@@ -548,7 +658,7 @@ class SetupMeta(Settings):
         self.auto_adjust("contact", self.extract_email)
         self.auto_adjust("maintainer", self.extract_email)
 
-        self.requirements = Requirements()
+        self.requirements = Requirements(self.pkg_info)
         self.auto_fill_requires("install", "install_requires")
         self.auto_fill_requires("test", "tests_require")
         if self.requirements.links:
@@ -660,6 +770,8 @@ class SetupMeta(Settings):
         self.add_definition("long_description_content_type", best_content_type, best_readme)
 
     def auto_fill_entry_points(self, key="entry_points"):
+        if self.pkg_info.entry_points_txt:
+            self.add_definition(key, load_contents(self.pkg_info.entry_points_txt), setupmeta.relative_path(self.pkg_info.entry_points_txt))
         path = "%s.ini" % key
         self.add_definition(key, load_contents(path), path)
 
@@ -690,8 +802,7 @@ class SetupMeta(Settings):
     def auto_fill_classifiers(self):
         """ Add classifiers from classifiers.txt, if present """
         # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        classifiers = load_list(CLASSIFIERS)
-        self.add_definition("classifiers", classifiers, CLASSIFIERS)
+        self.add_definition("classifiers", load_list(CLASSIFIERS), CLASSIFIERS)
 
     def sort_classifiers(self):
         """ Sort classifiers alphabetically """

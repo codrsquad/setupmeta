@@ -21,19 +21,20 @@ def load_contents(relative_path, limit=0):
     :param int limit: Max number of lines to load
     :return str|None: Contents, if any
     """
-    try:
-        full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, "rt") as fh:
-            lines = []
-            for line in fh:
-                limit -= 1
-                if limit == 0:
-                    break
-                lines.append(line)
-            return "".join(lines).strip()
+    if relative_path:
+        try:
+            full_path = setupmeta.project_path(relative_path)
+            with io.open(full_path, "rt") as fh:
+                lines = []
+                for line in fh:
+                    limit -= 1
+                    if limit == 0:
+                        break
+                    lines.append(line)
+                return "".join(lines).strip()
 
-    except IOError:
-        pass
+        except IOError:
+            return None
 
 
 def load_readme(relative_path, limit=0):
