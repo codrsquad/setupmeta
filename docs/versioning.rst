@@ -54,7 +54,7 @@ Now, running ``setup.py explain`` will show you something like this::
     version: (git          ) 1.0.0.post2+g123
          \_: (__init__.py:7) 1.0.0
 
-Which means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init)_.py`` line 7 states it is "1.0.0".
+Which means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init_.py`` line 7 states it is "1.0.0".
 
 If you commit your changes, your checkout won't be dirty anymore, and the number of commits since latest tag will be 3, so ``setup.py explain`` will now show::
 
