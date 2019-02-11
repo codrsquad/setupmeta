@@ -212,7 +212,7 @@ class Settings:
         :param bool override: If True, 'value' is forcibly taken
         """
         if key and value:
-            if key == "keywords":
+            if key in ("keywords", "setup_requires"):
                 value = listify(value, separator=",")
             definition = self.definitions.get(key)
             if definition is None:
