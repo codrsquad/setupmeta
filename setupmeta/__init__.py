@@ -36,7 +36,7 @@ def abort(message):
 
 def warn(message):
     """Issue a warning (coming from setupmeta itself)"""
-    warnings.warn(message)
+    warnings.warn(message, stacklevel=2)
 
 
 def trace(message):
