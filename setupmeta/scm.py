@@ -38,21 +38,23 @@ class Scm:
         """
         pass
 
-    def commit_files(self, commit, relative_paths, next_version):
+    def commit_files(self, commit, push, relative_paths, next_version):
         """
         Commit modified files with 'relative_paths', commit message will be of the form "Version v1.0.0"
 
         :param bool commit: Dryrun if False, effectively commit if True
+        :param bool push: Effectively push if True
         :param list(str) relative_paths: Relative paths to commit
         :param str next_version: Version that is about to be applied, of the form 1.0.0 (used for commit message)
         """
         pass
 
-    def apply_tag(self, commit, next_version):
+    def apply_tag(self, commit, push, next_version):
         """
         Apply a tag of the form "v1.0.0" at current commit
 
         :param bool commit: Dryrun if False, effectively apply tag if True
+        :param bool push: Effectively push if True
         :param str next_version: Version to use for tag
         """
         pass
@@ -168,16 +170,19 @@ class Git(Scm):
             self._has_origin = bool(self.get_output("config", "--get", "remote.origin.url"))
         return self._has_origin
 
-    def commit_files(self, commit, relative_paths, next_version):
+    def commit_files(self, commit, push, relative_paths, next_version):
         if not relative_paths:
             return
         relative_paths = sorted(set(relative_paths))
         self.run(commit, "add", *relative_paths)
         self.run(commit, "commit", "-m", "Version %s" % next_version)
-        if self.has_origin():
-            self.run(commit, "push", "origin")
+        if push:
+            if self.has_origin():
+                self.run(commit, "push", "origin")
+            else:
+                print("Won't push: no origin defined")
 
-    def apply_tag(self, commit, next_version):
+    def apply_tag(self, commit, push, next_version):
         """
         :param bool commit: Effectively apply tag if True, dryrun otherwise
         :param str next_version: Next version to apply
@@ -187,11 +192,12 @@ class Git(Scm):
 
         self.run(commit, "tag", "-a", tag, "-m", bump_msg)
 
-        if self.has_origin():
-            self.run(commit, "push", "--tags", "origin")
+        if push:
+            if self.has_origin():
+                self.run(commit, "push", "--tags", "origin")
 
-        else:
-            print("Not running 'git push --tags origin' as you don't have an origin")
+            else:
+                print("Not running 'git push --tags origin' as you don't have an origin")
 
 
 class Version:

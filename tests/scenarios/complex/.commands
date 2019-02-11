@@ -1,7 +1,7 @@
 version --bump patch
-version --bump minor
+version --bump minor --push
 version --bump major
 version --bump minor --commit
-version --bump major --commit
+version --bump major --commit --push
 version
 explain -c180

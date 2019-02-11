@@ -2,6 +2,12 @@
 History
 =======
 
+2.4.0 (2019-02-12)
+------------------
+
+* Push version bumps only when ``--push`` is explicitly specified
+
+
 2.3.4 (2019-02-11)
 ------------------
 

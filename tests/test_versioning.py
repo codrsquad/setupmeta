@@ -323,10 +323,9 @@ def check_bump(versioning):
         versioning.bump("major")
         assert "Not committing bump, use --commit to commit" in out
         assert 'git tag -a v1.0.0 -m "Version 1.0.0"' in out
-        assert "git push --tags origin" in out
 
     with conftest.capture_output() as out:
-        versioning.bump("minor")
+        versioning.bump("minor", push=True)
         assert "Not committing bump, use --commit to commit" in out
         assert 'git tag -a v0.2.0 -m "Version 0.2.0"' in out
         assert "git push --tags origin" in out
