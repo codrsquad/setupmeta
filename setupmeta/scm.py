@@ -138,8 +138,11 @@ class Git(Scm):
     def is_dirty(self):
         """
         :return bool: Is checkout folder self.root currently dirty?
+
+        This checks both the working tree and index, in a single command.
+        Ref: https://stackoverflow.com/a/2659808/15690
         """
-        exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", capture=False)
+        exitcode = self.get_output("diff-index", "--quiet", "--ignore-submodules", "HEAD", capture=False)
         return exitcode != 0
 
     def get_branch(self):
