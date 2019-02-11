@@ -2,6 +2,14 @@
 History
 =======
 
+2.3.3 (2019-02-11)
+------------------
+
+* Better warnings message, should show proper origination
+
+* Corrected `dirty` determination: repo with staged files is considered dirty until effective commit
+
+
 2.3.2 (2019-01-28)
 ------------------
 
