@@ -8,5 +8,5 @@ from setuptools import setup
 
 setup(
     name="readmes",
-    setup_requires="setupmeta",
+    setup_requires=["setupmeta"],
 )

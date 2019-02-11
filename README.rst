@@ -33,7 +33,7 @@ Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look l
     setup(
         name='myproject',
         versioning='distance',          # Optional, would activate tag-based versioning
-        setup_requires='setupmeta'      # This is where setupmeta comes in
+        setup_requires=['setupmeta']    # This is where setupmeta comes in
     )
 
 And that should be it - setupmeta_ will take it from there, extracting everything else from the rest of your project

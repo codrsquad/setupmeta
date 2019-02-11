@@ -151,7 +151,7 @@ History
 
 * Auto-determine most common license, and associated classifier string
 
-* Should work with any version of setuptools now, via ``setup_requires='setupmeta'``
+* Should work with any version of setuptools now, via ``setup_requires=['setupmeta']``
 
 * Removed old way, no more "drop setupmeta.py next to your setup.py" mode
 
