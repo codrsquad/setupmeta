@@ -189,7 +189,13 @@ def run_program(program, *args, **kwargs):
     trace(trace_msg)
 
     if capture:
-        return merged(output, error if capture == "all" else None)
+        if output[-1:] == '\n':
+            output = output[:-1]
+        if capture == "all":
+            if error[-1:] == '\n':
+                error = error[:-1]
+            return merged(output, error)
+        return merged(output, None)
 
     if p.returncode and fatal:
         print("%s exited with code %s" % (represented, p.returncode))
