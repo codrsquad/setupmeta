@@ -417,7 +417,7 @@ class Versioning:
         gv = self.scm.get_version()
         return self.strategy.bumped(what, gv)
 
-    def bump(self, what, commit=False, simulate_branch=None):
+    def bump(self, what, commit=False, push=False, simulate_branch=None):
         if self.problem:
             setupmeta.abort(self.problem)
 
@@ -436,11 +436,14 @@ class Versioning:
         if not commit:
             print("Not committing bump, use --commit to commit")
 
+        if not push:
+            print("Not pushing bump, use --push to push")
+
         vdefs = self.meta.definitions.get("version")
         if vdefs:
-            self.update_sources(next_version, commit, vdefs)
+            self.update_sources(next_version, commit, push, vdefs)
 
-        self.scm.apply_tag(commit, next_version)
+        self.scm.apply_tag(commit, push, next_version)
 
         if not self.strategy.hook:
             return
@@ -449,7 +452,7 @@ class Versioning:
         if setupmeta.is_executable(hook):
             setupmeta.run_program(hook, self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
 
-    def update_sources(self, next_version, commit, vdefs):
+    def update_sources(self, next_version, commit, push, vdefs):
         modified = []
         for vdef in vdefs.sources:
             if ".py:" not in vdef.source:
@@ -487,7 +490,7 @@ class Versioning:
         if not modified:
             return
 
-        self.scm.commit_files(commit, modified, next_version)
+        self.scm.commit_files(commit, push, modified, next_version)
 
 
 def updated_line(line, next_version, vdef):

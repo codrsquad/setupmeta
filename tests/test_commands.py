@@ -40,7 +40,7 @@ def test_version():
     run_setup_py(["version", "--bump", "major", "--simulate-branch=HEAD"], "Can't bump branch 'HEAD'")
 
     run_setup_py(
-        ["version", "--bump", "major", "--simulate-branch=master"],
+        ["version", "--bump", "major", "--simulate-branch=master", "--push"],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
@@ -53,7 +53,6 @@ def test_version():
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
-            Would run: git push --tags origin
         """,
     )
 
@@ -62,7 +61,6 @@ def test_version():
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
-            Would run: git push --tags origin
         """,
     )
 
