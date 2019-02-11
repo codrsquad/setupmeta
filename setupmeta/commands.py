@@ -158,10 +158,11 @@ class ExplainCommand(setuptools.Command):
             if not definition.value or definition.key not in setupmeta.MetaDefs.all_fields:
                 continue
             if definition.key == "setup_requires":
-                if isinstance(definition.value, list) and "setupmeta" in definition.value:
+                # When expanding, remove mention of 'setupmeta',
+                # as expansion is aimed at giving a people a way to get a setup.py as-if setupmeta didn't exist
+                # ie: it's a way of easily getting rid of setupmeta (should the need arise)
+                if "setupmeta" in definition.value:
                     definition.value.remove("setupmeta")
-                if "setupmeta" == definition.value:
-                    continue
                 if definition.value:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
             elif definition.key == "download_url":

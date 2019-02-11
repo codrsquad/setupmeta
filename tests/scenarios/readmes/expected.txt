@@ -9,7 +9,7 @@ running explain
              long_description: (README.md ) readmes: foo No useful short description on 1st line here This scenario tests edge cases around finding a suitable short description ...
 long_description_content_type: (README.md ) text/markdown
                          name: (explicit  ) readmes
-               setup_requires: (explicit  ) setupmeta
+               setup_requires: (explicit  ) ["setupmeta"]
                           url: (missing   ) - Consider specifying 'url'
                       version: (missing   ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
