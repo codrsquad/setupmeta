@@ -165,7 +165,7 @@ class MockGit(Git):
         Git.__init__(self, TESTS)
 
     def get_output(self, cmd, *args, **kwargs):
-        if cmd == "diff-index":
+        if cmd == "diff":
             return 1 if self.dirty else 0
         if cmd == "describe":
             return self.describe

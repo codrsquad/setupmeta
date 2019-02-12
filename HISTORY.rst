@@ -2,6 +2,13 @@
 History
 =======
 
+2.4.1 (2019-02-12)
+------------------
+
+* Rolled back ``dirty`` checkout determination, repo with staged files is considered clean again,
+  will have to find another fix for that edge case
+
+
 2.4.0 (2019-02-12)
 ------------------
 
