@@ -333,6 +333,9 @@ class Strategy:
                 else:
                     data["extra"] = extra
 
+            if main and "{dirty}" in main and data["extra"] == "{commitid}":
+                data["extra"] = None
+
             data["main"] = main
 
             hook = m.group(7)

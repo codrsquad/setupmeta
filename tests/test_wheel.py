@@ -7,18 +7,13 @@ import setupmeta
 
 
 RE_META = re.compile(r""".*['"](\S+/METADATA)['"].*""")
-RE_GIT_HASH = re.compile(r".*(.g[a-z0-9]+)\.dist-info.*")
 
 
 def get_metadata_line(output):
     for line in output.split("\n"):
         m = RE_META.match(line)
         if m:
-            meta = m.group(1)
-            m = RE_GIT_HASH.match(meta)
-            if m:
-                meta = meta.replace(m.group(1), "-[git-hash]-")
-            return meta
+            return m.group(1)
 
 
 @patch.dict(os.environ, {"SETUPMETA_DEBUG": "1"})
@@ -40,4 +35,4 @@ def test_wheel(sample_project):
 
     output = setupmeta.run_program("pip", "-vvv", "wheel", "--only-binary", ":all:", "-w", "dist", ".", capture=True)
     meta = get_metadata_line(output)
-    assert meta == "sample-0.1.0.dirty-[git-hash]-.dist-info/METADATA"
+    assert meta == "sample-0.1.0.dirty.dist-info/METADATA"

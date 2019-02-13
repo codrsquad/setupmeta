@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 from mock import patch
@@ -131,7 +132,8 @@ def test_versioning_variants(*_):
     with conftest.capture_output() as logged:
         quick_check("{major}.{minor}", "0.1+g123")
         quick_check("{major}.{minor}+", "0.1")
-        quick_check("{major}.{minor}{dirty}", "0.1.dirty+g123")
+        quick_check("{major}.{minor}-{dirty}", "0.1-.dirty")
+        quick_check("{major}.{minor}{dirty}", "0.1.dirty")
         quick_check("{major}.{minor}{dirty}+", "0.1.dirty")
         quick_check("{major}.{minor}", "0.1", dirty=False)
 
@@ -340,3 +342,42 @@ def check_get_bump(versioning):
 
     with pytest.raises(setupmeta.UsageError):
         versioning.get_bump("foo")
+
+
+def write_to_file(path, text):
+    with open(path, "w") as fh:
+        fh.write(text)
+        fh.write("\n")
+
+
+def test_git_versioning(sample_project):
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.1.0"
+
+    # New file does not change dirtiness
+    write_to_file("foo", "print('hello')")
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.1.0"
+
+    # Modify existing file makes checkout dirty
+    write_to_file("sample.py", "print('hello')")
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.1.0.dirty"
+
+    # git add -> version should still be dirty, as we didn't commit yet
+    setupmeta.run_program("git", "add", "sample.py")
+    # Note: this is currently not working, 1st fix tentative here: https://github.com/zsimic/setupmeta/pull/13
+    # output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    # assert output == "0.1.0.dirty"
+
+    # git add -> version reflects new distance
+    setupmeta.run_program("git", "commit", "-m", "Testing")
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.1.1"
+
+    # Bump minor, we should get 0.2.0
+    output = setupmeta.run_program(sys.executable, "setup.py", "version", "--bump", "minor", "--commit", capture=True)
+    assert "Not pushing bump, use --push to push" in output
+    assert "Running: git tag -a v0.2.0" in output
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.2.0"
