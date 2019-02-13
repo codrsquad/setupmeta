@@ -2,6 +2,12 @@
 History
 =======
 
+2.4.3 (2019-02-12)
+------------------
+
+* Report version as dirty if there staged (but uncommitted changes)
+
+
 2.4.2 (2019-02-12)
 ------------------
 

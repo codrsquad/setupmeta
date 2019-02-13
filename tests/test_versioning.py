@@ -366,9 +366,8 @@ def test_git_versioning(sample_project):
 
     # git add -> version should still be dirty, as we didn't commit yet
     setupmeta.run_program("git", "add", "sample.py")
-    # Note: this is currently not working, 1st fix tentative here: https://github.com/zsimic/setupmeta/pull/13
-    # output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
-    # assert output == "0.1.0.dirty"
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.1.0.dirty"
 
     # git add -> version reflects new distance
     setupmeta.run_program("git", "commit", "-m", "Testing")

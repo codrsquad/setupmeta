@@ -145,6 +145,8 @@ class Git(Scm):
         Ref: https://stackoverflow.com/a/2659808/15690
         """
         exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", capture=False)
+        if exitcode == 0:
+            exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", "--staged", capture=False)
         return exitcode != 0
 
     def get_branch(self):
