@@ -1,8 +1,10 @@
 import imp
 import os
+import shutil
 import sys
 import warnings
 
+import pytest
 from six import StringIO
 
 import setupmeta
@@ -30,6 +32,27 @@ def relative_path(full_path):
 def print_warning(message, *_, **__):
     """Print simplified warnings for capture in testing, instead of letting warnings do its funky thing"""
     print("WARNING: %s" % setupmeta.short(message, -60))
+
+
+@pytest.fixture
+def sample_project():
+    """Yield a sample git project, seeded with files from tests/sample"""
+    old_cd = os.getcwd()
+    try:
+        with setupmeta.temp_resource() as temp:
+            source = resouce("sample")
+            dest = os.path.join(temp, "sample")
+            shutil.copytree(source, dest)
+            files = os.listdir(dest)
+            setupmeta.run_program("git", "init", cwd=dest)
+            setupmeta.run_program("git", "add", *files, cwd=dest)
+            setupmeta.run_program("git", "commit", "-m", "Initial commit", cwd=dest)
+            setupmeta.run_program("git", "tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
+            os.chdir(dest)
+            yield dest
+
+    finally:
+        os.chdir(old_cd)
 
 
 class capture_output:
@@ -165,7 +188,7 @@ class MockGit(Git):
         Git.__init__(self, TESTS)
 
     def get_output(self, cmd, *args, **kwargs):
-        if cmd == "diff":
+        if cmd.startswith("diff"):
             return 1 if self.dirty else 0
         if cmd == "describe":
             return self.describe

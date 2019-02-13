@@ -26,7 +26,8 @@ def valid_scenarios(folder):
         full_path = os.path.join(folder, name)
         setup_py = os.path.join(full_path, "setup.py")
         if os.path.isdir(full_path) and os.path.isfile(setup_py):
-            result.append(conftest.relative_path(full_path))
+            if not setupmeta.WINDOWS or not os.path.exists(os.path.join(full_path, ".hooks")):
+                result.append(conftest.relative_path(full_path))
     return result
 
 
@@ -88,10 +89,11 @@ class Scenario:
 
     def prepare(self):
         if self.target:
+            os.environ[setupmeta.SCM_DESCRIBE] = "v2.3.0-3-g1234abc"
             return
-        self.temp = tempfile.mkdtemp()
 
         # Create a temp origin and clone folder
+        self.temp = tempfile.mkdtemp()
         self.origin = os.path.join(self.temp, "origin.git")
         self.target = os.path.join(self.temp, "work")
 
@@ -106,11 +108,14 @@ class Scenario:
         self.run_git("push", "--tags", "origin", "master")
 
     def clean(self):
-        if self.temp:
-            try:
-                shutil.rmtree(self.temp)
-            except PermissionError:
-                pass
+        if not self.temp:
+            del os.environ[setupmeta.SCM_DESCRIBE]
+            return
+
+        try:
+            shutil.rmtree(self.temp)
+        except PermissionError:
+            pass
 
     def replay(self):
         try:

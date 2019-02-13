@@ -22,6 +22,20 @@ def run_setup_py(args, expected, folder=conftest.PROJECT_DIR):
         assert m, "'%s' not present in output of '%s': %s" % (line, " ".join(args), output)
 
 
+def test_check(sample_project):
+    # First sample_project is a pristine git checkout, check should pass
+    output = conftest.run_setup_py(sample_project, "check")
+    assert output.strip() == "running check"
+
+    # Now let's modify one of the files
+    with open(os.path.join(sample_project, "sample.py"), "w") as fh:
+        fh.write("print('hello')\n")
+
+    # check should report that as a pending change
+    output = conftest.run_setup_py(sample_project, "check")
+    assert "Pending changes:" in output
+
+
 def test_explain():
     """ Test setupmeta's own setup.py """
     run_setup_py(

@@ -13,7 +13,7 @@ RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?
 def find_scm_root(root, name):
     if not root:
         return None
-    if os.path.isdir(os.path.join(root, ".%s" % name)):
+    if os.path.isdir(os.path.join(root, name)):
         return root
     parent = os.path.dirname(root)
     if parent == root:
@@ -26,11 +26,11 @@ def project_scm(root):
     :param str root: Path to project folder
     :return setupmeta.scm.Scm: SCM used by project, if any
     """
-    scm_root = find_scm_root(os.path.abspath(root), "git")
-    if scm_root:
-        return Git(scm_root)
     if os.environ.get(setupmeta.SCM_DESCRIBE):
         return Snapshot(root)
+    scm_root = find_scm_root(os.path.abspath(root), ".git")
+    if scm_root:
+        return Git(scm_root)
     version_file = os.path.join(root, setupmeta.VERSION_FILE)
     if os.path.isfile(version_file):
         return Snapshot(root)

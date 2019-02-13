@@ -28,11 +28,11 @@ def test_disabled():
 
 
 def test_project_scm():
-    assert setupmeta.versioning.find_scm_root(None, "git") is None
-    assert setupmeta.versioning.find_scm_root("", "git") is None
-    assert setupmeta.versioning.find_scm_root("/", "git") is None
-    assert setupmeta.versioning.find_scm_root(conftest.TESTS, "git") == conftest.PROJECT_DIR
-    assert setupmeta.versioning.find_scm_root(conftest.resouce("scenarios", "complex", "src", "complex"), "git") == conftest.PROJECT_DIR
+    assert setupmeta.versioning.find_scm_root(None, ".git") is None
+    assert setupmeta.versioning.find_scm_root("", ".git") is None
+    assert setupmeta.versioning.find_scm_root("/", ".git") is None
+    assert setupmeta.versioning.find_scm_root(conftest.TESTS, ".git") == conftest.PROJECT_DIR
+    assert setupmeta.versioning.find_scm_root(conftest.resouce("scenarios", "complex", "src", "complex"), ".git") == conftest.PROJECT_DIR
 
 
 def test_snapshot_with_version_file():
@@ -63,7 +63,7 @@ def test_find_scm_in_parent():
     assert versioning.enabled
     assert not versioning.problem
     assert setupmeta.project_path() == conftest.TESTS
-    assert versioning.scm.root == conftest.PROJECT_DIR
+    assert versioning.scm.root == conftest.TESTS
 
 
 def check_render(v, expected, main="1.0", distance=None, cid=None, dirty=False):

@@ -44,9 +44,18 @@ class CheckCommand(check):
                 message += ", %s dependency links" % len(self.setupmeta.requirements.links or reqs.links)
             print(message)
 
+    def _show_diff(self):
+        if self.setupmeta.versioning:
+            scm = self.setupmeta.versioning.scm
+            if scm:
+                diff = scm.get_output("diff", "--stat", capture=True)
+                if diff:
+                    print("Pending changes:\n%s" % diff)
+
     def run(self):
         check.run(self)
         self._show_requirements_synopsis()
+        self._show_diff()
 
 
 @MetaCommand

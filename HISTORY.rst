@@ -5,6 +5,14 @@ History
 2.4.1 (2019-02-12)
 ------------------
 
+* Show pending changes (if there are any) in ``setup.py check`` command
+
+* Added a test exercising ``pip wheel`` to expose recent ``dirty`` determination issue
+
+
+2.4.1 (2019-02-12)
+------------------
+
 * Rolled back ``dirty`` checkout determination, repo with staged files is considered clean again,
   will have to find another fix for that edge case
 
