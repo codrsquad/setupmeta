@@ -2,7 +2,7 @@
 History
 =======
 
-2.4.1 (2019-02-12)
+2.4.2 (2019-02-12)
 ------------------
 
 * Show pending changes (if there are any) in ``setup.py check`` command
