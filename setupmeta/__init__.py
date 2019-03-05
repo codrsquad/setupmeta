@@ -113,15 +113,16 @@ def which(program):
     return None
 
 
-def represented_args(args):
+def represented_args(args, separator=" "):
     result = []
     for text in args:
+        text = str(text)
         if not text or " " in text:
             sep = "'" if '"' in text else '"'
             result.append("%s%s%s" % (sep, text, sep))
         else:
             result.append(text)
-    return " ".join(result)
+    return separator.join(result)
 
 
 def merged(output, error):

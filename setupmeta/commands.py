@@ -8,10 +8,20 @@ import platform
 import shutil
 import sys
 from distutils.command.check import check
+from itertools import chain
 
 import setuptools
 
+try:
+    import pkg_resources
+
+except ImportError:
+    pkg_resources = None
+
 import setupmeta
+
+
+flatten = chain.from_iterable
 
 
 def abort(message):
@@ -28,6 +38,14 @@ def MetaCommand(cls):
 @MetaCommand
 class CheckCommand(check):
     """Perform checks on the package"""
+
+    user_options = check.user_options + [
+        ("deps", "d", "Show dependency tree (from currently activated venv, or ./.venv, or ./venv)"),
+    ]
+
+    def initialize_options(self):
+        check.initialize_options(self)
+        self.deps = None
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
@@ -52,7 +70,32 @@ class CheckCommand(check):
                 if diff:
                     print("Pending changes:\n%s" % diff)
 
+    def _show_deps(self):
+        """
+        Conveniently  get dependency tree via ./setup.py check --deps, similar to https://pypi.org/project/pipdeptree
+        """
+        if pkg_resources is None:
+            setupmeta.warn("pkg_resources is not available, can't show dependencies")
+            return
+
+        venv = find_venv()
+        if not venv:
+            setupmeta.warn("Could not find virtual environment to scan for dependencies")
+            return
+
+        entries = list(find_subfolders(venv, ["site-packages"]))
+        if not entries:
+            setupmeta.warn("Could not find 'site-packages' subfolder in '%s'" % venv)
+            return
+
+        tree = DepTree(pkg_resources.WorkingSet(entries), self.setupmeta)
+        print(tree.rendered())
+
     def run(self):
+        if self.deps:
+            self._show_deps()
+            return
+
         check.run(self)
         self._show_requirements_synopsis()
         self._show_diff()
@@ -431,3 +474,203 @@ class TwineCommand(setuptools.Command):
 
         finally:
             self.clean("build")
+
+
+class PipReq(object):
+    def __init__(self, obj, package):
+        """
+        :param pkg_resources.Requirement obj:
+        :param PipPackage package: Associated package
+        """
+        self._obj = obj
+        self.package = package
+        self.key = obj.key
+        self.version = package.version
+        self.version_spec = ",".join(["".join(sp) for sp in sorted(obj.specs, reverse=True)])
+        self.version_rec = pkg_resources.Requirement.parse("%s%s" % (self.key, self.version_spec or ""))
+        self.is_conflicting = not self.package.version or self.package.version not in self.version_rec
+
+    def __repr__(self):
+        return self.key
+
+    def __eq__(self, other):
+        return isinstance(other, PipReq) and self.key is other.key
+
+    def __lt__(self, other):
+        return isinstance(other, PipReq) and self.key < other.key
+
+    def render(self):
+        conflict = " CONFLICT!" if self.is_conflicting else ""
+        return "%s [required: %s, installed: %s]%s" % (self.key, self.version_spec or "Any", self.version, conflict)
+
+
+class PipPackage(object):
+    """Represents a pip package"""
+
+    def __init__(self, tree, obj):
+        """
+        :param DepTree tree: Associated tree
+        :param pkg_resources.DistInfoDistribution obj:
+        """
+        self.tree = tree
+        self._obj = obj
+        self.key = obj.key
+        self.version = obj.version
+        self.requires = []
+        self.required_by = set()
+        self.transitive = set()
+        self.cycle = None
+
+    def __repr__(self):
+        return self.key
+
+    def __eq__(self, other):
+        return isinstance(other, PipPackage) and self.key is other.key
+
+    def __lt__(self, other):
+        return isinstance(other, PipPackage) and self.key < other.key
+
+    def __hash__(self):
+        return hash(self.key)
+
+    def resolve(self):
+        for req in self._obj.requires():
+            package = self.tree.get_package(req)
+            pr = PipReq(req, package)
+            self.requires.append(pr)
+            package.required_by.add(self)
+
+    def _add_transitive(self, required):
+        if isinstance(required, PipReq):
+            required = required.package
+
+        if isinstance(required, PipPackage):
+            if required not in self.transitive:
+                self.transitive.add(required)
+                self._add_transitive(required.requires)
+            return
+
+        for req in required:
+            self._add_transitive(req)
+
+    def _find_cycle(self, target, visited):
+        if self in visited:
+            return None
+        visited.add(self)
+        for r in self.requires:
+            if r.package is target:
+                return [r.package]
+            c = r.package._find_cycle(target, visited)
+            if c:
+                return [r.package] + c
+
+    def resolve_transitive(self):
+        self._add_transitive(self.requires)
+        if self in self.transitive:
+            self.cycle = self._find_cycle(self, set())
+
+    def render(self):
+        return "%s==%s" % (self.key, self.version)
+
+
+def find_subfolders(folder, names, depth=3):
+    if folder and os.path.isdir(folder):
+        for name in os.listdir(folder):
+            fpath = os.path.join(folder, name)
+            if name in names:
+                yield fpath
+                continue
+            if os.path.isdir(fpath) and depth > 0:
+                for p in find_subfolders(fpath, names, depth=depth - 1):
+                    yield p
+
+
+def find_venv():
+    venv = os.environ.get("VIRTUAL_ENV")
+    if venv:
+        return venv
+    for folder in (".venv", "venv"):
+        fpath = setupmeta.project_path(folder)
+        if os.path.isdir(fpath):
+            return fpath
+
+
+class DepTree:
+    def __init__(self, ws, meta):
+        self.packages = dict((d.key, PipPackage(self, d)) for d in ws)
+        self.setup = meta.definitions.get("setup_requires"),
+        self.install = meta.definitions.get("install_requires")
+        self.test = meta.definitions.get("tests_require")
+        self.extras = meta.definitions.get("extras_require")
+        self.conflicts = set()
+        self.cycles = {}
+
+        for p in self.packages.values():
+            p.resolve()
+            self.conflicts.update(r.key for r in p.requires if r.is_conflicting)
+
+        for p in self.packages.values():
+            p.resolve_transitive()
+            if p.cycle:
+                key = setupmeta.represented_args(sorted(p.cycle))
+                if key not in self.cycles:
+                    self.cycles[key] = [p] + p.cycle
+
+    def get_package(self, ref):
+        return self.packages.get(getattr(ref, "key", ref))
+
+    def get_packages(self, deps):
+        result = []
+        for dep in deps:
+            p = self.get_package(pkg_resources.Requirement.parse(dep))
+            if p:
+                result.append(p)
+        return result
+
+    def get_children(self, ref):
+        return self.get_package(ref).requires
+
+    def render_section(self, report, title, deps):
+        nodes = self.get_packages(deps)
+        if not nodes:
+            return
+
+        def aux(node, indent=2, chain=None):
+            if chain is None:
+                chain = [node.key]
+            result = ["%s%s" % (" " * indent, node.render())]
+            children = sorted(self.get_children(node))
+            children = [aux(c, indent=indent + 2, chain=chain + [c.key])
+                        for c in children
+                        if c.key not in chain]
+            result += list(flatten(children))
+            return result
+
+        auxed = [aux(p) for p in nodes]
+        report.append("%s:\n%s" % (title, "-" * len(title)))
+        report.extend(flatten(auxed))
+        report.append("")
+
+    def rendered(self):
+        """String representation"""
+        result = ["Dependency tree:\n"]
+
+        if self.install:
+            self.render_section(result, "install", self.install.value)
+
+        if self.test:
+            self.render_section(result, "test", self.test.value)
+
+        if self.extras and self.extras.value:
+            for name, value in self.extras.value.items():
+                self.render_section(result, "extra[%s]" % name, value)
+
+        if self.conflicts:
+            result.append("\n%s conflicts: %s" % (len(self.conflicts), setupmeta.represented_args(self.conflicts, separator=", ")))
+
+        if self.cycles:
+            result.append("\n%s cycles found:" % len(self.cycles))
+            for c in self.cycles.values():
+                result.append(setupmeta.represented_args(c, separator=" -> "))
+
+        return "\n".join(result)
