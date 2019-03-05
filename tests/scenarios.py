@@ -52,6 +52,7 @@ def copytree(src, dst):
 class Scenario:
 
     folder = None       # type: str # Folder where scenario is defined
+    preparation = None  # type: list[str] # Commands to run in preparation step
     commands = None     # type: list[str] # setup.py commands to run
     target = None       # type: str # Folder where to run the scenario (temp folder for full git modification support)
 
@@ -60,6 +61,7 @@ class Scenario:
 
     def __init__(self, folder):
         self.folder = os.path.join(conftest.PROJECT_DIR, folder)
+        self.preparation = []
         self.commands = []
         self.commands.extend(SCENARIO_COMMANDS)
         self.target = folder
@@ -70,7 +72,10 @@ class Scenario:
                 for line in fh:
                     line = conftest.decode(line).strip()
                     if line:
-                        self.commands.append(line)
+                        if line.startswith(":"):
+                            self.preparation.append(line[1:])
+                        else:
+                            self.commands.append(line)
 
     def __repr__(self):
         return conftest.relative_path(self.folder)
@@ -101,6 +106,10 @@ class Scenario:
         self.run_git("init", "--bare", self.origin, cwd=self.temp)
         self.run_git("clone", self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
+
+        for command in self.preparation:
+            setupmeta.run_program(*command.split(), cwd=self.target)
+
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")
         self.run_git("push", "origin", "master")
