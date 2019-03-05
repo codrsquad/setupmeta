@@ -95,7 +95,7 @@ def test_no_pip():
     with conftest.capture_output() as logged:
         # Simulate pip < 10.0
         with patch.dict("sys.modules", {"pip.req": MagicMock(), "pip.download": MagicMock()}):
-            assert get_pip()
+            assert len(get_pip()) == 2
 
         # Simulate pip not installed at all
         with patch.dict("sys.modules", {"pip": None}):

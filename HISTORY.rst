@@ -2,6 +2,12 @@
 History
 =======
 
+2.5.0 (2019-03-05)
+------------------
+
+* Added ``check --deptree``, to show dependency tree of package
+
+
 2.4.3 (2019-02-12)
 ------------------
 

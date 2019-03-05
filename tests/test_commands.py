@@ -2,11 +2,13 @@ import os
 import re
 import shutil
 
+import pkg_resources
 import pytest
 from mock import patch
 from six import StringIO
 
 import setupmeta
+from setupmeta.commands import _show_dependencies, DepTree, find_venv
 
 from . import conftest
 
@@ -34,6 +36,138 @@ def test_check(sample_project):
     # check should report that as a pending change
     output = conftest.run_setup_py(sample_project, "check")
     assert "Pending changes:" in output
+
+
+def test_check_dependencies():
+    run_setup_py(
+        ["check", "--deptree"],
+        """
+            tests_require:
+            mock==.+
+            pytest-cov==.+
+        """
+    )
+
+    with patch("setupmeta.commands.find_venv", return_value=None):
+        with conftest.capture_output() as logged:
+            _show_dependencies(None)
+            assert "Could not find virtual environment" in logged
+
+    with patch("setupmeta.commands.find_subfolders", return_value=[]):
+        with conftest.capture_output() as logged:
+            _show_dependencies(None)
+            assert "Could not find 'site-packages' subfolder" in logged
+
+    with patch.dict(os.environ, {"VIRTUAL_ENV": ""}):
+        with patch("os.path.isdir", return_value=True):
+            assert find_venv()
+
+    with patch("setupmeta.commands.pkg_resources", spec=str):
+        with conftest.capture_output() as logged:
+            _show_dependencies(None)
+            assert "pkg_resources is not available" in logged
+
+
+class FakeDist:
+
+    def __init__(self, spec, requires):
+        req = pkg_resources.Requirement.parse(spec)
+        self.key = req.key
+        self.version = req.specs[0][1] if req.specs else "1.0"
+        self._requires = requires
+
+    def requires(self):
+        return self._requires
+
+    @classmethod
+    def from_string(self, specs):
+        result = []
+        for spec in specs.split():
+            name, _, req = spec.partition(":")
+            if req:
+                req = [pkg_resources.Requirement.parse(r) for r in req.split("+")]
+            else:
+                req = []
+            result.append(FakeDist(name, req))
+        return result
+
+
+class FakeDefinition:
+    def __init__(self, value):
+        self.value = value
+
+
+def expect_render(definitions, spec, expected):
+    dists = FakeDist.from_string(spec)
+    definitions = dict((k, FakeDefinition(v)) for k, v in definitions.items())
+    tree = DepTree(dists, definitions)
+    s = tree.rendered()
+    assert s.strip() == expected.strip()
+    return tree
+
+
+def test_dep_tree():
+    # No deps edge case
+    expect_render({}, "", """
+Dependency tree:
+- no dependencies -
+""")
+
+    # Simple case, no conflicts, no cycles
+    tree = expect_render(
+        {"install_requires": ["mock"]},
+        "mock==2.0:pbr>=0.11 pbr",
+        """
+Dependency tree:
+install_requires:
+----------------
+  mock==2.0
+    pbr [required: >=0.11, installed: 1.0]
+""")
+
+    # Some extra edge case coverage
+    assert tree.packages["mock"] != tree.packages["pbr"]
+    assert str(tree.packages["mock"]) == "mock"
+    pbr = tree.packages["mock"].requires[0]
+    assert str(pbr) == "pbr"
+    assert tree.packages["mock"].requires[0] == pbr
+    report = []
+    tree.render_section(report, "some title", ["absent"])
+    assert not report
+
+    # Conflict and cycles
+    expect_render(
+        {"install_requires": ["mock"], "extras_require": {"bonus": ["pbr"]}},
+        "mock==2.0:pbr+attrs pbr:attrs attrs:six six:mock>=3.0",
+        """
+Dependency tree:
+install_requires:
+----------------
+  mock==2.0
+    attrs [required: Any, installed: 1.0]
+      six [required: Any, installed: 1.0]
+        mock [required: >=3.0, installed: 2.0] CONFLICT!
+          pbr [required: Any, installed: 1.0]
+    pbr [required: Any, installed: 1.0]
+      attrs [required: Any, installed: 1.0]
+        six [required: Any, installed: 1.0]
+          mock [required: >=3.0, installed: 2.0] CONFLICT!
+
+extras_require[bonus]:
+---------------------
+  pbr==1.0
+    attrs [required: Any, installed: 1.0]
+      six [required: Any, installed: 1.0]
+        mock [required: >=3.0, installed: 2.0] CONFLICT!
+          pbr [required: Any, installed: 1.0]
+
+
+1 conflicts: mock
+
+2 cycles found:
+attrs -> six -> mock -> attrs
+pbr -> attrs -> six -> mock -> pbr
+""")
 
 
 def test_explain():

@@ -15,7 +15,7 @@ import setuptools
 try:
     import pkg_resources
 
-except ImportError:
+except ImportError:  # pragma: no cover
     pkg_resources = None
 
 import setupmeta
@@ -35,17 +35,41 @@ def MetaCommand(cls):
     return setupmeta.MetaDefs.register_command(cls)
 
 
+def count(*args):
+    return sum(1 for a in args if a)
+
+
 @MetaCommand
 class CheckCommand(check):
     """Perform checks on the package"""
 
     user_options = check.user_options + [
-        ("deps", "d", "Show dependency tree (from currently activated venv, or ./.venv, or ./venv)"),
+        ("status", "t", "Show git status recap (useful to get evidence as to why version was dirty during CI jobs)"),
+        ("deptree", "d", "Show dependency tree (from currently activated venv, or ./.venv, or ./venv)"),
+        ("reqs", "q", "Show how many requirements were auto-abstracted or ignored, if any"),
     ]
 
     def initialize_options(self):
         check.initialize_options(self)
-        self.deps = None
+        self.status = None
+        self.deptree = None
+        self.reqs = None
+
+    def run(self):
+        if count(self.restructuredtext, self.status, self.deptree, self.reqs) == 0:
+            self.status = 1
+            self.reqs = 1
+
+        check.run(self)
+
+        if self.reqs:
+            self._show_requirements_synopsis()
+
+        if self.status:
+            self._show_git_status()
+
+        if self.deptree:
+            _show_dependencies(self.setupmeta.definitions)
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
@@ -62,43 +86,13 @@ class CheckCommand(check):
                 message += ", %s dependency links" % len(self.setupmeta.requirements.links or reqs.links)
             print(message)
 
-    def _show_diff(self):
+    def _show_git_status(self):
         if self.setupmeta.versioning:
             scm = self.setupmeta.versioning.scm
             if scm:
                 diff = scm.get_output("diff", "--stat", capture=True)
                 if diff:
                     print("Pending changes:\n%s" % diff)
-
-    def _show_deps(self):
-        """
-        Conveniently  get dependency tree via ./setup.py check --deps, similar to https://pypi.org/project/pipdeptree
-        """
-        if pkg_resources is None:
-            setupmeta.warn("pkg_resources is not available, can't show dependencies")
-            return
-
-        venv = find_venv()
-        if not venv:
-            setupmeta.warn("Could not find virtual environment to scan for dependencies")
-            return
-
-        entries = list(find_subfolders(venv, ["site-packages"]))
-        if not entries:
-            setupmeta.warn("Could not find 'site-packages' subfolder in '%s'" % venv)
-            return
-
-        tree = DepTree(pkg_resources.WorkingSet(entries), self.setupmeta)
-        print(tree.rendered())
-
-    def run(self):
-        if self.deps:
-            self._show_deps()
-            return
-
-        check.run(self)
-        self._show_requirements_synopsis()
-        self._show_diff()
 
 
 @MetaCommand
@@ -476,6 +470,28 @@ class TwineCommand(setuptools.Command):
             self.clean("build")
 
 
+def _show_dependencies(definitions):
+    """
+    Conveniently  get dependency tree via ./setup.py check --dep, similar to https://pypi.org/project/pipdeptree
+    """
+    if not hasattr(pkg_resources, "WorkingSet"):
+        setupmeta.warn("pkg_resources is not available, can't show dependencies")
+        return
+
+    venv = find_venv()
+    if not venv:
+        setupmeta.warn("Could not find virtual environment to scan for dependencies")
+        return
+
+    entries = list(find_subfolders(venv, ["site-packages"]))
+    if not entries:
+        setupmeta.warn("Could not find 'site-packages' subfolder in '%s'" % venv)
+        return
+
+    tree = DepTree(pkg_resources.WorkingSet(entries), definitions)
+    print(tree.rendered())
+
+
 class PipReq(object):
     def __init__(self, obj, package):
         """
@@ -557,7 +573,7 @@ class PipPackage(object):
         if self in visited:
             return None
         visited.add(self)
-        for r in self.requires:
+        for r in sorted(self.requires):
             if r.package is target:
                 return [r.package]
             c = r.package._find_cycle(target, visited)
@@ -596,20 +612,20 @@ def find_venv():
 
 
 class DepTree:
-    def __init__(self, ws, meta):
+    def __init__(self, ws, definitions):
         self.packages = dict((d.key, PipPackage(self, d)) for d in ws)
-        self.setup = meta.definitions.get("setup_requires"),
-        self.install = meta.definitions.get("install_requires")
-        self.test = meta.definitions.get("tests_require")
-        self.extras = meta.definitions.get("extras_require")
+        self.setup = definitions.get("setup_requires"),
+        self.install = definitions.get("install_requires")
+        self.test = definitions.get("tests_require")
+        self.extras = definitions.get("extras_require")
         self.conflicts = set()
         self.cycles = {}
 
-        for p in self.packages.values():
+        for p in sorted(self.packages.values()):
             p.resolve()
             self.conflicts.update(r.key for r in p.requires if r.is_conflicting)
 
-        for p in self.packages.values():
+        for p in sorted(self.packages.values()):
             p.resolve_transitive()
             if p.cycle:
                 key = setupmeta.represented_args(sorted(p.cycle))
@@ -619,9 +635,9 @@ class DepTree:
     def get_package(self, ref):
         return self.packages.get(getattr(ref, "key", ref))
 
-    def get_packages(self, deps):
+    def get_packages(self, dependencies):
         result = []
-        for dep in deps:
+        for dep in dependencies:
             p = self.get_package(pkg_resources.Requirement.parse(dep))
             if p:
                 result.append(p)
@@ -630,19 +646,20 @@ class DepTree:
     def get_children(self, ref):
         return self.get_package(ref).requires
 
-    def render_section(self, report, title, deps):
-        nodes = self.get_packages(deps)
+    def render_section(self, report, title, dependencies):
+        nodes = self.get_packages(dependencies)
         if not nodes:
             return
 
         def aux(node, indent=2, chain=None):
             if chain is None:
-                chain = [node.key]
+                chain = []
             result = ["%s%s" % (" " * indent, node.render())]
             children = sorted(self.get_children(node))
             children = [aux(c, indent=indent + 2, chain=chain + [c.key])
                         for c in children
                         if c.key not in chain]
+            chain.append(node.key)
             result += list(flatten(children))
             return result
 
@@ -653,24 +670,27 @@ class DepTree:
 
     def rendered(self):
         """String representation"""
-        result = ["Dependency tree:\n"]
+        result = ["Dependency tree:"]
 
         if self.install:
-            self.render_section(result, "install", self.install.value)
+            self.render_section(result, "install_requires", self.install.value)
 
         if self.test:
-            self.render_section(result, "test", self.test.value)
+            self.render_section(result, "tests_require", self.test.value)
 
         if self.extras and self.extras.value:
             for name, value in self.extras.value.items():
-                self.render_section(result, "extra[%s]" % name, value)
+                self.render_section(result, "extras_require[%s]" % name, value)
 
         if self.conflicts:
             result.append("\n%s conflicts: %s" % (len(self.conflicts), setupmeta.represented_args(self.conflicts, separator=", ")))
 
         if self.cycles:
             result.append("\n%s cycles found:" % len(self.cycles))
-            for c in self.cycles.values():
+            for c in sorted(self.cycles.values()):
                 result.append(setupmeta.represented_args(c, separator=" -> "))
+
+        if len(result) < 2:
+            result.append("- no dependencies -")
 
         return "\n".join(result)
