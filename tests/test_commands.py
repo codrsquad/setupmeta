@@ -50,12 +50,12 @@ def test_check_dependencies():
 
     with patch("setupmeta.commands.find_venv", return_value=None):
         with conftest.capture_output() as logged:
-            _show_dependencies(None)
+            assert _show_dependencies(None) == 1
             assert "Could not find virtual environment" in logged
 
     with patch("setupmeta.commands.find_subfolders", return_value=[]):
         with conftest.capture_output() as logged:
-            _show_dependencies(None)
+            assert _show_dependencies(None) == 1
             assert "Could not find 'site-packages' subfolder" in logged
 
     with patch.dict(os.environ, {"VIRTUAL_ENV": ""}):
@@ -64,7 +64,7 @@ def test_check_dependencies():
 
     with patch("setupmeta.commands.pkg_resources", spec=str):
         with conftest.capture_output() as logged:
-            _show_dependencies(None)
+            assert _show_dependencies(None) == 1
             assert "pkg_resources is not available" in logged
 
 
@@ -132,13 +132,15 @@ install_requires:
     assert str(pbr) == "pbr"
     assert tree.packages["mock"].requires[0] == pbr
     report = []
-    tree.render_section(report, "some title", ["absent"])
+    seen = set()
+    tree.render_section(report, seen, "some title", ["absent"])
     assert not report
+    assert not seen
 
     # Conflict and cycles
     expect_render(
         {"install_requires": ["mock"], "extras_require": {"bonus": ["pbr"]}},
-        "mock==2.0:pbr+attrs pbr:attrs attrs:six six:mock>=3.0",
+        "mock==2.0:pbr+attrs pbr:attrs attrs:six six:mock>=3.0 foo",
         """
 Dependency tree:
 install_requires:
@@ -160,6 +162,10 @@ extras_require[bonus]:
       six [required: Any, installed: 1.0]
         mock [required: >=3.0, installed: 2.0] CONFLICT!
           pbr [required: Any, installed: 1.0]
+
+other:
+-----
+  foo==1.0
 
 
 1 conflicts: mock

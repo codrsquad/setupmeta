@@ -60,8 +60,6 @@ class CheckCommand(check):
             self.status = 1
             self.reqs = 1
 
-        check.run(self)
-
         if self.reqs:
             self._show_requirements_synopsis()
 
@@ -69,7 +67,9 @@ class CheckCommand(check):
             self._show_git_status()
 
         if self.deptree:
-            _show_dependencies(self.setupmeta.definitions)
+            self._warnings = _show_dependencies(self.setupmeta.definitions)
+
+        check.run(self)
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
@@ -476,20 +476,21 @@ def _show_dependencies(definitions):
     """
     if not hasattr(pkg_resources, "WorkingSet"):
         setupmeta.warn("pkg_resources is not available, can't show dependencies")
-        return
+        return 1
 
     venv = find_venv()
     if not venv:
         setupmeta.warn("Could not find virtual environment to scan for dependencies")
-        return
+        return 1
 
     entries = list(find_subfolders(venv, ["site-packages"]))
     if not entries:
         setupmeta.warn("Could not find 'site-packages' subfolder in '%s'" % venv)
-        return
+        return 1
 
     tree = DepTree(pkg_resources.WorkingSet(entries), definitions)
     print(tree.rendered())
+    return len(tree.conflicts) + len(tree.cycles)
 
 
 class PipReq(object):
@@ -646,7 +647,7 @@ class DepTree:
     def get_children(self, ref):
         return self.get_package(ref).requires
 
-    def render_section(self, report, title, dependencies):
+    def render_section(self, report, seen, title, dependencies):
         nodes = self.get_packages(dependencies)
         if not nodes:
             return
@@ -660,9 +661,13 @@ class DepTree:
                         for c in children
                         if c.key not in chain]
             chain.append(node.key)
+            p = self.packages.get(node.key)
+            if p:
+                seen.add(p)
             result += list(flatten(children))
             return result
 
+        seen.update(nodes)
         auxed = [aux(p) for p in nodes]
         report.append("%s:\n%s" % (title, "-" * len(title)))
         report.extend(flatten(auxed))
@@ -671,16 +676,22 @@ class DepTree:
     def rendered(self):
         """String representation"""
         result = ["Dependency tree:"]
+        seen = set()
 
         if self.install:
-            self.render_section(result, "install_requires", self.install.value)
+            self.render_section(result, seen, "install_requires", self.install.value)
 
         if self.test:
-            self.render_section(result, "tests_require", self.test.value)
+            self.render_section(result, seen, "tests_require", self.test.value)
 
         if self.extras and self.extras.value:
             for name, value in self.extras.value.items():
-                self.render_section(result, "extras_require[%s]" % name, value)
+                self.render_section(result, seen, "extras_require[%s]" % name, value)
+
+        other = set(self.packages.values()) - seen
+        if other:
+            other = sorted(p.key for p in other)
+            self.render_section(result, seen, "other", other)
 
         if self.conflicts:
             result.append("\n%s conflicts: %s" % (len(self.conflicts), setupmeta.represented_args(self.conflicts, separator=", ")))
