@@ -2,6 +2,12 @@
 History
 =======
 
+2.5.1 (2019-03-07)
+------------------
+
+* Show top level deps in ``check --deptree``'s "other" section
+
+
 2.5.0 (2019-03-05)
 ------------------
 

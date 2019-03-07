@@ -690,7 +690,7 @@ class DepTree:
 
         other = set(self.packages.values()) - seen
         if other:
-            other = sorted(p.key for p in other)
+            other = sorted(p.key for p in other if not p.required_by)
             self.render_section(result, seen, "other", other)
 
         if self.conflicts:
