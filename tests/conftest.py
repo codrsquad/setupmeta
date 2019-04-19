@@ -200,5 +200,9 @@ class MockGit(Git):
             return self.commitid.split()
         if cmd == "config":
             return args[1]
+        if cmd == "show-ref":
+            return "v1.0\nv1.1"
+        if cmd == "ls-remote":
+            return "v1.0\nv2.0"
         assert kwargs.get("dryrun") is True
         return Git.get_output(self, cmd, *args, **kwargs)

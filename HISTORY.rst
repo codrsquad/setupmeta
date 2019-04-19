@@ -2,6 +2,12 @@
 History
 =======
 
+2.5.2 (2019-04-20)
+------------------
+
+* Verify that remote tags match local tags before allowing version bump
+
+
 2.5.1 (2019-03-07)
 ------------------
 
