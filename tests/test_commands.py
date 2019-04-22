@@ -190,7 +190,7 @@ def test_explain():
     )
 
 
-def test_version():
+def test_version(sample_project):
     run_setup_py(["version", "--bump", "major", "--simulate-branch=HEAD"], "Can't bump branch 'HEAD'")
 
     run_setup_py(
@@ -251,102 +251,85 @@ def touch(folder, isdir, *paths):
                 fh.write("from setuptools import setup\nsetup(setup_requires='setupmeta')\n")
 
 
-def test_clean():
-    with setupmeta.temp_resource() as temp:
-        touch(temp, True, ".idea", "build", "dd", "dd/__pycache__", "foo.egg-info")
-        touch(temp, False, "foo", "a.pyc", ".pyo", "bar.pyc", "setup.py", "dd/__pycache__/a.pyc")
-        run_setup_py(
-            ["cleanall"],
-            """
-            deleted build
-            deleted foo.egg-info
-            deleted dd.__pycache__
-            deleted 2 .pyc files, 1 .pyo files
-            """,
-            folder=temp,
-        )
-        # Run a 2nd time: nothing to be cleaned anymore
-        run_setup_py(["cleanall"], "all clean, no deletable files found", folder=temp)
-
-
-def copy_to(src, dest, basename=None):
-    basename = basename or os.path.basename(src)
-    d = os.path.join(dest, basename)
-    if os.path.isdir(src):
-        shutil.copytree(src, d)
-        return
-    shutil.copy2(src, d)
+def test_clean(sample_project):
+    touch(sample_project, True, ".idea", "build", "dd", "dd/__pycache__", "foo.egg-info")
+    touch(sample_project, False, "foo", "a.pyc", ".pyo", "bar.pyc", "setup.py", "dd/__pycache__/a.pyc")
+    run_setup_py(
+        ["cleanall"],
+        """
+        deleted build
+        deleted foo.egg-info
+        deleted dd.__pycache__
+        deleted 2 .pyc files, 1 .pyo files
+        """,
+        folder=sample_project,
+    )
+    # Run a 2nd time: nothing to be cleaned anymore
+    run_setup_py(["cleanall"], "all clean, no deletable files found", folder=sample_project)
 
 
 @pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
-def test_twine():
-    with setupmeta.temp_resource() as temp:
-        copy_to(setupmeta.project_path("examples", "single", "setup.py"), temp)
-        copy_to(setupmeta.project_path("examples", "single", "single.py"), temp)
+def test_twine(sample_project):
+    run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel", folder=sample_project)
+    run_setup_py(["twine", "--egg=all"], "twine is not installed", folder=sample_project)
 
-        run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel", folder=temp)
-        run_setup_py(["twine", "--egg=all"], "twine is not installed", folder=temp)
+    shutil.copy2(setupmeta.project_path("tests", "mock-twine"), os.path.join(sample_project, "twine"))
 
-        copy_to(setupmeta.project_path("tests", "mock-twine"), temp, basename="twine")
+    run_setup_py(
+        ["twine", "--egg=all"],
+        """
+            Dryrun, use --commit to effectively build/publish
+            Would build egg distribution: .*python.* setup.py bdist_egg
+            Would upload to PyPi via twine
+        """,
+        folder=sample_project,
+    )
 
-        run_setup_py(
-            ["twine", "--egg=all"],
-            """
-                Dryrun, use --commit to effectively build/publish
-                Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine
-            """,
-            folder=temp,
-        )
+    run_setup_py(
+        ["twine", "--commit", "--egg=all", "--wheel=1.0"],
+        """
+            python.* setup.py bdist_egg
+            Uploading to PyPi via twine
+            Running: <target>/twine upload <target>/dist/sample-0.1.0-.+.egg
+            Deleting <target>/build
+        """,
+        folder=sample_project,
+    )
 
-        run_setup_py(
-            ["twine", "--commit", "--egg=all", "--wheel=1.0"],
-            """
-                python.* setup.py bdist_egg
-                Uploading to PyPi via twine
-                Running: <target>/twine upload <target>/dist/single-0.1.0-.+.egg
-                Deleting <target>/build
-            """,
-            folder=temp,
-        )
+    run_setup_py(
+        ["twine", "--egg=all"],
+        """
+            Would delete .*/dist
+            Would build egg distribution: .*python.* setup.py bdist_egg
+            Would upload to PyPi via twine
+        """,
+        folder=sample_project,
+    )
 
-        run_setup_py(
-            ["twine", "--egg=all"],
-            """
-                Would delete .*/dist
-                Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine
-            """,
-            folder=temp,
-        )
+    run_setup_py(
+        ["twine", "--commit", "--rebuild", "--egg=all", "--sdist=all", "--wheel=all"],
+        """
+            Deleting <target>/dist
+            python.* setup.py bdist_egg
+            python.* setup.py sdist
+            python.* setup.py bdist_wheel
+            Uploading to PyPi via twine
+            Running: <target>/twine upload <target>/dist
+            Deleting <target>/build
+        """,
+        folder=sample_project,
+    )
 
-        run_setup_py(
-            ["twine", "--commit", "--rebuild", "--egg=all", "--sdist=all", "--wheel=all"],
-            """
-                Deleting <target>/dist
-                python.* setup.py bdist_egg
-                python.* setup.py sdist
-                python.* setup.py bdist_wheel
-                Uploading to PyPi via twine
-                Running: <target>/twine upload <target>/dist
-                Deleting <target>/build
-            """,
-            folder=temp,
-        )
-
-        run_setup_py(
-            ["twine", "--commit", "--rebuild", "--egg=1.0"],
-            """
-                Deleting <target>/dist
-                No files found in <target>/dist
-            """,
-            folder=temp,
-        )
+    run_setup_py(
+        ["twine", "--commit", "--rebuild", "--egg=1.0"],
+        """
+            Deleting <target>/dist
+            No files found in <target>/dist
+        """,
+        folder=sample_project,
+    )
 
 
-@patch("platform.python_implementation", return_value="pypy")
-def test_unsupported_twine(*_):
-    with setupmeta.temp_resource() as temp:
-        copy_to(setupmeta.project_path("examples", "single", "setup.py"), temp)
-        copy_to(setupmeta.project_path("examples", "single", "single.py"), temp)
-        run_setup_py(["twine"], "twine command not supported on pypy", folder=temp)
+def test_unsupported_twine(sample_project):
+    with patch("platform.python_implementation", return_value="pypy"):
+        run_setup_py(["twine"], "twine command not supported on pypy", folder=sample_project)

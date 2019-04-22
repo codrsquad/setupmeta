@@ -380,3 +380,14 @@ def test_git_versioning(sample_project):
     assert "Running: git tag -a v0.2.0" in output
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.2.0"
+
+
+def test_missing_tags():
+    meta = new_meta("distance", scm=conftest.MockGit(False, local_tags="v1.0\nv1.1", remote_tags="v1.0\nv2.0"))
+    versioning = meta.versioning
+    assert versioning.enabled
+    assert not versioning.problem
+    assert not versioning.strategy.problem
+    with pytest.raises(setupmeta.UsageError):
+        # Can't effectively bump when remote tags are not all present locally
+        versioning.bump("minor", commit=True)

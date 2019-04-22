@@ -180,11 +180,21 @@ def run_internal_setup_py(folder, *args):
 
 
 class MockGit(Git):
-    def __init__(self, dirty=True, describe="v0.1.2-3-g123", branch="master", commitid="abc123"):
+    def __init__(
+            self,
+            dirty=True,
+            describe="v0.1.2-3-g123",
+            branch="master",
+            commitid="abc123",
+            local_tags="",
+            remote_tags="",
+    ):
         self.dirty = dirty
         self.describe = describe
         self.branch = branch
         self.commitid = commitid
+        self._local_tags = local_tags
+        self._remote_tags = remote_tags
         Git.__init__(self, TESTS)
 
     def get_output(self, cmd, *args, **kwargs):
@@ -201,8 +211,8 @@ class MockGit(Git):
         if cmd == "config":
             return args[1]
         if cmd == "show-ref":
-            return "v1.0\nv1.1"
+            return self._local_tags
         if cmd == "ls-remote":
-            return "v1.0\nv2.0"
+            return self._remote_tags
         assert kwargs.get("dryrun") is True
         return Git.get_output(self, cmd, *args, **kwargs)

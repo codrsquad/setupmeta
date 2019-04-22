@@ -424,10 +424,10 @@ class Versioning:
         """Verify that remote tags are identical to local tags"""
         local_tags = self.scm.local_tags()
         remote_tags = self.scm.remote_tags()
-        if remote_tags and local_tags != remote_tags:
-            local_only = local_tags.difference(remote_tags)
-            remote_only = remote_tags.difference(local_tags)
-            message = "Can't bump: local and remote tags differ!\n"
+        local_only = local_tags.difference(remote_tags)
+        remote_only = remote_tags.difference(local_tags)
+        if remote_only:
+            message = "Can't bump: not all remote tags are present locally!\n"
             if local_only:
                 message += "Tags only seen locally: %s\n" % ", ".join(local_only)
             if remote_only:
