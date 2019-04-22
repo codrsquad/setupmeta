@@ -420,6 +420,20 @@ class Versioning:
         gv = self.scm.get_version()
         return self.strategy.bumped(what, gv)
 
+    def verify_remote_tags(self):
+        """Verify that remote tags are identical to local tags"""
+        local_tags = self.scm.local_tags()
+        remote_tags = self.scm.remote_tags()
+        local_only = local_tags.difference(remote_tags)
+        remote_only = remote_tags.difference(local_tags)
+        if remote_only:
+            message = "Can't bump: not all remote tags are present locally!\n"
+            if local_only:
+                message += "Tags only seen locally: %s\n" % ", ".join(local_only)
+            if remote_only:
+                message += "Tags only on remote: %s\n" % ", ".join(remote_only)
+            setupmeta.abort(message)
+
     def bump(self, what, commit=False, push=False, simulate_branch=None):
         if self.problem:
             setupmeta.abort(self.problem)
@@ -433,6 +447,8 @@ class Versioning:
             if commit:
                 setupmeta.abort("You have pending changes, can't bump")
             print("Note: you have pending changes, commit (or stash) them before using --commit")
+
+        self.verify_remote_tags()
 
         next_version = self.strategy.bumped(what, gv)
 

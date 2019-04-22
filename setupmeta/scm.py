@@ -26,6 +26,12 @@ class Scm:
     def name(self):
         return self.__class__.__name__.lower()
 
+    def local_tags(self):
+        """Get all local tags"""
+
+    def remote_tags(self):
+        """Get all remote tags"""
+
     def get_branch(self):
         """
         :return str: Current branch name
@@ -122,6 +128,24 @@ class Git(Scm):
 
     program = "git"
     _has_origin = None
+
+    def _get_tags(self, *cmd):
+        text = self.get_output(*cmd)
+        result = set()
+        for line in text.splitlines():
+            p = line.rpartition('/')[2]
+            tag = str(p.partition('^')[0])
+            if tag.startswith('v') or tag[0].isdigit():
+                result.add(tag)
+        return result
+
+    def local_tags(self):
+        """Get all local tags"""
+        return self._get_tags("show-ref", "--tags", "-d")
+
+    def remote_tags(self):
+        """Get all remote tags"""
+        return self._get_tags("ls-remote", "--tags")
 
     @staticmethod
     def parsed_version(text, dirty=None):
