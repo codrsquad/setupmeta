@@ -13,9 +13,9 @@ from setupmeta.commands import _show_dependencies, DepTree, find_venv
 from . import conftest
 
 
-def run_setup_py(args, expected, folder=conftest.PROJECT_DIR):
+def run_setup_py(args, expected, folder=None):
     expected = expected.splitlines()
-    output = conftest.run_setup_py(folder, *args)
+    output = conftest.run_setup_py(folder or os.getcwd(), *args)
     for line in expected:
         line = line.strip()
         if not line:
@@ -45,7 +45,8 @@ def test_check_dependencies():
             tests_require:
             mock==.+
             pytest-cov==.+
-        """
+        """,
+        folder=conftest.PROJECT_DIR,
     )
 
     with patch("setupmeta.commands.find_venv", return_value=None):
@@ -187,6 +188,7 @@ def test_explain():
             url:.+ https://github.com/zsimic/setupmeta
             version:.+ [0-9]+\\.[0-9]
         """,
+        folder=conftest.PROJECT_DIR,
     )
 
 
@@ -198,7 +200,7 @@ def test_version(sample_project):
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
-            Would run: git push --tags origin
+            Not running 'git push --tags origin' as you don't have an origin
         """,
     )
 
@@ -213,24 +215,15 @@ def test_version(sample_project):
     run_setup_py(
         ["version", "-b", "patch", "--simulate-branch=master"],
         """
-            Not committing bump, use --commit to commit
-            Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
+            Can't bump 'patch', it's out of scope of main format .+ acceptable values: major, minor
         """,
     )
 
-    run_setup_py(
-        ["version", "-a", "patch"],
-        """
-            [\\d.]+
-        """,
-    )
+    run_setup_py(["version", "--show-next", "major"], "[\\d.]+")
+    run_setup_py(["version", "--show-next", "minor"], "[\\d.]+")
+    run_setup_py(["version", "-a", "patch"], "out of scope of main format")
 
-    run_setup_py(
-        ["version", "--show-next", "major"],
-        """
-            [\\d.]+
-        """,
-    )
+    run_setup_py(["version", "-a", "patch"], "[\\d.]+", folder=conftest.PROJECT_DIR)
 
 
 @patch("sys.stdout.isatty", return_value=True)
@@ -262,16 +255,15 @@ def test_clean(sample_project):
         deleted dd.__pycache__
         deleted 2 .pyc files, 1 .pyo files
         """,
-        folder=sample_project,
     )
     # Run a 2nd time: nothing to be cleaned anymore
-    run_setup_py(["cleanall"], "all clean, no deletable files found", folder=sample_project)
+    run_setup_py(["cleanall"], "all clean, no deletable files found")
 
 
 @pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
 def test_twine(sample_project):
-    run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel", folder=sample_project)
-    run_setup_py(["twine", "--egg=all"], "twine is not installed", folder=sample_project)
+    run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
+    run_setup_py(["twine", "--egg=all"], "twine is not installed")
 
     shutil.copy2(setupmeta.project_path("tests", "mock-twine"), os.path.join(sample_project, "twine"))
 
@@ -282,7 +274,6 @@ def test_twine(sample_project):
             Would build egg distribution: .*python.* setup.py bdist_egg
             Would upload to PyPi via twine
         """,
-        folder=sample_project,
     )
 
     run_setup_py(
@@ -293,7 +284,6 @@ def test_twine(sample_project):
             Running: <target>/twine upload <target>/dist/sample-0.1.0-.+.egg
             Deleting <target>/build
         """,
-        folder=sample_project,
     )
 
     run_setup_py(
@@ -303,7 +293,6 @@ def test_twine(sample_project):
             Would build egg distribution: .*python.* setup.py bdist_egg
             Would upload to PyPi via twine
         """,
-        folder=sample_project,
     )
 
     run_setup_py(
@@ -317,7 +306,6 @@ def test_twine(sample_project):
             Running: <target>/twine upload <target>/dist
             Deleting <target>/build
         """,
-        folder=sample_project,
     )
 
     run_setup_py(
@@ -326,10 +314,9 @@ def test_twine(sample_project):
             Deleting <target>/dist
             No files found in <target>/dist
         """,
-        folder=sample_project,
     )
 
 
 def test_unsupported_twine(sample_project):
     with patch("platform.python_implementation", return_value="pypy"):
-        run_setup_py(["twine"], "twine command not supported on pypy", folder=sample_project)
+        run_setup_py(["twine"], "twine command not supported on pypy")
