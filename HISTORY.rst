@@ -5,7 +5,7 @@ History
 2.5.3 (2019-04-29)
 ------------------
 
-* Properly handle name (possible dashes) vs pythonified name (no dashes)
+* Properly handle package name (possible dashes) vs top-level module name (no dashes)
 
 
 2.5.2 (2019-04-22)
