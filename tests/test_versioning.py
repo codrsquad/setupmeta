@@ -159,6 +159,16 @@ def test_versioning_variants(*_):
         assert "patch version component should be .0" in logged
 
 
+def test_bump_patch():
+    with conftest.capture_output() as logged:
+        meta = new_meta("post", scm=conftest.MockGit(False, describe="v0.1.2.rc-5-g123"))
+        versioning = meta.versioning
+        versioning.bump("patch")
+        assert "Would run: git tag -a v0.1.3" in logged
+        assert "Not committing" in logged
+        assert "Not pushing" in logged
+
+
 def test_no_extra():
     with conftest.capture_output() as logged:
         meta = new_meta("{major}.{minor}.{$FOO}+", scm=conftest.MockGit(True))

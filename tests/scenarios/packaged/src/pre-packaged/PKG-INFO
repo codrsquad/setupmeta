@@ -1,11 +1,11 @@
 Metadata-Version: 2.1
-Name: packaged
+Name: pre-packaged
 Version: 2.3.2.dev1+ged11e58
 Summary: An example test case with info coming from PKG-INFO
-Home-page: http://somewhere.net/packaged
+Home-page: http://somewhere.net/pre-packaged
 License: UNKNOWN
 Description: # An example test case with info coming from PKG-INFO
-        
+
         Most of the metadata for this project comes from the ``.egg-info`` folder
 Platform: UNKNOWN
 Classifier: Intended Audience :: Developers

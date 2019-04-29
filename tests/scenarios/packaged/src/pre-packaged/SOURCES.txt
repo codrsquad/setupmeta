@@ -1,8 +1,8 @@
 README.md
 setup.py
-packaged.egg-info/PKG-INFO
-packaged.egg-info/SOURCES.txt
-packaged.egg-info/dependency_links.txt
-packaged.egg-info/entry_points.txt
-packaged.egg-info/requires.txt
-packaged.egg-info/top_level.txt
+pre_packaged.egg-info/PKG-INFO
+pre_packaged.egg-info/SOURCES.txt
+pre_packaged.egg-info/dependency_links.txt
+pre_packaged.egg-info/entry_points.txt
+pre_packaged.egg-info/requires.txt
+pre_packaged.egg-info/top_level.txt

@@ -1,1 +1,1 @@
-:mv src/pre-packaged src/packaged.egg-info
+:mv src/pre-packaged src/pre_packaged.egg-info

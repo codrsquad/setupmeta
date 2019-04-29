@@ -21,6 +21,8 @@ EXPLICIT = "explicit"
 CLASSIFIERS = "classifiers.txt"
 READMES = ["README.rst", "README.md", "README*"]
 
+RE_WORDS = re.compile(r"[^\w]+")
+
 # Accept reasonable variations of name + some separator + email
 RE_EMAIL = re.compile(r"(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)")
 
@@ -361,6 +363,14 @@ def is_complex_requirement(line):
     return line and (line.startswith("-") or ":" in line)
 
 
+def pythonified_name(name):
+    if name:
+        words = [s.strip() for s in RE_WORDS.split(name)]
+        name = "_".join(s for s in words if s)
+
+    return name
+
+
 class PackageInfo:
     """Retrieves info from PKG-INFO"""
 
@@ -411,6 +421,7 @@ class PackageInfo:
             setupmeta.trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
 
         self.name = self.info.get("name")
+        self.pythonified_name = pythonified_name(self.name)
         self.info["long_description"] = "\n".join(self.info.get("long_description", []))
         self.load_more_info(root)
 
@@ -433,7 +444,7 @@ class PackageInfo:
         if not self.name or not os.path.isdir(folder) or depth <= 0:
             return False
 
-        path = os.path.join(folder, "%s.egg-info" % self.name)
+        path = os.path.join(folder, "%s.egg-info" % self.pythonified_name)
         if os.path.isdir(path):
             self.dependency_links_txt = self.checked_file(path, "dependency_links.txt")
             self.entry_points_txt = self.checked_file(path, "entry_points.txt")
@@ -619,8 +630,9 @@ class SetupMeta(Settings):
 
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
-            direct_packages = find_packages(self.name)
-            src_packages = find_packages(self.name, subfolder="src")
+            name = self.pythonified_name
+            direct_packages = find_packages(name)
+            src_packages = find_packages(name, subfolder="src")
             packages = sorted(direct_packages | src_packages)
 
             if src_packages:
@@ -628,8 +640,8 @@ class SetupMeta(Settings):
             if packages:
                 self.auto_fill("packages", packages)
 
-            if os.path.isfile(project_path("%s.py" % self.name)):
-                py_modules = [self.name]
+            if os.path.isfile(project_path("%s.py" % name)):
+                py_modules = [name]
                 self.auto_fill("py_modules", py_modules)
 
         # Scan the usual/conventional places
@@ -734,14 +746,14 @@ class SetupMeta(Settings):
         if size < 4 or size > 256:
             return None
         m = RE_DESCRIPTION.match(description)
-        name = (self.name or "").lower()
+        candidates = set([s.lower() for s in (self.name, self.pythonified_name) if s])
         if m:
             lead = m.group(3)
-            if lead and lead.lower() == name:
+            if lead and lead.lower() in candidates:
                 description = m.group(4)
             else:
                 description = m.group(1)
-        if len(description) < 4 or description.lower() == name:
+        if len(description) < 4 or description.lower() in candidates:
             return None
         return description
 
@@ -794,6 +806,10 @@ class SetupMeta(Settings):
     @property
     def name(self):
         return self.value("name")
+
+    @property
+    def pythonified_name(self):
+        return pythonified_name(self.name)
 
     @property
     def version(self):

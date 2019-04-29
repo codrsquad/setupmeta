@@ -1,2 +1,2 @@
 [console_scripts]
-packaged-test = packaged:main
+pre-packaged-test = pre_packaged:main

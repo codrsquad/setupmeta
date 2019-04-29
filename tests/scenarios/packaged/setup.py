@@ -2,8 +2,8 @@ from setuptools import setup
 
 
 setup(
-    name="packaged",
+    name="pre-packaged",
     setup_requires=["setupmeta"],
     versioning="dev",
-    url="http://somewhere.net/packaged",
+    url="http://somewhere.net/pre-packaged",
 )
