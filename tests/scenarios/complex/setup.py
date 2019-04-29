@@ -13,7 +13,7 @@ __version__ = "1.0b1"
 __keywords__ = "some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command"
 
 setup(
-    name="my cplx-nm__here",
+    name="My cplx-nm__here",
     versioning="distance;.hooks/bump",
     setup_requires=["setupmeta"],
     # This will overshadow classifiers.txt
