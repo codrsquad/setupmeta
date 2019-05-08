@@ -305,10 +305,6 @@ class temp_resource:
 def meta_command_init(self, dist, **kwargs):
     """Custom __init__ injected to commands decorated with @MetaCommand"""
     self.setupmeta = getattr(dist, "_setupmeta", None)
-    if not self.setupmeta:
-        from distutils.errors import DistutilsClassError
-
-        raise DistutilsClassError("Missing setupmeta information")
     setuptools.Command.__init__(self, dist, **kwargs)
 
 

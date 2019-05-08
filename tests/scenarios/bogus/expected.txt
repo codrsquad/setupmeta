@@ -9,6 +9,7 @@ running explain
              long_description: (README.md  ) # bogus versioning spec This scenario tests a bogus `versioning` specification in `setup.py`
 long_description_content_type: (README.md  ) text/markdown
                          name: (explicit   ) bogus
+               setup_requires: (explicit   ) ["setupmeta"]
                           url: (missing    ) - Consider specifying 'url'
                       version: (git        ) 1.0
                    versioning: (explicit   ) {extra: [], main: function 'main_part'}

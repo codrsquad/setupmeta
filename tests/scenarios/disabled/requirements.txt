@@ -1,0 +1,15 @@
+sqlalchemy
+
+[:python_version < "3.7"]
+aiocontextvars
+
+[mysql]
+aiomysql
+pymysql
+
+[postgresql]
+asyncpg
+psycopg2-binary
+
+[sqlite]
+aiosqlite
