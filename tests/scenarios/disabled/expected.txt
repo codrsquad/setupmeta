@@ -18,8 +18,8 @@ running entrypoints
 :: version
 running version
 
-:: clean
-running clean
+:: cleanall
+running cleanall
 
 :: twine
 running twine
