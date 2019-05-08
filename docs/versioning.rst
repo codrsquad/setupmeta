@@ -18,13 +18,13 @@ The functionality is optional and has to be explicitly enabled, note that:
 In order to use setupmeta as a bridge to your git tags as versions, activate the feature by specifying one of the strategies in your ``setup.py`` like so::
 
     setup(
-        versioning='post',
+        versioning="post",
         ...
     )
 
 You can use then ``python setup.py version --bump`` to bump major/minor/patch (no need to assign tags manually).
 
-Note that if you still explicitly mention a ``__version__ = '...'``` in your ``__init__.py`` or ``__about__.py`` etc, setupmeta will find it and also bump it accordingly.
+Note that if you still explicitly mention a ``__version__ = "..."``` in your ``__init__.py`` or ``__about__.py`` etc, setupmeta will find it and also bump it accordingly.
 This is done for convenience only, you don't need ``__version__`` anywhere if you use setupmeta versioning.
 
 
@@ -43,9 +43,9 @@ Tag-based versioning will take precedence on any other ``version`` specification
 
 For example, if you have this:
 
-* ``setup(versioning='post')`` in your ``setup.py``
+* ``setup(versioning="post")`` in your ``setup.py``
 
-* ``__version__ = '1.0.0'`` in your ``__init__.py`` line 7
+* ``__version__ = "1.0.0"`` in your ``__init__.py`` line 7
 
 * ``git describe`` yields ``v1.0.0-2-g123`` (ie: latest tag is "v1.0.0", there are 2 commits since that tag, and current commit id is "123")
 
@@ -73,7 +73,7 @@ Ie:
 
 If you now run ``setup.py version --bump patch --commit``, the following would happen:
 
-* your ``__init__.py`` line 7 is modified to state ``__version__ = '1.0.1'``, and committed with description "Version 1.0.1"
+* your ``__init__.py`` line 7 is modified to state ``__version__ = "1.0.1"``, and committed with description "Version 1.0.1"
 
 * tag ``v1.0.1`` is applied at that new commit
 
@@ -83,7 +83,7 @@ If you now run ``setup.py version --bump patch --commit``, the following would h
          \_: (__init__.py:7) 1.0.1
 
 Note that you do NOT need any ``__version__ = ...`` stated anywhere, we're showing this only here for illustration purposes.
-In general, you should simply use ``versioning='post'`` (or any other format you like).
+In general, you should simply use ``versioning="post"`` (or any other format you like).
 
 You could leverage this ``__version__`` possibility if you have specific use case for that
 (like: you'd like to show which version your code is at without using something like ``import pkg_resources``)
@@ -97,12 +97,12 @@ post
 
 This is well suited if you don't plan to publish often, and have a tag for each release.
 
-``post`` corresponds to this format: ``branch(master):{major}.{minor}.{patch}{post}+{commitid}``
+``post`` corresponds to this format: ``branch(master):{major}.{minor}.{patch}{post}{dirty}``
 
 State this in your ``setup.py``::
 
     setup(
-        versioning='post',
+        versioning="post",
         ...
     )
 
@@ -206,12 +206,12 @@ distance
 
 This is well suited if you want to publish a new version at every commit (but don't want to keep bumping version in code for every commit).
 
-``distance`` corresponds to this format: ``branch(master):{major}.{minor}.{distance}+{commitid}``
+``distance`` corresponds to this format: ``branch(master):{major}.{minor}.{distance}{dirty}``
 
 State this in your ``setup.py``::
 
     setup(
-        versioning='distance',
+        versioning="distance",
         ...
     )
 
@@ -267,7 +267,7 @@ This is similar to distance_ (described above), so well suited if you want to pu
 State this in your ``setup.py``::
 
     setup(
-        versioning='build-id',
+        versioning="build-id",
         ...
     )
 
@@ -295,7 +295,7 @@ g10              1.0.1+h300.g3
 
 * Similar to distance_, except that the ``extra`` part is always shown and will reflect whether build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
 
-* Can be easily made to act like post_ instead for the **main*** part of the version via ``versioning='post+build-id'``
+* Can be easily made to act like post_ instead for the **main*** part of the version via ``versioning="post+build-id"``
 
 
 Advanced
@@ -333,14 +333,14 @@ Advanced
     * ``branches``: list of branch names (or csv) where to allow **bump**
 
 
-This is what ``versioning='post'`` is a shortcut for::
+This is what ``versioning="post"`` is a shortcut for::
 
     setup(
         versioning={
-            'main': '{major}.{minor}.{patch}{post}',
-            'extra': '{commitid}',
-            'branches': ['master'],
-            'separator': '+'
+            "main": "{major}.{minor}.{patch}{post}",
+            "extra": "{dirty}",
+            "branches": ["master"],
+            "separator": ""
         },
         ...
     )
