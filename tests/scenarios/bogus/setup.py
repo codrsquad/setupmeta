@@ -7,6 +7,7 @@ def main_part(version):
 
 setup(
     name="bogus",
+    setup_requires="setupmeta",
     versioning={
         "main": main_part,
         "extra": [],

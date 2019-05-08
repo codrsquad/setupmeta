@@ -56,6 +56,9 @@ class CheckCommand(check):
         self.reqs = None
 
     def run(self):
+        if not self.setupmeta:
+            return check.run(self)
+
         if count(self.restructuredtext, self.status, self.deptree, self.reqs) == 0:
             self.status = 1
             self.reqs = 1
@@ -115,6 +118,9 @@ class VersionCommand(setuptools.Command):
         self.show_next = None
 
     def run(self):
+        if not self.setupmeta:
+            return
+
         try:
             if self.show_next:
                 print(self.setupmeta.versioning.get_bump(self.show_next))
@@ -250,6 +256,9 @@ class ExplainCommand(setuptools.Command):
         print(")")
 
     def run(self):
+        if not self.setupmeta:
+            return
+
         if self.expand:
             return self.show_expanded_python()
 
@@ -296,6 +305,9 @@ class EntryPointsCommand(setuptools.Command):
     """List entry points for pygradle consumption"""
 
     def run(self):
+        if not self.setupmeta:
+            return
+
         entry_points = self.setupmeta.value("entry_points")
         console_scripts = get_console_scripts(entry_points)
         if not console_scripts:
@@ -358,6 +370,9 @@ class CleanCommand(setuptools.Command):
                 self.delete(full_path)
 
     def run(self):
+        if not self.setupmeta:
+            return
+
         self.deleted = 0
         self.by_ext = collections.defaultdict(int)
         self.clean_direct()
@@ -434,6 +449,9 @@ class TwineCommand(setuptools.Command):
         setupmeta.run_program(*args, fatal=True)
 
     def run(self):
+        if not self.setupmeta:
+            return
+
         if platform.python_implementation() != "CPython":
             abort("twine command not supported on %s" % platform.python_implementation())
 
