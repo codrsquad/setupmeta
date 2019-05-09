@@ -31,9 +31,9 @@ Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look l
     from setuptools import setup
 
     setup(
-        name='myproject',
-        versioning='distance',          # Optional, would activate tag-based versioning
-        setup_requires='setupmeta'      # This is where setupmeta comes in
+        name="myproject",
+        versioning="distance",          # Optional, would activate tag-based versioning
+        setup_requires="setupmeta"      # This is where setupmeta comes in
     )
 
 And that should be it - setupmeta_ will take it from there, extracting everything else from the rest of your project
@@ -48,15 +48,15 @@ note that a lot of info is typically extracted from your project, if you follow 
               author: (auto-adjust     ) Your Name
                   \_: (myproject.py:7  ) Your Name<your@email.com>
         author_email: (auto-adjust     ) your@email.com
-         classifiers: (classifiers.txt ) 6 items: ['Development Status :: ...
+         classifiers: (classifiers.txt ) 6 items: ["Development Status :: ...
          description: (README.rst:1    ) First line of your README
         entry_points: (entry_points.ini) [console_scripts] ...
-    install_requires: (requirements.txt) ['click', ...
+    install_requires: (requirements.txt) ["click", ...
              license: (auto-fill       ) MIT
     long_description: (README.rst      ) Long description would be your inlined README
                 name: (explicit        ) myproject
-          py_modules: (auto-fill       ) ['myproject']
-      setup_requires: (explicit        ) ['setupmeta']
+          py_modules: (auto-fill       ) ["myproject"]
+      setup_requires: (explicit        ) ["setupmeta"]
              version: (git             ) 1.2.3.post2
           versioning: (explicit        ) distance
 
@@ -116,25 +116,25 @@ How it works?
 
 * ``version`` can be stated explicitly, or be computed from git tags using ``versioning=...`` (see versioning_ for more info):
 
-    * With ``versioning='distance'``, your git tags will be of the form ``v{major}.{minor}.0``,
+    * With ``versioning="distance"``, your git tags will be of the form ``v{major}.{minor}.0``,
       the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
         * tag "v1.0.0", no commits since tag -> version is "1.0.0"
 
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.5"
 
-        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.5.post5+g123"
+        * if checkout is dirty, a marker is added -> version would be "1.0.5.post5.dirty"
 
-    * With ``versioning='post'``, your git tags will be of the form ``v{major}.{minor}.{patch}``,
+    * With ``versioning="post"``, your git tags will be of the form ``v{major}.{minor}.{patch}``,
       a "post" addendum will be present if there are commits since latest version tag:
 
         * tag "v1.0.0", no commits since tag -> version is "1.0.0"
 
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
 
-        * if checkout is dirty, ``+{commitid}`` is added -> version would be "1.0.0.post5+g123"
+        * if checkout is dirty, a marker is added -> version would be "1.0.0.post5.dirty"
 
-    * With ``versioning='build-id'``, your git tags will be of the form ``v{major}.{minor}.0``,
+    * With ``versioning="build-id"``, your git tags will be of the form ``v{major}.{minor}.0``,
       the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
 
         * tag "v1.0.0", no commits since tag, ``BUILD_ID=12`` -> version is "1.0.0+h12.g123"
@@ -145,7 +145,7 @@ How it works?
 
         * tag "v1.0.0", 5 commits since tag, ``BUILD_ID`` not defined -> version is "1.0.5+hlocal.g456"
 
-        * if checkout is dirty, ``.dirty`` is added -> version would be "1.0.5+hlocal.g456.dirty"
+        * if checkout is dirty, a marker is added -> version would be "1.0.5+hlocal.g456.dirty"
 
     * Use the **bump** command (see commands_) to easily bump (ie: increment major, minor or patch + apply git tag)
 
@@ -242,7 +242,7 @@ I noticed that most open-source projects out there do the same thing over and ov
   (copy-pasting the few lines of code to read the contents of said file)
 
 * Reading, grepping, sometimes importing a small ``__version__.py`` or ``__about__.py`` file to get values like ``__version__`` out of it,
-  and then dutifully doing ``version=__version__`` or ``version=about['__version__']`` in their ``setup.py``
+  and then dutifully doing ``version=__version__`` or ``version=about["__version__"]`` in their ``setup.py``
 
 * All kinds of creative things to get the ``description``
 

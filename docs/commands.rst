@@ -61,9 +61,9 @@ In the above output:
 
 * Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta sees the value and can use it, but doesn't transfer it to setuptools
 
-* ``packages`` was auto-filled to ``['setupmeta']``
+* ``packages`` was auto-filled to ``["setupmeta"]``
 
-* ``version`` was determined from git tag (due to ``versioning='post'`` in setup.py), in this case ``1.1.2.post1+g816252c`` means:
+* ``version`` was determined from git tag (due to ``versioning="post"`` in setup.py), in this case ``1.1.2.post1+g816252c`` means:
 
     * latest tag was 1.1.2
 

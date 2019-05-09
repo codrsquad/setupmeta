@@ -157,6 +157,7 @@ class Git(Scm):
                 distance = setupmeta.to_int(distance, default=0)
                 commitid = setupmeta.strip_dash(m.group(3))
                 if dirty is None:
+                    # This is only settable via env var SCM_DESCRIBE
                     dirty = m.group(4) == "-dirty"
                 return Version(main, distance, commitid, dirty, text)
         return None

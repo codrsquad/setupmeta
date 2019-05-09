@@ -110,7 +110,7 @@ def test_no_scm(_):
 def test_version_from_env_var(*_):
     meta = new_meta("post")
     versioning = meta.versioning
-    assert meta.version == "1.2.3.post4+g1234567"
+    assert meta.version == "1.2.3.post4.dirty"
     assert versioning.enabled
     assert not versioning.generate_version_file
     assert not versioning.problem
@@ -130,28 +130,29 @@ def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123"):
 @patch.dict(os.environ, {"BUILD_ID": "543"})
 def test_versioning_variants(*_):
     with conftest.capture_output() as logged:
-        quick_check("{major}.{minor}", "0.1+g123")
+        quick_check("{major}.{minor}", "0.1.dirty")
         quick_check("{major}.{minor}+", "0.1")
         quick_check("{major}.{minor}-{dirty}", "0.1-.dirty")
         quick_check("{major}.{minor}{dirty}", "0.1.dirty")
         quick_check("{major}.{minor}{dirty}+", "0.1.dirty")
         quick_check("{major}.{minor}", "0.1", dirty=False)
 
-        quick_check("distance", "0.1.5+g123")
-        quick_check("post", "0.1.2.post5+g123")
-        quick_check("dev", "0.1.3.dev5+g123")
+        quick_check("distance", "0.1.5.dirty")
+        quick_check("post", "0.1.2.post5.dirty")
+        quick_check("dev", "0.1.3.dev5.dirty")
         quick_check("devcommit", "0.1.3.dev-g123", dirty=False)
         quick_check("devcommit", "0.1.3.dev-g123-dirty")
-        quick_check("tag+dev", "0.1.3.dev5+g123")
+        quick_check("tag dev", "0.1.3.dev5.dirty")
+        quick_check("tag+dev", "0.1.3.dev5+.dirty")
         quick_check("build-id", "0.1.5+h543.g123.dirty")
         quick_check("dev+build-id", "0.1.3.dev5+h543.g123.dirty")
 
         # Patch is not bumpable
-        quick_check("dev", "0.1.rc.dev5+g123", describe="v0.1.rc-5-g123")
+        quick_check("dev", "0.1.rc.dev5.dirty", describe="v0.1.rc-5-g123")
 
         # On tag
         quick_check("dev", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
-        quick_check("dev", "0.1.3.dev0+g123", describe="v0.1.2-0-g123", dirty=True)
+        quick_check("dev", "0.1.3.dev0.dirty", describe="v0.1.2-0-g123", dirty=True)
         quick_check("devcommit", "0.1.2", describe="v0.1.2", dirty=False)
         quick_check("devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
         quick_check("devcommit", "0.1.3.dev-g123-dirty", describe="v0.1.2-0-g123", dirty=True)
@@ -241,16 +242,16 @@ def test_distance_marker():
         assert versioning.enabled
         assert not versioning.problem
         assert not versioning.strategy.problem
-        assert meta.version == "0.1.3+g123"
-        assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
+        assert meta.version == "0.1.3.dirty"
+        assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}{dirty}"
 
 
 @patch.dict(os.environ, {"BUILD_ID": "543"})
 def test_preconfigured_build_id(*_):
     """Verify that short notations expand to the expected format"""
-    check_preconfigured("branch(master):{major}.{minor}.{patch}{post}+{commitid}", "post", "default")
+    check_preconfigured("branch(master):{major}.{minor}.{patch}{post}{dirty}", "post", "default")
 
-    check_preconfigured("branch(master):{major}.{minor}.{distance}+{commitid}", "distance")
+    check_preconfigured("branch(master):{major}.{minor}.{distance}{dirty}", "distance")
 
     check_preconfigured("branch(master):{major}.{minor}.{distance}+!h{$*BUILD_ID:local}.{commitid}{dirty}", "build-id", "distance+build-id")
 
@@ -289,10 +290,10 @@ def check_strategy_distance(dirty):
     assert not versioning.problem
     assert not versioning.strategy.problem
     assert "major" in str(versioning.strategy.main_bits)
-    assert "commitid" in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}+{commitid}"
+    assert "dirty" in str(versioning.strategy.extra_bits)
+    assert str(versioning.strategy) == "branch(master):{major}.{minor}.{distance}{dirty}"
     if dirty:
-        assert meta.version == "0.1.3+g123"
+        assert meta.version == "0.1.3.dirty"
 
         with pytest.raises(setupmeta.UsageError):
             # Can't effectively bump if checkout is dirty

@@ -287,8 +287,8 @@ class Strategy:
 
         data = dict(
             main="{major}.{minor}.{patch}{post}",
-            extra="{commitid}",
-            separator="+",
+            extra="{dirty}",
+            separator="",
             branches="master",
             hook=None,
         )
@@ -304,6 +304,7 @@ class Strategy:
             main = m.group(3)
             if main in ("distance", "build-id", "changes"):
                 if main == "build-id":
+                    data["separator"] = "+"
                     data["extra"] = "!h{$*BUILD_ID:local}.{commitid}{dirty}"
                 main = "{major}.{minor}.{distance}"
 
@@ -328,12 +329,13 @@ class Strategy:
                         main = main.replace("{post}", "{dev}")
 
                 elif extra == "build-id":
+                    data["separator"] = "+"
                     data["extra"] = "!h{$*BUILD_ID:local}.{commitid}{dirty}"
 
                 else:
                     data["extra"] = extra
 
-            if main and "{dirty}" in main and data["extra"] == "{commitid}":
+            if main and "{dirty}" in main and data["extra"] in ("{commitid}", "{dirty}"):
                 data["extra"] = None
 
             data["main"] = main

@@ -2,6 +2,18 @@
 History
 =======
 
+2.6.0 (2019-05-09)
+------------------
+
+* Changed default dirty marker to ``.dirty`` (instead of ``+{commitid}``)
+
+
+2.5.4 (2019-05-08)
+------------------
+
+* Run only if explicitly required via ``setup_requires=["setupmeta"]``
+
+
 2.5.3 (2019-04-29)
 ------------------
 
