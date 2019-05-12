@@ -347,13 +347,17 @@ def parse_requirements(requirements):
     with temp_resource(is_folder=False) as temp:
         with open(temp, "wt") as fh:
             fh.write("\n".join(requirements))
-        for ir in pip_parse_requirements(temp, session=session):
-            if ir.link:
-                if ir.name:
-                    reqs.append(ir.name)
-                links.append(ir.link.url)
-            else:
-                reqs.append(str(ir.req))
+        try:
+            for ir in pip_parse_requirements(temp, session=session):
+                if ir.link:
+                    if ir.name:
+                        reqs.append(ir.name)
+                    links.append(ir.link.url)
+                else:
+                    reqs.append(str(ir.req))
+
+        except Exception:
+            return None, None
 
     return reqs, links
 

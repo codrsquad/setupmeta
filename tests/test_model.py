@@ -56,6 +56,9 @@ def test_representation():
 def test_empty():
     assert parse_requirements(None) == (None, None)
 
+    # When pip can't parse requirements, don't use them for auto-fill
+    assert parse_requirements(conftest.resouce("scenarios/disabled/requirements.txt")) == (None, None)
+
     meta = bogus_project()
     assert not meta.attrs
     assert not meta.definitions
