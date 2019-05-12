@@ -28,6 +28,10 @@ def test_shortening():
 
     assert setupmeta.short(dict(foo="bar"), c=8) == "1 keys"
 
+    assert setupmeta.merged("a", None) == "a"
+    assert setupmeta.merged(None, "a") == "a"
+    assert setupmeta.merged("a", "b") == "a\nb"
+
 
 def test_strip():
     assert setupmeta.strip_dash(None) is None

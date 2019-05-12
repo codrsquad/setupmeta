@@ -365,6 +365,10 @@ def test_git_versioning(sample_project):
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.0"
 
+    output = setupmeta.run_program(sys.executable, "setup.py", "explain", capture=True)
+    assert "0.1.0" in output
+    assert "runez" in output
+
     # New file does not change dirtiness
     write_to_file("foo", "print('hello')")
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)

@@ -54,6 +54,8 @@ def test_representation():
 
 
 def test_empty():
+    assert parse_requirements(None) == (None, None)
+
     meta = bogus_project()
     assert not meta.attrs
     assert not meta.definitions
@@ -98,11 +100,6 @@ def test_no_pip():
             assert len(get_pip()) == 2
 
         # Simulate pip not installed at all
-        with patch.dict("sys.modules", {"pip": None}):
+        with patch.dict("sys.modules", {"pip": None, "pip._internal.req": None, "pip.req": None}):
             assert get_pip() == (None, None)
-
-        # Simulate unknown pip API
-        with patch.dict("sys.modules", {"pip": os}):
-            assert parse_requirements(None) == (None, None)
-
         assert "Can't find PipSession" in logged

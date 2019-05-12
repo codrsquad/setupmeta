@@ -338,7 +338,7 @@ def parse_requirements(requirements):
     """Parse requirements with pip"""
     # Note: we can't assume pip is installed
     pip_parse_requirements, pip_session = get_pip()
-    if not pip_parse_requirements:
+    if not pip_parse_requirements or not requirements:
         return None, None
 
     reqs = []
@@ -743,19 +743,14 @@ class SetupMeta(Settings):
         """
         description = contents.strip().partition("\n")[0].strip()
         size = len(description)
-        if size < 4 or size > 256:
-            return None
-        m = RE_DESCRIPTION.match(description)
-        candidates = set([s.lower() for s in (self.name, self.pythonified_name) if s])
-        if m:
-            lead = m.group(3)
-            if lead and lead.lower() in candidates:
-                description = m.group(4)
-            else:
-                description = m.group(1)
-        if len(description) < 4 or description.lower() in candidates:
-            return None
-        return description
+        if 4 <= size <= 256:
+            m = RE_DESCRIPTION.match(description)
+            candidates = set([s.lower() for s in (self.name, self.pythonified_name) if s])
+            if m:
+                lead = m.group(3)
+                description = m.group(4 if lead and lead.lower() in candidates else 1)
+            if len(description) >= 4 and description.lower() not in candidates:
+                return description
 
     def auto_fill_long_description(self):
         """ Auto-fille descriptions from README file """

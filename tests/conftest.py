@@ -87,7 +87,7 @@ class capture_output:
             result += decode(self.out_buffer.getvalue())
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
-        return result.strip()
+        return result.rstrip()
 
     def __enter__(self):
         if self.old_out is not None:
@@ -135,13 +135,15 @@ def cleaned_output(text, folder=None):
         if line and not line.startswith("pydev debugger:"):
             if folder:
                 line = line.replace(folder, "<target>")
+            line = line.replace(os.getcwd(), "<target>")
             result.append(line)
-    return "\n".join(result).strip()
+    return "\n".join(result).rstrip()
 
 
 def run_setup_py(folder, *args):
     if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        return cleaned_output(setupmeta.run_program(sys.executable, os.path.join(folder, "setup.py"), *args, capture="all", fatal=True))
+        output = setupmeta.run_program(sys.executable, os.path.join(folder, "setup.py"), "-q", *args, capture="all", fatal=True)
+        return cleaned_output(output)
 
     return run_internal_setup_py(folder, *args)
 
@@ -157,7 +159,7 @@ def run_internal_setup_py(folder, *args):
         os.chdir(folder)
         setup_py = os.path.join(folder, "setup.py")
         with capture_output(ownwarn=True) as logged:
-            sys.argv = [setup_py] + list(args)
+            sys.argv = [setup_py, "-q"] + list(args)
             run_output = ""
             try:
                 basename = "setup"
@@ -168,8 +170,8 @@ def run_internal_setup_py(folder, *args):
                 run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)
                 run_output += "%s\n" % e
 
-            run_output = "%s\n%s" % (logged, run_output.strip())
-            return cleaned_output(run_output, folder)
+            run_output = "%s\n%s" % (logged, run_output.rstrip())
+            return cleaned_output(run_output, folder=folder)
 
     finally:
         if fp:

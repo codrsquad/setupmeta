@@ -284,15 +284,21 @@ class temp_resource:
 
     def __init__(self, is_folder=True):
         self.is_folder = is_folder
+        self.old_cwd = os.getcwd()
         if is_folder:
             self.path = tempfile.mkdtemp()
         else:
             _, self.path = tempfile.mkstemp()
 
     def __enter__(self):
+        if self.is_folder:
+            os.chdir(self.path)
+        else:
+            os.chdir(os.path.dirname(self.path))
         return self.path
 
     def __exit__(self, *args):
+        os.chdir(self.old_cwd)
         try:
             if self.is_folder:
                 shutil.rmtree(self.path)
