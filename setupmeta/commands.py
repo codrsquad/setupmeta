@@ -77,9 +77,7 @@ class CheckCommand(check):
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
         reqs = self.setupmeta.requirements.install
-        if not reqs:
-            return
-        if reqs.abstracted or reqs.ignored or reqs.links:
+        if reqs and (reqs.abstracted or reqs.ignored or reqs.links):
             message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
                 len(reqs.abstracted),
                 len(reqs.ignored),

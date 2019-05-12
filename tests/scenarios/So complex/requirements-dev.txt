@@ -1,2 +1,3 @@
-flake8
+# some comment
+flake8  # some comment
 pytest

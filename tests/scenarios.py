@@ -59,13 +59,29 @@ class Scenario:
     temp = None         # type: str # Optional temp folder used
     origin = None       # type: str # Temp SCM origin to use
 
-    def __init__(self, folder):
-        self.folder = os.path.join(conftest.PROJECT_DIR, folder)
+    def __init__(self, relative_path, in_place=False):
+        self.short_name = relative_path
+        src = os.path.join(conftest.PROJECT_DIR, relative_path)
+        if in_place:
+            self.folder = src
+            self.target = relative_path
+
+        else:
+            for fname in os.listdir(src):
+                fsrc = os.path.join(src, fname)
+                fdest = os.path.join(os.getcwd(), fname)
+                if os.path.isdir(fsrc):
+                    shutil.copytree(fsrc, fdest)
+                else:
+                    shutil.copy(fsrc, fdest)
+                shutil.copystat(fsrc, fdest)
+            self.folder = os.getcwd()
+            self.target = self.folder
+
         self.preparation = []
         self.commands = []
         self.commands.extend(SCENARIO_COMMANDS)
-        self.target = folder
-        extra_commands = os.path.join(folder, ".commands")
+        extra_commands = os.path.join(self.folder, ".commands")
         if os.path.isfile(extra_commands):
             self.target = None
             with io.open(extra_commands, "rt") as fh:
@@ -78,7 +94,7 @@ class Scenario:
                             self.commands.append(line)
 
     def __repr__(self):
-        return conftest.relative_path(self.folder)
+        return self.short_name
 
     def run_git(self, *args, **kwargs):
         cwd = kwargs.pop("cwd", self.target)
@@ -134,7 +150,7 @@ class Scenario:
                 output = ":: %s\n%s" % (command, conftest.run_setup_py(self.target, *command.split()))
                 result.append(output)
 
-            return "\n\n".join(result)
+            return "\n\n".join(result).rstrip()
 
         finally:
             self.clean()
@@ -176,7 +192,7 @@ def main():
     os.chdir(conftest.PROJECT_DIR)
 
     for folder in args.scenario:
-        scenario = Scenario(folder)
+        scenario = Scenario(folder, in_place=True)
         scenario.refresh_example(args.dryrun)
 
 
