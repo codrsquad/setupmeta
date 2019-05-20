@@ -139,7 +139,7 @@ class Scenario:
 
         try:
             shutil.rmtree(self.temp)
-        except PermissionError:
+        except OSError:
             pass
 
     def replay(self):

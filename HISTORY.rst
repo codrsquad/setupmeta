@@ -2,6 +2,12 @@
 History
 =======
 
+2.6.3 (2019-05-20)
+------------------
+
+* Fixed incorrect tag mismatch warning with ``post`` versioning strategy
+
+
 2.6.2 (2019-05-17)
 ------------------
 

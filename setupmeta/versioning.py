@@ -409,11 +409,14 @@ class Versioning:
             setupmeta.warn(msg)
 
         rendered = self.strategy.rendered(gv)
-        if cv and rendered and not rendered.startswith(cv):
-            source = vdef.sources[0].source
-            expected = rendered[: len(cv)]
-            msg = "In %s version should be %s, not %s" % (source, expected, cv)
-            setupmeta.warn(msg)
+        if cv and gv:
+            cvv = Version(main=cv, distance=gv.distance, commitid=gv.commitid, dirty=gv.dirty)
+            if cvv.major != gv.major or cvv.minor != gv.minor or cvv.patch != gv.patch:
+                source = vdef.sources[0].source
+                expected = rendered[: len(cv)]
+                msg = "In %s version should be %s, not %s" % (source, expected, cv)
+                setupmeta.warn(msg)
+
         self.meta.auto_fill("version", rendered, self.scm.name, override=True)
 
     def get_bump(self, what):

@@ -304,7 +304,7 @@ class temp_resource:
                 shutil.rmtree(self.path)
             else:
                 os.unlink(self.path)
-        except PermissionError:  # pragma: no cover
+        except OSError:  # pragma: no cover
             pass
 
 
