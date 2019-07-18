@@ -180,7 +180,7 @@ class Git(Scm):
 
     def get_version(self):
         dirty = self.is_dirty()
-        text = self.get_output("describe", "--tags", "--long", "--match", "*.*")
+        text = self.get_output("describe", "--tags", "--long", "--match", "*.*", "--first-parent")
         version = self.parsed_version(text, dirty)
         if version:
             return version
