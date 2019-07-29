@@ -180,7 +180,10 @@ class Git(Scm):
 
     def get_version(self):
         dirty = self.is_dirty()
-        text = self.get_output("describe", "--tags", "--long", "--match", "*.*", "--first-parent")
+        # Allow to override git describe command via env var GIT_DESCRIBE_COMMAND (just in case)
+        cmd = os.environ.get("GIT_DESCRIBE_COMMAND", "describe --dirty --tags --long --match *.* --first-parent")
+        cmd = cmd.split(" ")
+        text = self.get_output(*cmd)
         version = self.parsed_version(text, dirty)
         if version:
             return version
