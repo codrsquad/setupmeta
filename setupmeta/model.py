@@ -344,10 +344,25 @@ def parse_requirements(requirements):
     reqs = []
     links = []
     session = pip_session()
-    with temp_resource(is_folder=False) as temp:
-        with open(temp, "wt") as fh:
-            fh.write("\n".join(requirements))
-        try:
+    try:
+        if not isinstance(requirements, list):
+            # Parse given file path as-is (when not abstracting)
+            for ir in pip_parse_requirements(requirements, session=session):
+                if ir.link:
+                    if ir.name:
+                        reqs.append(ir.name)
+                    links.append(ir.link.url)
+                else:
+                    reqs.append(str(ir.req))
+
+            return reqs, links
+
+        with temp_resource(is_folder=False) as temp:
+            # Passed list is "complex reqs" that were not abstracted by the simple convention described here:
+            # https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
+            with open(temp, "wt") as fh:
+                fh.write("\n".join(requirements))
+
             for ir in pip_parse_requirements(temp, session=session):
                 if ir.link:
                     if ir.name:
@@ -356,8 +371,8 @@ def parse_requirements(requirements):
                 else:
                     reqs.append(str(ir.req))
 
-        except Exception:
-            return None, None
+    except Exception:
+        return None, None
 
     return reqs, links
 
@@ -479,25 +494,25 @@ class RequirementsEntry:
         :param bool abstract: If True, abstract away simple pinning (applicable to install_requires only)
         """
         self.source = relative_path(path)
-        current_section = None
         self.notes = {}
         self.reqs = []
         self.abstracted = []
         self.untouched = []
         self.ignored = []
-        for line in load_list(path, comment=None):
-            if not abstract:
-                # Not abstracting, just trim away comments
-                if line.startswith("#"):
-                    continue
-                if "# " in line:
-                    i = line.index("# ")
-                    line = line[:i].strip()
-                if line:
-                    self.reqs.append(line)
-                continue
 
-            # We're abstracting, allow comments to tweak how we do that
+        if abstract:
+            self.parse_with_comments()
+
+        else:
+            reqs, links = parse_requirements(self.source)
+            if reqs:
+                self.reqs = reqs
+                self.links = links
+
+    def parse_with_comments(self):
+        # We're abstracting, allow comments to tweak how we do that
+        current_section = None
+        for line in load_list(self.source, comment=None):
             if line.startswith("#"):
                 # Lines containing only a comment can start a "section", all requirements below this will respect that section
                 word = first_word(line[1:])
