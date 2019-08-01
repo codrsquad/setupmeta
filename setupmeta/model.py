@@ -499,6 +499,7 @@ class RequirementsEntry:
         self.abstracted = []
         self.untouched = []
         self.ignored = []
+        self.links = None
 
         if abstract:
             self.parse_with_comments()
@@ -559,8 +560,6 @@ class RequirementsEntry:
                 self.notes[line] = note or "abstract by default"
 
             self.reqs.append(line)
-
-        self.links = None
 
         if any(is_complex_requirement(line) for line in self.reqs):
             reqs, links = parse_requirements(self.reqs)
