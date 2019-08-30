@@ -304,8 +304,8 @@ class Version:
         """
         {devcommit} marker for this version
 
-        :return str: '.dev-{commitid}' for distance > 0, empty string otherwise
+        :return str: '.dev{distance}-{commitid}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return ".dev-%s" % self.commitid
+            return ".dev%d-%s" % (self.distance, self.commitid)
         return ""
