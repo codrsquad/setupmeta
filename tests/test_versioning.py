@@ -140,8 +140,8 @@ def test_versioning_variants(*_):
         quick_check("distance", "0.1.5.dirty")
         quick_check("post", "0.1.2.post5.dirty")
         quick_check("dev", "0.1.3.dev5.dirty")
-        quick_check("devcommit", "0.1.3.dev-g123", dirty=False)
-        quick_check("devcommit", "0.1.3.dev-g123-dirty")
+        quick_check("devcommit", "0.1.3.dev5-g123", dirty=False)
+        quick_check("devcommit", "0.1.3.dev5-g123-dirty")
         quick_check("tag dev", "0.1.3.dev5.dirty")
         quick_check("tag+dev", "0.1.3.dev5+.dirty")
         quick_check("build-id", "0.1.5+h543.g123.dirty")
@@ -155,7 +155,7 @@ def test_versioning_variants(*_):
         quick_check("dev", "0.1.3.dev0.dirty", describe="v0.1.2-0-g123", dirty=True)
         quick_check("devcommit", "0.1.2", describe="v0.1.2", dirty=False)
         quick_check("devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
-        quick_check("devcommit", "0.1.3.dev-g123-dirty", describe="v0.1.2-0-g123", dirty=True)
+        quick_check("devcommit", "0.1.3.dev0-g123-dirty", describe="v0.1.2-0-g123", dirty=True)
 
         assert "patch version component should be .0" in logged
 
