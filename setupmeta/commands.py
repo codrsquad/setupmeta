@@ -456,7 +456,10 @@ class TwineCommand(setuptools.Command):
         if not self.egg and not self.sdist and not self.wheel:
             abort("Specify at least one of: --egg, --dist or --wheel")
 
-        twine = setupmeta.which("twine")
+        # Env var SETUPMETA_TWINE primarily used to allow for flexible testing
+        # Can be set to instruct setupmeta to use a particular twine executable as well
+        # Use absolute path, of filename (for example: "my-twine-wrapper")
+        twine = setupmeta.which(os.environ.get("SETUPMETA_TWINE", "twine"))
         if not twine:
             abort("twine is not installed")
 
