@@ -289,6 +289,8 @@ class temp_resource:
             self.path = tempfile.mkdtemp()
         else:
             _, self.path = tempfile.mkstemp()
+        # OSX edge case: /var/<temp> is really /private/var/<temp>
+        self.path = os.path.realpath(self.path)
 
     def __enter__(self):
         if self.is_folder:

@@ -262,59 +262,62 @@ def test_clean(sample_project):
 
 @pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
 def test_twine(sample_project):
-    run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
-    run_setup_py(["twine", "--egg=all"], "twine is not installed")
+    with patch.dict(os.environ, {"SETUPMETA_TWINE": "/dev/null/no-twine"}):
+        run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
+        run_setup_py(["twine", "--egg=all"], "twine is not installed")
 
-    shutil.copy2(setupmeta.project_path("tests", "mock-twine"), os.path.join(sample_project, "twine"))
+    mocked_twine = os.path.join(sample_project, "mocked-twine")
+    shutil.copy2(setupmeta.project_path("tests", "mock-twine"), mocked_twine)
 
-    run_setup_py(
-        ["twine", "--egg=all"],
-        """
-            Dryrun, use --commit to effectively build/publish
-            Would build egg distribution: .*python.* setup.py bdist_egg
-            Would upload to PyPi via twine
-        """,
-    )
+    with patch.dict(os.environ, {"SETUPMETA_TWINE": "mocked-twine"}):
+        run_setup_py(
+            ["twine", "--egg=all"],
+            """
+                Dryrun, use --commit to effectively build/publish
+                Would build egg distribution: .*python.* setup.py bdist_egg
+                Would upload to PyPi via twine
+            """,
+        )
 
-    run_setup_py(
-        ["twine", "--commit", "--egg=all", "--wheel=1.0"],
-        """
-            python.* setup.py bdist_egg
-            Uploading to PyPi via twine
-            Running: <target>/twine upload <target>/dist/sample-0.1.0-.+.egg
-            Deleting <target>/build
-        """,
-    )
+        run_setup_py(
+            ["twine", "--commit", "--egg=all", "--wheel=1.0"],
+            """
+                python.* setup.py bdist_egg
+                Uploading to PyPi via twine
+                Running: <target>/mocked-twine upload <target>/dist/sample-0.1.0-.+.egg
+                Deleting <target>/build
+            """,
+        )
 
-    run_setup_py(
-        ["twine", "--egg=all"],
-        """
-            Would delete .*/dist
-            Would build egg distribution: .*python.* setup.py bdist_egg
-            Would upload to PyPi via twine
-        """,
-    )
+        run_setup_py(
+            ["twine", "--egg=all"],
+            """
+                Would delete .*/dist
+                Would build egg distribution: .*python.* setup.py bdist_egg
+                Would upload to PyPi via twine
+            """,
+        )
 
-    run_setup_py(
-        ["twine", "--commit", "--rebuild", "--egg=all", "--sdist=all", "--wheel=all"],
-        """
-            Deleting <target>/dist
-            python.* setup.py bdist_egg
-            python.* setup.py sdist
-            python.* setup.py bdist_wheel
-            Uploading to PyPi via twine
-            Running: <target>/twine upload <target>/dist
-            Deleting <target>/build
-        """,
-    )
+        run_setup_py(
+            ["twine", "--commit", "--rebuild", "--egg=all", "--sdist=all", "--wheel=all"],
+            """
+                Deleting <target>/dist
+                python.* setup.py bdist_egg
+                python.* setup.py sdist
+                python.* setup.py bdist_wheel
+                Uploading to PyPi via twine
+                Running: <target>/mocked-twine upload <target>/dist
+                Deleting <target>/build
+            """,
+        )
 
-    run_setup_py(
-        ["twine", "--commit", "--rebuild", "--egg=1.0"],
-        """
-            Deleting <target>/dist
-            No files found in <target>/dist
-        """,
-    )
+        run_setup_py(
+            ["twine", "--commit", "--rebuild", "--egg=1.0"],
+            """
+                Deleting <target>/dist
+                No files found in <target>/dist
+            """,
+        )
 
 
 def test_unsupported_twine(sample_project):
