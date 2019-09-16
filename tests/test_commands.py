@@ -262,8 +262,9 @@ def test_clean(sample_project):
 
 @pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
 def test_twine(sample_project):
-    run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
-    run_setup_py(["twine", "--egg=all"], "twine is not installed")
+    with patch("setupmeta.which", return_value=None):
+        run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
+        run_setup_py(["twine", "--egg=all"], "twine is not installed")
 
     shutil.copy2(setupmeta.project_path("tests", "mock-twine"), os.path.join(sample_project, "twine"))
 
