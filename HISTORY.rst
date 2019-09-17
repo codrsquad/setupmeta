@@ -2,6 +2,30 @@
 History
 =======
 
+2.6.6 (2019-09-16)
+------------------
+
+* RFC: include distance with "{devcommit}"
+
+* Correctly mock absence of twine in tests
+
+
+2.6.5 (2019-08-01)
+------------------
+
+* Bug fix: Correctly initialize .links field in ``model.py``
+
+
+2.6.4 (2019-07-30)
+------------------
+
+* version: git: use --first-parent with git-describe
+
+* Let pip expand req files when not abstracting
+
+* Allow to override git describe command via env var GIT_DESCRIBE_COMMAND (just in case)
+
+
 2.6.3 (2019-05-20)
 ------------------
 
