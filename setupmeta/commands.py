@@ -572,9 +572,10 @@ class PipPackage(object):
     def resolve(self):
         for req in self._obj.requires():
             package = self.tree.get_package(req)
-            pr = PipReq(req, package)
-            self.requires.append(pr)
-            package.required_by.add(self)
+            if package:
+                pr = PipReq(req, package)
+                self.requires.append(pr)
+                package.required_by.add(self)
 
     def _add_transitive(self, required):
         if isinstance(required, PipReq):
