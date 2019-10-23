@@ -7,7 +7,7 @@ python:
   - "3.5"
   - "3.6"
   - "3.7"
-  - "3.8-dev"
+  - "3.8"
 
 install:
   - pip install tox-travis
@@ -28,7 +28,7 @@ credentials:
 deploy:
   - <<: *pypi
     on:
-      python: 2.7
+      python: 3.8
       repo: zsimic/setupmeta
       tags: true
     distributions: "sdist bdist_wheel --universal"
