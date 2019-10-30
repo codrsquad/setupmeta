@@ -3,7 +3,7 @@
                            \_: (direct/__init__.py:5 ) Someone someone@somewhere.com
                  author_email: (auto-adjust          ) someone@somewhere.com
                  bugtrack_url: (auto-fill            ) https://github.com/zsimic/simple/issues
-                  classifiers: (classifiers.txt      ) ["Framework :: Pytest", "Programming Language :: Python", "License :: OSI Approved :: Apache Software License"]
+                  classifiers: (classifiers.txt      ) ["Framework :: Pytest", "Programming Language :: Python"]
                   description: (direct/__init__.py:2 ) A package implemented by one direct (not under src/) module folder
                  download_url: (auto-fill            ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
                            \_: (direct/__init__.py:10) https://github.com/zsimic/simple/archive/{version}.tar.gz
@@ -37,11 +37,7 @@ setup(
     author="Someone",                                               # from direct/__init__.py:5
     author_email="someone@somewhere.com",
     bugtrack_url="https://github.com/zsimic/simple/issues",
-    classifiers=[
-        "Framework :: Pytest",
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python"
-    ],                                                              # from classifiers.txt
+    classifiers=["Framework :: Pytest", "Programming Language :: Python"], # from classifiers.txt
     description="A package implemented by one direct (not under src/) module folder", # from direct/__init__.py:2
     download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__, # from direct/__init__.py:10
     entry_points="""[console_scripts]

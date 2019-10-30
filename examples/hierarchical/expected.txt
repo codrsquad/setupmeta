@@ -3,7 +3,7 @@
                            \_: (src/hierarchical/__init__.py:5 ) Someone someone@somewhere.com
                  author_email: (auto-adjust                    ) someone@somewhere.com
                  bugtrack_url: (auto-fill                      ) https://github.com/zsimic/hierarchical/issues
-                  classifiers: (classifiers.txt                ) ["Framework :: Pytest", "Programming Language :: Python", "License :: OSI Approved :: MIT License"]
+                  classifiers: (classifiers.txt                ) ["Framework :: Pytest", "Programming Language :: Python"]
                   description: (README.rst:1                   ) A hierarchical package (code under src/)
                            \_: (src/hierarchical/__init__.py:2 ) A hierarchical package (code under src/, tests under tests/)
                  download_url: (auto-fill                      ) https://github.com/zsimic/hierarchical/archive/1.0.0.tar.gz
@@ -41,11 +41,7 @@ setup(
     author="Someone",                                                 # from src/hierarchical/__init__.py:5
     author_email="someone@somewhere.com",
     bugtrack_url="https://github.com/zsimic/hierarchical/issues",
-    classifiers=[
-        "Framework :: Pytest",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python"
-    ],                                                                # from classifiers.txt
+    classifiers=["Framework :: Pytest", "Programming Language :: Python"], # from classifiers.txt
     description="A hierarchical package (code under src/)",           # from README.rst:1
     download_url="https://github.com/zsimic/hierarchical/archive/%s.tar.gz" % __version__, # from src/hierarchical/__init__.py:10
     entry_points="""[console_scripts]

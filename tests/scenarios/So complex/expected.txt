@@ -5,7 +5,7 @@ WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
               \_: (setup.py:2                        ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust                       ) zoran@simicweb.com
     bugtrack_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/issues
-     classifiers: (explicit                          ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
+     classifiers: (explicit                          ) ["Programming Language :: Python"]
               \_: (classifiers.txt                   ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating Sys...
          contact: (My_cplx_nm__here/__init__.py:13   ) Zoran Simic
    contact_email: (My_cplx_nm__here/__init__.py:14   ) me@myplace.com
@@ -77,7 +77,7 @@ setup(
     author="Zoran Simic",                                             # from setup.py:2
     author_email="zoran@simicweb.com",
     bugtrack_url="https://github.com/zsimic/My cplx-nm__here/issues",
-    classifiers=["License :: OSI Approved :: BSD License", "Programming Language :: Python"],
+    classifiers=["Programming Language :: Python"],
     contact="Zoran Simic",                                            # from My_cplx_nm__here/__init__.py:13
     contact_email="me@myplace.com",                                   # from My_cplx_nm__here/__init__.py:14
     description="My cplx-nm__here - Sample complex project",          # from README:1
@@ -196,7 +196,7 @@ Running: <target>/.hooks/bump "My cplx-nm__here" master 2.0.0
               \_: (setup.py:2                        ) Zoran Simic zoran@simicweb.com
     author_email: (auto-adjust                       ) zoran@simicweb.com
     bugtrack_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/issues
-     classifiers: (explicit                          ) ["Programming Language :: Python", "License :: OSI Approved :: BSD License"]
+     classifiers: (explicit                          ) ["Programming Language :: Python"]
               \_: (classifiers.txt                   ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating Sys...
          contact: (My_cplx_nm__here/__init__.py:13   ) Zoran Simic
    contact_email: (My_cplx_nm__here/__init__.py:14   ) me@myplace.com
