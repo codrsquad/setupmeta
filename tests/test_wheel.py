@@ -13,7 +13,7 @@ def test_wheel(sample_project):
 
     dist_folder = os.path.join(sample_project, "dist")
 
-    setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".")
+    assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
     files = os.listdir(dist_folder)
     assert len(files) == 2
     assert "sample-0.1.0-py2.py3-none-any.whl" in files
@@ -22,7 +22,7 @@ def test_wheel(sample_project):
     with open(os.path.join(sample_project, "sample.py"), "w") as fh:
         fh.write("print('hello')\n")
 
-    setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".")
+    assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
     files = os.listdir(dist_folder)
     assert len(files) == 3
     assert "sample-0.1.0-py2.py3-none-any.whl" in files

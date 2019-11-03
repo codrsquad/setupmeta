@@ -165,9 +165,8 @@ def run_program(program, *args, **kwargs):
         print("Running: %s" % represented)
         if TESTING:
             # Avoid pass-through chatter in tests
-            DEVNULL = open(os.devnull, "w")
-            kwargs["stdout"] = DEVNULL
-            kwargs["stderr"] = DEVNULL
+            kwargs["stdout"] = subprocess.PIPE
+            kwargs["stderr"] = subprocess.PIPE
 
     else:
         kwargs["stdout"] = subprocess.PIPE
@@ -190,11 +189,11 @@ def run_program(program, *args, **kwargs):
     trace(trace_msg)
 
     if capture:
-        if output[-1:] == '\n':
-            output = output[:-1]
+        if output:
+            output = output.rstrip()
         if capture == "all":
-            if error[-1:] == '\n':
-                error = error[:-1]
+            if error:
+                error = error.rstrip()
             return merged(output, error)
         return merged(output, None)
 

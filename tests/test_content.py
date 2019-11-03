@@ -90,8 +90,6 @@ def test_run_program():
         with pytest.raises(SystemExit):
             assert setupmeta.run_program("ls", "foo/does/not/exist", fatal=True)
 
-        assert setupmeta.run_program("echo", capture=True) == ""
-
         assert "exitcode" in out
 
     setupmeta.DEBUG = False
