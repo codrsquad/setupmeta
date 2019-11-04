@@ -505,7 +505,7 @@ class RequirementsEntry:
             self.parse_with_comments()
 
         else:
-            reqs, links = parse_requirements(self.source)
+            reqs, links = parse_requirements(path)
             if reqs:
                 self.reqs = reqs
                 self.links = links

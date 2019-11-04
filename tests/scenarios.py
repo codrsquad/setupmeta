@@ -124,7 +124,16 @@ class Scenario:
         copytree(self.folder, self.target)
 
         for command in self.preparation:
-            setupmeta.run_program(*command.split(), cwd=self.target)
+            if command.startswith("mv"):
+                # Unfortunately there is no 'mv' on Windows
+                _, source, dest = command.split()
+                source = os.path.join(self.target, source)
+                dest = os.path.join(self.target, dest)
+                shutil.copytree(source, dest)
+                shutil.rmtree(source)
+
+            else:
+                setupmeta.run_program(*command.split(), cwd=self.target)
 
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")

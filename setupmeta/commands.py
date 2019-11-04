@@ -294,7 +294,8 @@ class ExplainCommand(setuptools.Command):
                         prefix = source.key
 
                     preview = setupmeta.short(source.value, c=max_chars)
-                    print(form % (prefix, setupmeta.short(source.source), preview))
+                    s = form % (prefix, setupmeta.short(source.source), preview)
+                    print(s)
                     count += 1
 
 
