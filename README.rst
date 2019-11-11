@@ -62,6 +62,12 @@ note that a lot of info is typically extracted from your project, if you follow 
 
 See examples_ for more.
 
+**Note**: ``setupmeta``'s versioning is based on::
+
+    git describe --dirty --tags --long --match *.* --first-parent
+
+you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
+
 
 Goal
 ====

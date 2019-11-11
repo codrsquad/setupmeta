@@ -2,6 +2,18 @@
 History
 =======
 
+2.6.11 (2019-11-11)
+-------------------
+
+* Warn when ``git describe`` exits with code != 0
+
+* Corrected tests for Windows
+
+* Removed auto-added ``License :: OSI Approved`` classifier
+
+* Corrected ``check --deptree`` edge cases
+
+
 2.6.6 (2019-09-16)
 ------------------
 
