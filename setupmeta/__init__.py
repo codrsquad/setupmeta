@@ -183,22 +183,26 @@ def run_program(program, *args, **kwargs):
 
     trace_msg = "ran [%s], exitcode: %s" % (represented, p.returncode)
     if output:
+        output = output.rstrip()
         trace_msg = "%s, output: [%s]" % (trace_msg, output.strip())
+
     if error:
+        error = error.rstrip()
         trace_msg = "%s, error: [%s]" % (trace_msg, error.strip())
+
     trace(trace_msg)
 
     if capture:
-        if output:
-            output = output.rstrip()
         if capture == "all":
-            if error:
-                error = error.rstrip()
             return merged(output, error)
+
+        if p.returncode:
+            warn("%s exited with error code %s\n%s" % (represented, p.returncode, error))
+
         return merged(output, None)
 
     if p.returncode and fatal:
-        print("%s exited with code %s" % (represented, p.returncode))
+        print("%s exited with code %s:\n%s" % (represented, p.returncode, error))
         sys.exit(p.returncode)
 
     return p.returncode
