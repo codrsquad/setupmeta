@@ -31,6 +31,16 @@ This is done for convenience only, you don't need ``__version__`` anywhere if yo
 How does it work?
 =================
 
+**Note**: ``setupmeta``'s versioning is based on (by default)::
+
+    git describe --dirty --tags --long --match *.* --first-parent
+
+you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
+
+You can modify the above command via environment variable ``GIT_DESCRIBE_COMMAND`` (give full git command if you do).
+
+----
+
 setupmeta declares a keyword to setuptools called ``versioning``, if you specify that keyword (and it is valid), setupmeta versioning will be enabled.
 
 You can specify ``versioning``:
