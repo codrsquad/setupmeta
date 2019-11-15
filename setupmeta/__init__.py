@@ -197,7 +197,9 @@ def run_program(program, *args, **kwargs):
             return merged(output, error)
 
         if p.returncode:
-            warn("%s exited with error code %s\n%s" % (represented, p.returncode, error))
+            if not args or args[0] != "describe" or not error or "no names" not in error.lower():
+                # Edge case: don't warn when no tags are present, git states "No names found" in that case...
+                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error))
 
         return merged(output, None)
 

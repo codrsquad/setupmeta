@@ -2,7 +2,7 @@
 History
 =======
 
-2.6.11 (2019-11-11)
+2.6.12 (2019-11-15)
 -------------------
 
 * Warn when ``git describe`` exits with code != 0
@@ -13,23 +13,11 @@ History
 
 * Corrected ``check --deptree`` edge cases
 
-
-2.6.6 (2019-09-16)
-------------------
-
 * RFC: include distance with "{devcommit}"
 
 * Correctly mock absence of twine in tests
 
-
-2.6.5 (2019-08-01)
-------------------
-
 * Bug fix: Correctly initialize .links field in ``model.py``
-
-
-2.6.4 (2019-07-30)
-------------------
 
 * version: git: use --first-parent with git-describe
 
@@ -37,27 +25,11 @@ History
 
 * Allow to override git describe command via env var GIT_DESCRIBE_COMMAND (just in case)
 
-
-2.6.3 (2019-05-20)
-------------------
-
 * Fixed incorrect tag mismatch warning with ``post`` versioning strategy
-
-
-2.6.2 (2019-05-17)
-------------------
 
 * Publish .egg for python 3.4 and 3.8
 
-
-2.6.1 (2019-05-12)
-------------------
-
 * Ignore unparseable ``requirements.txt``
-
-
-2.6.0 (2019-05-09)
-------------------
 
 * Changed default dirty marker to ``.dirty`` (instead of ``+{commitid}``)
 
@@ -67,27 +39,11 @@ History
 
 * Run only if explicitly required via ``setup_requires=["setupmeta"]``
 
-
-2.5.3 (2019-04-29)
-------------------
-
 * Properly handle package name (possible dashes) vs top-level module name (no dashes)
-
-
-2.5.2 (2019-04-22)
-------------------
 
 * Verify that all remote tags are present locally before allowing version bump
 
-
-2.5.1 (2019-03-07)
-------------------
-
 * Show top level deps in ``check --deptree``'s "other" section
-
-
-2.5.0 (2019-03-05)
-------------------
 
 * Added ``check --deptree``, to show dependency tree of package
 
@@ -97,24 +53,12 @@ History
 
 * Report version as dirty if there staged (but uncommitted changes)
 
-
-2.4.2 (2019-02-12)
-------------------
-
 * Show pending changes (if there are any) in ``setup.py check`` command
 
 * Added a test exercising ``pip wheel`` to expose recent ``dirty`` determination issue
 
-
-2.4.1 (2019-02-12)
-------------------
-
 * Rolled back ``dirty`` checkout determination, repo with staged files is considered clean again,
   will have to find another fix for that edge case
-
-
-2.4.0 (2019-02-12)
-------------------
 
 * Push version bumps only when ``--push`` is explicitly specified
 
@@ -124,29 +68,13 @@ History
 
 * Always listify ``setup_requires``
 
-
-2.3.3 (2019-02-11)
-------------------
-
 * Better warnings message, should show proper origination
 
 * Corrected ``dirty`` determination: repo with staged files is considered dirty until effective commit
 
-
-2.3.2 (2019-01-28)
-------------------
-
 * Extract all relevant info from ``PKG-INFO`` (not just version)
 
-
-2.3.1 (2019-01-04)
-------------------
-
 * Auto-fill ``bugtrack_url``
-
-
-2.3.0 (2018-11-12)
-------------------
 
 * Added support for version determination from PKG-INFO
 
@@ -156,15 +84,7 @@ History
 
 * Added ``version --show-next``
 
-
-2.2.0 (2018-10-19)
-------------------
-
 * Added ``{devcommit}`` versioning strategy token
-
-
-2.1.2 (2018-09-19)
-------------------
 
 * Added ``--expand`` to command ``explain``
 
@@ -180,15 +100,7 @@ History
 
 * Warn if current version tag mention patch while versioning strategy doesn't
 
-
-2.0.1 (2018-08-31)
-------------------
-
 * Make sure local tags match remote before pushing a new bumped version tag
-
-
-2.0.0 (2018-08-10)
-------------------
 
 * Auto-fill dependencies accordingly to recommendations in https://packaging.python.org/discussions/install-requires-vs-requirements/
 
