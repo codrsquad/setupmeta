@@ -37,7 +37,7 @@ How does it work?
 
 you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
 
-You can modify the above command via environment variable ``GIT_DESCRIBE_COMMAND`` (give full git command if you do).
+You can modify the above command via environment variable ``SETUPMETA_GIT_DESCRIBE_COMMAND`` (give full git command if you do).
 
 ----
 
