@@ -1,49 +1,48 @@
 :: explain -c180 -r
 WARNING: patch version component should be .0 for versioning strategy...
 WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
-          author: (auto-adjust                       ) Zoran Simic
-              \_: (setup.py:2                        ) Zoran Simic zoran@simicweb.com
-    author_email: (auto-adjust                       ) zoran@simicweb.com
-    bugtrack_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/issues
-     classifiers: (explicit                          ) ["Programming Language :: Python"]
-              \_: (classifiers.txt                   ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating Sys...
-         contact: (My_cplx_nm__here/__init__.py:13   ) Zoran Simic
-   contact_email: (My_cplx_nm__here/__init__.py:14   ) me@myplace.com
-     description: (README:1                          ) My cplx-nm__here - Sample complex project
-              \_: (My_cplx_nm__here/__init__.py:2    ) Short description of complex project
-    download_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/archive/1.2.0.tar.gz
-              \_: (setup.py:4                        ) archive/{version}.tar.gz
-    entry_points: (explicit                          ) {console_scripts: a=b}
-              \_: (entry_points.ini                  ) [foo] [console_scripts] foo = My_cplx_nm__here.some_module:main_func bar = My_cplx_nm__here.some_module:bar
-  extras_require: (explicit                          ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
-install_requires: (pinned.txt                        ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
-        keywords: (explicit                          ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (setup.py:5                        ) ["setup", "docstring"]
-              \_: (setup.py:13                       ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (My_cplx_nm__here/__version__.py:6 ) ["complex", "version"]
-              \_: (My_cplx_nm__here/__init__.py:16   ) ["complex", "init"]
-              \_: (src/My_cplx_nm__here/__init__.py:6) ["src", "complex", "init"]
-         license: (explicit                          ) foo
-              \_: (auto-fill                         ) BSD
-long_description: (README                            ) My cplx-nm__here - Sample complex project README is a regular txt file HISTORY here.Done with README.
-      maintainer: (auto-adjust                       ) Zoran Simic
-              \_: (My_cplx_nm__here/__version__.py:4 ) Zoran Simic me@myplace.com
-              \_: (My_cplx_nm__here/__init__.py:10   ) Zoran Simic me2@myplace.com
-maintainer_email: (auto-adjust                       ) me@myplace.com
-            name: (explicit                          ) My cplx-nm__here
-     package_dir: (auto-fill                         ) {: src}
-        packages: (auto-fill                         ) ["My_cplx_nm__here", "My_cplx_nm__here.submodule"]
-  setup_requires: (explicit                          ) ["setupmeta"]
-   tests_require: (requirements-dev.txt              ) ["flake8", "pytest"]
-             url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here
-              \_: (setup.py:3                        ) https://github.com/zsimic
-         version: (git                               ) 1.2.0
-              \_: (setup.py:6                        ) 1.0a1
-              \_: (setup.py:12                       ) 1.0b1
-              \_: (My_cplx_nm__here/__version__.py:3 ) 1.2.3
-              \_: (My_cplx_nm__here/__init__.py:7    ) 0.0.1
-              \_: (src/My_cplx_nm__here/__init__.py:7) 1.3.0
-      versioning: (explicit                          ) distance;.hooks/bump
+          author: (auto-adjust                         ) Zoran Simic
+              \_: (setup.py:2                          ) Zoran Simic zoran@simicweb.com
+    author_email: (auto-adjust                         ) zoran@simicweb.com
+    bugtrack_url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here/issues
+     classifiers: (explicit                            ) ["Programming Language :: Python"]
+              \_: (classifiers.txt                     ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating S...
+         contact: (src/My_cplx_nm_here/__init__.py:14  ) Zoran Simic
+   contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@myplace.com
+     description: (README:1                            ) My cplx-nm_here - Sample complex project
+              \_: (src/My_cplx_nm_here/__init__.py:2   ) Short description of complex project
+    download_url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here/archive/1.2.0.tar.gz
+              \_: (setup.py:4                          ) archive/{version}.tar.gz
+    entry_points: (explicit                            ) {console_scripts: a=b}
+              \_: (entry_points.ini                    ) [foo] [console_scripts] foo = My_cplx_nm_here.some_module:main_func bar = My_cplx_nm_here.some_module:bar
+  extras_require: (explicit                            ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+install_requires: (pinned.txt                          ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
+        keywords: (explicit                            ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (setup.py:5                          ) ["setup", "docstring"]
+              \_: (setup.py:13                         ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (src/My_cplx_nm_here/__version__.py:6) ["complex", "version"]
+              \_: (src/My_cplx_nm_here/__init__.py:7   ) ["src", "complex", "init"]
+         license: (explicit                            ) foo
+              \_: (auto-fill                           ) BSD
+long_description: (README                              ) My cplx-nm_here - Sample complex project README is a regular txt file HISTORY here.Done with README.
+      maintainer: (auto-adjust                         ) Zoran Simic
+              \_: (src/My_cplx_nm_here/__version__.py:4) Zoran Simic me@myplace.com
+              \_: (src/My_cplx_nm_here/__init__.py:11  ) Zoran Simic me2@myplace.com
+maintainer_email: (auto-adjust                         ) me@myplace.com
+            name: (explicit                            ) My cplx-nm_here
+     package_dir: (auto-fill                           ) {: src}
+        packages: (auto-fill                           ) ["My_cplx_nm_here", "My_cplx_nm_here.submodule"]
+      py_modules: (auto-fill                           ) ["My_cplx_nm_here"]
+  setup_requires: (explicit                            ) ["setupmeta"]
+   tests_require: (requirements-dev.txt                ) ["flake8", "pytest"]
+             url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here
+              \_: (setup.py:3                          ) https://github.com/zsimic
+         version: (git                                 ) 1.2.0
+              \_: (setup.py:6                          ) 1.0a1
+              \_: (setup.py:12                         ) 1.0b1
+              \_: (src/My_cplx_nm_here/__version__.py:3) 1.2.3
+              \_: (src/My_cplx_nm_here/__init__.py:8   ) 1.3.0
+      versioning: (explicit                            ) distance;.hooks/bump
 
 :: explain -d
 WARNING: patch version component should be .0 for versioning strategy...
@@ -76,12 +75,12 @@ __version__ = "1.2.0"
 setup(
     author="Zoran Simic",                                             # from setup.py:2
     author_email="zoran@simicweb.com",
-    bugtrack_url="https://github.com/zsimic/My cplx-nm__here/issues",
+    bugtrack_url="https://github.com/zsimic/My cplx-nm_here/issues",
     classifiers=["Programming Language :: Python"],
-    contact="Zoran Simic",                                            # from My_cplx_nm__here/__init__.py:13
-    contact_email="me@myplace.com",                                   # from My_cplx_nm__here/__init__.py:14
-    description="My cplx-nm__here - Sample complex project",          # from README:1
-    download_url="https://github.com/zsimic/My cplx-nm__here/archive/%s.tar.gz" % __version__, # from setup.py:4
+    contact="Zoran Simic",                                            # from src/My_cplx_nm_here/__init__.py:14
+    contact_email="me@myplace.com",                                   # from src/My_cplx_nm_here/__init__.py:15
+    description="My cplx-nm_here - Sample complex project",           # from README:1
+    download_url="https://github.com/zsimic/My cplx-nm_here/archive/%s.tar.gz" % __version__, # from setup.py:4
     entry_points={"console_scripts": "a=b"},
     extras_require={
         "bar": ["docutils"],
@@ -107,13 +106,14 @@ setup(
     ],
     license="foo",
     long_description=open("README").read(),                           # from README
-    maintainer="Zoran Simic",                                         # from My_cplx_nm__here/__version__.py:4
+    maintainer="Zoran Simic",                                         # from src/My_cplx_nm_here/__version__.py:4
     maintainer_email="me@myplace.com",
-    name="My cplx-nm__here",
+    name="My cplx-nm_here",
     package_dir={"": "src"},
-    packages=["My_cplx_nm__here", "My_cplx_nm__here.submodule"],
+    packages=["My_cplx_nm_here", "My_cplx_nm_here.submodule"],
+    py_modules=["My_cplx_nm_here"],
     tests_require=["flake8", "pytest"],                               # from requirements-dev.txt
-    url="https://github.com/zsimic/My cplx-nm__here",                 # from setup.py:3
+    url="https://github.com/zsimic/My cplx-nm_here",                  # from setup.py:3
     version=__version__,                                              # from git
     # versioning="distance;.hooks/bump",
 )
@@ -145,15 +145,14 @@ WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 Not committing bump, use --commit to commit
 Would update setup.py:6 with: version: 1.3.0
 Would update setup.py:12 with: __version__ = "1.3.0"
-Would update My_cplx_nm__here/__version__.py:3 with: __version__ = "1.3.0"  # Ignored due to setuptools_scm ref
-Would update My_cplx_nm__here/__init__.py:7 with: __version__ = '1.3.0'  # Ignored due to setuptools_scm ref, single-quote sample
-src/My_cplx_nm__here/__init__.py:7 already has the right version
-Would run: git add My_cplx_nm__here/__init__.py My_cplx_nm__here/__version__.py setup.py
+Would update src/My_cplx_nm_here/__version__.py:3 with: __version__ = "1.3.0"  # Ignored due to setuptools_scm ref
+src/My_cplx_nm_here/__init__.py:8 already has the right version
+Would run: git add setup.py src/My_cplx_nm_here/__version__.py
 Would run: git commit -m "Version 1.3.0"
 Would run: git push origin
 Would run: git tag -a v1.3.0 -m "Version 1.3.0"
 Would run: git push --tags origin
-Would run: <target>/.hooks/bump "My cplx-nm__here" master 1.3.0
+Would run: <target>/.hooks/bump "My cplx-nm_here" master 1.3.0
 
 :: version --bump major
 WARNING: patch version component should be .0 for versioning strategy...
@@ -162,76 +161,74 @@ Not committing bump, use --commit to commit
 Not pushing bump, use --push to push
 Would update setup.py:6 with: version: 2.0.0
 Would update setup.py:12 with: __version__ = "2.0.0"
-Would update My_cplx_nm__here/__version__.py:3 with: __version__ = "2.0.0"  # Ignored due to setuptools_scm ref
-Would update My_cplx_nm__here/__init__.py:7 with: __version__ = '2.0.0'  # Ignored due to setuptools_scm ref, single-quote sample
-Would update src/My_cplx_nm__here/__init__.py:7 with: __version__ = "2.0.0"
-Would run: git add My_cplx_nm__here/__init__.py My_cplx_nm__here/__version__.py setup.py src/My_cplx_nm__here/__init__.py
+Would update src/My_cplx_nm_here/__version__.py:3 with: __version__ = "2.0.0"  # Ignored due to setuptools_scm ref
+Would update src/My_cplx_nm_here/__init__.py:8 with: __version__ = '2.0.0'
+Would run: git add setup.py src/My_cplx_nm_here/__init__.py src/My_cplx_nm_here/__version__.py
 Would run: git commit -m "Version 2.0.0"
 Would run: git tag -a v2.0.0 -m "Version 2.0.0"
-Would run: <target>/.hooks/bump "My cplx-nm__here" master 2.0.0
+Would run: <target>/.hooks/bump "My cplx-nm_here" master 2.0.0
 
 :: version --bump minor --commit
 WARNING: patch version component should be .0 for versioning strategy...
 WARNING: In setup.py:6 version should be 1.2.0, not 1.0a1
 Not pushing bump, use --push to push
-src/My_cplx_nm__here/__init__.py:7 already has the right version
-Running: git add My_cplx_nm__here/__init__.py My_cplx_nm__here/__version__.py setup.py
+src/My_cplx_nm_here/__init__.py:8 already has the right version
+Running: git add setup.py src/My_cplx_nm_here/__version__.py
 Running: git commit -m "Version 1.3.0"
 Running: git tag -a v1.3.0 -m "Version 1.3.0"
-Running: <target>/.hooks/bump "My cplx-nm__here" master 1.3.0
+Running: <target>/.hooks/bump "My cplx-nm_here" master 1.3.0
 
 :: version --bump major --commit --push
-Running: git add My_cplx_nm__here/__init__.py My_cplx_nm__here/__version__.py setup.py src/My_cplx_nm__here/__init__.py
+Running: git add setup.py src/My_cplx_nm_here/__init__.py src/My_cplx_nm_here/__version__.py
 Running: git commit -m "Version 2.0.0"
 Running: git push origin
 Running: git tag -a v2.0.0 -m "Version 2.0.0"
 Running: git push --tags origin
-Running: <target>/.hooks/bump "My cplx-nm__here" master 2.0.0
+Running: <target>/.hooks/bump "My cplx-nm_here" master 2.0.0
 
 :: version
 2.0.0
 
 :: explain -c180
-          author: (auto-adjust                       ) Zoran Simic
-              \_: (setup.py:2                        ) Zoran Simic zoran@simicweb.com
-    author_email: (auto-adjust                       ) zoran@simicweb.com
-    bugtrack_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/issues
-     classifiers: (explicit                          ) ["Programming Language :: Python"]
-              \_: (classifiers.txt                   ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating Sys...
-         contact: (My_cplx_nm__here/__init__.py:13   ) Zoran Simic
-   contact_email: (My_cplx_nm__here/__init__.py:14   ) me@myplace.com
-     description: (README:1                          ) My cplx-nm__here - Sample complex project
-              \_: (My_cplx_nm__here/__init__.py:2    ) Short description of complex project
-    download_url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here/archive/2.0.0.tar.gz
-              \_: (setup.py:4                        ) archive/{version}.tar.gz
-    entry_points: (explicit                          ) {console_scripts: a=b}
-              \_: (entry_points.ini                  ) [foo] [console_scripts] foo = My_cplx_nm__here.some_module:main_func bar = My_cplx_nm__here.some_module:bar
-  extras_require: (explicit                          ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
-install_requires: (pinned.txt                        ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
-        keywords: (explicit                          ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (setup.py:5                        ) ["setup", "docstring"]
-              \_: (setup.py:13                       ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (My_cplx_nm__here/__version__.py:6 ) ["complex", "version"]
-              \_: (My_cplx_nm__here/__init__.py:16   ) ["complex", "init"]
-              \_: (src/My_cplx_nm__here/__init__.py:6) ["src", "complex", "init"]
-         license: (explicit                          ) foo
-              \_: (auto-fill                         ) BSD
-long_description: (README                            ) My cplx-nm__here - Sample complex project README is a regular txt file HISTORY here.Done with README.
-      maintainer: (auto-adjust                       ) Zoran Simic
-              \_: (My_cplx_nm__here/__version__.py:4 ) Zoran Simic me@myplace.com
-              \_: (My_cplx_nm__here/__init__.py:10   ) Zoran Simic me2@myplace.com
-maintainer_email: (auto-adjust                       ) me@myplace.com
-            name: (explicit                          ) My cplx-nm__here
-     package_dir: (auto-fill                         ) {: src}
-        packages: (auto-fill                         ) ["My_cplx_nm__here", "My_cplx_nm__here.submodule"]
-  setup_requires: (explicit                          ) ["setupmeta"]
-   tests_require: (requirements-dev.txt              ) ["flake8", "pytest"]
-             url: (auto-fill                         ) https://github.com/zsimic/My cplx-nm__here
-              \_: (setup.py:3                        ) https://github.com/zsimic
-         version: (git                               ) 2.0.0
-              \_: (setup.py:6                        ) 2.0.0
-              \_: (setup.py:12                       ) 2.0.0
-              \_: (My_cplx_nm__here/__version__.py:3 ) 2.0.0
-              \_: (My_cplx_nm__here/__init__.py:7    ) 2.0.0
-              \_: (src/My_cplx_nm__here/__init__.py:7) 2.0.0
-      versioning: (explicit                          ) distance;.hooks/bump
+          author: (auto-adjust                         ) Zoran Simic
+              \_: (setup.py:2                          ) Zoran Simic zoran@simicweb.com
+    author_email: (auto-adjust                         ) zoran@simicweb.com
+    bugtrack_url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here/issues
+     classifiers: (explicit                            ) ["Programming Language :: Python"]
+              \_: (classifiers.txt                     ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating S...
+         contact: (src/My_cplx_nm_here/__init__.py:14  ) Zoran Simic
+   contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@myplace.com
+     description: (README:1                            ) My cplx-nm_here - Sample complex project
+              \_: (src/My_cplx_nm_here/__init__.py:2   ) Short description of complex project
+    download_url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here/archive/2.0.0.tar.gz
+              \_: (setup.py:4                          ) archive/{version}.tar.gz
+    entry_points: (explicit                            ) {console_scripts: a=b}
+              \_: (entry_points.ini                    ) [foo] [console_scripts] foo = My_cplx_nm_here.some_module:main_func bar = My_cplx_nm_here.some_module:bar
+  extras_require: (explicit                            ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+install_requires: (pinned.txt                          ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
+        keywords: (explicit                            ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (setup.py:5                          ) ["setup", "docstring"]
+              \_: (setup.py:13                         ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+              \_: (src/My_cplx_nm_here/__version__.py:6) ["complex", "version"]
+              \_: (src/My_cplx_nm_here/__init__.py:7   ) ["src", "complex", "init"]
+         license: (explicit                            ) foo
+              \_: (auto-fill                           ) BSD
+long_description: (README                              ) My cplx-nm_here - Sample complex project README is a regular txt file HISTORY here.Done with README.
+      maintainer: (auto-adjust                         ) Zoran Simic
+              \_: (src/My_cplx_nm_here/__version__.py:4) Zoran Simic me@myplace.com
+              \_: (src/My_cplx_nm_here/__init__.py:11  ) Zoran Simic me2@myplace.com
+maintainer_email: (auto-adjust                         ) me@myplace.com
+            name: (explicit                            ) My cplx-nm_here
+     package_dir: (auto-fill                           ) {: src}
+        packages: (auto-fill                           ) ["My_cplx_nm_here", "My_cplx_nm_here.submodule"]
+      py_modules: (auto-fill                           ) ["My_cplx_nm_here"]
+  setup_requires: (explicit                            ) ["setupmeta"]
+   tests_require: (requirements-dev.txt                ) ["flake8", "pytest"]
+             url: (auto-fill                           ) https://github.com/zsimic/My cplx-nm_here
+              \_: (setup.py:3                          ) https://github.com/zsimic
+         version: (git                                 ) 2.0.0
+              \_: (setup.py:6                          ) 2.0.0
+              \_: (setup.py:12                         ) 2.0.0
+              \_: (src/My_cplx_nm_here/__version__.py:3) 2.0.0
+              \_: (src/My_cplx_nm_here/__init__.py:8   ) 2.0.0
+      versioning: (explicit                            ) distance;.hooks/bump

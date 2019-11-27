@@ -2,8 +2,10 @@
 History
 =======
 
-2.6.12 (2019-11-15)
+2.6.13 (2019-11-27)
 -------------------
+
+* Support project layout similar to pytest's
 
 * Warn when ``git describe`` exits with code != 0
 
