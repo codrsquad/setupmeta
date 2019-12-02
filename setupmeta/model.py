@@ -57,25 +57,6 @@ def is_setup_py_path(path):
         return os.path.basename(path).startswith("setup.py")
 
 
-def find_packages(name, subfolder=None):
-    """ Find packages for 'name' (if any), 'subfolder' is like "src" """
-    result = set()
-    if subfolder:
-        path = project_path(subfolder, name)
-        trace("looking for packages in '%s/%s'" % (subfolder, name))
-    else:
-        path = project_path(name)
-        trace("looking for packages in '%s'" % name)
-    init_py = os.path.join(path, "__init__.py")
-    if os.path.isfile(init_py):
-        result.add(name)
-        trace("found package '%s'" % name)
-        for subpackage in setuptools.find_packages(where=path):
-            result.add("%s.%s" % (name, subpackage))
-            trace("found subpackage '%s.%s'" % (name, subpackage))
-    return result
-
-
 def content_type_from_filename(filename):
     """Determined content type from 'filename'"""
     if filename:
@@ -649,17 +630,24 @@ class SetupMeta(Settings):
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
             name = self.pythonified_name
-            direct_packages = find_packages(name)
-            src_packages = find_packages(name, subfolder="src")
-            packages = sorted(direct_packages | src_packages)
+            src_folder = project_path("src")
+            if os.path.isdir(src_folder):
+                packages = setuptools.find_packages(where=src_folder)
+                if os.path.isfile(project_path("src", "%s.py" % name)):
+                    py_modules = [name]
 
-            if src_packages:
-                self.auto_fill("package_dir", {"": "src"})
+                if packages or py_modules:
+                    self.auto_fill("package_dir", {"": "src"})
+
+            else:
+                packages = setuptools.find_packages(where=project_path(), include=(name, ))
+                if os.path.isfile(project_path("%s.py" % name)):
+                    py_modules = [name]
+
             if packages:
-                self.auto_fill("packages", packages)
+                self.auto_fill("packages", sorted(packages))
 
-            if os.path.isfile(project_path("%s.py" % name)):
-                py_modules = [name]
+            if py_modules:
                 self.auto_fill("py_modules", py_modules)
 
         # Scan the usual/conventional places
