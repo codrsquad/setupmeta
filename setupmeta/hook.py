@@ -33,7 +33,8 @@ def register(dist, name, value):
     But we do need distutils to import this module
     """
     if name == "setup_requires":
-        if value == "setupmeta" or "setupmeta" in value:
+        value = value if isinstance(value, list) else [value]
+        if any(item.startswith('setupmeta') for item in value):
             # Replace Distribution.parse_command_line so we can inject our parsing
             distutils.dist.Distribution.parse_command_line = distutils_hook
 
