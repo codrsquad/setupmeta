@@ -14,7 +14,7 @@
              long_description: (README.rst           ) direct: A package implemented by one direct (not under src/) module folder ===============================================...
 long_description_content_type: (README.rst           ) text/x-rst
                          name: (setup.py:4           ) direct
-                     packages: (auto-fill            ) ["direct"]
+                     packages: (auto-fill            ) ["direct", "direct.some_submodule"]
                setup_requires: (explicit             ) ["setupmeta"]
                        title*: (setup.py:4           ) direct
                           url: (direct/__init__.py:9 ) https://github.com/zsimic/simple
@@ -48,7 +48,7 @@ direct = direct:main""",                                            # from entry
     long_description=open("README.rst").read(),                     # from README.rst
     long_description_content_type="text/x-rst",                     # from README.rst
     name="direct",                                                  # from setup.py:4
-    packages=["direct"],
+    packages=["direct", "direct.some_submodule"],
     url="https://github.com/zsimic/simple",                         # from direct/__init__.py:9
     version=__version__,                                            # from direct/__init__.py:8
 )

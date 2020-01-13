@@ -640,7 +640,13 @@ class SetupMeta(Settings):
                     self.auto_fill("package_dir", {"": "src"})
 
             else:
-                packages = setuptools.find_packages(where=project_path(), include=(name, ))
+                src_folder = project_path()
+                packages = setuptools.find_packages(where=src_folder)
+                if packages:
+                    # Take only found packages that start with the expected name
+                    # For any other use-case, user must explicitly list their packages
+                    packages = [p for p in packages if p.startswith(name)]
+
                 if os.path.isfile(project_path("%s.py" % name)):
                     py_modules = [name]
 

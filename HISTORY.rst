@@ -2,7 +2,15 @@
 History
 =======
 
-2.6.13 (2019-11-27)
+2.6.14 (2020-01-13)
+-------------------
+
+* Corrected ``packages`` auto-fill for projects using a direct layout
+
+* Fix version pinning when ``setup_requires`` is a list
+
+
+2.6.13 (2020-01-09)
 -------------------
 
 * Support project layout similar to pytest's
