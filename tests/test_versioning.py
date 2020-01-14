@@ -140,6 +140,16 @@ def test_versioning_variants(*_):
         quick_check("distance", "0.1.5.dirty")
         quick_check("post", "0.1.2.post5.dirty")
         quick_check("dev", "0.1.3.dev5.dirty")
+
+        quick_check("dev", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("devcommit", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("post", "0.1.9rc1.dirty", dirty=True, describe="v0.1.9-rc.1-0-gebe2789")
+
+        quick_check("dev", "0.1.9rc1.dev1", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("devcommit", "0.1.9rc1.dev1-gebe2789", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("devcommit", "0.1.9rc1.dev1-gebe2789-dirty", dirty=True, describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("post", "0.1.9rc1.post1", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
+
         quick_check("devcommit", "0.1.3.dev5-g123", dirty=False)
         quick_check("devcommit", "0.1.3.dev5-g123-dirty")
         quick_check("tag dev", "0.1.3.dev5.dirty")
@@ -147,8 +157,12 @@ def test_versioning_variants(*_):
         quick_check("build-id", "0.1.5+h543.g123.dirty")
         quick_check("dev+build-id", "0.1.3.dev5+h543.g123.dirty")
 
+        quick_check("post", "5.0.0a1.post1", dirty=False, describe="v5.0-a.1-1-gebe2789")
+        quick_check("post", "5.0.0a1.rc2.post7", dirty=False, describe="v5.a1rc2-7-gebe2789")
+        quick_check("dev", "0.1.0a.dev8", dirty=False, describe="v0.1.a-8-gebe2789")
+
         # Patch is not bumpable
-        quick_check("dev", "0.1.rc.dev5.dirty", describe="v0.1.rc-5-g123")
+        quick_check("dev", "0.1.0rc.dev5.dirty", describe="v0.1.rc-5-g123")
 
         # On tag
         quick_check("dev", "0.1.2", describe="v0.1.2-0-g123", dirty=False)

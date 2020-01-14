@@ -81,11 +81,7 @@ class VersionBit:
         :return str: Auto-bumped if possible
         """
         value = self.rendered_attr(version)
-        try:
-            return str(int(value) + 1)
-
-        except ValueError:
-            return value
+        return setupmeta.to_int(value) + 1
 
     def rendered_attr(self, version):
         """
@@ -226,9 +222,9 @@ class Strategy:
         :return str: Rendered version
         """
         bits = self.main_bits
-        if isinstance(bits, list) and len(bits) > 1 and (version.distance > 0 or version.dirty):
+        if isinstance(bits, list) and len(bits) > 1 and not version.additional and (version.distance > 0 or version.dirty):
             # Support for '.dev' versioning scheme: apply it only for:
-            # - regular versioning (no special hook)
+            # - regular versioning (no special hook, no additional version bits given)
             # - only if it's "simple enough", ie: last bit is "dev", and the bit before that is bumpable
             bits = list(bits)
             last = bits[-1]
@@ -269,7 +265,7 @@ class Strategy:
             msg += " acceptable values: %s" % ", ".join(self.bumpable)
             setupmeta.abort(msg)
 
-        major, minor, rev = current_version.bump_triplet()
+        major, minor, rev = current_version.major, current_version.minor, current_version.patch
         if what == "major":
             major, minor, rev = (major + 1, 0, 0)
         elif what == "minor":

@@ -1,11 +1,11 @@
 import os
 import re
-from distutils.version import LooseVersion
 
 import setupmeta
 
 
 RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
+RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 
 class Scm:
@@ -236,7 +236,6 @@ class Version:
     """
 
     text = None         # type: str # Full text of version as received
-    version = None      # type: LooseVersion # Distutils LooseVersion object representing the 'main' part
 
     major = 0           # type: int # Major part of version
     minor = 0           # type: int # Minor part of version
@@ -244,6 +243,7 @@ class Version:
     distance = 0        # type: int # Number of commits since last version tag
     commitid = None     # type: str # Commit id
     dirty = ""          # type: str # Dirty marker
+    additional = ""     # type: str # Additional version markers (if any)
 
     def __init__(self, main=None, distance=0, commitid=None, dirty=False, text=None):
         """
@@ -258,24 +258,37 @@ class Version:
         self.dirty = ".dirty" if dirty else ""
         main = (main or "0.0.0").strip()
         self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)
-        self.version = LooseVersion(main)
-        triplet = self.bump_triplet()
-        self.major = triplet[0]
-        self.minor = triplet[1]
-        self.patch = triplet[2]
+
+        components = [setupmeta.to_int(x, default=x) for x in RE_VERSION_COMPONENT.split(main) if x and x.isalnum()]
+        main_triplet = []
+        additional = []
+        qualifier = ""
+        for component in components:
+            if not isinstance(component, int):
+                qualifier = "%s%s" % (qualifier, component)
+                continue
+
+            if not additional and not qualifier and len(main_triplet) < 3:
+                main_triplet.append(component)
+                continue
+
+            if qualifier is not None:
+                component = "%s%s" % (qualifier, component)
+                qualifier = ""
+
+            additional.append(component)
+
+        while len(main_triplet) < 3:
+            main_triplet.append(0)
+
+        if qualifier:
+            additional.append(qualifier)
+
+        self.major, self.minor, self.patch = main_triplet
+        self.additional = ".".join(additional)
 
     def __repr__(self):
         return self.text
-
-    def bump_triplet(self):
-        """
-        :return int, int, int: Major, minor, patch
-        """
-        version = list(self.version.version)
-        major = version and version.pop(0) or 0
-        minor = version and version.pop(0) or 0
-        patch = version and version.pop(0) or 0
-        return major, minor, patch
 
     @property
     def post(self):
@@ -285,8 +298,9 @@ class Version:
         :return str: '.post{distance}' for distance > 0, empty string otherwise
         """
         if self.distance:
-            return ".post%s" % self.distance
-        return ""
+            return "%s.post%s" % (self.additional, self.distance)
+
+        return self.additional
 
     @property
     def dev(self):
@@ -296,8 +310,9 @@ class Version:
         :return str: '.dev{distance}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return ".dev%s" % self.distance
-        return ""
+            return "%s.dev%s" % (self.additional, self.distance)
+
+        return self.additional
 
     @property
     def devcommit(self):
@@ -307,5 +322,6 @@ class Version:
         :return str: '.dev{distance}-{commitid}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return ".dev%d-%s" % (self.distance, self.commitid)
-        return ""
+            return "%s.dev%d-%s" % (self.additional, self.distance, self.commitid)
+
+        return self.additional
