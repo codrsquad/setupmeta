@@ -2,6 +2,14 @@
 History
 =======
 
+2.6.17 (2020-01-24)
+-------------------
+
+* Adapted ``get_pip()`` call to pip 20.0 API change
+
+* Removed support for python 3.4 (not accepted by pypi anymore)
+
+
 2.6.15 (2020-01-14)
 -------------------
 
