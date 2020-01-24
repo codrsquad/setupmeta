@@ -102,7 +102,20 @@ def test_no_pip():
         with patch.dict("sys.modules", {"pip.req": MagicMock(), "pip.download": MagicMock()}):
             assert len(get_pip()) == 2
 
+        # Simulate 10.0 < pip < 20.0
+        with patch.dict(
+            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": MagicMock(), "pip._internal.network.session": None}
+        ):
+            assert len(get_pip()) == 2
+
+        # Simulate pip > 20.0
+        with patch.dict(
+            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": None, "pip._internal.network.session": MagicMock()}
+        ):
+            assert len(get_pip()) == 2
+
         # Simulate pip not installed at all
         with patch.dict("sys.modules", {"pip": None, "pip._internal.req": None, "pip.req": None}):
             assert get_pip() == (None, None)
+
         assert "Can't find PipSession" in logged
