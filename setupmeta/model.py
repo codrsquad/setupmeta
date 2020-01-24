@@ -311,6 +311,16 @@ def get_pip():
         return parse_requirements, PipSession
 
     except ImportError:
+        pass
+
+    try:
+        # pip >= 19.3
+        from pip._internal.req import parse_requirements
+        from pip._internal.network.session import PipSession
+
+        return parse_requirements, PipSession
+
+    except ImportError:
         setupmeta.warn("Can't find PipSession, won't auto-fill requirements")
         return None, None
 
