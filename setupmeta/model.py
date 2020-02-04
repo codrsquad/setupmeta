@@ -294,9 +294,9 @@ class SimpleModule(Settings):
 def get_pip():
     """We can't assume pip is installed"""
     try:
-        # pip < 10.0
-        from pip.req import parse_requirements
-        from pip.download import PipSession
+        # pip >= 19.3
+        from pip._internal.req import parse_requirements
+        from pip._internal.network.session import PipSession
 
         return parse_requirements, PipSession
 
@@ -314,9 +314,9 @@ def get_pip():
         pass
 
     try:
-        # pip >= 19.3
-        from pip._internal.req import parse_requirements
-        from pip._internal.network.session import PipSession
+        # pip < 10.0
+        from pip.req import parse_requirements
+        from pip.download import PipSession
 
         return parse_requirements, PipSession
 

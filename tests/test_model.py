@@ -98,8 +98,10 @@ def test_meta():
 
 def test_no_pip():
     with conftest.capture_output() as logged:
-        # Simulate pip < 10.0
-        with patch.dict("sys.modules", {"pip.req": MagicMock(), "pip.download": MagicMock()}):
+        # Simulate pip > 20.0
+        with patch.dict(
+            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": None, "pip._internal.network.session": MagicMock()}
+        ):
             assert len(get_pip()) == 2
 
         # Simulate 10.0 < pip < 20.0
@@ -108,10 +110,8 @@ def test_no_pip():
         ):
             assert len(get_pip()) == 2
 
-        # Simulate pip > 20.0
-        with patch.dict(
-            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": None, "pip._internal.network.session": MagicMock()}
-        ):
+        # Simulate pip < 10.0
+        with patch.dict("sys.modules", {"pip._internal": None, "pip.req": MagicMock(), "pip.download": MagicMock()}):
             assert len(get_pip()) == 2
 
         # Simulate pip not installed at all
