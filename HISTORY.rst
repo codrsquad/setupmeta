@@ -2,6 +2,12 @@
 History
 =======
 
+2.6.20 (2020-03-03)
+-------------------
+
+* Corrected warning when hardcoded version found does not match git tag
+
+
 2.6.19 (2020-03-02)
 -------------------
 

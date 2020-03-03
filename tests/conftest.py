@@ -85,13 +85,16 @@ class capture_output:
         result = ""
         if self.out_buffer:
             result += decode(self.out_buffer.getvalue())
+
         if self.err_buffer:
             result += decode(self.err_buffer.getvalue())
+
         return result.rstrip()
 
     def __enter__(self):
         if self.old_out is not None:
             sys.stdout = self.out_buffer = StringIO()
+
         if self.old_err is not None:
             sys.stderr = self.err_buffer = StringIO()
 
@@ -108,8 +111,10 @@ class capture_output:
     def __exit__(self, *args):
         if self.old_out is not None:
             sys.stdout = self.old_out
+
         if self.old_err is not None:
             sys.stderr = self.old_err
+
         self.out_buffer = None
         self.err_buffer = None
         warnings.warn = self.old_warnings
@@ -122,21 +127,43 @@ class capture_output:
         return "%s %s" % (self, other)
 
 
+def should_ignore_output(line):
+    if not line:
+        return True
+
+    if line.startswith("pydev debugger:"):
+        return True
+
+    if "Module setupmeta was already imported" in line:
+        # Edge case when pinning setupmeta itself to a certain version
+        return True
+
+    if "pkg_resources.working_set.add" in line:
+        return True
+
+
 def cleaned_output(text, folder=None):
     text = decode(text)
     if not text:
         return text
+
     result = []
+    cwd = os.getcwd()
     for line in text.splitlines():
         line = line.rstrip()
+        if should_ignore_output(line):
+            continue
+
         if setupmeta.WINDOWS:
             if " \\_: " not in line:
                 line = line.replace("\\", "/")
-        if line and not line.startswith("pydev debugger:"):
-            if folder:
-                line = line.replace(folder, "<target>")
-            line = line.replace(os.getcwd(), "<target>")
-            result.append(line)
+
+        if folder:
+            line = line.replace(folder, "<target>")
+
+        line = line.replace(cwd, "<target>")
+        result.append(line)
+
     return "\n".join(result).rstrip()
 
 
@@ -176,6 +203,7 @@ def run_internal_setup_py(folder, *args):
     finally:
         if fp:
             fp.close()
+
         setupmeta.MetaDefs.project_dir = old_pd
         sys.argv = old_argv
         os.chdir(old_cd)
@@ -202,19 +230,27 @@ class MockGit(Git):
     def get_output(self, cmd, *args, **kwargs):
         if cmd.startswith("diff"):
             return 1 if self.dirty else 0
+
         if cmd == "describe":
             return self.describe
+
         if cmd == "rev-parse":
             if "--abbrev-ref" in args:
                 return self.branch
+
             return self.commitid
+
         if cmd == "rev-list":
             return self.commitid.split()
+
         if cmd == "config":
             return args[1]
+
         if cmd == "show-ref":
             return self._local_tags
+
         if cmd == "ls-remote":
             return self._remote_tags
+
         assert kwargs.get("dryrun") is True
         return Git.get_output(self, cmd, *args, **kwargs)

@@ -13,11 +13,14 @@ RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?
 def find_scm_root(root, name):
     if not root:
         return None
+
     if os.path.isdir(os.path.join(root, name)):
         return root
+
     parent = os.path.dirname(root)
     if parent == root:
         return None
+
     return find_scm_root(parent, name)
 
 
@@ -28,12 +31,15 @@ def project_scm(root):
     """
     if os.environ.get(setupmeta.SCM_DESCRIBE):
         return Snapshot(root)
+
     scm_root = find_scm_root(os.path.abspath(root), ".git")
     if scm_root:
         return Git(scm_root)
+
     version_file = os.path.join(root, setupmeta.VERSION_FILE)
     if os.path.isfile(version_file):
         return Snapshot(root)
+
     setupmeta.trace("could not determine SCM for '%s'" % root)
     return None
 
@@ -48,10 +54,13 @@ class VersionBit:
         self.problem = None
         if self.constant:
             self.renderer = self.rendered_constant
+
         elif "$" in self.text:
             self.renderer = self.rendered_env_var
+
         elif not hasattr(Version, self.text):
             self.problem = "invalid versioning part '%s'" % self.text
+
         else:
             self.renderer = self.rendered_attr
 
@@ -59,12 +68,16 @@ class VersionBit:
         text = self.text
         if self.alternative:
             text = "%s:%s" % (text, self.alternative)
+
         if self.constant:
             text = "'%s'" % text
+
         else:
             text = "{%s}" % text
+
         if self.problem:
             text = " [%s]" % self.problem
+
         return text
 
     def auto_bumped(self):
@@ -108,23 +121,31 @@ class VersionBit:
         if env_var.startswith("*") and env_var.endswith("*"):
             env_var = env_var[1:-1]
             candidates = [n for n in os.environ if env_var in n]
+
         elif env_var.startswith("*"):
             env_var = env_var[1:]
             candidates = [n for n in os.environ if n.endswith(env_var)]
+
         elif env_var.endswith("*"):
             env_var = env_var[:-1]
             candidates = [n for n in os.environ if n.startswith(env_var)]
+
         else:
             candidates = [env_var]
+
         value = None
         if candidates:
             value = os.environ.get(sorted(candidates)[0])
+
         if value is None:
             value = self.alternative
+
         if value is None:
             if prefix:
                 return ""
+
             return None
+
         return "%s%s" % (prefix, value)
 
     def rendered(self, version):
@@ -134,6 +155,7 @@ class VersionBit:
         """
         if not self.renderer:
             return "invalid"
+
         value = self.renderer(version)
         return str(value)
 
@@ -144,25 +166,31 @@ class Strategy:
         self.extra = extra
         if kwargs:
             setupmeta.warn("Ignored fields for 'versioning': %s" % kwargs)
+
         self.main_bits = self.bits(main)
         if isinstance(self.main_bits, list):
             self.bumpable = [b.text for b in self.main_bits if b.text in BUMPABLE]
+
         else:
             self.bumpable = []
+
         self.extra_bits = self.bits(extra)
         self.separator = separator
         self.branches = branches
         self.hook = hook
         if self.branches and hasattr(self.branches, "lstrip"):
             self.branches = self.branches.lstrip("(").rstrip(")")
+
         self.branches = setupmeta.listify(self.branches, separator=",")
         self.text = self.formatted(self.branches, self.main, self.separator, self.extra)
         if not self.main_bits:
             self.problem = "No versioning format specified"
             return
+
         all_bits = self.main_bits if isinstance(self.main_bits, list) else []
         if isinstance(self.extra_bits, list):
             all_bits = all_bits + self.extra_bits
+
         problems = [bit.problem for bit in all_bits if bit.problem]
         self.problem = "\n".join(problems) if problems else None
 
@@ -170,38 +198,50 @@ class Strategy:
     def formatted(branches, main, separator, extra):
         if isinstance(branches, list):
             branches = ",".join(branches)
+
         result = ""
         if main:
             result += setupmeta.stringify(main)
+
         if result or extra:
             result += setupmeta.stringify(separator)
+
         if extra:
             result += setupmeta.stringify(extra)
+
         if branches:
             result = "branch(%s):%s" % (branches, result)
+
         return result
 
     def bits(self, fmt):
         if callable(fmt):
             return fmt
+
         elif fmt and fmt[0] == "!":
             fmt = fmt[1:]
+
         result = []
         if not fmt:
             return result
+
         before, _, after = fmt.partition("{")
         if before:
             result.append(VersionBit(self, before, constant=True))
+
         if not after:
             return result
+
         part, _, rest = after.partition("}")
         if ":" in part:
             left, _, right = part.partition(":")
             left = VersionBit(self, left, alternative=right)
             result.append(left)
+
         else:
             part = VersionBit(self, part)
             result.append(part)
+
         result.extend(self.bits(rest))
         return result
 
@@ -211,14 +251,17 @@ class Strategy:
     def needs_extra(self, version):
         if not self.extra:
             return False
+
         if not isinstance(self.extra_bits, list):
             return True
+
         return self.extra[0] == "!" or version.dirty
 
-    def rendered(self, version, extra=True):
+    def rendered(self, version, extra=True, auto_bumped=True):
         """
         :param Version version: Version to render
         :param bool extra: Render extra part?
+        :param bool auto_bumped: Perform .dev strategy auto-bump?
         :return str: Rendered version
         """
         bits = self.main_bits
@@ -229,25 +272,30 @@ class Strategy:
             bits = list(bits)
             last = bits[-1]
             prelast = bits[-2]
-            if last and (last.text == "dev" or last.text == "devcommit") and prelast and prelast.text in BUMPABLE:
+            if auto_bumped and last and (last.text == "dev" or last.text == "devcommit") and prelast and prelast.text in BUMPABLE:
                 bits[-2] = prelast.auto_bumped()
+
         result = self.rendered_bits(version, bits) or []
         if extra and self.needs_extra(version):
             extra = self.rendered_bits(version, self.extra_bits)
             if extra:
                 if self.separator != " ":
                     result.append(self.separator)
+
                 result.extend(extra)
+
         return "".join(result)
 
     @staticmethod
     def rendered_bits(version, bits):
         if isinstance(bits, list):
             return [bit.rendered(version) for bit in bits]
+
         if callable(bits):
             value = bits(version)
             if value:
                 return [value]
+
         return None
 
     def bumped(self, what, current_version):
@@ -268,8 +316,10 @@ class Strategy:
         major, minor, rev = current_version.major, current_version.minor, current_version.patch
         if what == "major":
             major, minor, rev = (major + 1, 0, 0)
+
         elif what == "minor":
             major, minor, rev = (major, minor + 1, 0)
+
         elif what == "patch":
             major, minor, rev = (major, minor, rev + 1)
 
@@ -302,6 +352,7 @@ class Strategy:
                 if main == "build-id":
                     data["separator"] = "+"
                     data["extra"] = "!h{$*BUILD_ID:local}.{commitid}{dirty}"
+
                 main = "{major}.{minor}.{distance}"
 
             elif main == "dev":
@@ -358,10 +409,13 @@ class Versioning:
         self.problem = None
         if not self.strategy:
             self.problem = "setupmeta versioning not enabled"
+
         elif self.strategy.problem:
             self.problem = self.strategy.problem
+
         elif not self.scm:
             self.problem = "project not under a supported SCM"
+
         setupmeta.trace("versioning given: '%s', strategy: [%s], problem: [%s]" % (given, self.strategy, self.problem))
 
     def auto_fill_version(self):
@@ -388,8 +442,10 @@ class Versioning:
         if self.problem:
             if not cv:
                 self.meta.auto_fill("version", "0.0.0", "missing")
+
             if self.strategy:
                 setupmeta.warn(self.problem)
+
             setupmeta.trace("not auto-filling version due to problem: [%s]" % self.problem)
             return
 
@@ -406,11 +462,14 @@ class Versioning:
 
         rendered = self.strategy.rendered(gv)
         if cv and gv:
-            cvv = Version(main=cv, distance=gv.distance, commitid=gv.commitid, dirty=gv.dirty)
-            if cvv.major != gv.major or cvv.minor != gv.minor or cvv.patch != gv.patch:
+            cvc = setupmeta.version_components(cv)
+            cvv = Version(main="%s.%s.%s" % cvc[:3], distance=cvc[4], commitid=gv.commitid, dirty=cvc[5])
+            actual = self.strategy.rendered(cvv, auto_bumped=False)
+            cleaned = self.strategy.rendered(gv.non_dirty)
+            if actual not in (cleaned, rendered):
                 source = vdef.sources[0].source
-                expected = rendered[: len(cv)]
-                msg = "In %s version should be %s, not %s" % (source, expected, cv)
+                expected = self.strategy.rendered(gv, extra=False)
+                msg = "In %s version should be '%s', not '%s'" % (source, expected, cv)
                 setupmeta.warn(msg)
 
         self.meta.auto_fill("version", rendered, self.scm.name, override=True)
@@ -418,6 +477,7 @@ class Versioning:
     def get_bump(self, what):
         if self.problem:
             setupmeta.abort(self.problem)
+
         gv = self.scm.get_version()
         return self.strategy.bumped(what, gv)
 
@@ -431,8 +491,10 @@ class Versioning:
             message = "Can't bump: not all remote tags are present locally!\n"
             if local_only:
                 message += "Tags only seen locally: %s\n" % ", ".join(local_only)
+
             if remote_only:
                 message += "Tags only on remote: %s\n" % ", ".join(remote_only)
+
             setupmeta.abort(message)
 
     def bump(self, what, commit=False, push=False, simulate_branch=None):
@@ -447,6 +509,7 @@ class Versioning:
         if gv and gv.dirty:
             if commit:
                 setupmeta.abort("You have pending changes, can't bump")
+
             print("Note: you have pending changes, commit (or stash) them before using --commit")
 
         self.verify_remote_tags()
@@ -494,6 +557,7 @@ class Versioning:
                         if revised and revised != line:
                             changed += 1
                             line = revised
+
                     lines.append(line)
 
             if not changed:
@@ -504,6 +568,7 @@ class Versioning:
                 if commit:
                     with io.open(full_path, "wt") as fh:
                         fh.writelines(lines)
+
                 else:
                     print("Would update %s with: %s" % (vdef.source, revised.strip()))
 
@@ -521,13 +586,17 @@ def updated_line(line, next_version, vdef):
     key, _, value = line.partition(sep)
     if value and value[0] == " ":
         space = " "
+
     value = value.strip()
     if value and value[0] == "'":
         quote = "'"
+
     elif value and value[0] == '"':
         quote = '"'
+
     comment = ""
     if "#" in value:
         i = value.index("#")
         comment = "  #%s" % value[i + 1:]
+
     return "%s%s%s%s%s%s%s\n" % (key, sep, space, quote, next_version, quote, comment)

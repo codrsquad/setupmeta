@@ -24,6 +24,7 @@ VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are 
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
 TESTING = False  # Set to True while running tests
 RE_SPACES = re.compile(r"\s+", re.MULTILINE)
+RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 PLATFORM = platform.system().lower()
 WINDOWS = "windows" in PLATFORM
@@ -92,6 +93,53 @@ def is_executable(path):
     if WINDOWS:  # pragma: no cover
         return path and os.path.isfile(path) and path.endswith(".exe")
     return path and os.path.isfile(path) and os.access(path, os.X_OK)
+
+
+def main_version_part(text):
+    """
+    :param str text: Text to parse (example: 1.0.2.dev5)
+    :return str: Main version part (example: 1.0.2)
+    """
+    return "%s.%s.%s" % version_components(text)[:3]
+
+
+def version_components(text):
+    """
+    :param str text: Text to parse
+    :return (int, int, int, str): Main triplet + additional version info found
+    """
+    components = [to_int(x, default=x) for x in RE_VERSION_COMPONENT.split(text) if x and x.isalnum()]
+    main_triplet = []
+    additional = []
+    qualifier = ""
+    distance = None
+    for component in components:
+        if not isinstance(component, int):
+            qualifier = "%s%s" % (qualifier, component)
+            continue
+
+        if not additional and not qualifier and len(main_triplet) < 3:
+            main_triplet.append(component)
+            continue
+
+        if qualifier is not None:
+            if distance is None and qualifier in ("dev", "post"):
+                distance = component
+
+            component = "%s%s" % (qualifier, component)
+            qualifier = ""
+
+        additional.append(component)
+
+    while len(main_triplet) < 3:
+        main_triplet.append(0)
+
+    if qualifier:
+        additional.append(qualifier)
+
+    dirty = "dirty" in additional
+
+    return main_triplet[0], main_triplet[1], main_triplet[2], ".".join(additional), distance, dirty
 
 
 def which(program):

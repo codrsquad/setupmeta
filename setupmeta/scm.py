@@ -5,7 +5,6 @@ import setupmeta
 
 
 RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
-RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 
 class Scm:
@@ -258,37 +257,16 @@ class Version:
         self.dirty = ".dirty" if dirty else ""
         main = (main or "0.0.0").strip()
         self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)
-
-        components = [setupmeta.to_int(x, default=x) for x in RE_VERSION_COMPONENT.split(main) if x and x.isalnum()]
-        main_triplet = []
-        additional = []
-        qualifier = ""
-        for component in components:
-            if not isinstance(component, int):
-                qualifier = "%s%s" % (qualifier, component)
-                continue
-
-            if not additional and not qualifier and len(main_triplet) < 3:
-                main_triplet.append(component)
-                continue
-
-            if qualifier is not None:
-                component = "%s%s" % (qualifier, component)
-                qualifier = ""
-
-            additional.append(component)
-
-        while len(main_triplet) < 3:
-            main_triplet.append(0)
-
-        if qualifier:
-            additional.append(qualifier)
-
-        self.major, self.minor, self.patch = main_triplet
-        self.additional = ".".join(additional)
+        self.major, self.minor, self.patch, self.additional, _, _ = setupmeta.version_components(main)
 
     def __repr__(self):
         return self.text
+
+    @property
+    def non_dirty(self):
+        """Non-dirty version associated to this Version"""
+        main = "%s.%s.%s" % (self.major, self.minor, self.patch)
+        return Version(main=main, distance=self.distance, commitid=self.commitid, dirty=False, text=main)
 
     @property
     def post(self):
