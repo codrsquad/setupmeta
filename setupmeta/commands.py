@@ -39,6 +39,12 @@ def count(*args):
     return sum(1 for a in args if a)
 
 
+def longest_line(lines, maximum=70):
+    lines = [setupmeta.stringify(line) for line in lines]
+    longest = max(len(line) for line in lines if "\n" not in line)
+    return min(longest, maximum)
+
+
 @MetaCommand
 class CheckCommand(check):
     """Perform checks on the package"""
@@ -83,8 +89,10 @@ class CheckCommand(check):
                 len(reqs.ignored),
                 len(reqs.untouched),
             )
+
             if self.setupmeta.requirements.links or reqs.links:
                 message += ", %s dependency links" % len(self.setupmeta.requirements.links or reqs.links)
+
             print(message)
 
     def _show_git_status(self):
@@ -122,8 +130,10 @@ class VersionCommand(setuptools.Command):
         try:
             if self.show_next:
                 print(self.setupmeta.versioning.get_bump(self.show_next))
+
             elif self.bump:
                 self.setupmeta.versioning.bump(self.bump, commit=self.commit, push=self.push, simulate_branch=self.simulate_branch)
+
             else:
                 print(self.setupmeta.version)
 
@@ -158,6 +168,7 @@ class ExplainCommand(setuptools.Command):
         if note:
             fmt = "%%-%ss# %%s" % align
             name = fmt % (name, note)
+
         return name
 
     def show_requirements(self, setup_key, requirements):
@@ -172,14 +183,18 @@ class ExplainCommand(setuptools.Command):
             for req in requirements.reqs:
                 names.append(req)
                 notes.append(requirements.notes.get(req) or "")
+
             if any(len(note) for note in notes):
                 longest_name = max(len(name) for name in names) + 5
                 content = []
                 for i in range(len(names)):
                     content.append(self.represented_req(names[i], notes[i], longest_name))
+
             else:
                 content = [self.represented_req(name) for name in names]
+
             content = "[\n        %s\n    ]," % "\n        ".join(content).strip()
+
         print("    %s=%s" % (setup_key, content))
 
     def show_dependencies(self):
@@ -190,6 +205,7 @@ class ExplainCommand(setuptools.Command):
         if self.setupmeta.requirements:
             install = self.setupmeta.requirements.install
             test = self.setupmeta.requirements.test
+
         self.show_requirements("install_requires", install)
         self.show_requirements("tests_require", test)
 
@@ -209,46 +225,58 @@ class ExplainCommand(setuptools.Command):
         for definition in sorted(definitions.values()):
             if not definition.value or definition.key not in setupmeta.MetaDefs.all_fields:
                 continue
+
             if definition.key == "setup_requires":
                 # When expanding, remove mention of 'setupmeta',
                 # as expansion is aimed at giving a people a way to get a setup.py as-if setupmeta didn't exist
                 # ie: it's a way of easily getting rid of setupmeta (should the need arise)
                 if "setupmeta" in definition.value:
                     definition.value.remove("setupmeta")
+
                 if definition.value:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
+
             elif definition.key == "download_url":
                 if version and version.value in definition.value:
                     definition.value = definition.value.replace(version.value, "%s")
                     definition.value = "%s %% __version__" % setupmeta.stringify(setupmeta.short(definition.value), quote=True)
+
                 else:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
+
             elif definition.key == "long_description":
                 definition.value = 'open(%s).read()' % setupmeta.stringify(setupmeta.short(definition.source), quote=True)
+
             elif definition.key == "version":
                 definition.value = "__version__"
-            else:
+
+            elif definition.key != "include_package_data":
                 definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
+
             if definition.value:
                 defs.append(definition)
 
-        longest = max(len(d.value) for d in defs if "\n" not in d.value)
-        longest = min(longest, 70)
+        longest = longest_line([d.value for d in defs])
         for definition in defs:
             if definition.key == "versioning":
                 line = "    # versioning=%s," % definition.value
+
             else:
                 line = "    %s=%s," % (definition.key, definition.value)
+
             source = definition.actual_source
             if source and source != "explicit":
                 comment = "# from %s" % setupmeta.short(source)
                 rest, _, last_line = line.rpartition("\n")
                 if len(last_line) < longest:
                     padding = " " * (longest - len(last_line))
+
                 else:
                     padding = " "
+
                 last_line = "%s%s%s" % (last_line, padding, comment)
                 line = "%s\n%s" % (rest, last_line) if rest else last_line
+
             print(line)
 
         print(")")
@@ -276,6 +304,7 @@ class ExplainCommand(setuptools.Command):
             self.check_recommend("download_url")
             self.check_recommend("license")
             self.check_recommend("url")
+
         if definitions:
             longest_key = min(30, max(len(key) for key in definitions))
             sources = sum((d.sources for d in definitions.values()), [])
@@ -288,8 +317,10 @@ class ExplainCommand(setuptools.Command):
                 for source in definition.sources:
                     if count:
                         prefix = "\\_"
+
                     elif source.key not in setupmeta.MetaDefs.all_fields:
                         prefix = "%s*" % source.key
+
                     else:
                         prefix = source.key
 
@@ -311,10 +342,13 @@ class EntryPointsCommand(setuptools.Command):
         console_scripts = get_console_scripts(entry_points)
         if not console_scripts:
             return
+
         if isinstance(console_scripts, list):
             for ep in console_scripts:
                 print(ep)
+
             return
+
         for line in console_scripts.splitlines():
             line = line.strip()
             if line:
@@ -325,8 +359,10 @@ def get_console_scripts(entry_points):
     """pygradle's 'entrypoints' are misnamed: they really mean 'consolescripts'"""
     if not entry_points:
         return None
+
     if isinstance(entry_points, dict):
         return entry_points.get("console_scripts")
+
     if isinstance(entry_points, list):
         result = []
         in_console_scripts = False
@@ -335,9 +371,12 @@ def get_console_scripts(entry_points):
             if line and line.startswith("["):
                 in_console_scripts = "console_scripts" in line
                 continue
+
             if in_console_scripts:
                 result.append(line)
+
         return result
+
     return get_console_scripts(entry_points.split("\n"))
 
 
@@ -357,9 +396,11 @@ class CleanCommand(setuptools.Command):
         if os.path.isdir(full_path):
             shutil.rmtree(full_path)
             print("deleted %s" % setupmeta.relative_path(full_path))
+
         else:
             os.unlink(full_path)
             self.by_ext[full_path.rpartition(".")[2]] += 1
+
         self.deleted += 1
 
     def clean_direct(self):
@@ -380,23 +421,29 @@ class CleanCommand(setuptools.Command):
             for dname in dirnames:
                 if dname in self.ignored:
                     remove.append(dname)
+
                 elif dname in self.dirs:
                     remove.append(dname)
                     self.delete(os.path.join(dirpath, dname))
+
                 else:
                     ext = dname.rpartition(".")[2]
                     if ext in self.extensions:
                         remove.append(dname)
                         self.delete(os.path.join(dirpath, dname))
+
             for dname in remove:
                 dirnames.remove(dname)
+
             for fname in filenames:
                 ext = fname.rpartition(".")[2]
                 if ext in self.extensions:
                     self.delete(os.path.join(dirpath, fname))
+
         if self.by_ext:
             info = ["%s .%s files" % (v, k) for k, v in sorted(self.by_ext.items())]
             print("deleted %s" % ", ".join(info))
+
         if self.deleted == 0:
             print("all clean, no deletable files found")
 
@@ -427,9 +474,11 @@ class TwineCommand(setuptools.Command):
             path = setupmeta.project_path(relative_path)
             if not os.path.exists(path):
                 continue
+
             if self.commit:
                 print("Deleting %s..." % path)
                 shutil.rmtree(path)
+
             else:
                 print("Would delete %s" % path)
 
@@ -586,6 +635,7 @@ class PipPackage(object):
             if required not in self.transitive:
                 self.transitive.add(required)
                 self._add_transitive(required.requires)
+
             return
 
         for req in required:
@@ -594,10 +644,12 @@ class PipPackage(object):
     def _find_cycle(self, target, visited):
         if self in visited:
             return None
+
         visited.add(self)
         for r in sorted(self.requires):
             if r.package is target:
                 return [r.package]
+
             c = r.package._find_cycle(target, visited)
             if c:
                 return [r.package] + c
@@ -618,6 +670,7 @@ def find_subfolders(folder, names, depth=3):
             if name in names:
                 yield fpath
                 continue
+
             if os.path.isdir(fpath) and depth > 0:
                 for p in find_subfolders(fpath, names, depth=depth - 1):
                     yield p
@@ -627,6 +680,7 @@ def find_venv():
     venv = os.environ.get("VIRTUAL_ENV")
     if venv:
         return venv
+
     for folder in (".venv", "venv"):
         fpath = setupmeta.project_path(folder)
         if os.path.isdir(fpath):
@@ -663,6 +717,7 @@ class DepTree:
             p = self.get_package(pkg_resources.Requirement.parse(dep))
             if p:
                 result.append(p)
+
         return result
 
     def get_children(self, ref):
@@ -676,15 +731,18 @@ class DepTree:
         def aux(node, indent=2, chain=None):
             if chain is None:
                 chain = []
+
             result = ["%s%s" % (" " * indent, node.render())]
             children = sorted(self.get_children(node))
             children = [aux(c, indent=indent + 2, chain=chain + [c.key])
                         for c in children
                         if c.key not in chain]
+
             chain.append(node.key)
             p = self.packages.get(node.key)
             if p:
                 seen.add(p)
+
             result += list(flatten(children))
             return result
 

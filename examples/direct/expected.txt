@@ -8,6 +8,7 @@
                  download_url: (auto-fill            ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
                            \_: (direct/__init__.py:10) https://github.com/zsimic/simple/archive/{version}.tar.gz
                  entry_points: (entry_points.ini     ) [console_scripts] direct = direct:main
+         include_package_data: (MANIFEST.in          ) True
              install_requires: (requirements.txt     ) ["click>=6.7"]
                      keywords: (direct/__init__.py:4 ) ["direct", "package"]
                       license: (auto-fill            ) Apache 2.0
@@ -42,6 +43,7 @@ setup(
     download_url="https://github.com/zsimic/simple/archive/%s.tar.gz" % __version__, # from direct/__init__.py:10
     entry_points="""[console_scripts]
 direct = direct:main""",                                            # from entry_points.ini
+    include_package_data=True,                                      # from MANIFEST.in
     install_requires=["click>=6.7"],                                # from requirements.txt
     keywords=["direct", "package"],                                 # from direct/__init__.py:4
     license="Apache 2.0",
