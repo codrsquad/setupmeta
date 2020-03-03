@@ -702,6 +702,7 @@ class SetupMeta(Settings):
         self.auto_fill_entry_points()
         self.auto_fill_license()
         self.auto_fill_long_description()
+        self.auto_fill_include_package_data()
         self.sort_classifiers()
 
     def resolved_url(self, url, base=None):
@@ -838,6 +839,13 @@ class SetupMeta(Settings):
         classifiers = self.definitions.get("classifiers")
         if classifiers and isinstance(classifiers.value, list):
             classifiers.value = sorted(classifiers.value)
+
+    def auto_fill_include_package_data(self):
+        """Auto-fill 'include_package_data' if a MANIFEST.in file exists in project"""
+        if "include_package_data" not in self.attrs:
+            manifest = os.path.join(MetaDefs.project_dir, "MANIFEST.in")
+            if os.path.isfile(manifest):
+                self.add_definition("include_package_data", True, os.path.basename(manifest))
 
     def auto_fill(self, field, value, source="auto-fill", override=False):
         """ Auto-fill 'field' with 'value' """
