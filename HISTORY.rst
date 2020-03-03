@@ -2,6 +2,18 @@
 History
 =======
 
+2.6.19 (2020-03-02)
+-------------------
+
+* Auto-fill ``include_package_data`` when ``MANIFEST.in`` is present
+
+
+2.6.18 (2020-02-03)
+-------------------
+
+* Try and import latest pip first
+
+
 2.6.17 (2020-01-24)
 -------------------
 
