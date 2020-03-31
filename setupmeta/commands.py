@@ -3,7 +3,6 @@ Commands contributed by setupmeta
 """
 
 import collections
-import distutils
 import os
 import platform
 import shutil
@@ -29,6 +28,18 @@ def abort(message):
     from distutils.errors import DistutilsSetupError
 
     raise DistutilsSetupError(message)
+
+
+def get_pip_config(key, default=None):
+    """Configured pip key, if available"""
+    try:
+        from pip._internal.configuration import Configuration
+        cc = Configuration(isolated=False)
+        cc.load()
+        return cc.get_value(key)
+
+    except (Exception, ImportError):
+        return default
 
 
 def MetaCommand(cls):
@@ -87,29 +98,39 @@ class UberEggCommand(setuptools.Command):
         print("%s dependencies in %s" % (len(reqs), self.requirements))
         if reqs:
             with setupmeta.temp_resource():
-                dist = distutils.core.Distribution(dict(setup_requires=reqs))
-                dist.fetch_build_eggs(dist.setup_requires)
-                eggs = os.listdir(".eggs") if os.path.isdir(".eggs") else []
-                eggs = [f for f in eggs if f.endswith(".egg")]
+                easy_install = os.path.join(os.path.dirname(sys.executable), "easy_install")
+                common_args = ["-zax", "-d", "."]
+                index_url = get_pip_config("global.index-url")
+                if index_url:
+                    common_args.append("-i")
+                    common_args.append(index_url)
+
+                env = dict(os.environ)
+                env["PYTHONPATH"] = "."
+                for req in reqs:
+                    args = common_args[:]
+                    args.append(req)
+                    setupmeta.run_program(easy_install, *args, env=env)
+
+                eggs = [f for f in os.listdir(".") if f.endswith(".egg")]
                 print("Fetched %s eggs" % len(eggs))
                 for name in eggs:
-                    if name.endswith(".egg") and not name.startswith("setupmeta"):
-                        dest = os.path.join(egg_target, name)
-                        if os.path.exists(dest):  # pragma: no cover
-                            print("%s/%s already exists, skipping" % (self.dist, name))
-                            continue
+                    dest = os.path.join(egg_target, name)
+                    if os.path.exists(dest):  # pragma: no cover
+                        print("%s/%s already exists, skipping" % (self.dist, name))
+                        continue
 
-                        source = os.path.join(".eggs", name)
-                        action = "Grabbed"
-                        if os.path.isdir(source):
-                            # This disregards any `zip_safe=False` setting, this could be wrong
-                            # However, most libraries don't specify this, even though their project is zip-safe...
-                            # Spark users seem to get by with eggs just fine, so forcing a zip here
-                            action = "Force-zipped"
-                            source = shutil.make_archive(name, "zip", source)
+                    source = name
+                    action = "Grabbed"
+                    if os.path.isdir(source):
+                        # This disregards any `zip_safe=False` setting, this could be wrong
+                        # However, most libraries don't specify this, even though their project is zip-safe...
+                        # Spark users seem to get by with eggs just fine, so forcing a zip here
+                        action = "Force-zipped"
+                        source = shutil.make_archive(name, "zip", source)
 
-                        print("%s %s" % (action, name))
-                        shutil.copy2(source, dest)
+                    print("%s %s" % (action, name))
+                    shutil.copy2(source, dest)
 
 
 @MetaCommand

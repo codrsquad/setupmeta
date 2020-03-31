@@ -1,4 +1,3 @@
-sudo: required
 dist: xenial
 language: python
 python:
@@ -17,21 +16,20 @@ script:
 after_success:
   - tox -e coverage,codecov
 
-credentials:
-  - &pypi
-    provider: pypi
-    user: zsimic
-    password:
-      secure: "DBPkqlzNIjL1sKv+B+O0jmBzZG0bTGO0AEaP6VpoMNu/YR5RV/FCZggINbdnuCSgTpjwu2d/GfHOOkg2rgzTvqFkVxI6pmHMP4ZWKBA45ooQBsfE8jUjXPRyKrEjgrGBtvldJT5MpifBwbt8WOwIhK3eRgCz4xgA5SoYl5uyU6dVC1xtmJWzbTyJp4Is473GwcocrsdxVoIlSiO11Gy32oI6noN4Q6zerRxob56UdgKGdNxr/p/UBwLm9DctNHuZgQK2XM+hgD/jDrEopVezxoOkRi5oKKtkIrBA3I5vbygy+tcYA/6Bqskj9mx3NGB/EDk7EPXplh3rbdEiXo+D+Ra1cX7kHRMiAGfLDZg3GW/Fm3ajpBHIOEchUQHocTl3AE4y8al7KfROQ9soCNbJGtFrPJRmSmLL+x4zLCoNUgSZxr5so9zmj/wQKpTu/FhzdBxEPxuaQbRRbJMCxO7wyTX8wLtcoZzSaL3IfdIhqovgqZvSTqkykat8cA70K3jIhwOzfMLj6QO2sJ0lS1MmyQ2WHvZ4jf4hLXgVU+udV9OFBySOZp5RK90PlkYXf+58dyILQeNad0bxzzttj5LudCOxqUpqszk8GohenqccFOcg66Fi+ypexChK2rdNsHVetD4OiZDsuW6yC5FpN9EyLELzw9BEFKNg+CI7z3Ja8/U="
+- &pypicreds
+  provider: pypi
+  username: zsimic
+  password:
+    secure: "DBPkqlzNIjL1sKv+B+O0jmBzZG0bTGO0AEaP6VpoMNu/YR5RV/FCZggINbdnuCSgTpjwu2d/GfHOOkg2rgzTvqFkVxI6pmHMP4ZWKBA45ooQBsfE8jUjXPRyKrEjgrGBtvldJT5MpifBwbt8WOwIhK3eRgCz4xgA5SoYl5uyU6dVC1xtmJWzbTyJp4Is473GwcocrsdxVoIlSiO11Gy32oI6noN4Q6zerRxob56UdgKGdNxr/p/UBwLm9DctNHuZgQK2XM+hgD/jDrEopVezxoOkRi5oKKtkIrBA3I5vbygy+tcYA/6Bqskj9mx3NGB/EDk7EPXplh3rbdEiXo+D+Ra1cX7kHRMiAGfLDZg3GW/Fm3ajpBHIOEchUQHocTl3AE4y8al7KfROQ9soCNbJGtFrPJRmSmLL+x4zLCoNUgSZxr5so9zmj/wQKpTu/FhzdBxEPxuaQbRRbJMCxO7wyTX8wLtcoZzSaL3IfdIhqovgqZvSTqkykat8cA70K3jIhwOzfMLj6QO2sJ0lS1MmyQ2WHvZ4jf4hLXgVU+udV9OFBySOZp5RK90PlkYXf+58dyILQeNad0bxzzttj5LudCOxqUpqszk8GohenqccFOcg66Fi+ypexChK2rdNsHVetD4OiZDsuW6yC5FpN9EyLELzw9BEFKNg+CI7z3Ja8/U="
 
 deploy:
-  - <<: *pypi
+  - <<: *pypicreds
     on:
       python: 3.8
       repo: zsimic/setupmeta
       tags: true
     distributions: "sdist bdist_wheel --universal"
-  - <<: *pypi
+  - <<: *pypicreds
     on:
       repo: zsimic/setupmeta
       tags: true

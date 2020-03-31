@@ -8,7 +8,7 @@ from mock import patch
 from six import StringIO
 
 import setupmeta
-from setupmeta.commands import _show_dependencies, DepTree, find_venv
+from setupmeta.commands import _show_dependencies, DepTree, find_venv, get_pip_config
 
 from . import conftest
 
@@ -39,6 +39,8 @@ def test_check(sample_project):
 
 
 def test_uber_egg(sample_project):
+    assert get_pip_config("foo") is None
+
     output = conftest.run_setup_py(sample_project, "uber_egg")
     assert "1 dependencies in requirements.txt" in output
     assert "Fetched 1 eggs" in output
@@ -46,6 +48,13 @@ def test_uber_egg(sample_project):
     eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
     assert len(eggs) == 1
     assert eggs[0].startswith("click")
+
+    output = conftest.run_setup_py(sample_project, "uber_egg", "-rreqs2.txt")
+    assert "2 dependencies in reqs2.txt" in output
+    assert "Fetched 6 eggs" in output
+    eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
+    assert len(eggs) == 6
+    assert any(e.startswith("requests-2.23.0") for e in eggs)
 
 
 def test_check_dependencies():
