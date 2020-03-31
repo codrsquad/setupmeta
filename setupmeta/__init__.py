@@ -95,14 +95,6 @@ def is_executable(path):
     return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
 
-def main_version_part(text):
-    """
-    :param str text: Text to parse (example: 1.0.2.dev5)
-    :return str: Main version part (example: 1.0.2)
-    """
-    return "%s.%s.%s" % version_components(text)[:3]
-
-
 def version_components(text):
     """
     :param str text: Text to parse

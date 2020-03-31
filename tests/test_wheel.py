@@ -15,7 +15,7 @@ def test_wheel(sample_project):
 
     assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
     files = os.listdir(dist_folder)
-    assert len(files) == 2
+    assert len(files) == 3
     assert "sample-0.1.0-py2.py3-none-any.whl" in files
 
     # Now let's modify one of the files
@@ -24,6 +24,6 @@ def test_wheel(sample_project):
 
     assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
     files = os.listdir(dist_folder)
-    assert len(files) == 3
+    assert len(files) == 4
     assert "sample-0.1.0-py2.py3-none-any.whl" in files
     assert "sample-0.1.0.dirty-py2.py3-none-any.whl" in files
