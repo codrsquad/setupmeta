@@ -2,6 +2,12 @@
 History
 =======
 
+2.6.21 (2020-03-30)
+-------------------
+
+* Added support for creating spark_-like "uber eggs"
+
+
 2.6.20 (2020-03-03)
 -------------------
 
@@ -250,3 +256,5 @@ History
 
 
 .. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
+
+.. _spark: https://spark.apache.org/docs/latest/index.html

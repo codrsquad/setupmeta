@@ -27,7 +27,7 @@ def run_setup_py(args, expected, folder=None):
 def test_check(sample_project):
     # First sample_project is a pristine git checkout, check should pass
     output = conftest.run_setup_py(sample_project, "check")
-    assert "[setupmeta] install_requires: 0 abstracted, 0 ignored, 1 untouched, 1 dependency links" in output
+    assert "[setupmeta] install_requires: 0 abstracted, 0 ignored, 2 untouched, 1 dependency links" in output
 
     # Now let's modify one of the files
     with open(os.path.join(sample_project, "sample.py"), "w") as fh:
@@ -36,6 +36,16 @@ def test_check(sample_project):
     # check should report that as a pending change
     output = conftest.run_setup_py(sample_project, "check")
     assert "Pending changes:" in output
+
+
+def test_bdist_egg(sample_project):
+    output = conftest.run_setup_py(sample_project, "bdist_egg", "--egg-name=foo", "-rrequirements.txt")
+    assert "setup.py --name" in output
+    eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
+    assert len(eggs) == 2
+    assert "foo.egg" in eggs
+    eggs.remove("foo.egg")
+    assert eggs[0].startswith("click")
 
 
 def test_check_dependencies():

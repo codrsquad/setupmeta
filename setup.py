@@ -20,6 +20,7 @@ EGG = os.path.join(HERE, "%s.egg-info" % __title__)
 
 ENTRY_POINTS = """
 [distutils.commands]
+bdist_egg = {t}.commands:BdistEggCommand
 check = {t}.commands:CheckCommand
 cleanall = {t}.commands:CleanCommand
 entrypoints = {t}.commands:EntryPointsCommand
