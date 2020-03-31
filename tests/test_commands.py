@@ -38,13 +38,13 @@ def test_check(sample_project):
     assert "Pending changes:" in output
 
 
-def test_bdist_egg(sample_project):
-    output = conftest.run_setup_py(sample_project, "bdist_egg", "--egg-name=foo", "-rrequirements.txt")
-    assert "setup.py --name" in output
+def test_uber_egg(sample_project):
+    output = conftest.run_setup_py(sample_project, "uber_egg")
+    assert "1 dependencies in requirements.txt" in output
+    assert "Fetched 1 eggs" in output
+    assert "Force-zipped click" in output
     eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
-    assert len(eggs) == 2
-    assert "foo.egg" in eggs
-    eggs.remove("foo.egg")
+    assert len(eggs) == 1
     assert eggs[0].startswith("click")
 
 

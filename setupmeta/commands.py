@@ -3,6 +3,7 @@ Commands contributed by setupmeta
 """
 
 import collections
+import distutils
 import os
 import platform
 import shutil
@@ -11,7 +12,6 @@ from distutils.command.check import check
 from itertools import chain
 
 import setuptools
-from setuptools.command.bdist_egg import bdist_egg
 
 try:
     import pkg_resources
@@ -47,81 +47,69 @@ def longest_line(lines, maximum=70):
 
 
 @MetaCommand
-class BdistEggCommand(bdist_egg):
-    """create an "egg" distribution"""
+class UberEggCommand(setuptools.Command):
+    """pack all dependencies as eggs"""
 
-    user_options = bdist_egg.user_options + [
-        ("egg-name=", None, "Use 'name' for packaged egg (useful for spark-like 'uber eggs')"),
-        ("requirements=", "r", "Grab egg for all dependencies listed in given requirements file (useful for spark-like 'uber eggs')"),
+    user_options = [
+        ('dist=', 'd', "directory to put eggs in"),
+        ("requirements=", "r", "grab egg for all dependencies listed in given requirements file"),
     ]
 
     def initialize_options(self):
-        bdist_egg.initialize_options(self)
-        self.egg_name = None
+        self.dist = None
         self.requirements = None
 
     def _get_requirements(self):
         if self.requirements:
             from setupmeta.content import load_list
 
-            reqs = load_list(self.requirements)
-            return [r for r in reqs if r and not r.startswith("-")]
+            raw = load_list(self.requirements) or []
+            reqs = [r for r in raw if r and not r.startswith("-")]
+            setupmeta.trace("Extracted %s/%s reqs from %s" % (len(raw), len(reqs), self.requirements))
+            return reqs
 
-    def _get_all_dependency_eggs(self):
+    def run(self):
         """
         Grab an egg for each requirement, if any.
         This is useful to mimic spark's "uber-jars" (https://spark.apache.org/docs/latest/index.html)
-
-        We're making here a sort-of "uber-egg", by grabbing an egg for every dependency of a python project.
-        This functionality is only enabled if user rund `bdist_egg --egg-name=foo`.
-        The produced egg is renamed as given `egg-name',
-        this is also to mimic spark user's approach of generating one "known" egg name to represent their entire project.
-
-        All eggs are dropped in the same folder where 'bdist_egg' creates the project's egg (default: 'dist/')
         """
-        egg_target = os.path.abspath(os.path.dirname(self.egg_output))
-        if self.egg_name:
-            original = [x for x in os.listdir(egg_target) if x.startswith(self.setupmeta.name) and x.endswith(".egg")]
-            if len(original) == 1:
-                source = os.path.join(egg_target, original[0])
-                dest = os.path.join(egg_target, self.egg_name)
-                if not dest.endswith(".egg"):
-                    dest += ".egg"
+        if self.dist is None:
+            self.dist = "dist"
 
-                shutil.move(source, dest)
+        if self.requirements is None:
+            self.requirements = "requirements.txt"
+
+        egg_target = os.path.abspath(self.dist)
+        if not os.path.isdir(egg_target):
+            os.mkdir(egg_target)
 
         reqs = self._get_requirements()
+        print("%s dependencies in %s" % (len(reqs), self.requirements))
         if reqs:
             with setupmeta.temp_resource():
-                with open("setup.py", "wt") as fh:
-                    fh.write("from setuptools import setup\n")
-                    fh.write("setup(name='temp', zip_safe=True, setup_requires=[\n")
-                    for r in reqs:
-                        fh.write("'%s',\n" % r)
+                dist = distutils.core.Distribution(dict(setup_requires=reqs))
+                dist.fetch_build_eggs(dist.setup_requires)
+                eggs = os.listdir(".eggs") if os.path.isdir(".eggs") else []
+                eggs = [f for f in eggs if f.endswith(".egg")]
+                print("Fetched %s eggs" % len(eggs))
+                for name in eggs:
+                    if name.endswith(".egg") and not name.startswith("setupmeta"):
+                        dest = os.path.join(egg_target, name)
+                        if os.path.exists(dest):  # pragma: no cover
+                            print("%s/%s already exists, skipping" % (self.dist, name))
+                            continue
 
-                    fh.write("])\n")
+                        source = os.path.join(".eggs", name)
+                        action = "Grabbed"
+                        if os.path.isdir(source):
+                            # This disregards any `zip_safe=False` setting, this could be wrong
+                            # However, most libraries don't specify this, even though their project is zip-safe...
+                            # Spark users seem to get by with eggs just fine, so forcing a zip here
+                            action = "Force-zipped"
+                            source = shutil.make_archive(name, "zip", source)
 
-                exit_code = setupmeta.run_program(sys.executable, "setup.py", "--name")
-                if not exit_code:
-                    for name in os.listdir(".eggs"):
-                        if name.endswith(".egg"):
-                            dest = os.path.join(egg_target, name)
-                            if not os.path.exists(dest):
-                                source = os.path.join(".eggs", name)
-                                if os.path.isdir(source):
-                                    # This disregards any `zip_safe=False` setting, this could be wrong
-                                    # However, most libraries don't specify this, even though their project is zip-safe...
-                                    # Spark users seem to get by with eggs just fine, so forcing a zip here
-                                    source = shutil.make_archive(name, "zip", source)
-
-                                shutil.copy2(source, dest)
-
-    def run(self):
-        exit_code = bdist_egg.run(self)
-        if not exit_code and (self.egg_name or self.requirements):
-            self._get_all_dependency_eggs()
-
-        return exit_code
+                        print("%s %s" % (action, name))
+                        shutil.copy2(source, dest)
 
 
 @MetaCommand

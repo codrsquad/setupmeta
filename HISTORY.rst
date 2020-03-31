@@ -2,10 +2,10 @@
 History
 =======
 
-2.6.21 (2020-03-30)
+2.6.22 (2020-03-30)
 -------------------
 
-* Added support for creating spark_-like "uber eggs"
+* Added command ``uber_egg``, to support creating spark_-like "uber eggs"
 
 
 2.6.20 (2020-03-03)
