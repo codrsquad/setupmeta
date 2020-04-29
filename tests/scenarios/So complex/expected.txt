@@ -53,8 +53,8 @@ WARNING: In setup.py:6 version should be '1.2.0', not '1.0a1'
         "b",     # abstracted by default
         "c",     # 'abstract' stated on line
         "d>1",
-        "e==1",
-        "f",
+        "e==1",  # in 'pinned' section
+        "f",     # in 'pinned' section
         "g",     # 'abstract' stated on line
         "h",     # in 'abstract' section
         "i==1",  # 'pinned' stated on line

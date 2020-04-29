@@ -14,8 +14,20 @@ import setupmeta
 RE_README_TOKEN = re.compile(r"(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?")
 
 
+def readlines(relative_path, limit=0):
+    if relative_path:
+        full_path = setupmeta.project_path(relative_path)
+        with io.open(full_path, "rt") as fh:
+            for line in fh:
+                limit -= 1
+                if limit == 0:
+                    break
+
+                yield line
+
+
 def load_contents(relative_path, limit=0):
-    """ Return contents of file with 'relative_path'
+    """Return contents of file with 'relative_path'
 
     :param str relative_path: Relative path to file
     :param int limit: Max number of lines to load
@@ -23,15 +35,7 @@ def load_contents(relative_path, limit=0):
     """
     if relative_path:
         try:
-            full_path = setupmeta.project_path(relative_path)
-            with io.open(full_path, "rt") as fh:
-                lines = []
-                for line in fh:
-                    limit -= 1
-                    if limit == 0:
-                        break
-                    lines.append(line)
-                return "".join(lines).strip()
+            return "".join(readlines(relative_path, limit=limit)).strip()
 
         except IOError:
             return None

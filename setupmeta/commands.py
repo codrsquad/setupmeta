@@ -262,15 +262,16 @@ class ExplainCommand(setuptools.Command):
     def show_requirements(self, setup_key, requirements):
         """
         :param str setup_key: Name of corresponding key in 'setup()'
-        :param RequirementsEntry requirements:
+        :param RequirementsFile requirements:
         """
         content = "None,   # no auto-fill"
         if requirements and requirements.reqs:
             names = []
             notes = []
-            for req in requirements.reqs:
-                names.append(req)
-                notes.append(requirements.notes.get(req) or "")
+            for line_req in requirements.lines:
+                if line_req.abstracted:
+                    names.append(line_req.abstracted)
+                    notes.append(line_req.note or "")
 
             if any(len(note) for note in notes):
                 longest_name = max(len(name) for name in names) + 5

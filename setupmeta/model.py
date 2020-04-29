@@ -11,8 +11,8 @@ import sys
 import setuptools
 
 import setupmeta.versioning
-from setupmeta import listify, MetaDefs, project_path, relative_path, short, temp_resource, trace
-from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
+from setupmeta import listify, MetaDefs, project_path, relative_path, short, trace
+from setupmeta.content import find_contents, load_contents, load_list, load_readme, readlines, resolved_paths
 from setupmeta.license import determined_license
 
 
@@ -35,7 +35,29 @@ RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
 
+# Dependency links in requirements.txt files
+RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
+RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
+
 KNOWN_SECTIONS = set("abstract pinned indirect".split())
+
+
+def extract_link(line):
+    if line.startswith("file:"):
+        return line, None
+
+    m = RE_DEPENDENCY_EGG.match(line)
+    if m:
+        return line, m.group(1)
+
+    m = RE_DEPENDENCY_AT.match(line)
+    if m:
+        return m.group(2), m.group(1)
+
+    if os.path.isabs(line):
+        return "file://%s" % line, None
+
+    return None, None
 
 
 def first_word(text):
@@ -292,7 +314,10 @@ class SimpleModule(Settings):
 
 
 def get_pip():
-    """We can't assume pip is installed"""
+    """
+    Deprecated, see https://github.com/zsimic/setupmeta/issues/49
+    Left around for a while because some callers import this, they will have to adapt to pip 20.1+
+    """
     try:
         # pip >= 19.3
         from pip._internal.req import parse_requirements
@@ -323,54 +348,6 @@ def get_pip():
     except ImportError:
         setupmeta.warn("Can't find PipSession, won't auto-fill requirements")
         return None, None
-
-
-def parse_requirements(requirements):
-    """Parse requirements with pip"""
-    # Note: we can't assume pip is installed
-    pip_parse_requirements, pip_session = get_pip()
-    if not pip_parse_requirements or not requirements:
-        return None, None
-
-    reqs = []
-    links = []
-    session = pip_session()
-    try:
-        if not isinstance(requirements, list):
-            # Parse given file path as-is (when not abstracting)
-            for ir in pip_parse_requirements(requirements, session=session):
-                if ir.link:
-                    if ir.name:
-                        reqs.append(ir.name)
-                    links.append(ir.link.url)
-                else:
-                    reqs.append(str(ir.req))
-
-            return reqs, links
-
-        with temp_resource(is_folder=False) as temp:
-            # Passed list is "complex reqs" that were not abstracted by the simple convention described here:
-            # https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
-            with open(temp, "wt") as fh:
-                fh.write("\n".join(requirements))
-
-            for ir in pip_parse_requirements(temp, session=session):
-                if ir.link:
-                    if ir.name:
-                        reqs.append(ir.name)
-                    links.append(ir.link.url)
-                else:
-                    reqs.append(str(ir.req))
-
-    except Exception:
-        return None, None
-
-    return reqs, links
-
-
-def is_complex_requirement(line):
-    """Allows to save importing pip for very simple requirements.txt files"""
-    return line and (line.startswith("-") or ":" in line)
 
 
 def pythonified_name(name):
@@ -476,87 +453,174 @@ class PackageInfo:
             return path
 
 
-class RequirementsEntry:
+def parsed_req(text):
+    try:
+        from pkg_resources import Requirement
+
+        return Requirement(text)
+
+    except Exception:
+        return None
+
+
+class ReqLine(object):
+    def __init__(self, parent, line_number, parent_section, line):
+        """
+        :param RequirementsFile parent: Requirements.txt file where this line came from
+        :param int line_number: Corresponding line number
+        :param str|None parent_section: Optional parent section
+        :param str line: Line to parse
+        """
+        self.parent = parent
+        self.line_number = line_number
+        self.parent_section = parent_section
+        self.local_section = None
+        line = line.strip()
+        self.original = line
+        self.comment = None
+        self.editable = False
+        self.requirement = None
+        self.abstracted = None
+        self.pkg_req = None
+        self.link = None
+        self.note = None
+        if not line or line.startswith("#"):
+            self._set_comment(line[1:])
+            return
+
+        if line[0] not in "-_./\\" and not line[0].isalnum():
+            # Ignore anything that doesn't look like valid req or option
+            return
+
+        if " #" in line:
+            # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
+            i = line.index(" #")
+            self._set_comment(line[i + 2:])
+            line = line[:i].strip()
+
+        if line.startswith("-e") or line.startswith("--editable"):
+            self.editable = True
+            p = line.partition(" ")
+            line = p[2]
+
+        if line.startswith("-"):
+            return
+
+        link, name = extract_link(line)
+        if link:
+            if self.editable and "git" in link and not link.startswith("git+"):
+                # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
+                link = "git+%s" % link
+
+            self.link = link
+            self.requirement = name
+            self.abstracted = name
+            return
+
+        self._set_requirement(line)
+
+    def __repr__(self):
+        return self.original
+
+    @property
+    def empty(self):
+        return not self.link and not self.requirement
+
+    @property
+    def section(self):
+        return self.local_section or self.parent_section
+
+    @property
+    def is_direct(self):
+        return self.requirement and self.section != "indirect"
+
+    def _set_requirement(self, line):
+        self.pkg_req = parsed_req(line)
+        self.requirement = line
+        if self.local_section:
+            self.note = "'%s' stated on line" % self.local_section
+
+        elif self.parent_section:
+            self.note = "in '%s' section" % self.parent_section
+
+        if not self.is_direct:
+            return
+
+        self.abstracted = line
+        if self.pkg_req and len(self.pkg_req.specs) == 1 and len(self.pkg_req.specs[0]) == 2 and self.pkg_req.specs[0][0] == "==":
+            # Look for very specific simple name==version specifications
+            if self.section != "pinned":
+                self.abstracted = self.pkg_req.name
+                if not self.note:
+                    self.note = "abstracted by default"
+
+    def _set_comment(self, comment):
+        comment = comment.strip()
+        if comment:
+            self.comment = comment
+            w = first_word(self.comment)
+            if w in KNOWN_SECTIONS:
+                self.local_section = w
+
+
+def decorated_line(content, comment):
+    if not comment:
+        return content
+
+    return "%s  # %s" % (content, comment)
+
+
+class RequirementsFile:
     """ Keeps track of where requirements came from """
 
     def __init__(self, path, abstract=False):
         """
-        :param str path: Path to req file
+        :param str|list path: Path to req file
         :param bool abstract: If True, abstract away simple pinning (applicable to install_requires only)
         """
         self.source = relative_path(path)
-        self.notes = {}
         self.reqs = []
         self.abstracted = []
         self.untouched = []
         self.ignored = []
         self.links = None
+        self.lines = []
 
-        if abstract:
-            self.parse_with_comments()
-
-        else:
-            reqs, links = parse_requirements(path)
-            if reqs:
-                self.reqs = reqs
-                self.links = links
-
-    def parse_with_comments(self):
-        # We're abstracting, allow comments to tweak how we do that
         current_section = None
-        for line in load_list(self.source, comment=None):
-            if line.startswith("#"):
-                # Lines containing only a comment can start a "section", all requirements below this will respect that section
-                word = first_word(line[1:])
-                if word in KNOWN_SECTIONS:
-                    current_section = word
+        for n, line in enumerate(readlines(self.source), start=1):
+            req_line = ReqLine(self, n, current_section, line)
+            self.lines.append(req_line)
+            if req_line.empty:
+                if req_line.local_section:
+                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
+                    current_section = req_line.local_section
+
                 continue
 
-            line_section = current_section
-            note = None
-            if "# " in line:
-                # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
-                i = line.index("# ")
-                word = first_word(line[i + 2:])
-                line = line[:i].strip()
-                if word in KNOWN_SECTIONS:
-                    line_section = word
-                    note = "'%s' stated on line" % word
+            used = False
+            if req_line.link:
+                used = True
+                if self.links is None:
+                    self.links = []
 
-            if line_section == "indirect":
-                # 'indirect' means the pinning was done to satisfy some indirect dependency,
-                # but should not be considered as our project's dep
-                self.ignored.append("%s # %s" % (line, note or "indirect section"))
-                continue
+                self.links.append(req_line.link)
 
-            if (not line_section or line_section == "abstract") and "==" in line:
-                # By default (or if in explicit 'abstract' section), trim away simple '==' pinning
-                i = line.index("==")
-                line = line[:i].strip()
-                if not note:
-                    if line_section:
-                        note = "in '%s' section" % line_section
-                    else:
-                        note = "abstracted by default"
-                self.abstracted.append("%s # %s" % (line, note))
+            if req_line.is_direct:
+                used = True
+                req = req_line.abstracted if abstract else req_line.requirement
+                if req_line.requirement == req_line.abstracted:
 
-            elif line and (line[0].isalnum() or line.startswith("-e")):
-                # Count as untouched only actual deps (ignore flags such as -i)
-                if note:
-                    self.untouched.append("%s # %s" % (line, note))
+                    self.untouched.append(decorated_line(req_line.requirement, req_line.note))
+
                 else:
-                    self.untouched.append(line)
+                    self.abstracted.append(decorated_line(req_line.abstracted, req_line.note))
 
-            if note:
-                self.notes[line] = note or "abstract by default"
+                self.reqs.append(req)
 
-            self.reqs.append(line)
-
-        if any(is_complex_requirement(line) for line in self.reqs):
-            reqs, links = parse_requirements(self.reqs)
-            if reqs:
-                self.reqs = reqs
-                self.links = links
+            if not used:
+                # reqs in 'indirect' sections are ignored, pinning was done to satisfy some indirect dependency,
+                # but should not be considered as our project's dep
+                self.ignored.append(decorated_line(req_line.requirement, req_line.note))
 
 
 class Requirements:
@@ -602,7 +666,7 @@ class Requirements:
                 path = project_path(path)
                 if os.path.isfile(path):
                     trace("found requirements: %s" % path)
-                    return RequirementsEntry(path, abstract=abstract)
+                    return RequirementsFile(path, abstract=abstract)
 
 
 class SetupMeta(Settings):

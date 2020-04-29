@@ -327,30 +327,21 @@ class temp_resource:
     Context manager for creating / auto-deleting a temp working folder
     """
 
-    def __init__(self, is_folder=True):
-        self.is_folder = is_folder
+    def __init__(self):
         self.old_cwd = os.getcwd()
-        if is_folder:
-            self.path = tempfile.mkdtemp()
-        else:
-            _, self.path = tempfile.mkstemp()
+        self.path = tempfile.mkdtemp()
         # OSX edge case: /var/<temp> is really /private/var/<temp>
         self.path = os.path.realpath(self.path)
 
     def __enter__(self):
-        if self.is_folder:
-            os.chdir(self.path)
-        else:
-            os.chdir(os.path.dirname(self.path))
+        os.chdir(self.path)
         return self.path
 
     def __exit__(self, *args):
         os.chdir(self.old_cwd)
         try:
-            if self.is_folder:
-                shutil.rmtree(self.path)
-            else:
-                os.unlink(self.path)
+            shutil.rmtree(self.path)
+
         except OSError:  # pragma: no cover
             pass
 
