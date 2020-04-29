@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import sys
 
 import pkg_resources
 import pytest
@@ -38,6 +39,7 @@ def test_check(sample_project):
     assert "Pending changes:" in output
 
 
+@pytest.mark.skipif(sys.version_info.major < 3, reason="Tested only in py3")
 def test_uber_egg(sample_project):
     assert get_pip_config("foo") is None
 
@@ -53,7 +55,8 @@ def test_uber_egg(sample_project):
     assert "2 dependencies in reqs2.txt" in output
     assert "Fetched 6 eggs" in output
     eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
-    assert len(eggs) == 6
+    assert len(eggs) == 7  # 2 versions of click should be installed
+    assert any(e.startswith("click-7.1.1") for e in eggs)
     assert any(e.startswith("requests-2.23.0") for e in eggs)
 
 

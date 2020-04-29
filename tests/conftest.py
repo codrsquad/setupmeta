@@ -34,6 +34,25 @@ def print_warning(message, *_, **__):
     print("WARNING: %s" % setupmeta.short(message, -60))
 
 
+def run_program(program, *args, **kwargs):
+    capture = kwargs.pop("capture", True)
+    fatal = kwargs.pop("fatal", True)
+    represented = "%s %s" % (program, setupmeta.represented_args(args))
+    print("Running: %s" % represented)
+    if not setupmeta.WINDOWS and "PYCHARM_HOSTED" in os.environ and "python" in program and args and args[0].startswith("-m"):
+        # Temporary workaround for https://youtrack.jetbrains.com/issue/PY-40692
+        wrapper = os.path.join(os.path.dirname(__file__), "pydev-wrapper.sh")
+        args = [wrapper, program] + list(args)
+        program = "/bin/sh"
+
+    output = setupmeta.run_program(program, *args, capture=capture, fatal=fatal, **kwargs)
+    if output and capture:
+        print("output:")
+        print(output)
+
+    return output
+
+
 @pytest.fixture
 def sample_project():
     """Yield a sample git project, seeded with files from tests/sample"""
@@ -44,10 +63,10 @@ def sample_project():
             dest = os.path.join(temp, "sample")
             shutil.copytree(source, dest)
             files = os.listdir(dest)
-            setupmeta.run_program("git", "init", cwd=dest)
-            setupmeta.run_program("git", "add", *files, cwd=dest)
-            setupmeta.run_program("git", "commit", "-m", "Initial commit", cwd=dest)
-            setupmeta.run_program("git", "tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
+            run_program("git", "init", cwd=dest)
+            run_program("git", "add", *files, cwd=dest)
+            run_program("git", "commit", "-m", "Initial commit", cwd=dest)
+            run_program("git", "tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
             os.chdir(dest)
             yield dest
 
@@ -169,7 +188,7 @@ def cleaned_output(text, folder=None):
 
 def run_setup_py(folder, *args):
     if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        output = setupmeta.run_program(sys.executable, os.path.join(folder, "setup.py"), "-q", *args, capture="all", fatal=True)
+        output = run_program(sys.executable, os.path.join(folder, "setup.py"), "-q", *args, capture="all")
         return cleaned_output(output)
 
     return run_internal_setup_py(folder, *args)

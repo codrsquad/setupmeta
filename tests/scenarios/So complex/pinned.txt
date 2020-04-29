@@ -3,7 +3,7 @@ a
 b==1
 c==1 # abstract (edge case: abstract within implicit abstract section)
 d>1
-x>1 # indirect (edge case: indirect line in abstract section)
+x>1 # indirect (edge case: indirect line in default abstract section)
 
 # pinned - this is our pinned section
 e==1

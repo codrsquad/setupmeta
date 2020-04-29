@@ -3,7 +3,7 @@ import sys
 
 from mock import MagicMock, patch
 
-from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, parse_requirements, SetupMeta
+from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, parsed_req, RequirementsFile, SetupMeta
 
 from . import conftest
 
@@ -53,12 +53,25 @@ def test_representation():
     assert not alpha1 > beta
 
 
+def test_requirements():
+    assert parsed_req(None) is None
+    assert parsed_req("#foo") is None
+
+    f = RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
+    assert len(f.lines) == 14
+    assert str(f.lines[0]) == "chardet"
+    assert f.links == ["git+git://a.b/c/p1.git#egg=runez", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
+    assert f.reqs == ["chardet", "requests", "runez", "some-project"]
+    assert f.untouched == f.reqs
+
+    f = RequirementsFile("".splitlines())
+    assert not f.lines
+    assert not f.links
+    assert not f.reqs
+    assert not f.abstracted
+
+
 def test_empty():
-    assert parse_requirements(None) == (None, None)
-
-    # When pip can't parse requirements, don't use them for auto-fill
-    assert parse_requirements(conftest.resouce("scenarios/disabled/requirements.txt")) == (None, None)
-
     meta = bogus_project()
     assert not meta.attrs
     assert not meta.definitions

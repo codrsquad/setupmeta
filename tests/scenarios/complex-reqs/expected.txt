@@ -25,7 +25,7 @@ long_description_content_type: (README.md           ) text/markdown
     ],
     tests_require=[
         "1337",
-        "pytest==3.7.4",
+        "pytest",  # 'abstract' stated on line
         "wonka",
         "mytest",
     ],

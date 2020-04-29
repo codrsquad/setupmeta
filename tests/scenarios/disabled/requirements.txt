@@ -1,15 +1,14 @@
-sqlalchemy
+chardet
 
+# Unknown [] sections ignored
 [:python_version < "3.7"]
-aiocontextvars
+requests
 
-[mysql]
-aiomysql
-pymysql
+# URLs properly auto-filled as dependency_links
+[foo]
+-e git://a.b/c/p1.git#egg=runez
+some-project @ https://a.b/c/p2.git@u/pp
 
-[postgresql]
-asyncpg
-psycopg2-binary
-
-[sqlite]
-aiosqlite
+# Folders taken as-is
+file:///tmp/bar1
+/tmp/bar2

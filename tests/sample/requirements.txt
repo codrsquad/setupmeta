@@ -1,2 +1,3 @@
+-i https://pypi.org/pypi
 -e git://github.com/zsimic/runez.git#egg=runez
 click>7.0
