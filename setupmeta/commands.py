@@ -3,11 +3,11 @@ Commands contributed by setupmeta
 """
 
 import collections
-import distutils.command.check
 import os
 import platform
 import shutil
 import sys
+from distutils.command.check import check as check_cmd
 from itertools import chain
 
 import setuptools
@@ -128,24 +128,24 @@ class UberEggCommand(setuptools.Command):
 
 
 @MetaCommand
-class CheckCommand(distutils.command.check.check):
+class CheckCommand(check_cmd):
     """Perform checks on the package"""
 
-    user_options = distutils.command.check.check.user_options + [
+    user_options = check_cmd.user_options + [
         ("status", "t", "Show git status recap (useful to get evidence as to why version was dirty during CI jobs)"),
         ("deptree", "d", "Show dependency tree (from currently activated venv, or ./.venv, or ./venv)"),
         ("reqs", "q", "Show how many requirements were auto-abstracted or ignored, if any"),
     ]
 
     def initialize_options(self):
-        distutils.command.check.check.initialize_options(self)
+        check_cmd.initialize_options(self)
         self.status = None
         self.deptree = None
         self.reqs = None
 
     def run(self):
         if not self.setupmeta:
-            return distutils.command.check.check.run(self)
+            return check_cmd.run(self)
 
         if count(self.restructuredtext, self.status, self.deptree, self.reqs) == 0:
             self.status = 1
@@ -160,7 +160,7 @@ class CheckCommand(distutils.command.check.check):
         if self.deptree:
             self._warnings = _show_dependencies(self.setupmeta.definitions)
 
-        distutils.command.check.check.run(self)
+        check_cmd.run(self)
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
@@ -257,7 +257,7 @@ class ExplainCommand(setuptools.Command):
     def show_requirements(self, setup_key, requirements):
         """
         :param str setup_key: Name of corresponding key in 'setup()'
-        :param RequirementsFile requirements:
+        :param setupmeta.RequirementsFile requirements:
         """
         content = "None,   # no auto-fill"
         if requirements and requirements.filled_requirements:

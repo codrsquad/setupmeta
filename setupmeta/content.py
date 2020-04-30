@@ -3,7 +3,6 @@ Functionality related to interacting with project and distutils content
 """
 
 import glob
-import io
 import os
 import re
 
@@ -14,29 +13,6 @@ import setupmeta
 RE_README_TOKEN = re.compile(r"(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?")
 
 
-def readlines(relative_path, limit=0):
-    if isinstance(relative_path, list):
-        # Handy for testing: accept pre-read list of lines as well
-        return relative_path
-
-    if relative_path:
-        try:
-            result = []
-            full_path = setupmeta.project_path(relative_path)
-            with io.open(full_path, "rt") as fh:
-                for line in fh:
-                    limit -= 1
-                    if limit == 0:
-                        break
-
-                    result.append(line)
-
-            return result
-
-        except IOError:
-            return None
-
-
 def load_contents(relative_path, limit=0):
     """Return contents of file with 'relative_path'
 
@@ -44,14 +20,14 @@ def load_contents(relative_path, limit=0):
     :param int limit: Max number of lines to load
     :return str|None: Contents, if any
     """
-    lines = readlines(relative_path, limit=limit)
+    lines = setupmeta.readlines(relative_path, limit=limit)
     if lines is not None:
         return "".join(lines).strip()
 
 
 def load_readme(relative_path, limit=0):
     """ Loader for README files """
-    lines = readlines(relative_path, limit=limit)
+    lines = setupmeta.readlines(relative_path, limit=limit)
     if lines is not None:
         content = []
         for line in lines:

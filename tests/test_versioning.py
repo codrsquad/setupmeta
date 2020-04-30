@@ -72,7 +72,7 @@ def check_render(v, expected, main="1.0", distance=None, cid=None, dirty=False):
     assert v.strategy.rendered(version) == expected
 
 
-@patch("setupmeta.versioning.project_scm", return_value=None)
+@patch("setupmeta.model.project_scm", return_value=None)
 def test_no_scm(_):
     with conftest.capture_output() as logged:
         fmt = "branch(a,b):{major}.{minor}.{patch}{post} !{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"

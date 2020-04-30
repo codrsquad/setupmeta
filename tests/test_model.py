@@ -4,7 +4,7 @@ import sys
 from mock import MagicMock, patch
 
 import setupmeta
-from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, Requirements, RequirementsFile, SetupMeta
+from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path, SetupMeta
 
 from . import conftest
 
@@ -14,9 +14,9 @@ def bogus_project(**attrs):
 
 
 def test_first_word():
-    assert first_word(None) is None
-    assert first_word("") == ""
-    assert first_word("FOO bar") == "foo"
+    assert setupmeta.first_word(None) is None
+    assert setupmeta.first_word("") == ""
+    assert setupmeta.first_word("FOO bar") == "foo"
 
 
 def test_setup_py_determination():
@@ -58,7 +58,7 @@ def test_requirements():
     assert setupmeta.pkg_req(None) is None
     assert setupmeta.pkg_req("#foo") is None
 
-    f = RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
+    f = setupmeta.RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
     assert len(f.lines) == 15
     assert str(f.lines[0]) == "chardet==3.0.4"
     assert f.filled_requirements == ["chardet", "requests", "runez", "some-project"]
@@ -67,13 +67,13 @@ def test_requirements():
     assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
     assert f.untouched == ["requests", "runez", "some-project"]
 
-    f = RequirementsFile("".splitlines())
+    f = setupmeta.RequirementsFile("".splitlines())
     assert not f.lines
     assert not f.filled_requirements
     assert not f.dependency_links
     assert not f.abstracted
 
-    f = RequirementsFile(None)
+    f = setupmeta.RequirementsFile(None)
     assert not f.lines
     assert not f.filled_requirements
     assert not f.dependency_links
@@ -85,7 +85,7 @@ def test_empty():
     assert not meta.attrs
     assert not meta.definitions
     assert not meta.name
-    assert isinstance(meta.requirements, Requirements)
+    assert isinstance(meta.requirements, setupmeta.Requirements)
     assert not meta.requirements.install_requires
     assert not meta.requirements.tests_require
     assert not meta.version
