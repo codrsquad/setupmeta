@@ -5,6 +5,8 @@ History
 2.7.1 (2020-04-30)
 -------------------
 
+* Added ``requirements_from_text()`` and ``requirements_from_file()``
+
 * Consistently apply auto-abstraction to ``tests_require`` as well
 
 * Internally use consistent names for ``install_requires``, ``tests_require`` and ``extras_require``

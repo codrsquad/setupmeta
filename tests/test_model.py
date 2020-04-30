@@ -58,7 +58,10 @@ def test_requirements():
     assert setupmeta.pkg_req(None) is None
     assert setupmeta.pkg_req("#foo") is None
 
-    f = setupmeta.RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
+    assert setupmeta.requirements_from_file("/dev/null/foo") is None
+
+    sample = conftest.resouce("scenarios/disabled/requirements.txt")
+    f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.lines) == 15
     assert str(f.lines[0]) == "chardet==3.0.4"
     assert f.filled_requirements == ["chardet", "requests", "runez", "some-project"]
@@ -67,13 +70,21 @@ def test_requirements():
     assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
     assert f.untouched == ["requests", "runez", "some-project"]
 
-    f = setupmeta.RequirementsFile("".splitlines())
-    assert not f.lines
-    assert not f.filled_requirements
-    assert not f.dependency_links
-    assert not f.abstracted
+    fr = setupmeta.requirements_from_file(sample)
+    assert fr == f.filled_requirements
 
-    f = setupmeta.RequirementsFile(None)
+    sample = "a==1.0\nb; python_version >= '3.6'"
+    f = setupmeta.RequirementsFile("test", sample.splitlines())
+    assert len(f.lines) == 2
+    assert f.filled_requirements == ["a", "b; python_version >= '3.6'"]
+    assert not f.dependency_links
+    assert f.abstracted == ["a  # abstracted by default"]
+    assert f.untouched == ["b; python_version >= '3.6'"]
+
+    fr = setupmeta.requirements_from_text(sample)
+    assert fr == f.filled_requirements
+
+    f = setupmeta.RequirementsFile("test", [])
     assert not f.lines
     assert not f.filled_requirements
     assert not f.dependency_links
