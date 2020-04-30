@@ -7,6 +7,8 @@ History
 
 * Added ``requirements_from_text()`` and ``requirements_from_file()``
 
+* Use a regex to determine simple pins of the form ``foo==1.0``
+
 * Consistently apply auto-abstraction to ``tests_require`` as well
 
 * Internally use consistent names for ``install_requires``, ``tests_require`` and ``extras_require``

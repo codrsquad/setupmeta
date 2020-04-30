@@ -379,9 +379,10 @@ def requirements_from_text(text):
     """Transform contents of a requirements.txt file to an appropriate form for install_requires
     Example:
         foo==1.0
-        bar
+        bar==2.0; python_version >= '3.6'
+        baz>=1.2
 
-    Transformed to: ["foo", "bar"]
+    Transformed to: ["foo", "bar; python_version >= '3.6'", "baz>=1.2"]
 
     :param str text: Contents (text) of a requirements.txt file
     :return list: List of parsed and abstracted requirements
@@ -394,9 +395,10 @@ def requirements_from_file(path):
     """Transform contents of a requirements.txt file to an appropriate form for install_requires
     Example:
         foo==1.0
-        bar
+        bar==2.0; python_version >= '3.6'
+        baz>=1.2
 
-    Transformed to: ["foo", "bar"]
+    Transformed to: ["foo", "bar; python_version >= '3.6'", "baz>=1.2"]
 
     :param str path: Path of requirements.txt file to read
     :return list|None: List of parsed and abstracted requirements
