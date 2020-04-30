@@ -10,10 +10,10 @@ import sys
 
 import setuptools
 
-import setupmeta.versioning
-from setupmeta import listify, MetaDefs, project_path, relative_path, short, trace
-from setupmeta.content import find_contents, load_contents, load_list, load_readme, readlines, resolved_paths
+from setupmeta import listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace
+from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
+from setupmeta.versioning import project_scm, Versioning
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -34,42 +34,6 @@ RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
-
-# Dependency links in requirements.txt files
-RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
-RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
-
-KNOWN_SECTIONS = set("abstract pinned indirect".split())
-
-
-def extract_link(line):
-    if line.startswith("file:"):
-        return line, None
-
-    m = RE_DEPENDENCY_EGG.match(line)
-    if m:
-        return line, m.group(1)
-
-    m = RE_DEPENDENCY_AT.match(line)
-    if m:
-        return m.group(2), m.group(1)
-
-    if os.path.isabs(line):
-        return "file://%s" % line, None
-
-    return None, None
-
-
-def first_word(text):
-    """
-    :param str|None text: Text to extract first word from
-    :return str: Lower case of first word from 'text', if any
-    """
-    if text:
-        text = text.strip()
-    if not text:
-        return text
-    return text.split()[0].lower()
 
 
 def is_setup_py_path(path):
@@ -346,7 +310,9 @@ def get_pip():
         return parse_requirements, PipSession
 
     except ImportError:
-        setupmeta.warn("Can't find PipSession, won't auto-fill requirements")
+        from setupmeta import warn
+
+        warn("Can't find PipSession, won't auto-fill requirements")
         return None, None
 
 
@@ -374,17 +340,18 @@ class PackageInfo:
         self.path = os.path.join(root, "PKG-INFO")
         self.info = {}
         self.name = None
-        self.dependency_links_txt = None
+        self.dependency_links = None
         self.entry_points_txt = None
         self.requires_txt = None
-        lines = load_contents(self.path)
+        lines = readlines(self.path)
         if not lines:
             return
 
         # Parse PKG-INFO when present
         line_number = 0
         key = None
-        for line in lines.split("\n"):
+        for line in lines:
+            line = line.rstrip()
             line_number += 1
             if line.startswith(" "):
                 self.info[key].append(line[8:])
@@ -395,9 +362,11 @@ class PackageInfo:
                 key = self.canonical_key(key)
                 if key is None:
                     continue
+
                 if key in self._list_types:
                     if key not in self.info:
                         self.info[key] = []
+
                     self.info[key].append(value)
 
                 else:
@@ -405,7 +374,7 @@ class PackageInfo:
 
                 continue
 
-            setupmeta.trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
+            trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
 
         self.name = self.info.get("name")
         self.pythonified_name = pythonified_name(self.name)
@@ -433,7 +402,7 @@ class PackageInfo:
 
         path = os.path.join(folder, "%s.egg-info" % self.pythonified_name)
         if os.path.isdir(path):
-            self.dependency_links_txt = self.checked_file(path, "dependency_links.txt")
+            self.dependency_links = self.checked_file(path, "dependency_links.txt")
             self.entry_points_txt = self.checked_file(path, "entry_points.txt")
             self.requires_txt = self.checked_file(path, "requires.txt")
             return True
@@ -451,222 +420,6 @@ class PackageInfo:
         path = os.path.join(folder, filename)
         if os.path.exists(path):
             return path
-
-
-def parsed_req(text):
-    try:
-        from pkg_resources import Requirement
-
-        return Requirement(text)
-
-    except Exception:
-        return None
-
-
-class ReqLine(object):
-    def __init__(self, parent, line_number, parent_section, line):
-        """
-        :param RequirementsFile parent: Requirements.txt file where this line came from
-        :param int line_number: Corresponding line number
-        :param str|None parent_section: Optional parent section
-        :param str line: Line to parse
-        """
-        self.parent = parent
-        self.line_number = line_number
-        self.parent_section = parent_section
-        self.local_section = None
-        line = line.strip()
-        self.original = line
-        self.comment = None
-        self.editable = False
-        self.requirement = None
-        self.abstracted = None
-        self.pkg_req = None
-        self.link = None
-        self.note = None
-        if not line or line.startswith("#"):
-            self._set_comment(line[1:])
-            return
-
-        if line[0] not in "-_./\\" and not line[0].isalnum():
-            # Ignore anything that doesn't look like valid req or option
-            return
-
-        if " #" in line:
-            # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
-            i = line.index(" #")
-            self._set_comment(line[i + 2:])
-            line = line[:i].strip()
-
-        if line.startswith("-e") or line.startswith("--editable"):
-            self.editable = True
-            p = line.partition(" ")
-            line = p[2]
-
-        if line.startswith("-"):
-            return
-
-        link, name = extract_link(line)
-        if link:
-            if self.editable and "git" in link and not link.startswith("git+"):
-                # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
-                link = "git+%s" % link
-
-            self.link = link
-            self.requirement = name
-            self.abstracted = name
-            return
-
-        self._set_requirement(line)
-
-    def __repr__(self):
-        return self.original
-
-    @property
-    def empty(self):
-        return not self.link and not self.requirement
-
-    @property
-    def section(self):
-        return self.local_section or self.parent_section
-
-    @property
-    def is_direct(self):
-        return self.requirement and self.section != "indirect"
-
-    def _set_requirement(self, line):
-        self.pkg_req = parsed_req(line)
-        self.requirement = line
-        if self.local_section:
-            self.note = "'%s' stated on line" % self.local_section
-
-        elif self.parent_section:
-            self.note = "in '%s' section" % self.parent_section
-
-        if not self.is_direct:
-            return
-
-        self.abstracted = line
-        if self.pkg_req and len(self.pkg_req.specs) == 1 and len(self.pkg_req.specs[0]) == 2 and self.pkg_req.specs[0][0] == "==":
-            # Look for very specific simple name==version specifications
-            if self.section != "pinned":
-                self.abstracted = self.pkg_req.name
-                if not self.note:
-                    self.note = "abstracted by default"
-
-    def _set_comment(self, comment):
-        comment = comment.strip()
-        if comment:
-            self.comment = comment
-            w = first_word(self.comment)
-            if w in KNOWN_SECTIONS:
-                self.local_section = w
-
-
-def decorated_line(content, comment):
-    if not comment:
-        return content
-
-    return "%s  # %s" % (content, comment)
-
-
-class RequirementsFile:
-    """ Keeps track of where requirements came from """
-
-    def __init__(self, path, abstract=False):
-        """
-        :param str|list path: Path to req file
-        :param bool abstract: If True, abstract away simple pinning (applicable to install_requires only)
-        """
-        self.source = relative_path(path)
-        self.reqs = []
-        self.abstracted = []
-        self.untouched = []
-        self.ignored = []
-        self.links = None
-        self.lines = []
-
-        current_section = None
-        for n, line in enumerate(readlines(self.source), start=1):
-            req_line = ReqLine(self, n, current_section, line)
-            self.lines.append(req_line)
-            if req_line.empty:
-                if req_line.local_section:
-                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
-                    current_section = req_line.local_section
-
-                continue
-
-            used = False
-            if req_line.link:
-                used = True
-                if self.links is None:
-                    self.links = []
-
-                self.links.append(req_line.link)
-
-            if req_line.is_direct:
-                used = True
-                req = req_line.abstracted if abstract else req_line.requirement
-                if req_line.requirement == req_line.abstracted:
-
-                    self.untouched.append(decorated_line(req_line.requirement, req_line.note))
-
-                else:
-                    self.abstracted.append(decorated_line(req_line.abstracted, req_line.note))
-
-                self.reqs.append(req)
-
-            if not used:
-                # reqs in 'indirect' sections are ignored, pinning was done to satisfy some indirect dependency,
-                # but should not be considered as our project's dep
-                self.ignored.append(decorated_line(req_line.requirement, req_line.note))
-
-
-class Requirements:
-    """ Allows to auto-fill requires from requirements.txt """
-
-    def __init__(self, pkg_info):
-        """
-        :param PackageInfo pkg_info: PKG-INFO, when available
-        """
-        self.links_source = None
-        self.install = self.get_requirements(True, pkg_info.requires_txt, "requirements.txt", "pinned.txt")
-        self.test = self.get_requirements(
-            False,
-            "tests/requirements.txt",  # Preferred
-            "requirements-dev.txt",  # Also accept other common variations
-            "dev-requirements.txt",
-            "test-requirements.txt",
-            "requirements-test.txt",
-        )
-
-        if pkg_info.dependency_links_txt:
-            self.links_source = setupmeta.relative_path(pkg_info.dependency_links_txt)
-            self.links = load_list(pkg_info.dependency_links_txt)
-
-        else:
-            self.links = []
-            self.add_links(self.install)
-            self.add_links(self.test)
-
-    def add_links(self, entries):
-        if entries and entries.links:
-            if not self.links_source:
-                self.links_source = entries.source
-            for link in entries.links:
-                if link not in self.links:
-                    self.links.append(link)
-
-    @staticmethod
-    def get_requirements(abstract, *relative_paths):
-        """ Read old-school requirements.txt type file """
-        for path in relative_paths:
-            if path:
-                path = project_path(path)
-                if os.path.isfile(path):
-                    trace("found requirements: %s" % path)
-                    return RequirementsFile(path, abstract=abstract)
 
 
 class SetupMeta(Settings):
@@ -690,7 +443,7 @@ class SetupMeta(Settings):
         self.pkg_info = PackageInfo(MetaDefs.project_dir)
         for key, value in self.pkg_info.info.items():
             if key in MetaDefs.all_fields:
-                self.add_definition(key, value, setupmeta.relative_path(self.pkg_info.path))
+                self.add_definition(key, value, relative_path(self.pkg_info.path))
 
         # Allow to auto-fill 'name' from setup.py's __title__, if any
         self.merge(SimpleModule("setup.py"))
@@ -746,8 +499,8 @@ class SetupMeta(Settings):
                     SimpleModule("src", package, "__init__.py"),
                 )
 
-        scm = scm or setupmeta.versioning.project_scm(MetaDefs.project_dir)
-        self.versioning = setupmeta.versioning.Versioning(self, scm)
+        scm = scm or project_scm(MetaDefs.project_dir)
+        self.versioning = Versioning(self, scm)
         self.versioning.auto_fill_version()
 
         self.fill_urls()
@@ -757,10 +510,10 @@ class SetupMeta(Settings):
         self.auto_adjust("maintainer", self.extract_email)
 
         self.requirements = Requirements(self.pkg_info)
-        self.auto_fill_requires("install", "install_requires")
-        self.auto_fill_requires("test", "tests_require")
-        if self.requirements.links:
-            self.auto_fill("dependency_links", self.requirements.links, self.requirements.links_source)
+        self.auto_fill_requires("install_requires")
+        self.auto_fill_requires("tests_require")
+        if self.requirements.dependency_links:
+            self.auto_fill("dependency_links", self.requirements.dependency_links, self.requirements.links_source)
 
         self.auto_fill_classifiers()
         self.auto_fill_entry_points()
@@ -865,7 +618,7 @@ class SetupMeta(Settings):
 
     def auto_fill_entry_points(self, key="entry_points"):
         if self.pkg_info.entry_points_txt:
-            self.add_definition(key, load_contents(self.pkg_info.entry_points_txt), setupmeta.relative_path(self.pkg_info.entry_points_txt))
+            self.add_definition(key, load_contents(self.pkg_info.entry_points_txt), relative_path(self.pkg_info.entry_points_txt))
         path = "%s.ini" % key
         self.add_definition(key, load_contents(path), path)
 
@@ -876,10 +629,10 @@ class SetupMeta(Settings):
         if short:
             self.auto_fill("license", short)
 
-    def auto_fill_requires(self, field, attr):
+    def auto_fill_requires(self, field):
         req = getattr(self.requirements, field)
         if req:
-            self.auto_fill(attr, req.reqs, req.source)
+            self.auto_fill(field, req.filled_requirements, req.source)
 
     @property
     def name(self):

@@ -2,7 +2,7 @@
                        author: (PKG-INFO                                ) Zoran Simic
                  author_email: (PKG-INFO                                ) zoran@simicweb.com
                   classifiers: (PKG-INFO                                ) ["Intended Audience :: Developers", "Programming Language :: Python"]
-             dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://somewhere.com/test.git"]
+             dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://somewhere.com/test.git#egg=mytest"]
                   description: (PKG-INFO                                ) An example test case with info coming from PKG-INFO
                  download_url: (PKG-INFO                                ) http://somewhere.net/pre-packaged/releases/download/v1.7.1/pickley
                  entry_points: (src/pre_packaged.egg-info/entry_points.txt) [console_scripts] pre-packaged-test = pre_packaged:main
@@ -40,7 +40,7 @@ setup(
     author="Zoran Simic",                                            # from PKG-INFO
     author_email="zoran@simicweb.com",                               # from PKG-INFO
     classifiers=["Intended Audience :: Developers", "Programming Language :: Python"], # from PKG-INFO
-    dependency_links=["git+https://somewhere.com/test.git"],         # from src/pre_packaged.egg-info/dependency_links.txt
+    dependency_links=["git+https://somewhere.com/test.git#egg=mytest"], # from src/pre_packaged.egg-info/dependency_links.txt
     description="An example test case with info coming from PKG-INFO", # from PKG-INFO
     download_url="http://somewhere.net/pre-packaged/releases/download/v1.7.1/pickley", # from PKG-INFO
     entry_points="""[console_scripts]

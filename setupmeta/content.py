@@ -3,7 +3,6 @@ Functionality related to interacting with project and distutils content
 """
 
 import glob
-import io
 import os
 import re
 
@@ -14,18 +13,6 @@ import setupmeta
 RE_README_TOKEN = re.compile(r"(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?")
 
 
-def readlines(relative_path, limit=0):
-    if relative_path:
-        full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, "rt") as fh:
-            for line in fh:
-                limit -= 1
-                if limit == 0:
-                    break
-
-                yield line
-
-
 def load_contents(relative_path, limit=0):
     """Return contents of file with 'relative_path'
 
@@ -33,44 +20,40 @@ def load_contents(relative_path, limit=0):
     :param int limit: Max number of lines to load
     :return str|None: Contents, if any
     """
-    if relative_path:
-        try:
-            return "".join(readlines(relative_path, limit=limit)).strip()
-
-        except IOError:
-            return None
+    lines = setupmeta.readlines(relative_path, limit=limit)
+    if lines is not None:
+        return "".join(lines).strip()
 
 
 def load_readme(relative_path, limit=0):
     """ Loader for README files """
-    content = []
-    try:
-        full_path = setupmeta.project_path(relative_path)
-        with io.open(full_path, "rt") as fh:
-            for line in fh.readlines():
-                m = RE_README_TOKEN.search(line)
-                if not m:
-                    content.append(line)
-                    continue
-                pre, post = m.group(1), m.group(4)
-                pre = pre and pre.strip()
-                post = post and post.strip()
-                if pre or post:
-                    content.append(line)
-                    continue  # Not beginning/end, or no spaces around
-                action = m.group(2)
-                param = m.group(3)
-                if action == "end" and param == "long_description":
-                    break
-                if action == "include":
-                    included = load_readme(param, limit=limit)
-                    if included:
-                        content.append(included)
+    lines = setupmeta.readlines(relative_path, limit=limit)
+    if lines is not None:
+        content = []
+        for line in lines:
+            m = RE_README_TOKEN.search(line)
+            if not m:
+                content.append(line)
+                continue
 
-            return "".join(content).strip()
+            pre, post = m.group(1), m.group(4)
+            pre = pre and pre.strip()
+            post = post and post.strip()
+            if pre or post:
+                content.append(line)
+                continue  # Not beginning/end, or no spaces around
 
-    except IOError:
-        return None
+            action = m.group(2)
+            param = m.group(3)
+            if action == "end" and param == "long_description":
+                break
+
+            if action == "include":
+                included = load_readme(param, limit=limit)
+                if included:
+                    content.append(included)
+
+        return "".join(content).strip()
 
 
 def extract_list(content, comment="#"):

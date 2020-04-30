@@ -3,7 +3,6 @@ import re
 import shutil
 import sys
 
-import pkg_resources
 import pytest
 from mock import patch
 from six import StringIO
@@ -85,7 +84,7 @@ def test_check_dependencies():
         with patch("os.path.isdir", return_value=True):
             assert find_venv()
 
-    with patch("setupmeta.commands.pkg_resources", spec=str):
+    with patch("setupmeta.pkg_resources", spec=str):
         with conftest.capture_output() as logged:
             assert _show_dependencies(None) == 1
             assert "pkg_resources is not available" in logged
@@ -94,7 +93,7 @@ def test_check_dependencies():
 class FakeDist:
 
     def __init__(self, spec, requires):
-        req = pkg_resources.Requirement.parse(spec)
+        req = setupmeta.pkg_req(spec)
         self.key = req.key
         self.version = req.specs[0][1] if req.specs else "1.0"
         self._requires = requires
@@ -108,7 +107,7 @@ class FakeDist:
         for spec in specs.split():
             name, _, req = spec.partition(":")
             if req:
-                req = [pkg_resources.Requirement.parse(r) for r in req.split("+")]
+                req = [setupmeta.pkg_req(r) for r in req.split("+")]
             else:
                 req = []
             result.append(FakeDist(name, req))
