@@ -37,9 +37,10 @@ RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 PLATFORM = platform.system().lower()
 WINDOWS = "windows" in PLATFORM
 
-# Dependency links in requirements.txt files
+# Simplistic parsing of known formats used in requirements.txt
 RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
 RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
+RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([A-Za-z0-9.]+)\s*(;.*)?$")
 
 K_ABSTRACT = "abstract"
 K_INDIRECT = "indirect"
@@ -356,10 +357,6 @@ def relative_path(full_path):
 
 
 def readlines(relative_path, limit=0):
-    if isinstance(relative_path, list):
-        # Handy for testing: accept pre-read list of lines as well
-        return relative_path
-
     if relative_path:
         try:
             result = []
@@ -376,6 +373,39 @@ def readlines(relative_path, limit=0):
 
         except IOError:
             return None
+
+
+def requirements_from_text(text):
+    """Transform contents of a requirements.txt file to an appropriate form for install_requires
+    Example:
+        foo==1.0
+        bar==2.0; python_version >= '3.6'
+        baz>=1.2
+
+    Transformed to: ["foo", "bar; python_version >= '3.6'", "baz>=1.2"]
+
+    :param str text: Contents (text) of a requirements.txt file
+    :return list: List of parsed and abstracted requirements
+    """
+    r = RequirementsFile("adhoc", text.splitlines())
+    return r.filled_requirements
+
+
+def requirements_from_file(path):
+    """Transform contents of a requirements.txt file to an appropriate form for install_requires
+    Example:
+        foo==1.0
+        bar==2.0; python_version >= '3.6'
+        baz>=1.2
+
+    Transformed to: ["foo", "bar; python_version >= '3.6'", "baz>=1.2"]
+
+    :param str path: Path of requirements.txt file to read
+    :return list|None: List of parsed and abstracted requirements
+    """
+    r = RequirementsFile.from_file(path)
+    if r is not None:
+        return r.filled_requirements
 
 
 def extracted_dependency_link(line):
@@ -428,7 +458,6 @@ class ReqLine(object):
         self.editable = False
         self.requirement = None
         self.abstracted = None
-        self.pkg_req = None
         self.link = None
         self.note = None
         if not line or line.startswith("#"):
@@ -482,7 +511,6 @@ class ReqLine(object):
         return self.requirement and self.section != K_INDIRECT
 
     def _set_requirement(self, line):
-        self.pkg_req = pkg_req(line)
         self.requirement = line
         if self.local_section:
             self.note = "'%s' stated on line" % self.local_section
@@ -494,10 +522,13 @@ class ReqLine(object):
             return
 
         self.abstracted = line
-        if self.pkg_req and len(self.pkg_req.specs) == 1 and len(self.pkg_req.specs[0]) == 2 and self.pkg_req.specs[0][0] == "==":
-            # Abstract only very specific and simple name==version reqs
-            if self.section != K_PINNED:
-                self.abstracted = self.pkg_req.name
+        if self.section != K_PINNED:
+            # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
+            m = RE_SIMPLE_PIN.match(line)
+            if m:
+                name = m.group(1)
+                spec = m.group(3)
+                self.abstracted = name if not spec else "%s%s" % (name, spec)
                 if not self.note:
                     self.note = "abstracted by default"
 
@@ -520,24 +551,19 @@ def decorated_line(content, comment):
 class RequirementsFile:
     """ Keeps track of where requirements came from """
 
-    def __init__(self, path):
+    def __init__(self, source, lines):
         """
-        :param str|list|None path: Path to req file
+        :param str source: Name identifying where `lines` came from
+        :param list|None lines: Line contents to parse
         """
-        self.source = relative_path(path)
+        self.source = source
         self.filled_requirements = []
         self.dependency_links = None
         self.abstracted = []
         self.ignored = []
         self.untouched = []
         self.lines = []
-
         current_section = None
-        lines = readlines(self.source)
-        if lines is None:
-            # Source could not be read
-            return
-
         for n, line in enumerate(lines, start=1):
             req_line = ReqLine(self, n, current_section, line)
             self.lines.append(req_line)
@@ -574,6 +600,16 @@ class RequirementsFile:
                 # but should NOT be considered as our project's dep
                 self.ignored.append(decorated_line(req_line.requirement, req_line.note))
 
+    @classmethod
+    def from_file(cls, path):
+        """
+        :param str path: Path to requirements.txt file to read
+        :return RequirementsFile|None: Associated object, if possible
+        """
+        lines = readlines(path)
+        if lines is not None:
+            return cls(relative_path(path), lines)
+
 
 def find_requirements(*relative_paths):
     """ Read old-school requirements.txt type file """
@@ -582,7 +618,7 @@ def find_requirements(*relative_paths):
             path = project_path(path)
             if os.path.isfile(path):
                 trace("found requirements: %s" % path)
-                return RequirementsFile(path)
+                return RequirementsFile.from_file(path)
 
 
 class Requirements:
@@ -603,7 +639,7 @@ class Requirements:
         )
 
         if pkg_info.dependency_links:
-            rf = RequirementsFile(pkg_info.dependency_links)
+            rf = RequirementsFile.from_file(pkg_info.dependency_links)
             self.links_source = rf.source
             self.dependency_links = rf.dependency_links
 

@@ -58,22 +58,33 @@ def test_requirements():
     assert setupmeta.pkg_req(None) is None
     assert setupmeta.pkg_req("#foo") is None
 
-    f = setupmeta.RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
-    assert len(f.lines) == 15
+    assert setupmeta.requirements_from_file("/dev/null/foo") is None
+
+    sample = conftest.resouce("scenarios/disabled/requirements.txt")
+    f = setupmeta.RequirementsFile.from_file(sample)
+    assert len(f.lines) == 16
     assert str(f.lines[0]) == "chardet==3.0.4"
-    assert f.filled_requirements == ["chardet", "requests", "runez", "some-project"]
-    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=runez", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
-    assert f.abstracted == ["chardet  # abstracted by default"]
+    assert f.filled_requirements == ["chardet", "foo_bar; python_version >= '3.6'", "requests", "my_egg", "some-project"]
+    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=my_egg", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
+    assert f.abstracted == ["chardet  # abstracted by default", "foo_bar; python_version >= '3.6'  # abstracted by default"]
     assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
-    assert f.untouched == ["requests", "runez", "some-project"]
+    assert f.untouched == ["requests", "my_egg", "some-project"]
 
-    f = setupmeta.RequirementsFile("".splitlines())
-    assert not f.lines
-    assert not f.filled_requirements
+    fr = setupmeta.requirements_from_file(sample)
+    assert fr == f.filled_requirements
+
+    sample = "a==1.0\nb; python_version >= '3.6'"
+    f = setupmeta.RequirementsFile("test", sample.splitlines())
+    assert len(f.lines) == 2
+    assert f.filled_requirements == ["a", "b; python_version >= '3.6'"]
     assert not f.dependency_links
-    assert not f.abstracted
+    assert f.abstracted == ["a  # abstracted by default"]
+    assert f.untouched == ["b; python_version >= '3.6'"]
 
-    f = setupmeta.RequirementsFile(None)
+    fr = setupmeta.requirements_from_text(sample)
+    assert fr == f.filled_requirements
+
+    f = setupmeta.RequirementsFile("test", [])
     assert not f.lines
     assert not f.filled_requirements
     assert not f.dependency_links
