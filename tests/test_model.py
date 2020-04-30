@@ -62,13 +62,13 @@ def test_requirements():
 
     sample = conftest.resouce("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
-    assert len(f.lines) == 15
+    assert len(f.lines) == 16
     assert str(f.lines[0]) == "chardet==3.0.4"
-    assert f.filled_requirements == ["chardet", "requests", "runez", "some-project"]
-    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=runez", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
-    assert f.abstracted == ["chardet  # abstracted by default"]
+    assert f.filled_requirements == ["chardet", "foo_bar; python_version >= '3.6'", "requests", "my_egg", "some-project"]
+    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=my_egg", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
+    assert f.abstracted == ["chardet  # abstracted by default", "foo_bar; python_version >= '3.6'  # abstracted by default"]
     assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
-    assert f.untouched == ["requests", "runez", "some-project"]
+    assert f.untouched == ["requests", "my_egg", "some-project"]
 
     fr = setupmeta.requirements_from_file(sample)
     assert fr == f.filled_requirements

@@ -37,9 +37,10 @@ RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 PLATFORM = platform.system().lower()
 WINDOWS = "windows" in PLATFORM
 
-# Dependency links in requirements.txt files
+# Simplistic parsing of known formats used in requirements.txt
 RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
 RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
+RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([A-Za-z0-9.]+)\s*(;.*)?$")
 
 K_ABSTRACT = "abstract"
 K_INDIRECT = "indirect"
@@ -455,7 +456,6 @@ class ReqLine(object):
         self.editable = False
         self.requirement = None
         self.abstracted = None
-        self.pkg_req = None
         self.link = None
         self.note = None
         if not line or line.startswith("#"):
@@ -509,7 +509,6 @@ class ReqLine(object):
         return self.requirement and self.section != K_INDIRECT
 
     def _set_requirement(self, line):
-        self.pkg_req = pkg_req(line)
         self.requirement = line
         if self.local_section:
             self.note = "'%s' stated on line" % self.local_section
@@ -521,10 +520,13 @@ class ReqLine(object):
             return
 
         self.abstracted = line
-        if self.pkg_req and len(self.pkg_req.specs) == 1 and len(self.pkg_req.specs[0]) == 2 and self.pkg_req.specs[0][0] == "==":
-            # Abstract only very specific and simple name==version reqs
-            if self.section != K_PINNED:
-                self.abstracted = self.pkg_req.name
+        if self.section != K_PINNED:
+            # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
+            m = RE_SIMPLE_PIN.match(line)
+            if m:
+                name = m.group(1)
+                spec = m.group(3)
+                self.abstracted = name if not spec else "%s%s" % (name, spec)
                 if not self.note:
                     self.note = "abstracted by default"
 

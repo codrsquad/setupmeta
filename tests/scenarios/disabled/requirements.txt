@@ -1,5 +1,6 @@
 chardet==3.0.4
 coverage>=5.0  # indirect
+foo_bar==1.0; python_version >= '3.6'
 
 # Unknown [] sections ignored
 [:python_version < "3.7"]
@@ -7,7 +8,7 @@ requests
 
 # URLs properly auto-filled as dependency_links
 [foo]
--e git://a.b/c/p1.git#egg=runez
+-e git://a.b/c/p1.git#egg=my_egg
 some-project @ https://a.b/c/p2.git@u/pp
 
 # Folders taken as-is
