@@ -3,20 +3,14 @@ Commands contributed by setupmeta
 """
 
 import collections
+import distutils.command.check
 import os
 import platform
 import shutil
 import sys
-from distutils.command.check import check
 from itertools import chain
 
 import setuptools
-
-try:
-    import pkg_resources
-
-except ImportError:  # pragma: no cover
-    pkg_resources = None
 
 import setupmeta
 
@@ -31,7 +25,7 @@ def abort(message):
 
 
 def get_pip_config(key, default=None):
-    """Configured pip key, if available"""
+    """Configured pip key, if available (from ~/.config/pip/pip.conf or /etc/pip.conf)"""
     try:
         from pip._internal.configuration import Configuration
         cc = Configuration(isolated=False)
@@ -134,24 +128,24 @@ class UberEggCommand(setuptools.Command):
 
 
 @MetaCommand
-class CheckCommand(check):
+class CheckCommand(distutils.command.check.check):
     """Perform checks on the package"""
 
-    user_options = check.user_options + [
+    user_options = distutils.command.check.check.user_options + [
         ("status", "t", "Show git status recap (useful to get evidence as to why version was dirty during CI jobs)"),
         ("deptree", "d", "Show dependency tree (from currently activated venv, or ./.venv, or ./venv)"),
         ("reqs", "q", "Show how many requirements were auto-abstracted or ignored, if any"),
     ]
 
     def initialize_options(self):
-        check.initialize_options(self)
+        distutils.command.check.check.initialize_options(self)
         self.status = None
         self.deptree = None
         self.reqs = None
 
     def run(self):
         if not self.setupmeta:
-            return check.run(self)
+            return distutils.command.check.check.run(self)
 
         if count(self.restructuredtext, self.status, self.deptree, self.reqs) == 0:
             self.status = 1
@@ -166,20 +160,21 @@ class CheckCommand(check):
         if self.deptree:
             self._warnings = _show_dependencies(self.setupmeta.definitions)
 
-        check.run(self)
+        distutils.command.check.check.run(self)
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
-        reqs = self.setupmeta.requirements.install
-        if reqs and (reqs.abstracted or reqs.ignored or reqs.links):
+        reqs = self.setupmeta.requirements.install_requires
+        if reqs and (reqs.abstracted or reqs.ignored or reqs.dependency_links):
             message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
                 len(reqs.abstracted),
                 len(reqs.ignored),
                 len(reqs.untouched),
             )
 
-            if self.setupmeta.requirements.links or reqs.links:
-                message += ", %s dependency links" % len(self.setupmeta.requirements.links or reqs.links)
+            dependency_links = self.setupmeta.requirements.dependency_links or reqs.dependency_links
+            if dependency_links:
+                message += ", %s dependency links" % len(dependency_links)
 
             print(message)
 
@@ -265,7 +260,7 @@ class ExplainCommand(setuptools.Command):
         :param RequirementsFile requirements:
         """
         content = "None,   # no auto-fill"
-        if requirements and requirements.reqs:
+        if requirements and requirements.filled_requirements:
             names = []
             notes = []
             for line_req in requirements.lines:
@@ -289,14 +284,14 @@ class ExplainCommand(setuptools.Command):
     def show_dependencies(self):
         """Copy-pastable code snippet with install_requires/tests_require"""
         print("    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py")
-        install = None
-        test = None
+        install_requires = None
+        tests_require = None
         if self.setupmeta.requirements:
-            install = self.setupmeta.requirements.install
-            test = self.setupmeta.requirements.test
+            install_requires = self.setupmeta.requirements.install_requires
+            tests_require = self.setupmeta.requirements.tests_require
 
-        self.show_requirements("install_requires", install)
-        self.show_requirements("tests_require", test)
+        self.show_requirements("install_requires", install_requires)
+        self.show_requirements("tests_require", tests_require)
 
     def show_expanded_python(self):
         """Copy-pastable setup.py, if one wants to get rid of setupmeta"""
@@ -632,7 +627,7 @@ def _show_dependencies(definitions):
     """
     Conveniently  get dependency tree via ./setup.py check --dep, similar to https://pypi.org/project/pipdeptree
     """
-    if not hasattr(pkg_resources, "WorkingSet"):
+    if setupmeta.pkg_resources is None or not hasattr(setupmeta.pkg_resources, "WorkingSet"):
         setupmeta.warn("pkg_resources is not available, can't show dependencies")
         return 1
 
@@ -646,7 +641,7 @@ def _show_dependencies(definitions):
         setupmeta.warn("Could not find 'site-packages' subfolder in '%s'" % venv)
         return 1
 
-    tree = DepTree(pkg_resources.WorkingSet(entries), definitions)
+    tree = DepTree(setupmeta.pkg_resources.WorkingSet(entries), definitions)
     print(tree.rendered())
     return len(tree.conflicts) + len(tree.cycles)
 
@@ -662,7 +657,7 @@ class PipReq(object):
         self.key = obj.key
         self.version = package.version
         self.version_spec = ",".join(["".join(sp) for sp in sorted(obj.specs, reverse=True)])
-        self.version_rec = pkg_resources.Requirement.parse("%s%s" % (self.key, self.version_spec or ""))
+        self.version_rec = setupmeta.pkg_req("%s%s" % (self.key, self.version_spec or ""))
         self.is_conflicting = not self.package.version or self.package.version not in self.version_rec
 
     def __repr__(self):
@@ -780,9 +775,9 @@ class DepTree:
     def __init__(self, ws, definitions):
         self.packages = dict((d.key, PipPackage(self, d)) for d in ws)
         self.setup = definitions.get("setup_requires"),
-        self.install = definitions.get("install_requires")
-        self.test = definitions.get("tests_require")
-        self.extras = definitions.get("extras_require")
+        self.install_requires = definitions.get("install_requires")
+        self.tests_require = definitions.get("tests_require")
+        self.extras_require = definitions.get("extras_require")
         self.conflicts = set()
         self.cycles = {}
 
@@ -803,7 +798,7 @@ class DepTree:
     def get_packages(self, dependencies):
         result = []
         for dep in dependencies:
-            p = self.get_package(pkg_resources.Requirement.parse(dep))
+            p = self.get_package(setupmeta.pkg_req(dep))
             if p:
                 result.append(p)
 
@@ -846,14 +841,14 @@ class DepTree:
         result = ["Dependency tree:"]
         seen = set()
 
-        if self.install:
-            self.render_section(result, seen, "install_requires", self.install.value)
+        if self.install_requires:
+            self.render_section(result, seen, "install_requires", self.install_requires.value)
 
-        if self.test:
-            self.render_section(result, seen, "tests_require", self.test.value)
+        if self.tests_require:
+            self.render_section(result, seen, "tests_require", self.tests_require.value)
 
-        if self.extras and self.extras.value:
-            for name, value in self.extras.value.items():
+        if self.extras_require and self.extras_require.value:
+            for name, value in self.extras_require.value.items():
                 self.render_section(result, seen, "extras_require[%s]" % name, value)
 
         other = set(self.packages.values()) - seen

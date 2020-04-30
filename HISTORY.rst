@@ -2,6 +2,14 @@
 History
 =======
 
+2.7.1 (2020-04-30)
+-------------------
+
+* Consistently apply auto-abstraction to ``tests_require`` as well
+
+* Internally use consistent names for ``install_requires``, ``tests_require`` and ``extras_require``
+
+
 2.7.0 (2020-04-29)
 -------------------
 

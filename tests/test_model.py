@@ -3,7 +3,8 @@ import sys
 
 from mock import MagicMock, patch
 
-from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, parsed_req, RequirementsFile, SetupMeta
+import setupmeta
+from setupmeta.model import Definition, DefinitionEntry, first_word, get_pip, is_setup_py_path, Requirements, RequirementsFile, SetupMeta
 
 from . import conftest
 
@@ -54,20 +55,28 @@ def test_representation():
 
 
 def test_requirements():
-    assert parsed_req(None) is None
-    assert parsed_req("#foo") is None
+    assert setupmeta.pkg_req(None) is None
+    assert setupmeta.pkg_req("#foo") is None
 
     f = RequirementsFile(conftest.resouce("scenarios/disabled/requirements.txt"))
-    assert len(f.lines) == 14
-    assert str(f.lines[0]) == "chardet"
-    assert f.links == ["git+git://a.b/c/p1.git#egg=runez", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
-    assert f.reqs == ["chardet", "requests", "runez", "some-project"]
-    assert f.untouched == f.reqs
+    assert len(f.lines) == 15
+    assert str(f.lines[0]) == "chardet==3.0.4"
+    assert f.filled_requirements == ["chardet", "requests", "runez", "some-project"]
+    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=runez", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
+    assert f.abstracted == ["chardet  # abstracted by default"]
+    assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
+    assert f.untouched == ["requests", "runez", "some-project"]
 
     f = RequirementsFile("".splitlines())
     assert not f.lines
-    assert not f.links
-    assert not f.reqs
+    assert not f.filled_requirements
+    assert not f.dependency_links
+    assert not f.abstracted
+
+    f = RequirementsFile(None)
+    assert not f.lines
+    assert not f.filled_requirements
+    assert not f.dependency_links
     assert not f.abstracted
 
 
@@ -76,8 +85,9 @@ def test_empty():
     assert not meta.attrs
     assert not meta.definitions
     assert not meta.name
-    assert not meta.requirements.install
-    assert not meta.requirements.test
+    assert isinstance(meta.requirements, Requirements)
+    assert not meta.requirements.install_requires
+    assert not meta.requirements.tests_require
     assert not meta.version
     assert not meta.versioning.enabled
     assert meta.versioning.problem == "setupmeta versioning not enabled"
