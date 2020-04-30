@@ -95,7 +95,7 @@ class UberEggCommand(setuptools.Command):
                 easy_install = os.path.join(os.path.dirname(sys.executable), "easy_install")
                 common_args = ["-zax", "-d", "."]
                 index_url = get_pip_config("global.index-url")
-                if index_url:
+                if index_url:  # pragma: no cover, only applicable if one has configured index url
                     common_args.append("-i")
                     common_args.append(index_url)
 
