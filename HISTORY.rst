@@ -2,6 +2,12 @@
 History
 =======
 
+2.7.2 (2020-04-30)
+-------------------
+
+* Corrected bug: parsing ``PKG-INFO`` files properly
+
+
 2.7.1 (2020-04-30)
 -------------------
 

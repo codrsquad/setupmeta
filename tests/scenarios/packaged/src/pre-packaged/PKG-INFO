@@ -1,12 +1,14 @@
 Metadata-Version: 2.1
 Name: pre-packaged
 Version: 2.3.2.dev1+ged11e58
-Summary: An example test case with info coming from PKG-INFO
+Summary: Project description
 Home-page: http://somewhere.net/pre-packaged
 License: UNKNOWN
-Description: # An example test case with info coming from PKG-INFO
+Description:
+        # Project description
 
-        Most of the metadata for this project comes from the ``.egg-info`` folder
+        This scenario simulates a PKG, no git source available
+
 Platform: UNKNOWN
 Classifier: Intended Audience :: Developers
 Classifier: Programming Language :: Python

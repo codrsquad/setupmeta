@@ -32,6 +32,9 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 # Finds simple docstring entries like: author: Zoran Simic
 RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 
+# Match PKG-INFO metadata, of the form: Some-Key: some value
+RE_PKG_KEY_VALUE = re.compile(r"^([-A-Za-z0-9_]+):\s?(.*)$")
+
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
 
@@ -334,7 +337,7 @@ class PackageInfo:
         "home_page": "url",
         "summary": "description",
     }
-    _list_types = ["classifiers", "long_description"]
+    _list_types = {"classifiers", "long_description"}
 
     def __init__(self, root):
         self.path = os.path.join(root, "PKG-INFO")
@@ -348,21 +351,16 @@ class PackageInfo:
             return
 
         # Parse PKG-INFO when present
-        line_number = 0
         key = None
-        for line in lines:
-            line = line.rstrip()
-            line_number += 1
-            if line.startswith(" "):
-                self.info[key].append(line[8:])
-                continue
-
-            if ": " in line:
-                key, _, value = line.partition(": ")
-                key = self.canonical_key(key)
-                if key is None:
+        for line_number, line in enumerate(lines, start=1):
+            m = RE_PKG_KEY_VALUE.match(line)
+            if m:
+                key = m.group(1).lower().replace("-", "_")
+                key = self._canonical_names.get(key, key)
+                if key not in MetaDefs.all_fields:
                     continue
 
+                value = m.group(2)
                 if key in self._list_types:
                     if key not in self.info:
                         self.info[key] = []
@@ -372,24 +370,17 @@ class PackageInfo:
                 else:
                     self.info[key] = value
 
-                continue
+            elif key in self._list_types:
+                # Indented description applying to previous key
+                self.info[key].append(line[8:].rstrip())
 
-            trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
+            elif line.strip():
+                trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
 
         self.name = self.info.get("name")
         self.pythonified_name = pythonified_name(self.name)
         self.info["long_description"] = "\n".join(self.info.get("long_description", []))
         self.load_more_info(root)
-
-    def canonical_key(self, key):
-        """
-        :param str key: Key from PKG-INFO
-        :return str|None: Corresponding key for setuptools.setup(), if any
-        """
-        key = key.lower().replace("-", "_")
-        key = self._canonical_names.get(key, key)
-        if key in MetaDefs.all_fields:
-            return key
 
     def load_more_info(self, folder, depth=3):
         """

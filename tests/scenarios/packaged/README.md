@@ -1,3 +1,3 @@
-# An example test case with info coming from PKG-INFO
+# Project description
 
-Most of the metadata for this project comes from the ``.egg-info`` folder
+This scenario simulates a PKG, no git source available

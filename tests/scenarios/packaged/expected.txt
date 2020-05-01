@@ -3,13 +3,13 @@
                  author_email: (PKG-INFO                                ) zoran@simicweb.com
                   classifiers: (PKG-INFO                                ) ["Intended Audience :: Developers", "Programming Language :: Python"]
              dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://somewhere.com/test.git#egg=mytest"]
-                  description: (PKG-INFO                                ) An example test case with info coming from PKG-INFO
+                  description: (PKG-INFO                                ) Project description
                  download_url: (PKG-INFO                                ) http://somewhere.net/pre-packaged/releases/download/v1.7.1/pickley
                  entry_points: (src/pre_packaged.egg-info/entry_points.txt) [console_scripts] pre-packaged-test = pre_packaged:main
              install_requires: (src/pre_packaged.egg-info/requires.txt  ) ["beautifulsoup4>=4.4.0", "pytest", "wonka", "mytest"]
                       license: (PKG-INFO                                ) MIT
-             long_description: (PKG-INFO                                ) # An example test case with info coming from PKG-INFO Most of the metadata for this project comes from ...
-                           \_: (README.md                               ) # An example test case with info coming from PKG-INFO Most of the metadata for this project comes from ...
+             long_description: (PKG-INFO                                ) # Project description This scenario simulates a PKG, no git source available
+                           \_: (README.md                               ) # Project description This scenario simulates a PKG, no git source available
 long_description_content_type: (PKG-INFO                                ) text/markdown
                            \_: (README.md                               ) text/markdown
                          name: (explicit                                ) pre-packaged
@@ -41,7 +41,7 @@ setup(
     author_email="zoran@simicweb.com",                               # from PKG-INFO
     classifiers=["Intended Audience :: Developers", "Programming Language :: Python"], # from PKG-INFO
     dependency_links=["git+https://somewhere.com/test.git#egg=mytest"], # from src/pre_packaged.egg-info/dependency_links.txt
-    description="An example test case with info coming from PKG-INFO", # from PKG-INFO
+    description="Project description",                               # from PKG-INFO
     download_url="http://somewhere.net/pre-packaged/releases/download/v1.7.1/pickley", # from PKG-INFO
     entry_points="""[console_scripts]
 pre-packaged-test = pre_packaged:main""",                            # from src/pre_packaged.egg-info/entry_points.txt
