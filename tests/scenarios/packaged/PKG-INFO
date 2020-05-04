@@ -2,11 +2,11 @@ Metadata-Version: 2.1
 Name: pre-packaged
 Version: 1.3.2.dev4
 Summary: Project description
-Home-page: http://somewhere.net/pre-packaged
+Home-page: http://example.com/pre-packaged
 Author: Zoran Simic
 Author-email: zoran@simicweb.com
 License: MIT
-Download-URL: http://somewhere.net/pre-packaged/releases/download/v1.7.1/pickley
+Download-URL: http://example.com/pre-packaged/releases/download/v1.7.1/pickley
 Description:
         # Project description
 

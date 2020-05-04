@@ -5,5 +5,5 @@ setup(
     name="pre-packaged",
     setup_requires=["setupmeta"],
     versioning="dev",
-    url="http://somewhere.net/pre-packaged",
+    url="http://example.com/pre-packaged",
 )

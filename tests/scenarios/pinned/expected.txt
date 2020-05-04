@@ -1,7 +1,7 @@
 :: explain -c180 -r
           author: (auto-adjust) Someone
-              \_: (pinned.py:5) Someone someone@somewhere.com
-    author_email: (auto-adjust) someone@somewhere.com
+              \_: (pinned.py:5) Someone someone@example.com
+    author_email: (auto-adjust) someone@example.com
      classifiers: (missing    ) - Consider specifying 'classifiers'
      description: (setup.py:3 ) This is a package that has setupmeta pinned to an explicit version range.
     download_url: (missing    ) - Consider specifying 'download_url'
@@ -26,7 +26,7 @@ from setuptools import setup
 __version__ = "0.1.0"
 setup(
     author="Someone",                                                 # from pinned.py:5
-    author_email="someone@somewhere.com",
+    author_email="someone@example.com",
     description="This is a package that has setupmeta pinned to an explicit version range.", # from setup.py:3
     license="MIT",                                                    # from pinned.py:4
     name="pinned",

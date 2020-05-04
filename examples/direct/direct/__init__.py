@@ -2,7 +2,7 @@
 A package implemented by one direct (not under src/) module folder
 
 keywords: direct, package
-author: Someone someone@somewhere.com
+author: Someone someone@example.com
 """
 
 __version__ = "1.0.0"

@@ -1,9 +1,9 @@
--i https://somewhere.net/pypi/
+-i https://example.com/pypi/
 
 flake8==3.7.9
 pytest-cov<3.0.0
 setuptools>=46.1
--e https://somewhere.com/foo.git#egg=click
+-e https://a.b/c/p1.git#egg=click
 
 # indirect, will be ignored due to being in an 'indirect' section
--e git+https://foo.com/test.git#egg=bar
+-e git+https://a.b/c/p2.git#egg=bar

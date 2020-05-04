@@ -52,7 +52,7 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
     A hierarchical package (code under src/, tests under tests/)
 
     keywords: hierarchical, package
-    author: Someone someone@somewhere.com
+    author: Someone someone@example.com
     """
 
     __version__ = '1.0.0'
@@ -67,8 +67,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
 * ``explain`` output::
 
               author: (auto-adjust                    ) Someone
-                  \_: (src/hierarchical/__init__.py:5 ) Someone someone@somewhere.com
-        author_email: (auto-adjust                    ) someone@somewhere.com
+                  \_: (src/hierarchical/__init__.py:5 ) Someone someone@example.com
+        author_email: (auto-adjust                    ) someone@example.com
          classifiers: (classifiers.txt                ) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: MIT License']
          description: (README.rst:1                   ) A hierarchical package (code under src/)
                   \_: (src/hierarchical/__init__.py:2 ) A hierarchical package (code under src/, tests under tests/)

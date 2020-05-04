@@ -39,7 +39,7 @@ This example shows:
     This is a python package implemented by a single .py file
 
     license: MIT
-    author: Someone someone@somewhere.com
+    author: Someone someone@example.com
     """
 
     __version__ = '0.1.0'
@@ -48,8 +48,8 @@ This example shows:
 * ``explain`` output::
 
               author: (auto-adjust ) Someone
-                  \_: (single.py:5 ) Someone someone@somewhere.com
-        author_email: (auto-adjust ) someone@somewhere.com
+                  \_: (single.py:5 ) Someone someone@example.com
+        author_email: (auto-adjust ) someone@example.com
          description: (README.rst:1) A package implemented by a single .py file
                   \_: (single.py:2 ) This is a python package implemented by a single .py file
              license: (single.py:4 ) MIT

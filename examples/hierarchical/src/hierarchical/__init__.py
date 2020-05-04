@@ -2,7 +2,7 @@
 A hierarchical package (code under src/, tests under tests/)
 
 keywords: hierarchical, package
-author: Someone someone@somewhere.com
+author: Someone someone@example.com
 """
 
 __version__ = "1.0.0"

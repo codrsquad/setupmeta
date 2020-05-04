@@ -1,4 +1,4 @@
--i https://pypi.python.org/simple/
+-i https://example.com/pypi/
 a
 b==1
 c==1 # abstract (edge case: abstract within implicit abstract section)

@@ -1,5 +1,5 @@
 """
-download_url: http://somewhere.net/readmes
+download_url: http://example.com/readmes
 foo: bar    # edge case: not a description, key/value definition
 """
 

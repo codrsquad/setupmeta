@@ -1,1 +1,1 @@
-git+https://somewhere.com/test.git#egg=wheel
+git+https://a.b/c/p1.git#egg=wheel

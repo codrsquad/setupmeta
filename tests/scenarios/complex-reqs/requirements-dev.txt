@@ -3,7 +3,7 @@ pytest-cov
 pytest==3.7.4 # abstract
 
 # This one is a dupe (also mentioned in requirements.txt):
--e git+https://somewhere.com/foo.git#egg=click
+-e git+https://a.b/c/p1.git#egg=click
 
 # This one is new:
--e git+https://somewhere.com/test.git#egg=mock
+-e git+https://a.b/c/p3.git#egg=mock

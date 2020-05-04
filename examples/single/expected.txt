@@ -1,7 +1,7 @@
 :: explain -c180 -r
                        author: (auto-adjust ) Someone
-                           \_: (single.py:5 ) Someone someone@somewhere.com
-                 author_email: (auto-adjust ) someone@somewhere.com
+                           \_: (single.py:5 ) Someone someone@example.com
+                 author_email: (auto-adjust ) someone@example.com
                   classifiers: (missing     ) - Consider specifying 'classifiers'
                   description: (README.rst:1) A package implemented by a single .py file
                            \_: (setup.py:3  ) Unicode chars in setup.py 😀 😎
@@ -28,7 +28,7 @@ from setuptools import setup
 __version__ = "0.1.0"
 setup(
     author="Someone",                       # from single.py:5
-    author_email="someone@somewhere.com",
+    author_email="someone@example.com",
     description="A package implemented by a single .py file", # from README.rst:1
     license="MIT",                          # from single.py:4
     long_description=open("README.rst").read(), # from README.rst

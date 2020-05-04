@@ -50,7 +50,7 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
     A package implemented by one direct ((not under src/)) module folder
 
     keywords: direct, package
-    author: Someone someone@somewhere.com
+    author: Someone someone@example.com
     """
 
     __version__ = '1.0.0'
@@ -65,8 +65,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
 * ``explain`` output::
 
               author: (auto-adjust          ) Someone
-                  \_: (direct/__init__.py:5 ) Someone someone@somewhere.com
-        author_email: (auto-adjust          ) someone@somewhere.com
+                  \_: (direct/__init__.py:5 ) Someone someone@example.com
+        author_email: (auto-adjust          ) someone@example.com
          classifiers: (classifiers.txt      ) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
          description: (direct/__init__.py:2 ) A package implemented by one direct ((not under src/)) module folder
         download_url: (auto-fill            ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
