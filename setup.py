@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-#  -*- encoding: utf-8 -*-
-"""
-keywords: simple, DRY, setup.py
-"""
-
 # This library is self-using and auto-bootstraps itself
 
 import os
@@ -13,32 +7,29 @@ import sys
 import setuptools
 
 
-__title__ = "setupmeta"
-
 HERE = os.path.dirname(os.path.abspath(__file__))
-EGG = os.path.join(HERE, "%s.egg-info" % __title__)
+EGG = os.path.join(HERE, "setupmeta.egg-info")
 
 ENTRY_POINTS = """
 [distutils.commands]
-uber_egg = {t}.commands:UberEggCommand
-check = {t}.commands:CheckCommand
-cleanall = {t}.commands:CleanCommand
-entrypoints = {t}.commands:EntryPointsCommand
-explain = {t}.commands:ExplainCommand
-twine = {t}.commands:TwineCommand
-version = {t}.commands:VersionCommand
+uber_egg = setupmeta.commands:UberEggCommand
+check = setupmeta.commands:CheckCommand
+cleanall = setupmeta.commands:CleanCommand
+entrypoints = setupmeta.commands:EntryPointsCommand
+explain = setupmeta.commands:ExplainCommand
+twine = setupmeta.commands:TwineCommand
+version = setupmeta.commands:VersionCommand
 
 [distutils.setup_keywords]
-setup_requires = {t}.hook:register
-versioning = {t}.hook:register
-""".format(
-    t=__title__
-)
+setup_requires = setupmeta.hook:register
+versioning = setupmeta.hook:register
+"""
 
 
 def decode(text):
     if isinstance(text, bytes):
         return text.decode("utf-8")
+
     return text
 
 
@@ -47,15 +38,16 @@ def run_bootstrap(message):
     p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # nosec
     output, error = p.communicate()
     if p.returncode:
-        print(output)
+        print(decode(output))
         sys.stderr.write("%s\n" % decode(error))
         sys.exit(p.returncode)
+
     if not os.path.isdir(EGG):
         sys.exit("Could not bootstrap egg-info")
 
 
 def complete_args(args):
-    args["setup_requires"] = [__title__]
+    args["setup_requires"] = ["setupmeta"]
     args["versioning"] = "dev"
 
 
@@ -64,20 +56,13 @@ if __name__ == "__main__":
     have_egg = os.path.isdir(EGG)
 
     # Explicit on entry points due to bootstrap
-    args = dict(entry_points=ENTRY_POINTS, zip_safe=True)
-
+    args = dict(name="setupmeta", entry_points=ENTRY_POINTS, packages=["setupmeta"], zip_safe=True)
     if have_egg:
         # We're bootstrapped, we can self-refer
         complete_args(args)
 
     if len(sys.argv) == 2 and sys.argv[1] == "egg_info":
         # egg_info as lone command is bootstrap mode
-        if not have_egg:
-            # Very first bootstrap needs some help
-            # We do want all subsequent runs to guess name, packages etc
-            args["name"] = __title__
-            args["packages"] = [__title__]
-
         setuptools.setup(**args)
         sys.exit(0)
 

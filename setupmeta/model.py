@@ -10,7 +10,7 @@ import sys
 
 import setuptools
 
-from setupmeta import listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace
+from setupmeta import get_words, listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -20,8 +20,6 @@ from setupmeta.versioning import project_scm, Versioning
 EXPLICIT = "explicit"
 CLASSIFIERS = "classifiers.txt"
 READMES = ["README.rst", "README.md", "README*"]
-
-RE_WORDS = re.compile(r"[^\w]+")
 
 # Accept reasonable variations of name + some separator + email
 RE_EMAIL = re.compile(r"(.+)[\s<>()\[\],:;]+([^@]+@[a-zA-Z0-9._-]+)")
@@ -321,7 +319,7 @@ def get_pip():
 
 def pythonified_name(name):
     if name:
-        words = [s.strip() for s in RE_WORDS.split(name)]
+        words = get_words(name)
         name = "_".join(s for s in words if s)
 
     return name

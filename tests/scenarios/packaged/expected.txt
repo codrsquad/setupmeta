@@ -23,10 +23,10 @@ long_description_content_type: (PKG-INFO                                ) text/m
 :: explain -d
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
-        "beautifulsoup4>=4.4.0",
-        "pytest",
-        "wonka",
-        "mytest",
+        "beautifulsoup4>=4.4.0",  # from src/pre_packaged.egg-info/requires.txt:1
+        "pytest",                 # from src/pre_packaged.egg-info/requires.txt:2
+        "wonka",                  # from src/pre_packaged.egg-info/requires.txt:3
+        "mytest",                 # from src/pre_packaged.egg-info/requires.txt:4
     ],
     tests_require=None,   # no auto-fill
 

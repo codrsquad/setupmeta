@@ -164,19 +164,20 @@ class CheckCommand(check_cmd):
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
-        reqs = self.setupmeta.requirements.install_requires
-        if reqs and (reqs.abstracted or reqs.ignored or reqs.dependency_links):
-            message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
-                len(reqs.abstracted),
-                len(reqs.ignored),
-                len(reqs.untouched),
-            )
+        reqs = self.setupmeta.requirements
+        if reqs and reqs.has_abstractions:
+            reqs = reqs.install_requires
+            if reqs.filled_requirements and (reqs.abstracted or reqs.ignored or reqs.dependency_links):
+                message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
+                    len(reqs.abstracted),
+                    len(reqs.ignored),
+                    len(reqs.untouched),
+                )
 
-            dependency_links = self.setupmeta.requirements.dependency_links or reqs.dependency_links
-            if dependency_links:
-                message += ", %s dependency links" % len(dependency_links)
+                if reqs.dependency_links:
+                    message += ", %s dependency links" % len(reqs.dependency_links)
 
-            print(message)
+                print(message)
 
     def _show_git_status(self):
         if self.setupmeta.versioning:
@@ -246,11 +247,11 @@ class ExplainCommand(setuptools.Command):
             hint = ", %s" % hint if hint else ""
             self.setupmeta.auto_fill(key, "- Consider specifying '%s'%s" % (key, hint), "missing")
 
-    def represented_req(self, name, note=None, align=None):
+    def represented_req(self, name, source_description, align):
         name = '"%s",' % name
-        if note:
+        if source_description:
             fmt = "%%-%ss# %%s" % align
-            name = fmt % (name, note)
+            name = fmt % (name, source_description)
 
         return name
 
@@ -260,22 +261,19 @@ class ExplainCommand(setuptools.Command):
         :param setupmeta.RequirementsFile requirements:
         """
         content = "None,   # no auto-fill"
-        if requirements and requirements.filled_requirements:
-            names = []
-            notes = []
-            for line_req in requirements.lines:
-                if line_req.abstracted:
-                    names.append(line_req.abstracted)
-                    notes.append(line_req.note or "")
+        names = []
+        source_descriptions = []
+        if requirements:
+            for req_entry in requirements.reqs:
+                if req_entry.requirement and not req_entry.is_ignored and req_entry.requirement not in names:
+                    names.append(req_entry.requirement)
+                    source_descriptions.append(req_entry.source_description)
 
-            if any(len(note) for note in notes):
-                longest_name = max(len(name) for name in names) + 5
-                content = []
-                for i in range(len(names)):
-                    content.append(self.represented_req(names[i], notes[i], longest_name))
-
-            else:
-                content = [self.represented_req(name) for name in names]
+        if names:
+            longest_name = max(len(name) for name in names) + 5
+            content = []
+            for i, name in enumerate(names):
+                content.append(self.represented_req(name, source_descriptions[i], longest_name))
 
             content = "[\n        %s\n    ]," % "\n        ".join(content).strip()
 

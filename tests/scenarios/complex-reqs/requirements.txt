@@ -3,8 +3,7 @@
 1and1==1.8.1
 1337<1.0.0
 beautifulsoup4>=4.4.0
--e git+https://somewhere.com/foo.git#egg=wonka
+-e https://somewhere.com/foo.git#egg=wonka
 
-# Won't be ignored because not a simple == pin
-# ignored
+# indirect, will be ignored due to being in an 'indirect' section
 -e git+https://foo.com/test.git#egg=bar

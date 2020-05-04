@@ -49,19 +49,19 @@ WARNING: patch version component should be .0 for versioning strategy...
 WARNING: In setup.py:6 version should be '1.2.0', not '1.0a1'
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
-        "a",
-        "b",     # abstracted by default
-        "c",     # 'abstract' stated on line
-        "d>1",
-        "e==1",  # in 'pinned' section
-        "f",     # in 'pinned' section
-        "g",     # 'abstract' stated on line
-        "h",     # in 'abstract' section
-        "i==1",  # 'pinned' stated on line
+        "a",     # from pinned.txt:2
+        "b",     # from pinned.txt:3, abstracted by default
+        "c",     # from pinned.txt:4, 'abstract' stated on line
+        "d>1",   # from pinned.txt:5
+        "e==1",  # from pinned.txt:9, in 'pinned' section
+        "f",     # from pinned.txt:10, in 'pinned' section
+        "g",     # from pinned.txt:11, 'abstract' stated on line
+        "h",     # from pinned.txt:14, in 'abstract' section
+        "i==1",  # from pinned.txt:15, 'pinned' stated on line
     ],
     tests_require=[
-        "flake8",
-        "pytest",
+        "flake8",  # from requirements-dev.txt:2
+        "pytest",  # from requirements-dev.txt:3
     ],
 
 :: explain --expand

@@ -4,28 +4,32 @@ import sys
 from mock import MagicMock, patch
 
 import setupmeta
-from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path, SetupMeta
+from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path
 
 from . import conftest
 
 
-def bogus_project(**attrs):
-    return SetupMeta(dict(_setup_py_path="/foo/bar/shouldnotexist/setup.py", **attrs))
-
-
 def test_first_word():
+    assert setupmeta.relative_path(None) is None
+    assert setupmeta.relative_path("") == ""
+    assert setupmeta.relative_path("foo") == "foo"
+
     assert setupmeta.first_word(None) is None
-    assert setupmeta.first_word("") == ""
+    assert setupmeta.first_word("") is None
+    assert setupmeta.first_word("  \n \t ") is None
+    assert setupmeta.first_word("  \n \t foo[bar]") == "foo"
     assert setupmeta.first_word("FOO bar") == "foo"
+    assert setupmeta.first_word(" FOO, bar") == "foo"
+    assert setupmeta.first_word("123") == "123"
 
 
 def test_setup_py_determination():
     initial = sys.argv[0]
     sys.argv[0] = "foo/setup.py"
-    meta = SetupMeta(dict(_setup_py_path=None))
-    assert not meta.definitions
-    assert not meta.version
-    sys.argv[0] = initial
+    with conftest.TestMeta() as meta:
+        assert not meta.definitions
+        assert not meta.version
+        sys.argv[0] = initial
 
 
 def test_representation():
@@ -62,63 +66,73 @@ def test_requirements():
 
     sample = conftest.resouce("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
-    assert len(f.lines) == 16
-    assert str(f.lines[0]) == "chardet==3.0.4"
+    assert len(f.reqs) == 8
+    assert str(f.reqs[0]) == "chardet [*] from tests/scenarios/disabled/requirements.txt:1, abstracted by default"
+    assert str(f.reqs[4]) == "[my_egg] git+git://a.b/c/p1.git#egg=my_egg"
     assert f.filled_requirements == ["chardet", "foo_bar; python_version >= '3.6'", "requests", "my_egg", "some-project"]
     assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=my_egg", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
-    assert f.abstracted == ["chardet  # abstracted by default", "foo_bar; python_version >= '3.6'  # abstracted by default"]
-    assert f.ignored == ["coverage>=5.0  # 'indirect' stated on line"]
-    assert f.untouched == ["requests", "my_egg", "some-project"]
+    assert len(f.abstracted) == 2
+    assert len(f.ignored) == 1
+    assert len(f.untouched) == 1
+
+    sample = conftest.resouce("scenarios/complex-reqs/requirements.txt")
+    f = setupmeta.RequirementsFile.from_file(sample)
+    assert len(f.reqs) == 5
 
     fr = setupmeta.requirements_from_file(sample)
     assert fr == f.filled_requirements
 
     sample = "a==1.0\nb; python_version >= '3.6'"
-    f = setupmeta.RequirementsFile("test", sample.splitlines())
-    assert len(f.lines) == 2
+    f = setupmeta.RequirementsFile()
+    f.scan(sample.splitlines())
+    f.finalize()
+    assert len(f.reqs) == 2
     assert f.filled_requirements == ["a", "b; python_version >= '3.6'"]
     assert not f.dependency_links
-    assert f.abstracted == ["a  # abstracted by default"]
-    assert f.untouched == ["b; python_version >= '3.6'"]
+    assert len(f.abstracted) == 1
+    assert len(f.ignored) == 0
+    assert len(f.untouched) == 1
 
     fr = setupmeta.requirements_from_text(sample)
     assert fr == f.filled_requirements
 
-    f = setupmeta.RequirementsFile("test", [])
-    assert not f.lines
-    assert not f.filled_requirements
-    assert not f.dependency_links
-    assert not f.abstracted
+    f = setupmeta.RequirementsFile()
+    f.scan([])
+    f.finalize()
+    assert f.reqs == []
+    assert f.filled_requirements == []
+    assert f.dependency_links == []
+    assert f.abstracted == []
 
 
 def test_empty():
-    meta = bogus_project()
-    assert not meta.attrs
-    assert not meta.definitions
-    assert not meta.name
-    assert isinstance(meta.requirements, setupmeta.Requirements)
-    assert not meta.requirements.install_requires
-    assert not meta.requirements.tests_require
-    assert not meta.version
-    assert not meta.versioning.enabled
-    assert meta.versioning.problem == "setupmeta versioning not enabled"
-    assert not meta.versioning.scm
-    assert not meta.versioning.strategy
-    assert str(meta).startswith("0 definitions, ")
+    with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py") as meta:
+        assert not meta.attrs
+        assert not meta.definitions
+        assert not meta.name
+        assert isinstance(meta.requirements, setupmeta.Requirements)
+        assert not meta.requirements.install_requires
+        assert not meta.requirements.tests_require
+        assert not meta.version
+        assert not meta.versioning.enabled
+        assert meta.versioning.problem == "setupmeta versioning not enabled"
+        assert not meta.versioning.scm
+        assert not meta.versioning.strategy
+        assert str(meta).startswith("0 definitions, ")
 
 
 @patch.dict(os.environ, {"PYGRADLE_PROJECT_VERSION": "1.2.3"})
 def test_pygradle_version():
-    meta = bogus_project(name="pygradle_project")
-    assert len(meta.definitions) == 2
-    assert meta.value("name") == "pygradle_project"
-    assert meta.value("version") == "1.2.3"
+    with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py", name="pygradle_project") as meta:
+        assert len(meta.definitions) == 2
+        assert meta.value("name") == "pygradle_project"
+        assert meta.value("version") == "1.2.3"
 
-    name = meta.definitions["name"]
-    version = meta.definitions["version"]
+        name = meta.definitions["name"]
+        version = meta.definitions["version"]
 
-    assert name.is_explicit
-    assert not version.is_explicit
+        assert name.is_explicit
+        assert not version.is_explicit
 
 
 def test_meta():

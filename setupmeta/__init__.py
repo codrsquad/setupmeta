@@ -41,6 +41,7 @@ WINDOWS = "windows" in PLATFORM
 RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
 RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
 RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([A-Za-z0-9.]+)\s*(;.*)?$")
+RE_WORDS = re.compile(r"[^\w]+")
 
 K_ABSTRACT = "abstract"
 K_INDIRECT = "indirect"
@@ -77,6 +78,11 @@ def pkg_req(text):
 
         except Exception:
             return None
+
+
+def get_words(text):
+    if text:
+        return [s.strip() for s in RE_WORDS.split(text) if s.strip()]
 
 
 def to_int(text, default=None):
@@ -387,7 +393,9 @@ def requirements_from_text(text):
     :param str text: Contents (text) of a requirements.txt file
     :return list: List of parsed and abstracted requirements
     """
-    r = RequirementsFile("adhoc", text.splitlines())
+    r = RequirementsFile()
+    r.scan(text.splitlines())
+    r.finalize()
     return r.filled_requirements
 
 
@@ -408,22 +416,35 @@ def requirements_from_file(path):
         return r.filled_requirements
 
 
-def extracted_dependency_link(line):
+def corrected_editable(link, editable):
+    # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
+    if editable and "git" in link and not link.startswith("git+"):
+        link = "git+%s" % link
+
+    return link
+
+
+def extracted_dependency_link(line, editable):
+    """
+    :param str line: Line to parse
+    :param bool editable: True if link was marked as --editable
+    :return (str, str): Extracted dependency link and name
+    """
     if line.startswith("file:"):
         return line, None
 
     m = RE_DEPENDENCY_EGG.match(line)
     if m:
-        return line, m.group(1)
+        return corrected_editable(line, editable), m.group(1)
 
     m = RE_DEPENDENCY_AT.match(line)
     if m:
-        return m.group(2), m.group(1)
+        return corrected_editable(m.group(2), editable), m.group(1)
 
     if os.path.isabs(line):
         return "file://%s" % line, None
 
-    return None, None
+    return None, line
 
 
 def first_word(text):
@@ -431,106 +452,103 @@ def first_word(text):
     :param str|None text: Text to extract first word from
     :return str: Lower case of first word from 'text', if any
     """
-    if text:
-        text = text.strip()
-
-    if not text:
-        return text
-
-    return text.split()[0].lower()
+    words = get_words(text)
+    if words:
+        return words[0].lower()
 
 
-class ReqLine(object):
-    def __init__(self, parent, line_number, parent_section, line):
+class ReqEntry(object):
+    def __init__(self, parent, origin, line_number, parent_section, line):
         """
         :param RequirementsFile parent: Requirements.txt file where this line came from
+        :param str origin: Where this req came from
         :param int line_number: Corresponding line number
-        :param str|None parent_section: Optional parent section
+        :param str|None parent_section: Optional parent section, one of: abstract, indirect or pinned
         :param str line: Line to parse
         """
         self.parent = parent
+        self.origin = origin
+        self.source = relative_path(origin)
         self.line_number = line_number
         self.parent_section = parent_section
         self.local_section = None
-        line = line.strip()
-        self.original = line
-        self.comment = None
-        self.editable = False
-        self.requirement = None
-        self.abstracted = None
-        self.link = None
-        self.note = None
+        line = line.replace("\t", " ").strip()
+        self.given = line  # Given parsed line, as-is
+        self.comment = None  # Extracted comment, if any
+        self.dependency_link = None  # Extracted dependency link, if any
+        self.editable = False  # True if dependency link is editable
+        self.requirement = None  # Associated requirement name, if any
+        self.abstracted = None  # True if self.requirement was auto-abstracted
         if not line or line.startswith("#"):
-            self._set_comment(line[1:])
-            return
+            s = self._set_comment(line[1:])
+            if s:
+                self.parent_section = s
 
-        if line[0] not in "-_./\\" and not line[0].isalnum():
-            # Ignore anything that doesn't look like valid req or option
             return
 
         if " #" in line:
             # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
             i = line.index(" #")
-            self._set_comment(line[i + 2:])
+            self.local_section = self._set_comment(line[i + 2:])
             line = line[:i].strip()
 
         if line.startswith("-e") or line.startswith("--editable"):
             self.editable = True
             p = line.partition(" ")
-            line = p[2]
+            line = p[2].strip()
 
-        if line.startswith("-"):
+        if not line or (line[0] not in "_./\\" and not line[0].isalnum()):
+            # Ignore anything that doesn't look like a valid req
             return
 
-        link, name = extracted_dependency_link(line)
-        if link:
-            if self.editable and "git" in link and not link.startswith("git+"):
-                # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
-                link = "git+%s" % link
-
-            self.link = link
-            self.requirement = name
-            self.abstracted = name
-            return
-
-        self._set_requirement(line)
+        self.dependency_link, self.requirement = extracted_dependency_link(line, self.editable)
+        if self.parent.do_abstract and not self.dependency_link and self.requirement and self.section != K_INDIRECT:
+            # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
+            self.abstracted = False
+            if self.section != K_PINNED:
+                m = RE_SIMPLE_PIN.match(self.requirement)
+                if m:
+                    name = m.group(1)
+                    spec = m.group(3)
+                    self.requirement = name if not spec else "%s%s" % (name, spec)
+                    self.abstracted = True
 
     def __repr__(self):
-        return self.original
+        marker = "*" if self.abstracted else ""
+        if self.dependency_link:
+            return "[%s%s] %s" % (marker, self.requirement, self.dependency_link)
+
+        return "%s [%s%s] %s" % (self.requirement, marker, self.section or "", self.source_description)
+
+    def __eq__(self, other):
+        return isinstance(other, ReqEntry) and self.dependency_link == other.dependency_link and self.requirement == other.requirement
 
     @property
-    def empty(self):
-        return not self.link and not self.requirement
+    def is_empty(self):
+        return not self.dependency_link and not self.requirement
 
     @property
     def section(self):
         return self.local_section or self.parent_section
 
     @property
-    def is_direct(self):
-        return self.requirement and self.section != K_INDIRECT
+    def source_description(self):
+        msg = "from %s:%s" % (self.source or "adhoc", self.line_number)
+        if self.abstracted is not None:
+            if self.local_section:
+                msg += ", '%s' stated on line" % self.local_section
 
-    def _set_requirement(self, line):
-        self.requirement = line
-        if self.local_section:
-            self.note = "'%s' stated on line" % self.local_section
+            elif self.parent_section:
+                msg += ", in '%s' section" % self.parent_section
 
-        elif self.parent_section:
-            self.note = "in '%s' section" % self.parent_section
+            elif self.abstracted:
+                msg += ", abstracted by default"
 
-        if not self.is_direct:
-            return
+        return msg
 
-        self.abstracted = line
-        if self.section != K_PINNED:
-            # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
-            m = RE_SIMPLE_PIN.match(line)
-            if m:
-                name = m.group(1)
-                spec = m.group(3)
-                self.abstracted = name if not spec else "%s%s" % (name, spec)
-                if not self.note:
-                    self.note = "abstracted by default"
+    @property
+    def is_ignored(self):
+        return self.section == K_INDIRECT
 
     def _set_comment(self, comment):
         comment = comment.strip()
@@ -538,87 +556,86 @@ class ReqLine(object):
             self.comment = comment
             w = first_word(self.comment)
             if w in KNOWN_SECTIONS:
-                self.local_section = w
+                return w
 
 
-def decorated_line(content, comment):
-    if not comment:
-        return content
+def non_repeat(items):
+    result = []
+    for i in items:
+        if i and i not in result:
+            result.append(i)
 
-    return "%s  # %s" % (content, comment)
+    return result
 
 
 class RequirementsFile:
     """ Keeps track of where requirements came from """
 
-    def __init__(self, source, lines):
-        """
-        :param str source: Name identifying where `lines` came from
-        :param list|None lines: Line contents to parse
-        """
-        self.source = source
-        self.filled_requirements = []
+    def __init__(self, do_abstract=True):
+        self.do_abstract = do_abstract
+        self.reqs = None
         self.dependency_links = None
-        self.abstracted = []
-        self.ignored = []
-        self.untouched = []
-        self.lines = []
+        self.abstracted = None
+        self.filled_requirements = None
+        self.ignored = None
+        self.untouched = None
+        self.source = None
+
+    def scan(self, lines, origin=None):
+        if lines is None:
+            return
+
+        if self.reqs is None:
+            self.reqs = []
+
         current_section = None
         for n, line in enumerate(lines, start=1):
-            req_line = ReqLine(self, n, current_section, line)
-            self.lines.append(req_line)
-            if req_line.empty:
-                if req_line.local_section:
+            req_entry = ReqEntry(self, origin, n, current_section, line)
+            if req_entry.is_empty:
+                if req_entry.parent_section:
                     # Lines containing only a comment can start a "section", all requirements below this will respect that section
-                    current_section = req_line.local_section
+                    current_section = req_entry.parent_section
 
-                continue
+            elif req_entry not in self.reqs:
+                self.reqs.append(req_entry)
 
-            used = False
-            if req_line.link:
-                used = True
-                if self.dependency_links is None:
-                    self.dependency_links = []
-
-                if req_line.link not in self.dependency_links:
-                    self.dependency_links.append(req_line.link)
-
-            if req_line.is_direct:
-                used = True
-                req = req_line.abstracted
-                if req_line.requirement == req_line.abstracted:
-                    self.untouched.append(decorated_line(req_line.requirement, req_line.note))
-
-                else:
-                    self.abstracted.append(decorated_line(req_line.abstracted, req_line.note))
-
-                if req not in self.filled_requirements:
-                    self.filled_requirements.append(req)
-
-            if not used:
-                # Reqs in 'indirect' sections are ignored (pinning was done to satisfy some indirect dependency)
-                # but should NOT be considered as our project's dep
-                self.ignored.append(decorated_line(req_line.requirement, req_line.note))
+    def finalize(self):
+        self.dependency_links = [r.dependency_link for r in self.reqs if r.dependency_link and not r.is_ignored]
+        self.filled_requirements = non_repeat([r.requirement for r in self.reqs if r.requirement and not r.is_ignored])
+        self.abstracted = [r for r in self.reqs if r.abstracted is True]
+        self.ignored = [r for r in self.reqs if r.requirement and r.is_ignored]
+        self.untouched = [r for r in self.reqs if r.abstracted is False]
+        for r in self.reqs:
+            if r.source:
+                self.source = r.source
+                break
 
     @classmethod
-    def from_file(cls, path):
+    def from_file(cls, *paths, **kwargs):
         """
-        :param str path: Path to requirements.txt file to read
+        :param str paths: Path to requirements.txt file(s) to read
+        :param bool do_abstract: If True, automatically abstract reqs of the form <name>==<version>
         :return RequirementsFile|None: Associated object, if possible
         """
-        lines = readlines(path)
-        if lines is not None:
-            return cls(relative_path(path), lines)
+        req = cls(do_abstract=kwargs.pop("do_abstract", True))  # `kwargs` needed because of py2
+        for path in paths:
+            req.scan(readlines(path), origin=path)
+
+        if req.reqs is not None:
+            req.finalize()
+            return req
 
 
-def find_requirements(*relative_paths):
+def find_requirements(do_abstract, *relative_paths):
     """ Read old-school requirements.txt type file """
     for path in relative_paths:
         if path:
             path = project_path(path)
             if os.path.isfile(path):
                 trace("found requirements: %s" % path)
-                return RequirementsFile.from_file(path)
+                r = RequirementsFile.from_file(path, do_abstract=do_abstract)
+                if r is not None:
+                    return r
 
 
 class Requirements:
@@ -628,34 +645,36 @@ class Requirements:
         """
         :param setupmeta.model.PackageInfo pkg_info: PKG-INFO, when available
         """
-        self.links_source = None
-        self.install_requires = find_requirements(pkg_info.requires_txt, "requirements.txt", "pinned.txt")
-        self.tests_require = find_requirements(
-            "tests/requirements.txt",  # Preferred
-            "requirements-dev.txt",  # Also accept other common variations
-            "dev-requirements.txt",
-            "test-requirements.txt",
-            "requirements-test.txt",
-        )
-
-        if pkg_info.dependency_links:
-            rf = RequirementsFile.from_file(pkg_info.dependency_links)
-            self.links_source = rf.source
-            self.dependency_links = rf.dependency_links
+        self.has_abstractions = False
+        if pkg_info and (pkg_info.requires_txt or pkg_info.dependency_links):
+            self.install_requires = RequirementsFile.from_file(pkg_info.requires_txt, pkg_info.dependency_links, do_abstract=False)
+            self.tests_require = None
 
         else:
-            self.dependency_links = []
-            self.add_dependency_links(self.install_requires)
-            self.add_dependency_links(self.tests_require)
+            self.install_requires = find_requirements(True, "requirements.txt", "pinned.txt")
+            self.tests_require = find_requirements(
+                False,
+                "tests/requirements.txt",  # Preferred
+                "requirements-dev.txt",  # Also accept other common variations
+                "dev-requirements.txt",
+                "test-requirements.txt",
+                "requirements-test.txt",
+            )
+            if self.install_requires and self.install_requires.reqs:
+                self.has_abstractions = any(not r.dependency_link for r in self.install_requires.reqs)
 
-    def add_dependency_links(self, entries):
-        if entries and entries.dependency_links:
-            if not self.links_source:
-                self.links_source = entries.source
+    @property
+    def dependency_links(self):
+        if self.install_requires:
+            return self.install_requires.dependency_links
 
-            for link in entries.dependency_links:
-                if link not in self.dependency_links:
-                    self.dependency_links.append(link)
+    @property
+    def links_source(self):
+        """str: First requirement source with a dependency link"""
+        if self.install_requires:
+            for req in self.install_requires.reqs:
+                if req.dependency_link:
+                    return req.source
 
 
 class temp_resource:

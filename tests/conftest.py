@@ -9,12 +9,14 @@ from six import StringIO
 
 import setupmeta
 from setupmeta import decode
+from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
 
+setupmeta.MetaDefs.project_dir = PROJECT_DIR
 setupmeta.TESTING = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 sys.dont_write_bytecode = True
@@ -72,6 +74,20 @@ def sample_project():
 
     finally:
         os.chdir(old_cd)
+
+
+class TestMeta:
+    def __init__(self, setup=None, **upstream):
+        upstream.setdefault("_setup_py_path", setup)
+        self.upstream = upstream
+        self.old_pd = None
+
+    def __enter__(self):
+        self.old_pd = setupmeta.MetaDefs.project_dir
+        return SetupMeta(self.upstream)
+
+    def __exit__(self, *args):
+        setupmeta.MetaDefs.project_dir = self.old_pd
 
 
 class capture_output:

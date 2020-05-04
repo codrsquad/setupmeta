@@ -21,4 +21,4 @@ def test_scenario(scenario_folder):
     scenario = scenarios.Scenario(scenario_folder)
     expected = scenario.expected_contents()
     output = scenario.replay()
-    assert expected == output
+    assert output == expected
