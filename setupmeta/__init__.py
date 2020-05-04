@@ -35,7 +35,7 @@ RE_SPACES = re.compile(r"\s+", re.MULTILINE)
 RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 PLATFORM = platform.system().lower()
-WINDOWS = "windows" in PLATFORM
+WINDOWS = PLATFORM.startswith("win")
 
 # Simplistic parsing of known formats used in requirements.txt
 RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
@@ -43,10 +43,10 @@ RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
 RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([A-Za-z0-9.]+)\s*(;.*)?$")
 RE_WORDS = re.compile(r"[^\w]+")
 
-K_ABSTRACT = "abstract"
-K_INDIRECT = "indirect"
-K_PINNED = "pinned"
-KNOWN_SECTIONS = {K_ABSTRACT, K_INDIRECT, K_PINNED}
+ABSTRACT = "abstract"
+INDIRECT = "indirect"
+PINNED = "pinned"
+KNOWN_SECTIONS = {ABSTRACT, INDIRECT, PINNED}
 
 
 def abort(message):
@@ -458,17 +458,17 @@ def first_word(text):
 
 
 class ReqEntry(object):
-    def __init__(self, parent, origin, line_number, parent_section, line):
+    def __init__(self, parent, source_path, line_number, parent_section, line):
         """
         :param RequirementsFile parent: Requirements.txt file where this line came from
-        :param str origin: Where this req came from
+        :param str source_path: Where this req came from
         :param int line_number: Corresponding line number
         :param str|None parent_section: Optional parent section, one of: abstract, indirect or pinned
         :param str line: Line to parse
         """
         self.parent = parent
-        self.origin = origin
-        self.source = relative_path(origin)
+        self.source_path = source_path
+        self.source = relative_path(source_path)
         self.line_number = line_number
         self.parent_section = parent_section
         self.local_section = None
@@ -479,6 +479,7 @@ class ReqEntry(object):
         self.editable = False  # True if dependency link is editable
         self.requirement = None  # Associated requirement name, if any
         self.abstracted = None  # True if self.requirement was auto-abstracted
+        self.refers = None  # Another requirements.txt this one refers to
         if not line or line.startswith("#"):
             s = self._set_comment(line[1:])
             if s:
@@ -492,20 +493,33 @@ class ReqEntry(object):
             self.local_section = self._set_comment(line[i + 2:])
             line = line[:i].strip()
 
-        if line.startswith("-e") or line.startswith("--editable"):
+        if line.startswith("-e ") or line.startswith("--editable "):
             self.editable = True
             p = line.partition(" ")
             line = p[2].strip()
+
+        elif line.startswith("-r ") or line.startswith("--requirement "):
+            _, _, self.refers = line.partition(" ")
+            self.refers = self.refers.strip()
+            if self.refers:
+                if self.source_path:
+                    base = os.path.dirname(self.source_path)
+                    if base:
+                        self.refers = os.path.join(base, self.refers)
+
+                self.refers = os.path.abspath(self.refers)
+
+            return
 
         if not line or (line[0] not in "_./\\" and not line[0].isalnum()):
             # Ignore anything that doesn't look like a valid req
             return
 
         self.dependency_link, self.requirement = extracted_dependency_link(line, self.editable)
-        if self.parent.do_abstract and not self.dependency_link and self.requirement and self.section != K_INDIRECT:
+        if self.parent.do_abstract and not self.dependency_link and self.requirement and self.section != INDIRECT:
             # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
             self.abstracted = False
-            if self.section != K_PINNED:
+            if self.section != PINNED:
                 m = RE_SIMPLE_PIN.match(self.requirement)
                 if m:
                     name = m.group(1)
@@ -519,9 +533,6 @@ class ReqEntry(object):
             return "[%s%s] %s" % (marker, self.requirement, self.dependency_link)
 
         return "%s [%s%s] %s" % (self.requirement, marker, self.section or "", self.source_description)
-
-    def __eq__(self, other):
-        return isinstance(other, ReqEntry) and self.dependency_link == other.dependency_link and self.requirement == other.requirement
 
     @property
     def is_empty(self):
@@ -548,7 +559,7 @@ class ReqEntry(object):
 
     @property
     def is_ignored(self):
-        return self.section == K_INDIRECT
+        return self.section == INDIRECT
 
     def _set_comment(self, comment):
         comment = comment.strip()
@@ -568,6 +579,28 @@ def non_repeat(items):
     return result
 
 
+def iterate_req_txt(seen, parent, source_path, lines):
+    if lines:
+        current_section = None
+        for n, line in enumerate(lines, start=1):
+            req_entry = ReqEntry(parent, source_path, n, current_section, line)
+            if req_entry.refers and req_entry.refers not in seen:
+                seen.add(req_entry.refers)
+                for r in iterate_req_txt(seen, parent, req_entry.refers, readlines(req_entry.refers)):
+                    yield r
+
+            elif req_entry.is_empty:
+                if req_entry.parent_section:
+                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
+                    current_section = req_entry.parent_section
+
+            else:
+                key = "%s %s" % (req_entry.requirement, req_entry.dependency_link)
+                if key not in seen:
+                    seen.add(key)
+                    yield req_entry
+
+
 class RequirementsFile:
     """ Keeps track of where requirements came from """
 
@@ -581,23 +614,19 @@ class RequirementsFile:
         self.untouched = None
         self.source = None
 
-    def scan(self, lines, origin=None):
+    def scan(self, lines, source_path=None):
         if lines is None:
             return
 
         if self.reqs is None:
             self.reqs = []
 
-        current_section = None
-        for n, line in enumerate(lines, start=1):
-            req_entry = ReqEntry(self, origin, n, current_section, line)
-            if req_entry.is_empty:
-                if req_entry.parent_section:
-                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
-                    current_section = req_entry.parent_section
+        seen = set()
+        if source_path:
+            seen.add(source_path)
 
-            elif req_entry not in self.reqs:
-                self.reqs.append(req_entry)
+        for r in iterate_req_txt(seen, self, source_path, lines):
+            self.reqs.append(r)
 
     def finalize(self):
         self.dependency_links = [r.dependency_link for r in self.reqs if r.dependency_link and not r.is_ignored]
@@ -619,7 +648,8 @@ class RequirementsFile:
         """
         req = cls(do_abstract=kwargs.pop("do_abstract", True))  # `kwargs` needed because of py2
         for path in paths:
-            req.scan(readlines(path), origin=path)
+            if path:
+                req.scan(readlines(path), source_path=os.path.abspath(path))
 
         if req.reqs is not None:
             req.finalize()

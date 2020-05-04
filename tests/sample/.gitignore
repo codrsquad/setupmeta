@@ -1,2 +1,6 @@
+.*version
+__pycache__/
+*.py[cod]
 /*.egg*
+build/
 dist/

@@ -5,7 +5,7 @@ History
 2.7.3 (2020-05-03)
 -------------------
 
-* Refactored code to allow for future support of nested requirements
+* Added support for nested requirements: ``-r foo.txt`` will be now followed
 
 
 2.7.2 (2020-04-30)

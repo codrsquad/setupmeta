@@ -20,14 +20,18 @@ def run_setup_py(args, expected, folder=None):
         line = line.strip()
         if not line:
             continue
+
         m = re.search(line, output)
         assert m, "'%s' not present in output of '%s': %s" % (line, " ".join(args), output)
 
 
 def test_check(sample_project):
     # First sample_project is a pristine git checkout, check should pass
+    output = conftest.run_setup_py(sample_project, "explain")
+    assert 'install_requires: (req1.txt ) ["click>7.0"]' in output
+
     output = conftest.run_setup_py(sample_project, "check")
-    assert "[setupmeta] install_requires: 0 abstracted, 0 ignored, 1 untouched, 1 dependency links" in output
+    assert not output
 
     # Now let's modify one of the files
     with open(os.path.join(sample_project, "sample.py"), "w") as fh:

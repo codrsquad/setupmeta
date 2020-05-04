@@ -64,15 +64,6 @@ class UberEggCommand(setuptools.Command):
         self.dist = None
         self.requirements = None
 
-    def _get_requirements(self):
-        if self.requirements:
-            from setupmeta.content import load_list
-
-            raw = load_list(self.requirements) or []
-            reqs = [r for r in raw if r and not r.startswith("-")]
-            setupmeta.trace("Extracted %s/%s reqs from %s" % (len(raw), len(reqs), self.requirements))
-            return reqs
-
     def run(self):
         """
         Grab an egg for each requirement, if any.
@@ -88,7 +79,7 @@ class UberEggCommand(setuptools.Command):
         if not os.path.isdir(egg_target):
             os.mkdir(egg_target)
 
-        reqs = self._get_requirements()
+        reqs = setupmeta.requirements_from_file(self.requirements)
         print("%s dependencies in %s" % (len(reqs), self.requirements))
         if reqs:
             with setupmeta.temp_resource():

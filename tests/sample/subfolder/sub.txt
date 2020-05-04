@@ -1,0 +1,3 @@
+# relative paths should work
+# indirect: this section won't have an effect on nested req
+-r ../req1.txt

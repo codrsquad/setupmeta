@@ -1,0 +1,2 @@
+# included via requirements.txt -> subfolder/sub.txt -> req1.txt
+click>7.0

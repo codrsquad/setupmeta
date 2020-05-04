@@ -14,16 +14,14 @@ def test_wheel(sample_project):
     dist_folder = os.path.join(sample_project, "dist")
 
     assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
-    files = os.listdir(dist_folder)
-    assert len(files) == 3
-    assert "sample-0.1.0-py2.py3-none-any.whl" in files
+    files1 = sorted(os.listdir(dist_folder))
+    assert files1 == ["click-7.1.2-py2.py3-none-any.whl", "sample-0.1.0-py2.py3-none-any.whl"]
 
     # Now let's modify one of the files
     with open(os.path.join(sample_project, "sample.py"), "w") as fh:
         fh.write("print('hello')\n")
 
     assert setupmeta.run_program("pip", "wheel", "--only-binary", ":all:", "-w", "dist", ".") == 0
-    files = os.listdir(dist_folder)
-    assert len(files) == 4
-    assert "sample-0.1.0-py2.py3-none-any.whl" in files
-    assert "sample-0.1.0.dirty-py2.py3-none-any.whl" in files
+    files2 = sorted(os.listdir(dist_folder))
+    expected = sorted(files1 + ["sample-0.1.0.dirty-py2.py3-none-any.whl"])
+    assert files2 == expected
