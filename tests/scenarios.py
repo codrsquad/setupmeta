@@ -97,15 +97,8 @@ class Scenario:
         return self.short_name
 
     def run_git(self, *args, **kwargs):
-        cwd = kwargs.pop("cwd", self.target)
-        # git requires a user.email configured, which is usually done in ~/.gitconfig, however under tox, we don't have $HOME defined
-        output = setupmeta.run_program(
-            "git", "-c", "user.email=tess@test.com", *args,
-            cwd=cwd,
-            capture=kwargs.pop("capture", True),
-            fatal=kwargs.pop("fatal", True),
-            **kwargs
-        )
+        kwargs.setdefault("cwd", self.target)
+        output = conftest.run_git(*args, **kwargs)
         return output
 
     def prepare(self):
@@ -120,8 +113,6 @@ class Scenario:
 
         os.makedirs(self.origin)
         self.run_git("init", "--bare", self.origin, cwd=self.temp)
-        self.run_git("config", "user.name", "tester", cwd=self.temp)
-        self.run_git("config", "user.email", "sample@example.com", cwd=self.temp)
         self.run_git("clone", self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
 

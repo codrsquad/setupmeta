@@ -393,12 +393,12 @@ def test_git_versioning(sample_project):
     assert output == "0.1.0.dirty"
 
     # git add -> version should still be dirty, as we didn't commit yet
-    setupmeta.run_program("git", "add", "sample.py")
+    conftest.run_git("add", "sample.py")
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.0.dirty"
 
     # git commit -> version reflects new distance
-    setupmeta.run_program("git", "commit", "-m", "Testing")
+    conftest.run_git("commit", "-m", "Testing")
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.1"
 

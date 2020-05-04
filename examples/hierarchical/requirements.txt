@@ -1,2 +1,2 @@
-arrow
 click>=6.7
+pytest-cov

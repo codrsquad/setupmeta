@@ -67,9 +67,9 @@ def test_requirements():
     sample = conftest.resouce("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 8
-    assert str(f.reqs[0]) == "chardet [*] from tests/scenarios/disabled/requirements.txt:1, abstracted by default"
+    assert str(f.reqs[0]) == "wheel [*] from tests/scenarios/disabled/requirements.txt:1, abstracted by default"
     assert str(f.reqs[4]) == "[my_egg] git+git://a.b/c/p1.git#egg=my_egg"
-    assert f.filled_requirements == ["chardet", "foo_bar; python_version >= '3.6'", "requests", "my_egg", "some-project"]
+    assert f.filled_requirements == ["wheel", "flake8; python_version >= '3.6'", "setuptools", "my_egg", "some-project"]
     assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=my_egg", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
     assert len(f.abstracted) == 2
     assert len(f.ignored) == 1

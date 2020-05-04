@@ -1,10 +1,10 @@
-chardet==3.0.4
-coverage>=5.0  # indirect
-foo_bar==1.0; python_version >= '3.6'
+wheel==0.34.2
+pytest-cov>=5.0  # indirect
+flake8==3.7.9; python_version >= '3.6'
 
 # Unknown [] sections ignored
 [:python_version < "3.7"]
-requests
+setuptools
 
 # URLs properly auto-filled as dependency_links
 [foo]

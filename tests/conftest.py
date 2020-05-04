@@ -55,6 +55,14 @@ def run_program(program, *args, **kwargs):
     return output
 
 
+def run_git(*args, **kwargs):
+    # git requires a user.email configured, which is usually done in ~/.gitconfig, however under tox, we don't have $HOME defined
+    kwargs.setdefault("capture", True)
+    kwargs.setdefault("fatal", True)
+    output = setupmeta.run_program("git", "-c", "user.name=Tester", "-c", "user.email=test@example.com", *args, **kwargs)
+    return output
+
+
 @pytest.fixture
 def sample_project():
     """Yield a sample git project, seeded with files from tests/sample"""
@@ -65,12 +73,10 @@ def sample_project():
             dest = os.path.join(temp, "sample")
             shutil.copytree(source, dest)
             files = os.listdir(dest)
-            run_program("git", "init", cwd=dest)
-            run_program("git", "config", "user.name", "tester", cwd=dest)
-            run_program("git", "config", "user.email", "sample@example.com", cwd=dest)
-            run_program("git", "add", *files, cwd=dest)
-            run_program("git", "commit", "-m", "Initial commit", cwd=dest)
-            run_program("git", "tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
+            run_git("init", cwd=dest)
+            run_git("add", *files, cwd=dest)
+            run_git("commit", "-m", "Initial commit", cwd=dest)
+            run_git("tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
             os.chdir(dest)
             yield dest
 

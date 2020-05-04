@@ -1,2 +1,2 @@
-mock
+mock  # Won't be needed anymore when py2 support is dropped
 pytest-cov

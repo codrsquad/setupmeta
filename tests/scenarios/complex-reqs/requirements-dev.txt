@@ -1,9 +1,9 @@
 # This req will not get abstracted, as we abstract 'install_requires' only
-1337
+pytest-cov
 pytest==3.7.4 # abstract
 
 # This one is a dupe (also mentioned in requirements.txt):
--e git+https://somewhere.com/foo.git#egg=wonka
+-e git+https://somewhere.com/foo.git#egg=click
 
 # This one is new:
--e git+https://somewhere.com/test.git#egg=mytest
+-e git+https://somewhere.com/test.git#egg=mock

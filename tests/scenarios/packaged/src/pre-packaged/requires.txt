@@ -1,4 +1,4 @@
-beautifulsoup4>=4.4.0
-pytest
-wonka
-mytest
+setuptools>=46.1
+pytest-cov
+flake8
+wheel
