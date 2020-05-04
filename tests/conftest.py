@@ -66,6 +66,8 @@ def sample_project():
             shutil.copytree(source, dest)
             files = os.listdir(dest)
             run_program("git", "init", cwd=dest)
+            run_program("git", "config", "user.name", "tester", cwd=dest)
+            run_program("git", "config", "user.email", "sample@example.com", cwd=dest)
             run_program("git", "add", *files, cwd=dest)
             run_program("git", "commit", "-m", "Initial commit", cwd=dest)
             run_program("git", "tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)

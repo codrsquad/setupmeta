@@ -120,6 +120,8 @@ class Scenario:
 
         os.makedirs(self.origin)
         self.run_git("init", "--bare", self.origin, cwd=self.temp)
+        self.run_git("config", "user.name", "tester", cwd=self.temp)
+        self.run_git("config", "user.email", "sample@example.com", cwd=self.temp)
         self.run_git("clone", self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
 
