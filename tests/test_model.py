@@ -24,12 +24,13 @@ def test_first_word():
 
 
 def test_setup_py_determination():
-    initial = sys.argv[0]
-    sys.argv[0] = "foo/setup.py"
-    with conftest.TestMeta() as meta:
-        assert not meta.definitions
-        assert not meta.version
-        sys.argv[0] = initial
+    with conftest.capture_output():
+        initial = sys.argv[0]
+        sys.argv[0] = "foo/setup.py"
+        with conftest.TestMeta() as meta:
+            assert not meta.definitions
+            assert not meta.version
+            sys.argv[0] = initial
 
 
 def test_representation():
@@ -106,19 +107,20 @@ def test_requirements():
 
 
 def test_empty():
-    with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py") as meta:
-        assert not meta.attrs
-        assert not meta.definitions
-        assert not meta.name
-        assert isinstance(meta.requirements, setupmeta.Requirements)
-        assert not meta.requirements.install_requires
-        assert not meta.requirements.tests_require
-        assert not meta.version
-        assert not meta.versioning.enabled
-        assert meta.versioning.problem == "setupmeta versioning not enabled"
-        assert not meta.versioning.scm
-        assert not meta.versioning.strategy
-        assert str(meta).startswith("0 definitions, ")
+    with conftest.capture_output():
+        with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py") as meta:
+            assert not meta.attrs
+            assert not meta.definitions
+            assert not meta.name
+            assert isinstance(meta.requirements, setupmeta.Requirements)
+            assert not meta.requirements.install_requires
+            assert not meta.requirements.tests_require
+            assert not meta.version
+            assert not meta.versioning.enabled
+            assert meta.versioning.problem == "setupmeta versioning not enabled"
+            assert not meta.versioning.scm
+            assert not meta.versioning.strategy
+            assert str(meta).startswith("0 definitions, ")
 
 
 @patch.dict(os.environ, {"PYGRADLE_PROJECT_VERSION": "1.2.3"})

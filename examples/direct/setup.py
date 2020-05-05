@@ -1,9 +1,7 @@
 from setuptools import setup
 
 
-__title__ = "direct"  # This will auto-fill 'name'
-
-
 setup(
+    name="direct",
     setup_requires=["setupmeta"],
 )

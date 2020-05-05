@@ -1,0 +1,2 @@
+-r extra-reqs.txt       # This creates a circular dep
+-r even-more-reqs.txt   # This one does not exist

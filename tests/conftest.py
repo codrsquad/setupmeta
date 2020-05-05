@@ -164,7 +164,10 @@ class capture_output:
         setupmeta.warn = self.old_setupmeta_warnings
 
     def __contains__(self, item):
-        return item is not None and item in str(self)
+        return item in str(self)
+
+    def __len__(self):
+        return len(str(self))
 
     def __add__(self, other):
         return "%s %s" % (self, other)

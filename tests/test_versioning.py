@@ -12,9 +12,13 @@ from setupmeta.scm import Version
 from . import conftest
 
 
-def new_meta(versioning, scm=None, setup_py=None, **kwargs):
+def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs):
     setup_py = setup_py or conftest.resouce("setup.py")
     upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
+    if name:
+        # Allow to test "missing name" case
+        upstream["name"] = name
+
     upstream.update(kwargs)
     return SetupMeta(upstream=upstream)
 
@@ -38,23 +42,25 @@ def test_project_scm():
 
 def test_snapshot_with_version_file():
     with setupmeta.temp_resource() as temp:
-        with open(os.path.join(temp, setupmeta.VERSION_FILE), "w") as fh:
-            fh.write("v1.2.3-4-g1234567")
+        with conftest.capture_output() as logged:
+            with open(os.path.join(temp, setupmeta.VERSION_FILE), "w") as fh:
+                fh.write("v1.2.3-4-g1234567")
 
-        setup_py = os.path.join(temp, "setup.py")
-        meta = SetupMeta(dict(_setup_py_path=setup_py, versioning="post", setup_requires="setupmeta"))
+            setup_py = os.path.join(temp, "setup.py")
+            meta = SetupMeta(dict(_setup_py_path=setup_py, name="just-testing", versioning="post", setup_requires="setupmeta"))
 
-        versioning = meta.versioning
-        assert meta.version == "1.2.3.post4"
-        assert not versioning.generate_version_file
-        assert versioning.scm.program is None
-        assert str(versioning.scm).startswith("snapshot ")
-        assert not versioning.scm.is_dirty()
-        assert versioning.scm.get_branch() == "HEAD"
+            versioning = meta.versioning
+            assert meta.version == "1.2.3.post4"
+            assert not versioning.generate_version_file
+            assert versioning.scm.program is None
+            assert str(versioning.scm).startswith("snapshot ")
+            assert not versioning.scm.is_dirty()
+            assert versioning.scm.get_branch() == "HEAD"
 
-        # Trigger artificial rewriting of version file
-        versioning.generate_version_file = True
-        versioning.auto_fill_version()
+            # Trigger artificial rewriting of version file
+            versioning.generate_version_file = True
+            versioning.auto_fill_version()
+            assert not logged
 
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1"})
@@ -242,11 +248,13 @@ def test_invalid_main():
 
 
 def test_malformed():
-    meta = new_meta(dict(main=None, extra=""), scm=conftest.MockGit())
-    versioning = meta.versioning
-    assert meta.version is None
-    assert not versioning.enabled
-    assert versioning.problem == "No versioning format specified"
+    with conftest.capture_output() as logged:
+        meta = new_meta(dict(main=None, extra=""), name=None, scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert meta.version is None
+        assert not versioning.enabled
+        assert versioning.problem == "No versioning format specified"
+        assert "WARNING: 'name' not specified in setup.py" in logged
 
 
 def test_distance_marker():
@@ -346,16 +354,16 @@ def check_strategy_build_id(dirty):
 
 
 def check_bump(versioning):
-    with conftest.capture_output() as out:
+    with conftest.capture_output() as logged:
         versioning.bump("major")
-        assert "Not committing bump, use --commit to commit" in out
-        assert 'git tag -a v1.0.0 -m "Version 1.0.0"' in out
+        assert "Not committing bump, use --commit to commit" in logged
+        assert 'git tag -a v1.0.0 -m "Version 1.0.0"' in logged
 
-    with conftest.capture_output() as out:
+    with conftest.capture_output() as logged:
         versioning.bump("minor", push=True)
-        assert "Not committing bump, use --commit to commit" in out
-        assert 'git tag -a v0.2.0 -m "Version 0.2.0"' in out
-        assert "git push --tags origin" in out
+        assert "Not committing bump, use --commit to commit" in logged
+        assert 'git tag -a v0.2.0 -m "Version 0.2.0"' in logged
+        assert "git push --tags origin" in logged
 
     with pytest.raises(setupmeta.UsageError):
         versioning.bump("foo")
@@ -411,7 +419,7 @@ def test_git_versioning(sample_project):
 
 
 def test_missing_tags():
-    with conftest.capture_output() as out:
+    with conftest.capture_output() as logged:
         meta = new_meta("distance", scm=conftest.MockGit(False, local_tags="v1.0\nv1.1", remote_tags="v1.0\nv2.0"))
         versioning = meta.versioning
         assert versioning.enabled
@@ -420,4 +428,4 @@ def test_missing_tags():
         with pytest.raises(setupmeta.UsageError):
             # Can't effectively bump when remote tags are not all present locally
             versioning.bump("minor", commit=True)
-        assert "patch version component should be .0" in out
+        assert "patch version component should be .0" in logged

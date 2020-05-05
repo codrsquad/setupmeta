@@ -7,9 +7,13 @@ Done with README.
 
 Everything below will not make it to long_description
 
+This project is trying hard to be as edge-casey as possible.
+
 No README.rst here, long description is still found in this "README" however
 
 Other peculiarities of this example:
+- __title__ is used instead of name= in setup.py
+- there's a space in the folder name, as well as the `name` intended for pypi
 - only part of this README is included, as well as part of HISTORY.txt
 - there's a package in complex/ as well as src/complex/
 - `version` is defined 3 times
@@ -19,6 +23,8 @@ Other peculiarities of this example:
 - `url` is auto-filled with package name
 - `download_url` is auto-filled from a relative path
 - there's an explicit `extras_require`
-- `classifiers` is mention explicitly, as well as in `classifiers.txt` file
+- `classifiers` is mentioned explicitly, as well as in `classifiers.txt` file
+- `license` is mentioned explicitly, as well as in `LICENSE.md` file
 - there's an `entry_points.ini`
 - there's a `pinned.txt` and `requirements-dev.txt`
+- nested requirements via `-r` in `requirements-dev.txt`, one creating a circular reference, another one pointing to a non-existing file

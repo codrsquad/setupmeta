@@ -3,7 +3,7 @@ hierarchical: A hierarchical package (code under src/)
 
 This is a project that keeps its code under a ``src/`` subfolder:
 
-* ``name`` is deduced from ``__title__`` in ``setup.py``
+* ``name`` is given explicitly in ``setup.py``
 
 * module + submodule in ``src/hierarchical/`` -> ``packages`` is properly set to ``['hierarchical', 'hierarchical.submodule']``
 
@@ -38,10 +38,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
     from setuptools import setup
 
 
-    __title__ = 'hierarchical'          # This will auto-fill 'name'
-
-
     setup(
+        name="hierarchical",
         setup_requires=['setupmeta']
     )
 

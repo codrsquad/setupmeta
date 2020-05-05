@@ -3,7 +3,7 @@ direct: A package implemented by one direct (not under src/) module folder
 
 This is your typical small project, with:
 
-* ``name`` is deduced from ``__title__`` in ``setup.py``
+* ``name`` is given explicitly in ``setup.py``
 
 * one ``direct/__init__.py`` module (simple module folder) -> ``packages`` is properly set
 
@@ -36,10 +36,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
     from setuptools import setup
 
 
-    __title__ = 'direct'            # This will auto-fill 'name'
-
-
     setup(
+        name="direct",
         setup_requires=['setupmeta']
     )
 

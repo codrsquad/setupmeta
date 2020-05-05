@@ -3,14 +3,19 @@ Name: pre-packaged
 Version: 1.3.2.dev4
 Summary: Project description
 Home-page: http://example.com/pre-packaged
-Author: Zoran Simic
-Author-email: zoran@simicweb.com
+Author: Someone
+Author-email: someone@example.com
 License: MIT
 Download-URL: http://example.com/pre-packaged/releases/download/v1.7.1/pickley
 Description:
         # Project description
 
-        This scenario simulates a PKG, no git source available
+        This scenario simulates a PKG, with no git source available.
+
+        During testing, `src/pre-packaged` is renamed to `src/pre_packaged.egg-info`,
+        which will simulate a pip-expanded tarball + running of `setup.py egg_info`.
+
+        This simulates how setupmeta behaves in such an environment.
 
 Platform: UNKNOWN
 Classifier: Intended Audience :: Developers

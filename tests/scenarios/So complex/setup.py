@@ -1,6 +1,6 @@
 """
-author: Zoran Simic zoran@simicweb.com      # will be auto-adjusted
-url: https://github.com/zsimic              # url will be auto-completed
+author: Someone someone@example.com         # will be auto-adjusted
+url: https://example.com/complex            # url will be auto-completed
 download_url: archive/{version}.tar.gz      # will be auto-completed too
 keywords: setup, docstring
 version: 1.0a1
@@ -11,9 +11,10 @@ from setuptools import setup
 
 __version__ = "1.0b1"
 __keywords__ = "some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command"
+__title__ = "My cplx-nm_here"
+
 
 setup(
-    name="My cplx-nm_here",
     versioning="distance;.hooks/bump",
     setup_requires=["setupmeta"],
     # This will overshadow classifiers.txt

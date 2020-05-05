@@ -10,7 +10,7 @@ import sys
 
 import setuptools
 
-from setupmeta import get_words, listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace
+from setupmeta import get_words, listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace, warn
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -439,6 +439,9 @@ class SetupMeta(Settings):
         title = self.definitions.get("title")
         if title:
             self.auto_fill("name", title.value, source=title.source)
+
+        if not self.name:
+            warn("'name' not specified in setup.py, auto-fill will be incomplete")
 
         packages = self.attrs.get("packages", [])
         py_modules = self.attrs.get("py_modules", [])
