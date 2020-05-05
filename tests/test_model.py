@@ -69,9 +69,14 @@ def test_requirements():
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 8
     assert str(f.reqs[0]) == "wheel [*] from tests/scenarios/disabled/requirements.txt:1, abstracted by default"
-    assert str(f.reqs[4]) == "[my_egg] git+git://a.b/c/p1.git#egg=my_egg"
-    assert f.filled_requirements == ["wheel", "flake8; python_version >= '3.6'", "setuptools", "my_egg", "some-project"]
-    assert f.dependency_links == ["git+git://a.b/c/p1.git#egg=my_egg", "https://a.b/c/p2.git@u/pp", "file:///tmp/bar1", "file:///tmp/bar2"]
+    assert str(f.reqs[4]) == "[flake8] git+git://example.com/p1.git#egg=flake8"
+    assert f.filled_requirements == ["wheel", "click; python_version >= '3.6'", "setuptools", "flake8", "pytest-cov"]
+    assert f.dependency_links == [
+        "git+git://example.com/p1.git#egg=flake8",
+        "https://example.com/a.git@u/pp",
+        "file:///tmp/bar1",
+        "file:///tmp/bar2",
+    ]
     assert len(f.abstracted) == 2
     assert len(f.ignored) == 1
     assert len(f.untouched) == 1

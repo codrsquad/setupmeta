@@ -1,1 +1,1 @@
-git+https://a.b/c/p1.git#egg=wheel
+git+https://example.com/p1.git#egg=flake8

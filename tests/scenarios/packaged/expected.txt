@@ -2,11 +2,11 @@
                        author: (PKG-INFO                                ) Someone
                  author_email: (PKG-INFO                                ) someone@example.com
                   classifiers: (PKG-INFO                                ) ["Intended Audience :: Developers", "Programming Language :: Python"]
-             dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://a.b/c/p1.git#egg=wheel"]
+             dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://example.com/p1.git#egg=flake8"]
                   description: (PKG-INFO                                ) Project description
                  download_url: (PKG-INFO                                ) http://example.com/pre-packaged/releases/download/v1.7.1/pickley
                  entry_points: (src/pre_packaged.egg-info/entry_points.txt) [console_scripts] pre-packaged-test = pre_packaged:main
-             install_requires: (src/pre_packaged.egg-info/requires.txt  ) ["setuptools>=46.1", "pytest-cov", "flake8", "wheel"]
+             install_requires: (src/pre_packaged.egg-info/requires.txt  ) ["setuptools>=46.1", "pytest-cov", "flake8"]
                       license: (PKG-INFO                                ) MIT
              long_description: (PKG-INFO                                ) # Project description This scenario simulates a PKG, with no git source available. During testing, `src...
                            \_: (README.md                               ) # Project description This scenario simulates a PKG, with no git source available. During testing, `src...
@@ -26,7 +26,6 @@ long_description_content_type: (PKG-INFO                                ) text/m
         "setuptools>=46.1",  # from src/pre_packaged.egg-info/requires.txt:1
         "pytest-cov",        # from src/pre_packaged.egg-info/requires.txt:2
         "flake8",            # from src/pre_packaged.egg-info/requires.txt:3
-        "wheel",             # from src/pre_packaged.egg-info/requires.txt:4
     ],
     tests_require=None,   # no auto-fill
 
@@ -40,12 +39,12 @@ setup(
     author="Someone",                                                # from PKG-INFO
     author_email="someone@example.com",                              # from PKG-INFO
     classifiers=["Intended Audience :: Developers", "Programming Language :: Python"], # from PKG-INFO
-    dependency_links=["git+https://a.b/c/p1.git#egg=wheel"],         # from src/pre_packaged.egg-info/dependency_links.txt
+    dependency_links=["git+https://example.com/p1.git#egg=flake8"],  # from src/pre_packaged.egg-info/dependency_links.txt
     description="Project description",                               # from PKG-INFO
     download_url="http://example.com/pre-packaged/releases/download/v1.7.1/pickley", # from PKG-INFO
     entry_points="""[console_scripts]
 pre-packaged-test = pre_packaged:main""",                            # from src/pre_packaged.egg-info/entry_points.txt
-    install_requires=["setuptools>=46.1", "pytest-cov", "flake8", "wheel"], # from src/pre_packaged.egg-info/requires.txt
+    install_requires=["setuptools>=46.1", "pytest-cov", "flake8"],   # from src/pre_packaged.egg-info/requires.txt
     license="MIT",                                                   # from PKG-INFO
     long_description=open("PKG-INFO").read(),                        # from PKG-INFO
     long_description_content_type="text/markdown",                   # from PKG-INFO

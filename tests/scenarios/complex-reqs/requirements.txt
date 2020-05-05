@@ -1,9 +1,11 @@
 -i https://example.com/pypi/
 
-flake8==3.7.9
+setuptools==46.1.3
 pytest-cov<3.0.0
-setuptools>=46.1
--e https://a.b/c/p1.git#egg=click
+-e https://example.com/a.git#egg=flake8
 
 # indirect, will be ignored due to being in an 'indirect' section
--e git+https://a.b/c/p2.git#egg=bar
+-e git+https://example.com/b.git#egg=click
+
+# Nested reqs won't be ignored, even though we are in an 'ignored' section
+-r req2.txt

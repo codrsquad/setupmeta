@@ -1,0 +1,5 @@
+# This one is a dupe (also mentioned in requirements.txt, just without the git+ prefix):
+-e https://example.com/a.git#egg=flake8
+
+# This one is new:
+-e https://example.com/c.git#egg=flake8

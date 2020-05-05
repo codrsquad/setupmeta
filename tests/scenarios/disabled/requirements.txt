@@ -1,15 +1,14 @@
 wheel==0.34.2
-pytest-cov>=5.0  # indirect
-flake8==3.7.9; python_version >= '3.6'
+python-mock>=5.0  # indirect
+click==7.1.2; python_version >= '3.6'
 
 # Unknown [] sections ignored
 [:python_version < "3.7"]
-setuptools
+setuptools  # abstracted, static explicitly 'abstracted' here is a no-op (since no simple pin)
 
 # URLs properly auto-filled as dependency_links
-[foo]
--e git://a.b/c/p1.git#egg=my_egg
-some-project @ https://a.b/c/p2.git@u/pp
+-e git://example.com/p1.git#egg=flake8
+pytest-cov @ https://example.com/a.git@u/pp
 
 # Folders taken as-is
 file:///tmp/bar1
