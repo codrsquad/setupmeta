@@ -1,10 +1,12 @@
-wheel==0.34.2
-python-mock>=5.0  # indirect
-click==7.1.2; python_version >= '3.6'
+# We're not picky on what version looks like... anything (except ';') goes, whitespace around '==' doesn't matter
+wheel ==  1.0-rc1#foo+^.!bla
 
-# Unknown [] sections ignored
+python-mock>=5.0  # Indirect (this gets ignored for auto-fill due to 'indirect' comment)
+click==7.1.2; python_version >= '3.6'  # We abstract the ==<version> part only (keep the rest)
+
+# Unknown line formats such as [...] are ignored
 [:python_version < "3.7"]
-setuptools  # abstracted, static explicitly 'abstracted' here is a no-op (since no simple pin)
+setuptools
 
 # URLs properly auto-filled as dependency_links
 -e git://example.com/p1.git#egg=flake8

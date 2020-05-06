@@ -68,8 +68,8 @@ def test_requirements():
     sample = conftest.resouce("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 8
-    assert str(f.reqs[0]) == "wheel [*] from tests/scenarios/disabled/requirements.txt:1, abstracted by default"
-    assert str(f.reqs[4]) == "[flake8] git+git://example.com/p1.git#egg=flake8"
+    assert str(f.reqs[0]) == "wheel from tests/scenarios/disabled/requirements.txt:2, abstracted by default"
+    assert str(f.reqs[4]) == "-e git+git://example.com/p1.git#egg=flake8#egg=flake8 from tests/scenarios/disabled/requirements.txt:12"
     assert f.filled_requirements == ["wheel", "click; python_version >= '3.6'", "setuptools", "flake8", "pytest-cov"]
     assert f.dependency_links == [
         "git+git://example.com/p1.git#egg=flake8",
@@ -113,7 +113,7 @@ def test_requirements():
 
 def test_empty():
     with conftest.capture_output():
-        with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py") as meta:
+        with conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py") as meta:
             assert not meta.attrs
             assert not meta.definitions
             assert not meta.name
@@ -130,16 +130,18 @@ def test_empty():
 
 @patch.dict(os.environ, {"PYGRADLE_PROJECT_VERSION": "1.2.3"})
 def test_pygradle_version():
-    with conftest.TestMeta(setup="/foo/bar/shouldnotexist/setup.py", name="pygradle_project") as meta:
-        assert len(meta.definitions) == 2
-        assert meta.value("name") == "pygradle_project"
-        assert meta.value("version") == "1.2.3"
+    with conftest.capture_output() as logged:
+        with conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py", name="pygradle_project") as meta:
+            assert len(meta.definitions) == 2
+            assert meta.value("name") == "pygradle_project"
+            assert meta.value("version") == "1.2.3"
 
-        name = meta.definitions["name"]
-        version = meta.definitions["version"]
+            name = meta.definitions["name"]
+            version = meta.definitions["version"]
 
-        assert name.is_explicit
-        assert not version.is_explicit
+            assert name.is_explicit
+            assert not version.is_explicit
+            assert "WARNING: No 'packages' or 'py_modules' defined" in logged
 
 
 def test_meta():

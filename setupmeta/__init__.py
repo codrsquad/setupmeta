@@ -40,7 +40,7 @@ WINDOWS = PLATFORM.startswith("win")
 # Simplistic parsing of known formats used in requirements.txt
 RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
 RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
-RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([A-Za-z0-9.]+)\s*(;.*)?$")
+RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([^;\s]+)\s*(;.*)?$")
 RE_WORDS = re.compile(r"[^\w]+")
 
 ABSTRACT = "abstract"
@@ -375,6 +375,7 @@ def readlines(relative_path, limit=0):
 
                     result.append(line)
 
+            trace("read %s lines from %s" % (len(result), relative_path))
             return result
 
         except IOError:
@@ -419,6 +420,7 @@ def requirements_from_file(path):
 def corrected_editable(link, editable):
     # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
     if editable and "git" in link and not link.startswith("git+"):
+        trace("  added git+ prefix to %s" % link)
         link = "git+%s" % link
 
     return link
@@ -431,17 +433,25 @@ def extracted_dependency_link(line, editable):
     :return (str, str): Extracted dependency link and name
     """
     if line.startswith("file:"):
+        trace("  found explicit file dependency link %s" % line)
         return line, None
 
     m = RE_DEPENDENCY_EGG.match(line)
     if m:
-        return corrected_editable(line, editable), m.group(1)
+        link = corrected_editable(line, editable)
+        name = m.group(1)
+        trace("  found egg dependency link %s %s" % (name, link))
+        return link, name
 
     m = RE_DEPENDENCY_AT.match(line)
     if m:
-        return corrected_editable(m.group(2), editable), m.group(1)
+        link = corrected_editable(m.group(2), editable)
+        name = m.group(1)
+        trace("  found @ dependency link %s %s" % (name, link))
+        return link, name
 
     if os.path.isabs(line):
+        trace("  found folder dependency link %s" % line)
         return "file://%s" % line, None
 
     return None, line
@@ -522,21 +532,33 @@ class ReqEntry(object):
             if self.section != PINNED:
                 m = RE_SIMPLE_PIN.match(self.requirement)
                 if m:
+                    prev = self.requirement
                     name = m.group(1)
                     spec = m.group(3)
                     self.requirement = name if not spec else "%s%s" % (name, spec)
+                    trace("  abstracted [%s] -> [%s]" % (prev, self.requirement))
                     self.abstracted = True
 
     def __repr__(self):
-        marker = "*" if self.abstracted else ""
-        if self.dependency_link:
-            return "[%s%s] %s" % (marker, self.requirement, self.dependency_link)
+        result = []
+        if self.editable:
+            result.append("-e")
 
-        return "%s [%s%s] %s" % (self.requirement, marker, self.section or "", self.source_description)
+        if self.refers:
+            result.append("-r %s" % (self.source or self.refers))
+
+        if self.dependency_link:
+            result.append("%s#egg=%s" % (self.dependency_link, self.requirement))
+
+        elif self.requirement:
+            result.append(self.requirement)
+
+        result.append(self.source_description)
+        return " ".join(result)
 
     @property
     def is_empty(self):
-        return not self.dependency_link and not self.requirement
+        return not self.dependency_link and not self.requirement and not self.refers
 
     @property
     def section(self):
@@ -584,15 +606,18 @@ def iterate_req_txt(seen, parent, source_path, lines):
         current_section = None
         for n, line in enumerate(lines, start=1):
             req_entry = ReqEntry(parent, source_path, n, current_section, line)
+            if req_entry.is_empty:
+                if req_entry.parent_section:
+                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
+                    current_section = req_entry.parent_section
+
+                continue
+
+            trace("  req entry: %s" % req_entry)
             if req_entry.refers and req_entry.refers not in seen:
                 seen.add(req_entry.refers)
                 for r in iterate_req_txt(seen, parent, req_entry.refers, readlines(req_entry.refers)):
                     yield r
-
-            elif req_entry.is_empty:
-                if req_entry.parent_section:
-                    # Lines containing only a comment can start a "section", all requirements below this will respect that section
-                    current_section = req_entry.parent_section
 
             else:
                 key = "%s %s" % (req_entry.requirement, req_entry.dependency_link)
@@ -662,7 +687,7 @@ def find_requirements(do_abstract, *relative_paths):
         if path:
             path = project_path(path)
             if os.path.isfile(path):
-                trace("found requirements: %s" % path)
+                trace("found requirements: %s %s" % (path, " (auto-abstracted)" if do_abstract else ""))
                 r = RequirementsFile.from_file(path, do_abstract=do_abstract)
                 if r is not None:
                     return r

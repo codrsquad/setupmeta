@@ -24,12 +24,13 @@ def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs)
 
 
 def test_disabled():
-    meta = new_meta(False)
-    versioning = meta.versioning
-    assert not versioning.enabled
-    assert versioning.problem == "setupmeta versioning not enabled"
-    with pytest.raises(Exception):
-        versioning.bump("major", commit=False)
+    with conftest.capture_output():
+        meta = new_meta(False)
+        versioning = meta.versioning
+        assert not versioning.enabled
+        assert versioning.problem == "setupmeta versioning not enabled"
+        with pytest.raises(Exception):
+            versioning.bump("major", commit=False)
 
 
 def test_project_scm():
@@ -60,17 +61,18 @@ def test_snapshot_with_version_file():
             # Trigger artificial rewriting of version file
             versioning.generate_version_file = True
             versioning.auto_fill_version()
-            assert not logged
+            assert "WARNING: No 'packages' or 'py_modules' defined" in logged
 
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1"})
 def test_find_scm_in_parent():
-    meta = new_meta("post")
-    versioning = meta.versioning
-    assert versioning.enabled
-    assert not versioning.problem
-    assert setupmeta.project_path() == conftest.TESTS
-    assert versioning.scm.root == conftest.TESTS
+    with conftest.capture_output():
+        meta = new_meta("post")
+        versioning = meta.versioning
+        assert versioning.enabled
+        assert not versioning.problem
+        assert setupmeta.project_path() == conftest.TESTS
+        assert versioning.scm.root == conftest.TESTS
 
 
 def check_render(v, expected, main="1.0", distance=None, cid=None, dirty=False):
@@ -114,13 +116,14 @@ def test_no_scm(_):
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "v1.2.3-4-g1234567-dirty"})
 @patch("setupmeta.versioning.find_scm_root", return_value=None)
 def test_version_from_env_var(*_):
-    meta = new_meta("post")
-    versioning = meta.versioning
-    assert meta.version == "1.2.3.post4.dirty"
-    assert versioning.enabled
-    assert not versioning.generate_version_file
-    assert not versioning.problem
-    assert versioning.scm.is_dirty()
+    with conftest.capture_output():
+        meta = new_meta("post")
+        versioning = meta.versioning
+        assert meta.version == "1.2.3.post4.dirty"
+        assert versioning.enabled
+        assert not versioning.generate_version_file
+        assert not versioning.problem
+        assert versioning.scm.is_dirty()
 
 
 def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123"):

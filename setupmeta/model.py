@@ -440,9 +440,6 @@ class SetupMeta(Settings):
         if title:
             self.auto_fill("name", title.value, source=title.source)
 
-        if not self.name:
-            warn("'name' not specified in setup.py, auto-fill will be incomplete")
-
         packages = self.attrs.get("packages", [])
         py_modules = self.attrs.get("py_modules", [])
 
@@ -490,6 +487,12 @@ class SetupMeta(Settings):
                     SimpleModule("src", package, "__version__.py"),
                     SimpleModule("src", package, "__init__.py"),
                 )
+
+        if not self.name:
+            warn("'name' not specified in setup.py, auto-fill will be incomplete")
+
+        elif not self.definitions.get("packages") and not self.definitions.get("py_modules"):
+            warn("No 'packages' or 'py_modules' defined, this is an empty python package")
 
         scm = scm or project_scm(MetaDefs.project_dir)
         self.versioning = Versioning(self, scm)

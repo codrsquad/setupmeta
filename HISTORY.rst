@@ -2,6 +2,16 @@
 History
 =======
 
+2.7.4 (2020-05-06)
+-------------------
+
+* Corrected auto-abstract for non-standard version pins such as ``foo==1.0-rc1+local-part``
+
+* Added more debug tracing to help troubleshoot future issues (``SETUPMETA_DEBUG=1 setup.py ...``)
+
+* Warn if no ``packages`` or ``py_modules`` are defined (empty package)
+
+
 2.7.3 (2020-05-03)
 -------------------
 
