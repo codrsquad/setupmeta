@@ -191,7 +191,7 @@ How it works?
     * ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line
       (setupmeta_ will figure out the email part and auto-fill it properly)
 
-        * i.e.: ``author: Bob D bob@d.com`` will yield the proper ``author`` and ``author_email`` settings
+        * i.e.: ``author: Bob D bob@example.com`` will yield the proper ``author`` and ``author_email`` settings
 
 
 This should hopefully work nicely for the vast majority of python projects out there.
