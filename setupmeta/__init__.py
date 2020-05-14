@@ -429,7 +429,7 @@ def corrected_editable(link, editable):
 
 
 def extract_project_name_from_folder(path):
-    if path:
+    if path and "--name" not in sys.argv:
         setup_py = os.path.join(path, "setup.py")
         if os.path.exists(setup_py):
             output = run_program(sys.executable, setup_py, "--name", capture=True)

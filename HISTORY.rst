@@ -2,15 +2,21 @@
 Release notes
 =============
 
+2.7.6 (2020-05-14)
+------------------
+
+* Avoid infinite recursion with ``setup.py --name``
+
+
 2.7.5 (2020-05-14)
--------------------
+------------------
 
 * Report package name in ``setup_requires`` when possible,
   for local projects referred to via ``-e /some/folder`` in a requirements file
 
 
 2.7.4 (2020-05-06)
--------------------
+------------------
 
 * Corrected auto-abstract for non-standard version pins such as ``foo==1.0-rc1+local-part``
 
@@ -20,13 +26,13 @@ Release notes
 
 
 2.7.3 (2020-05-03)
--------------------
+------------------
 
 * Added support for nested requirements: ``-r foo.txt`` will be now followed
 
 
 2.7.2 (2020-04-30)
--------------------
+------------------
 
 * Corrected bug: parsing ``PKG-INFO`` files properly
 
