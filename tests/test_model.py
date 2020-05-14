@@ -153,6 +153,23 @@ def test_meta():
     assert is_setup_py_path("/foo/setup.pyc")
 
 
+def test_dependency_link_extraction():
+    assert setupmeta.extract_project_name_from_folder(conftest.TESTS) is None  # Existing folder, but no setup.py
+
+    # No such folder
+    assert setupmeta.extracted_dependency_link("/dev/null/foo", True) == ("file:///dev/null/foo", None)
+    assert setupmeta.extracted_dependency_link("file:///dev/null/foo", False) == ("file:///dev/null/foo", None)
+
+    # setup.py exists
+    full_uri = "file://%s" % conftest.PROJECT_DIR
+    assert setupmeta.extracted_dependency_link(conftest.PROJECT_DIR, False) == (full_uri, "setupmeta")
+    assert setupmeta.extracted_dependency_link(full_uri, True) == (full_uri, "setupmeta")
+
+    # Try and determine name from 'file://' uri only
+    incomplete_uri = "file:%s" % conftest.PROJECT_DIR
+    assert setupmeta.extracted_dependency_link(incomplete_uri, True) == (incomplete_uri, None)
+
+
 def test_no_pip():
     with conftest.capture_output() as logged:
         # Simulate pip > 20.0

@@ -36,12 +36,14 @@ RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 PLATFORM = platform.system().lower()
 WINDOWS = PLATFORM.startswith("win")
+PKGID = "[-A-Za-z0-9_.]+"
 
 # Simplistic parsing of known formats used in requirements.txt
-RE_DEPENDENCY_AT = re.compile(r"\s*([-A-Za-z0-9_.]+)\s*@\s*(.+)")
-RE_DEPENDENCY_EGG = re.compile(r".+#egg=([-A-Za-z0-9_.]+).*")
-RE_SIMPLE_PIN = re.compile(r"^([-A-Za-z0-9_.]+)\s*==\s*([^;\s]+)\s*(;.*)?$")
+RE_DEPENDENCY_AT = re.compile(r"\s*(%s)\s*@\s*(.+)" % PKGID)
+RE_DEPENDENCY_EGG = re.compile(r".+#egg=(%s).*" % PKGID)
+RE_SIMPLE_PIN = re.compile(r"^(%s)\s*==\s*([^;\s]+)\s*(;.*)?$" % PKGID)
 RE_WORDS = re.compile(r"[^\w]+")
+RE_PKG_NAME = re.compile(r"^(%s)$" % PKGID)
 
 ABSTRACT = "abstract"
 INDIRECT = "indirect"
@@ -426,6 +428,17 @@ def corrected_editable(link, editable):
     return link
 
 
+def extract_project_name_from_folder(path):
+    if path:
+        setup_py = os.path.join(path, "setup.py")
+        if os.path.exists(setup_py):
+            output = run_program(sys.executable, setup_py, "--name", capture=True)
+            if output and not isinstance(output, int):
+                m = RE_PKG_NAME.match(output.strip())
+                if m:
+                    return m.group(1)
+
+
 def extracted_dependency_link(line, editable):
     """
     :param str line: Line to parse
@@ -434,6 +447,9 @@ def extracted_dependency_link(line, editable):
     """
     if line.startswith("file:"):
         trace("  found explicit file dependency link %s" % line)
+        if line.startswith("file://"):
+            return line, extract_project_name_from_folder(line[7:].strip())
+
         return line, None
 
     m = RE_DEPENDENCY_EGG.match(line)
@@ -452,7 +468,8 @@ def extracted_dependency_link(line, editable):
 
     if os.path.isabs(line):
         trace("  found folder dependency link %s" % line)
-        return "file://%s" % line, None
+        name = extract_project_name_from_folder(line.strip())
+        return "file://%s" % line, name
 
     return None, line
 

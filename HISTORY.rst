@@ -2,6 +2,13 @@
 Release notes
 =============
 
+2.7.5 (2020-05-14)
+-------------------
+
+* Report package name in ``setup_requires`` when possible,
+  for local projects referred to via ``-e /some/folder`` in a requirements file
+
+
 2.7.4 (2020-05-06)
 -------------------
 

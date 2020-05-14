@@ -10,7 +10,7 @@ import sys
 
 import setuptools
 
-from setupmeta import get_words, listify, MetaDefs, project_path, readlines, relative_path, Requirements, short, trace, warn
+from setupmeta import get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path, Requirements, short, trace, warn
 from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -31,7 +31,7 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 
 # Match PKG-INFO metadata, of the form: Some-Key: some value
-RE_PKG_KEY_VALUE = re.compile(r"^([-A-Za-z0-9_]+):\s?(.*)$")
+RE_PKG_KEY_VALUE = re.compile(r"^(%s):\s?(.*)$" % PKGID)
 
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
