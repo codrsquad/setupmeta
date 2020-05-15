@@ -86,7 +86,7 @@ class Scenario:
             self.target = None
             with io.open(extra_commands, "rt") as fh:
                 for line in fh:
-                    line = conftest.decode(line).strip()
+                    line = str(conftest.decode(line).strip())  # coerce to str() to not confuse py2 with unicode
                     if line:
                         if line.startswith(":"):
                             self.preparation.append(line[1:])

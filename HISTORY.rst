@@ -5,6 +5,8 @@ Release notes
 2.7.7 (2020-05-14)
 ------------------
 
+* Don't do full auto-fill when invoked with ``--name``
+
 * Added tests, do not try to follow relative paths in ``requirements.txt`` (pip doesn't accept them anyway)
 
 
