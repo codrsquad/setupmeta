@@ -59,3 +59,7 @@ error: Main format is not a list: function 'main_part'
 :: version
 WARNING: patch version component should be .0 for versioning strategy...
 1.0
+
+:: --name
+WARNING: patch version component should be .0 for versioning strategy...
+bogus

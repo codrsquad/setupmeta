@@ -229,3 +229,6 @@ maintainer_email: (auto-adjust                         ) me@example.com
               \_: (src/My_cplx_nm_here/__version__.py:3) 2.0.0
               \_: (src/My_cplx_nm_here/__init__.py:8   ) 2.0.0
       versioning: (explicit                            ) distance;.hooks/bump
+
+:: --name
+My cplx-nm_here

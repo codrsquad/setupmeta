@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.7 (2020-05-14)
+------------------
+
+* Added tests, do not try to follow relative paths in ``requirements.txt`` (pip doesn't accept them anyway)
+
+
 2.7.6 (2020-05-14)
 ------------------
 

@@ -2,3 +2,7 @@
 flake8  # some comment, also not 'indirect'
 pytest
 -r tests/extra-reqs.txt     # No-op, extra-reqs.txt brings nothing new
+
+# Try referring to current folder
+.
+-e .

@@ -36,7 +36,7 @@ RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 PLATFORM = platform.system().lower()
 WINDOWS = PLATFORM.startswith("win")
-PKGID = "[-A-Za-z0-9_.]+"
+PKGID = "[A-Za-z0-9][-A-Za-z0-9_.]*"
 
 # Simplistic parsing of known formats used in requirements.txt
 RE_DEPENDENCY_AT = re.compile(r"\s*(%s)\s*@\s*(.+)" % PKGID)
@@ -429,7 +429,7 @@ def corrected_editable(link, editable):
 
 
 def extract_project_name_from_folder(path):
-    if path and "--name" not in sys.argv:
+    if path:
         setup_py = os.path.join(path, "setup.py")
         if os.path.exists(setup_py):
             output = run_program(sys.executable, setup_py, "--name", capture=True)
@@ -445,6 +445,10 @@ def extracted_dependency_link(line, editable):
     :param bool editable: True if link was marked as --editable
     :return (str, str): Extracted dependency link and name
     """
+    if line.startswith("."):
+        # Ignore local paths
+        return None, None
+
     if line.startswith("file:"):
         trace("  found explicit file dependency link %s" % line)
         if line.startswith("file://"):
@@ -543,6 +547,9 @@ class ReqEntry(object):
             return
 
         self.dependency_link, self.requirement = extracted_dependency_link(line, self.editable)
+        if not self.dependency_link and not self.requirement:
+            self.comment = None  # Ensure potential comment on the line doesn't count as section
+
         if self.parent.do_abstract and not self.dependency_link and self.requirement and self.section != INDIRECT:
             # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
             self.abstracted = False

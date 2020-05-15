@@ -440,6 +440,10 @@ class SetupMeta(Settings):
         if title:
             self.auto_fill("name", title.value, source=title.source)
 
+        if len(sys.argv) == 2 and sys.argv[1] == "--name":
+            # No need to waste time auto-filling anything if all we need to show is package name
+            return
+
         packages = self.attrs.get("packages", [])
         py_modules = self.attrs.get("py_modules", [])
 
