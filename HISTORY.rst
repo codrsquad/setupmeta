@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.8 (2020-05-21)
+------------------
+
+* Don't issue warnings related to versioning on fresh new (still empty) repos
+
+
 2.7.7 (2020-05-14)
 ------------------
 
