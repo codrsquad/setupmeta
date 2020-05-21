@@ -275,13 +275,12 @@ def run_program(program, *args, **kwargs):
     trace(trace_msg)
 
     if capture:
+        if p.returncode:
+            if not error or not _should_ignore_run_fail(program, args, error.lower()):
+                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no output-"))
+
         if capture == "all":
             return merged(output, error)
-
-        if p.returncode:
-            if not args or args[0] != "describe" or not error or "no names" not in error.lower():
-                # Edge case: don't warn when no tags are present, git states "No names found" in that case...
-                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error))
 
         return merged(output, None)
 
@@ -290,6 +289,20 @@ def run_program(program, *args, **kwargs):
         sys.exit(p.returncode)
 
     return p.returncode
+
+
+def _should_ignore_run_fail(program, args, error):
+    """Edge case: don't warn for known expected failures"""
+    if not program or not args or not args[0] or "git" not in program:
+        return False
+
+    if args[0] in ("rev-list", "rev-parse") and "HEAD" in args:
+        # No commits yet, brand new git repo
+        return "revision" in error
+
+    if args[0] == "describe":
+        # No tags are present, git states "No names found" in that case
+        return "no names" in error
 
 
 def decode(value):

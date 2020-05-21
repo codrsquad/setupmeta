@@ -386,12 +386,36 @@ def write_to_file(path, text):
         fh.write("\n")
 
 
+SAMPLE_EMPTY_PROJECT = """
+from setuptools import setup
+setup(
+    name='testing',
+    py_modules=['foo'],
+    setup_requires='setupmeta',
+    versioning='distance',
+)
+"""
+
+
+def test_brand_new_project():
+    with setupmeta.temp_resource():
+        conftest.run_git("init")
+        with open("setup.py", "w") as fh:
+            fh.write(SAMPLE_EMPTY_PROJECT)
+
+        # Test that we avoid warning about no tags etc on brand new empty git repos
+        output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture="all")
+        output = conftest.cleaned_output(output)
+        assert output == "0.0.0"
+
+
 def test_git_versioning(sample_project):
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.0"
 
-    output = setupmeta.run_program(sys.executable, "setup.py", "explain", capture=True)
+    output = setupmeta.run_program(sys.executable, "setup.py", "explain", capture="all")
     assert "0.1.0" in output
+    assert "UserWarning" not in output
 
     # New file does not change dirtiness
     write_to_file("foo", "print('hello')")
