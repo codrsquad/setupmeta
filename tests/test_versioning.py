@@ -168,10 +168,13 @@ def test_versioning_variants(*_):
 
         quick_check("post", "5.0.0a1.post1", dirty=False, describe="v5.0-a.1-1-gebe2789")
         quick_check("post", "5.0.0a1.rc2.post7", dirty=False, describe="v5.a1rc2-7-gebe2789")
-        quick_check("dev", "0.1.0a.dev8", dirty=False, describe="v0.1.a-8-gebe2789")
+        quick_check("dev", "0.1.0a0.dev8", dirty=False, describe="v0.1.a-8-gebe2789")
 
         # Patch is not bumpable
-        quick_check("dev", "0.1.0rc.dev5.dirty", describe="v0.1.rc-5-g123")
+        quick_check("dev", "0.1.0rc0.dev5.dirty", describe="v0.1.rc-5-g123")
+        quick_check("dev", "0.1.0rc1.dev5.dirty", describe="v0.1.rc1-5-g123")
+        quick_check("dev", "0.1.0rc1.dev5.dirty", describe="v0.1.rc.1-5-g123")
+        quick_check("dev", "0.1.0rc1.dev5.dirty", describe="v0.1.rc-1-5-g123")
 
         # On tag
         quick_check("dev", "0.1.2", describe="v0.1.2-0-g123", dirty=False)

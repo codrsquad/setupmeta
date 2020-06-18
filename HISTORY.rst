@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.9 (2020-06-17)
+------------------
+
+* Always ensure a number is added to version parts such as ``rc``, as per PEP-440_
+
+
 2.7.8 (2020-05-21)
 ------------------
 
@@ -325,3 +331,5 @@ Release notes
 .. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
 
 .. _spark: https://spark.apache.org/docs/latest/index.html
+
+.. _PEP-440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers

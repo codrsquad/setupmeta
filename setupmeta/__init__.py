@@ -166,6 +166,10 @@ def version_components(text):
         main_triplet.append(0)
 
     if qualifier:
+        if not qualifier[-1].isdigit():
+            # PEP-440 states additional components such as 'rc' must be followed by a number
+            qualifier += "0"
+
         additional.append(qualifier)
 
     dirty = "dirty" in additional
