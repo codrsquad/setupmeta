@@ -92,7 +92,7 @@ class TestMeta:
 
     def __enter__(self):
         self.old_pd = setupmeta.MetaDefs.project_dir
-        return SetupMeta(self.upstream)
+        return SetupMeta().finalize(self.upstream)
 
     def __exit__(self, *args):
         setupmeta.MetaDefs.project_dir = self.old_pd
