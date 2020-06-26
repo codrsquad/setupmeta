@@ -10,8 +10,13 @@ import sys
 
 import setuptools
 
-from setupmeta import get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path, Requirements, short, trace, warn
-from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
+from setupmeta import (
+    get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
+    Requirements, requirements_from_file, short, trace, warn
+)
+from setupmeta.content import (
+    find_contents, load_contents, load_list, load_readme, resolved_paths
+)
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
 
@@ -148,7 +153,7 @@ class Definition(object):
     @property
     def is_meaningful(self):
         """ Should this definition make it to the final setup attrs? """
-        return bool(self.value) or self.is_explicit
+        return self.value is not None or self.is_explicit
 
 
 class Settings:
@@ -166,11 +171,11 @@ class Settings:
         definition = self.definitions.get(key)
         return definition and definition.value
 
-    def to_dict(self):
+    def to_dict(self, only_meaningful=True):
         """ Resolved attributes to pass to setuptools """
         result = {}
         for definition in self.definitions.values():
-            if definition.is_meaningful:
+            if not only_meaningful or definition.is_meaningful:
                 result[definition.key] = definition.value
         return result
 
@@ -181,7 +186,7 @@ class Settings:
         :param str source: Where this key/value came from
         :param bool override: If True, 'value' is forcibly taken
         """
-        if key and value:
+        if key and (value or override):
             if key in ("keywords", "setup_requires"):
                 value = listify(value, separator=",")
             definition = self.definitions.get(key)
@@ -414,19 +419,46 @@ class PackageInfo:
 class SetupMeta(Settings):
     """ Find usable definitions throughout a project SetupPy SetupMeta """
 
-    def __init__(self, upstream):
+    def __init__(self):
         """
         :param upstream: Either a dict or Distribution
         """
         Settings.__init__(self)
-        self.attrs = MetaDefs.dist_to_dict(upstream)
+        self.attrs = {}
+
+    def preprocess(self, upstream):
+        self.find_project_dir(MetaDefs.dist_to_dict(upstream).pop("_setup_py_path", None))
+
+        for require_field in ('install_requires', 'tests_require'):
+            value = getattr(upstream, require_field)
+            if isinstance(value, str if sys.version_info.major >= 3 else basestring) and value.startswith('@'):  # noqa: E501, F821 (basestring used by Python 2)
+                self.add_definition(require_field, value, EXPLICIT)
+                self.add_definition(require_field, requirements_from_file(value[1:]) or [], source=value[1:], override=True)
+
+        if isinstance(upstream.extras_require, dict):
+            if any([
+                    isinstance(deps, str if sys.version_info.major >= 3 else basestring)  # noqa: F821 (basestring used by Python 2)
+                    and deps.startswith('@')
+                    for deps in upstream.extras_require.values()
+            ]):
+                self.add_definition('extras_require', upstream.extras_require, EXPLICIT)
+                self.add_definition('extras_require', {
+                    extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, str) and deps.startswith('@') else deps
+                    for extra, deps in upstream.extras_require.items()
+                }, 'preprocessed', override=True)
+
+        return self
+
+    def finalize(self, upstream):
+        self.attrs.update(MetaDefs.dist_to_dict(upstream))
 
         self.find_project_dir(self.attrs.pop("_setup_py_path", None))
         scm = self.attrs.pop("scm", None)
 
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
-            self.add_definition(key, value, EXPLICIT)
+            if key not in self.definitions:
+                self.add_definition(key, value, EXPLICIT)
 
         # Add definitions from PKG-INFO, when available
         self.pkg_info = PackageInfo(MetaDefs.project_dir)
@@ -442,7 +474,7 @@ class SetupMeta(Settings):
 
         if "--name" in sys.argv[1:3]:
             # No need to waste time auto-filling anything if all we need to show is package name
-            return
+            return self
 
         packages = self.attrs.get("packages", [])
         py_modules = self.attrs.get("py_modules", [])
@@ -520,6 +552,8 @@ class SetupMeta(Settings):
         self.auto_fill_long_description()
         self.auto_fill_include_package_data()
         self.sort_classifiers()
+
+        return self
 
     def resolved_url(self, url, base=None):
         """

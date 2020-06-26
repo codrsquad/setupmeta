@@ -20,7 +20,7 @@ def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs)
         upstream["name"] = name
 
     upstream.update(kwargs)
-    return SetupMeta(upstream=upstream)
+    return SetupMeta().finalize(upstream=upstream)
 
 
 def test_disabled():
@@ -48,7 +48,7 @@ def test_snapshot_with_version_file():
                 fh.write("v1.2.3-4-g1234567")
 
             setup_py = os.path.join(temp, "setup.py")
-            meta = SetupMeta(dict(_setup_py_path=setup_py, name="just-testing", versioning="post", setup_requires="setupmeta"))
+            meta = SetupMeta().finalize(dict(_setup_py_path=setup_py, name="just-testing", versioning="post", setup_requires="setupmeta"))
 
             versioning = meta.versioning
             assert meta.version == "1.2.3.post4"
