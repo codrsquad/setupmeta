@@ -3,12 +3,12 @@ Hook for setuptools/distutils
 """
 
 import distutils.dist
+import functools
 
 from setupmeta.model import MetaDefs, SetupMeta
 
 
-finalize_options_orig = distutils.dist.Distribution.finalize_options
-def finalize_options(dist):  # noqa: E302 (keep override close to function it replaces)
+def finalize_dist(dist, setup_requires=None):
     """
     Hook into setuptools' Distribution class before attributes are interpreted.
 
@@ -17,9 +17,15 @@ def finalize_options(dist):  # noqa: E302 (keep override close to function it re
     the usual spec. This step is *before* configuration is additionally read
     from config files.
     """
-    dist._setupmeta = SetupMeta().preprocess(dist)
-    MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
-    finalize_options_orig(dist)
+    setup_requires = setup_requires or dist.setup_requires
+    setup_requires = setup_requires if isinstance(setup_requires, list) else [setup_requires]
+
+    if any(dep.startswith('setupmeta') for dep in setup_requires):
+        dist._setupmeta = SetupMeta().preprocess(dist)
+        MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
+
+        # Override parse_command_line for this instance only.
+        dist.parse_command_line = functools.partial(parse_command_line, dist)
 
 
 # Reference to original distutils.dist.Distribution.parse_command_line
@@ -32,35 +38,21 @@ def parse_command_line(dist, *args, **kwargs):  # noqa: E302 (keep override clos
     before any commands are run. We then call `parse_command_line` to continue
     normal execution.
     """
-    # _setupmeta won't be present when running initial setup_requires install.
-    # We still need it for our commands.
-    if not hasattr(dist, '_setupmeta'):
-        dist._setupmeta = SetupMeta()
     dist._setupmeta.finalize(dist)
     MetaDefs.fill_dist(dist, dist._setupmeta.to_dict())
 
     return parse_command_line_orig(dist, *args, **kwargs)
 
 
-def register(dist, name, value):
-    """ Hook into distutils in order to do our magic
-
-    We use this as a 'distutils.setup_keywords' entry point
-    We don't need to do anything specific here (in this function)
-    But we do need distutils to import this module
+def register_keyword(dist, name, value):
     """
-    if name == "setup_requires":
-        value = value if isinstance(value, list) else [value]
-        if any(item.startswith('setupmeta') for item in value):
-            # Replace Distribution finalization hooks so we can inject our parsed options
-            distutils.dist.Distribution.finalize_options = finalize_options
-            distutils.dist.Distribution.parse_command_line = parse_command_line
-        else:
-            # Replace Distribution hooks with original implementations (just in case rerunning in same process)
-            distutils.dist.Distribution.finalize_options = finalize_options_orig
-            distutils.dist.Distribution.parse_command_line = parse_command_line_orig
+    Allow registration of our 'versioning' keyword.
 
-            # Since this registration may happen after option finalization when loaded
-            # in the same process, we delete any unnecessary SetupMeta attribute.
-            if hasattr(dist, '_setupmeta'):
-                del dist._setupmeta
+    We also use this as an opportunity to verify that setupmeta is
+    initialized correctly, just in case `setup_requires` is populated late
+    (which appears to be the case in some contexts).
+
+    TODO: Add validation for the `versioning` keyword?
+    """
+    if name == 'setup_requires' and not hasattr(dist, '_setupmeta'):
+        finalize_dist(dist, setup_requires=value)
