@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.10 (2020-06-26)
+-------------------
+
+* Auto-populate requirements attrs using ``@<filepath>`` syntax. #53
+
+
 2.7.9 (2020-06-17)
 ------------------
 
