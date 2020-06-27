@@ -20,9 +20,12 @@ explain = setupmeta.commands:ExplainCommand
 twine = setupmeta.commands:TwineCommand
 version = setupmeta.commands:VersionCommand
 
+[setuptools.finalize_distribution_options]
+setupmeta = setupmeta.hook:finalize_dist
+
 [distutils.setup_keywords]
-setup_requires = setupmeta.hook:register
-versioning = setupmeta.hook:register
+setup_requires = setupmeta.hook:register_keyword
+versioning = setupmeta.hook:register_keyword
 """
 
 
