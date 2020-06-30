@@ -2,10 +2,16 @@
 Release notes
 =============
 
+2.7.11 (2020-06-30)
+-------------------
+
+* Simplify hooks, and fix preprocessing not triggering when not already installed in environment. (#54)
+
+
 2.7.10 (2020-06-26)
 -------------------
 
-* Auto-populate requirements attrs using ``@<filepath>`` syntax. #53
+* Auto-populate requirements attrs using ``@<filepath>`` syntax. (#53)
 
 
 2.7.9 (2020-06-17)
