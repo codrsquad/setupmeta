@@ -2,6 +2,16 @@
 Release notes
 =============
 
+2.7.12 (2020-07-16)
+-------------------
+
+* Further refine hooks (#56)
+
+    * Add legacy hook to ease transition in rare cases.
+
+    * Ensure our dist finalization runs first.
+
+
 2.7.11 (2020-06-30)
 -------------------
 
