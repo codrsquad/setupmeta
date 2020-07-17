@@ -4,6 +4,7 @@ Hook for setuptools/distutils
 
 import distutils.dist
 import functools
+import warnings
 
 from setupmeta.model import MetaDefs, SetupMeta
 
@@ -56,3 +57,16 @@ def register_keyword(dist, name, value):
     """
     if name == 'setup_requires' and not hasattr(dist, '_setupmeta'):
         finalize_dist(dist, setup_requires=value)
+
+
+# Add alias to register_keyword for backwards compatibility
+def register(dist, name, value):
+    warnings.warn(
+        "It appears that you have an installed version of `setupmeta` that is "
+        "interfering with a newer version's functionality. Things should still work "
+        "for you, but we recommend uninstalling `setupmeta` from your environment."
+        "`setupmeta` is only useful during the setup process, and does not need "
+        "to be properly installed.",
+        DeprecationWarning
+    )
+    register_keyword(dist, name, value)
