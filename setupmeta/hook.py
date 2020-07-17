@@ -4,6 +4,7 @@ Hook for setuptools/distutils
 
 import distutils.dist
 import functools
+import warnings
 
 from setupmeta.model import MetaDefs, SetupMeta
 
@@ -26,6 +27,12 @@ def finalize_dist(dist, setup_requires=None):
 
         # Override parse_command_line for this instance only.
         dist.parse_command_line = functools.partial(parse_command_line, dist)
+
+
+# Make sure we are run before any other finalizer.
+# To hit this entrypoint for early field preprocessing we need setuptools >= 42.0.0
+# See: https://github.com/pypa/setuptools/commit/6b210c65938527a4bbcea34942fe43971be3c014
+finalize_dist.order = -100
 
 
 # Reference to original distutils.dist.Distribution.parse_command_line
@@ -56,3 +63,24 @@ def register_keyword(dist, name, value):
     """
     if name == 'setup_requires' and not hasattr(dist, '_setupmeta'):
         finalize_dist(dist, setup_requires=value)
+
+
+# Add alias to register_keyword for backwards compatibility
+def register(dist, name, value):  # pragma: no cover; Should not be used in normal operations.
+    """
+    This is an alias for `register_keyword` that is used only when there is a
+    collision in expected entrypoints due to `setupmeta` being installed into
+    the runtime environment as well as via a local egg within a project. This
+    should eventually be able to be removed one everyone has migrated to
+    newer versions of setupmeta (>=2.7.10), and should only affect a handful
+    in any case.
+    """
+    warnings.warn(
+        "It appears that you have an installed version of `setupmeta` that is "
+        "interfering with a newer version's functionality. Things should still work "
+        "for you, but we recommend uninstalling `setupmeta` from your environment."
+        "`setupmeta` is only useful during the setup process, and does not need "
+        "to be properly installed.",
+        RuntimeWarning
+    )
+    register_keyword(dist, name, value)
