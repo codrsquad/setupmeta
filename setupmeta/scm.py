@@ -4,6 +4,7 @@ import re
 import setupmeta
 
 
+RE_BRANCH_STATUS = re.compile(r"^## (.+)\.\.\.(([^/]+)/)?([^ ]+)\s*(\[(.+)\])?$")
 RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
 
 
@@ -54,13 +55,14 @@ class Scm:
         """
         pass
 
-    def apply_tag(self, commit, push, next_version):
+    def apply_tag(self, commit, push, next_version, branch):
         """
         Apply a tag of the form "v1.0.0" at current commit
 
         :param bool commit: Dryrun if False, effectively apply tag if True
         :param bool push: Effectively push if True
         :param str next_version: Version to use for tag
+        :param str branch: Branch on which tag is being applied
         """
         pass
 
@@ -202,6 +204,7 @@ class Git(Scm):
     def commit_files(self, commit, push, relative_paths, next_version):
         if not relative_paths:
             return
+
         relative_paths = sorted(set(relative_paths))
         self.run(commit, "add", *relative_paths)
         self.run(commit, "commit", "-m", "Version %s" % next_version)
@@ -211,11 +214,17 @@ class Git(Scm):
             else:
                 print("Won't push: no origin defined")
 
-    def apply_tag(self, commit, push, next_version):
-        """
-        :param bool commit: Effectively apply tag if True, dryrun otherwise
-        :param str next_version: Next version to apply
-        """
+    def apply_tag(self, commit, push, next_version, branch):
+        self.get_output("fetch", "--all")
+        output = self.get_output("status", "--porcelain", "--branch")
+        for line in output.splitlines():
+            m = RE_BRANCH_STATUS.match(line)
+            if m and m.group(1) == branch:
+                state = m.group(6)
+                if state and ("behind" in state or "gone" in state):
+                    # Example: Local branch 'master' is out of date (behind 1), can't bump
+                    setupmeta.abort("Local branch '%s' is out of date (%s), can't bump" % (branch, state))
+
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
 

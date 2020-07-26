@@ -526,7 +526,7 @@ class Versioning:
         if vdefs:
             self.update_sources(next_version, commit, push, vdefs)
 
-        self.scm.apply_tag(commit, push, next_version)
+        self.scm.apply_tag(commit, push, next_version, branch)
 
         if not self.strategy.hook:
             return
