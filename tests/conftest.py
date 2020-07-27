@@ -269,6 +269,7 @@ class MockGit(Git):
         self.describe = describe
         self.branch = branch
         self.commitid = commitid
+        self.status_message = "## master...origin/master"
         self._local_tags = local_tags
         self._remote_tags = remote_tags
         Git.__init__(self, TESTS)
@@ -297,6 +298,12 @@ class MockGit(Git):
 
         if cmd == "ls-remote":
             return self._remote_tags
+
+        if cmd.startswith("fetch"):
+            return None
+
+        if cmd.startswith("status"):
+            return self.status_message
 
         assert kwargs.get("dryrun") is True
         return Git.get_output(self, cmd, *args, **kwargs)
