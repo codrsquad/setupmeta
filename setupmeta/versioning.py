@@ -14,7 +14,7 @@ def find_scm_root(root, name):
     if not root:
         return None
 
-    if os.path.isdir(os.path.join(root, name)):
+    if os.path.exists(os.path.join(root, name)):
         return root
 
     parent = os.path.dirname(root)

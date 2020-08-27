@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.14 (2020-08-26)
+-------------------
+
+* Corrected edge case to support git submodules
+
+
 2.7.13 (2020-07-27)
 -------------------
 
