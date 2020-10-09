@@ -208,6 +208,8 @@ def cleaned_output(text, folder=None):
             line = line.replace(folder, "<target>")
 
         line = line.replace(cwd, "<target>")
+        # Ingore minor change in how missing meta-data warning is phrased...
+        line = line.replace(" must be supplied", " should be supplied")
         result.append(line)
 
     return "\n".join(result).rstrip()
