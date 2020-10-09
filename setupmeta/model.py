@@ -283,7 +283,7 @@ class SimpleModule(Settings):
         return True
 
 
-def get_pip():
+def get_pip():  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
     """
     Deprecated, see https://github.com/zsimic/setupmeta/issues/49
     Left around for a while because some callers import this, they will have to adapt to pip 20.1+

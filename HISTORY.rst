@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.7.15 (2020-10-10)
+-------------------
+
+* Publish egg for python 3.9, not publishing for 3.5 any more
+
+
 2.7.14 (2020-08-26)
 -------------------
 

@@ -11,7 +11,7 @@
 long_description_content_type: (README.md  ) text/markdown
                          name: (explicit   ) via-cfg
                      packages: (auto-fill  ) ["via_cfg"]
-              python_requires: (explicit   ) >=3.5
+              python_requires: (explicit   ) >=3.7
                setup_requires: (explicit   ) ["setupmeta"]
                           url: (missing    ) - Consider specifying 'url'
                       version: (explicit   ) 1.2.3
@@ -36,7 +36,7 @@ setup(
     long_description_content_type="text/markdown", # from README.md
     name="via-cfg",
     packages=["via_cfg"],
-    python_requires=">=3.5",
+    python_requires=">=3.7",
     version=__version__,
 )
 

@@ -1,7 +1,6 @@
 import os
 import re
 import shutil
-import sys
 
 import pytest
 from mock import patch
@@ -42,7 +41,7 @@ def test_check(sample_project):
     assert "Pending changes:" in output
 
 
-@pytest.mark.skipif(sys.version_info.major < 3, reason="Tested only in py3")
+@pytest.mark.skipif(True, reason="Imports pip, which breaks setuptools currently, https://github.com/pypa/setuptools/issues/2355")
 def test_uber_egg(sample_project):
     assert get_pip_config("foo") is None
 

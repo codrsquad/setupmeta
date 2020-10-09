@@ -24,7 +24,7 @@ def abort(message):
     raise DistutilsSetupError(message)
 
 
-def get_pip_config(key, default=None):
+def get_pip_config(key, default=None):  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
     """Configured pip key, if available (from ~/.config/pip/pip.conf or /etc/pip.conf)"""
     try:
         from pip._internal.configuration import Configuration
@@ -52,7 +52,7 @@ def longest_line(lines, maximum=70):
 
 
 @MetaCommand
-class UberEggCommand(setuptools.Command):
+class UberEggCommand(setuptools.Command):  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
     """pack all dependencies as eggs"""
 
     user_options = [

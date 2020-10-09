@@ -1,10 +1,10 @@
 import os
 import sys
 
-from mock import MagicMock, patch
+from mock import patch
 
 import setupmeta
-from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path
+from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path
 
 from . import conftest
 
@@ -168,28 +168,3 @@ def test_dependency_link_extraction():
     # Try and determine name from 'file://' uri only
     incomplete_uri = "file:%s" % conftest.PROJECT_DIR
     assert setupmeta.extracted_dependency_link(incomplete_uri, True) == (incomplete_uri, None)
-
-
-def test_no_pip():
-    with conftest.capture_output() as logged:
-        # Simulate pip > 20.0
-        with patch.dict(
-            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": None, "pip._internal.network.session": MagicMock()}
-        ):
-            assert len(get_pip()) == 2
-
-        # Simulate 10.0 < pip < 20.0
-        with patch.dict(
-            "sys.modules", {"pip._internal.req": MagicMock(), "pip._internal.download": MagicMock(), "pip._internal.network.session": None}
-        ):
-            assert len(get_pip()) == 2
-
-        # Simulate pip < 10.0
-        with patch.dict("sys.modules", {"pip._internal": None, "pip.req": MagicMock(), "pip.download": MagicMock()}):
-            assert len(get_pip()) == 2
-
-        # Simulate pip not installed at all
-        with patch.dict("sys.modules", {"pip": None, "pip._internal.req": None, "pip.req": None}):
-            assert get_pip() == (None, None)
-
-        assert "Can't find PipSession" in logged

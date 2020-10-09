@@ -18,6 +18,7 @@ def scenario_folder(request):
         yield request.param
 
 
+@pytest.mark.skipif(sys.version_info.major < 3, reason="Sunsetting py2, minor diffs in warnings coming from old setuptools checks")
 def test_scenario(scenario_folder):
     """Check that 'scenario' yields expected explain output"""
     py = ".".join(str(s) for s in sys.version_info[:2])
