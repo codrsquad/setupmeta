@@ -1,4 +1,3 @@
-import imp
 import os
 import shutil
 import sys
@@ -73,13 +72,6 @@ def sample_project():
             dest = os.path.join(temp, "sample")
             shutil.copytree(source, dest)
             files = os.listdir(dest)
-            if "CI" in os.environ:
-                # Github actions does not configure git user/email by default, needed for git commits on local test samples
-                user_name = run_git("config", "--get", "user.name")
-                if not user_name:
-                    run_git("config", "--global", "user.name", "tester")
-                    run_git("config", "--global", "user.email", "tester@example.com")
-
             run_git("init", cwd=dest)
             run_git("add", *files, cwd=dest)
             run_git("commit", "-m", "Initial commit", cwd=dest)
@@ -245,8 +237,19 @@ def run_internal_setup_py(folder, *args):
             run_output = ""
             try:
                 basename = "setup"
-                fp, pathname, description = imp.find_module(basename, [folder])
-                imp.load_module(basename, fp, pathname, description)
+                if sys.version_info[0] > 2:
+                    import importlib.util
+
+                    spec = importlib.util.spec_from_file_location(basename, setup_py)
+                    module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(module)
+
+                else:
+                    # With python2, we have to use deprecated imp module
+                    import imp
+
+                    fp, pathname, description = imp.find_module(basename, [folder])
+                    imp.load_module(basename, fp, pathname, description)
 
             except SystemExit as e:
                 run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)

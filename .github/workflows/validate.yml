@@ -1,13 +1,13 @@
-name: Run tests and linter
+name: Validate
 
 on:
   push:
-    #branches: [ master ]  # Run on any branch for now
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
 jobs:
-  run-tests:
+  test:
 
     runs-on: ubuntu-latest
 
@@ -27,7 +27,7 @@ jobs:
         git config --global user.email tester@example.com
     - run: tox -e py
 
-  check-code-style:
+  lint:
 
     runs-on: ubuntu-latest
 
