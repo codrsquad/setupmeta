@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  deploy-wheel:
+  publish-wheel:
 
     runs-on: ubuntu-latest
 
@@ -16,18 +16,22 @@ jobs:
       with:
         python-version: '3.8'
 
-    - run: pip install -U pip setuptools wheel twine tox
+    - run: |
+        pip install -U pip setuptools wheel twine tox
+        git config --global user.name tester
+        git config --global user.email tester@example.com
+        tox -e py,docs,style,security
+        python setup.py sdist bdist_wheel --universal
+
     - name: Publish sdist and wheel
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
-      run: |
-        tox -e py,coverage,docs,style,security
-        python setup.py sdist bdist_wheel --universal
-        twine upload --non-interactive dist/*
+      run: twine upload --non-interactive dist/*
 
-  deploy-eggs:
+  publish-eggs:
 
+    needs: publish-wheel
     runs-on: ubuntu-latest
 
     strategy:
@@ -40,12 +44,11 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - run: pip install -U pip setuptools wheel twine tox
-    - name: Publish eggs
+    - name: Publish egg
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
       run: |
-        tox -e py,coverage,docs,style,security
+        pip install -U pip setuptools wheel twine
         python setup.py bdist_egg
         twine upload --non-interactive dist/*
