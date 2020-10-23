@@ -77,8 +77,8 @@ def sample_project():
                 # Github actions does not configure git user/email by default, needed for git commits on local test samples
                 user_name = run_git("config", "--get", "user.name")
                 if not user_name:
-                    run_git("config", "user.name", "tester")
-                    run_git("config", "user.email", "tester@example.com")
+                    run_git("config", "--global", "user.name", "tester")
+                    run_git("config", "--global", "user.email", "tester@example.com")
 
             run_git("init", cwd=dest)
             run_git("add", *files, cwd=dest)
