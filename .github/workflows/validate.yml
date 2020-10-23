@@ -27,7 +27,7 @@ jobs:
         git config --global user.email tester@example.com
     - run: tox -e py
 
-  lint:
+  linter:
 
     runs-on: ubuntu-latest
 
