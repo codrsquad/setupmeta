@@ -26,8 +26,6 @@ To get going locally, simply do this::
     deactivate
 
 
-You can get into setupmeta's virtualenv also via ``tox -e venv bash``, use ``exit`` (or ``CTRL+D``) to exit in that case (not ``deactivate``).
-
 
 Running the tests
 =================
@@ -49,19 +47,25 @@ Run:
 Test coverage
 =============
 
-Run ``tox ; tox -e coverage``, then open ``.tox/test-reports/coverage/index.html``
+A coverage report is generated on all ``tox`` runs (coverage is combined across all the exercised python versions),
+
+Run this to  see the generated html report::
+
+    open .tox/coverage/index.html
 
 
 Refreshing the test scenarios
 =============================
 
-If you've modified the code, and the tests don't pass anymore because you added/removed/changed something, you can refresh the test scenario replays by:
+If you've modified the code, and the tests don't pass anymore because you added/removed/changed something,
+you can refresh the test scenario replays by running::
 
-* Running ``tox -e refreshscenarios``
+    tox -e refreshscenarios
 
-* Inspecting the diff (``git diff``), verify that the changes to ``tests/scenarios/*/expected.txt`` look good before committing
 
-* Note that the tests replay ``tests/scenarios/*`` as well as ``examples/*``
+Inspect the diff (``git diff``), verify that the changes to ``tests/scenarios/*/expected.txt`` look good before committing
+
+Note that the tests replay ``tests/scenarios/*`` as well as ``examples/*``
 
 
 .. _pyenv: https://github.com/pyenv/pyenv

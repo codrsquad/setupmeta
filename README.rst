@@ -5,14 +5,6 @@ Simplify your setup.py
     :target: https://pypi.org/project/setupmeta/
     :alt: Version on pypi
 
-.. image:: https://travis-ci.org/zsimic/setupmeta.svg?branch=master
-    :target: https://travis-ci.org/zsimic/setupmeta
-    :alt: Travis CI
-
-.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/zsimic/setupmeta
-    :alt: codecov
-
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
     :target: https://github.com/zsimic/setupmeta
     :alt: Python versions tested (link to github project)
@@ -271,7 +263,3 @@ as that would be disruptive to all clients.
 
 Test coverage is at 100%, and should remain at that at all times. If you are contributing, please craft test cases
 that exercise all possible edge cases.
-
-.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graphs/sunburst.svg
-    :target: https://codecov.io/gh/zsimic/setupmeta
-    :alt: Code coverage overview

@@ -1,0 +1,51 @@
+name: Publish to pypi
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-wheel:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - run: pip install -U pip setuptools wheel twine tox
+    - name: Publish sdist and wheel
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
+      run: |
+        tox -e py,coverage,docs,style,security
+        python setup.py sdist bdist_wheel --universal
+        twine upload --non-interactive dist/*
+
+  deploy-eggs:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [2.7, 3.6, 3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - run: pip install -U pip setuptools wheel twine tox
+    - name: Publish eggs
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
+      run: |
+        tox -e py,coverage,docs,style,security
+        python setup.py bdist_egg
+        twine upload --non-interactive dist/*
