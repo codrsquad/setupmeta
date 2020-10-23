@@ -272,12 +272,6 @@ class Version:
         return self.text
 
     @property
-    def non_dirty(self):
-        """Non-dirty version associated to this Version"""
-        main = self.main_text
-        return Version(main=main, distance=self.distance, commitid=self.commitid, dirty=False, text=main)
-
-    @property
     def main_text(self):
         """Main components only"""
         return "%s.%s.%s" % (self.major, self.minor, self.patch)
