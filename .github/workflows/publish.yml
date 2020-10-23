@@ -21,7 +21,7 @@ jobs:
         git config --global user.name tester
         git config --global user.email tester@example.com
         tox -e py,docs,style,security
-        python setup.py sdist bdist_wheel --universal
+    - run: python setup.py sdist bdist_wheel --universal
 
     - name: Publish sdist and wheel
       env:
@@ -44,11 +44,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - run: pip install -U pip setuptools wheel twine
+    - run: python setup.py bdist_egg
     - name: Publish egg
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
-      run: |
-        pip install -U pip setuptools wheel twine
-        python setup.py bdist_egg
-        twine upload --non-interactive dist/*
+      run: twine upload --non-interactive dist/*
