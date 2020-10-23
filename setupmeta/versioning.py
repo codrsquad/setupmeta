@@ -463,8 +463,8 @@ class Versioning:
         rendered = self.strategy.rendered(gv)
         if cv and gv:
             cv_adapted = Version(cv, distance=gv.distance, commitid=gv.commitid, dirty=gv.dirty)
-            actual = self.strategy.rendered(cv_adapted, extra=False)
-            expected = self.strategy.rendered(gv, extra=False)
+            actual = cv_adapted.main_text
+            expected = gv.main_text
             if actual != expected:
                 source = vdef.sources[0].source
                 msg = "In %s version should be '%s', not '%s'" % (source, expected, cv)
