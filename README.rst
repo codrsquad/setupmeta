@@ -5,13 +5,17 @@ Simplify your setup.py
     :target: https://pypi.org/project/setupmeta/
     :alt: Version on pypi
 
+.. image:: https://github.com/zsimic/setupmeta/workflows/Tests/badge.svg
+    :target: https://github.com/zsimic/setupmeta/actions
+    :alt: Tested with Github Actions
+
+.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/zsimic/setupmeta
+    :alt: Test code codecov
+
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
     :target: https://github.com/zsimic/setupmeta
     :alt: Python versions tested (link to github project)
-
-.. image:: https://img.shields.io/pypi/dm/setupmeta.svg
-    :target: https://pypistats.org/packages/setupmeta
-    :alt: Downloads
 
 ----
 

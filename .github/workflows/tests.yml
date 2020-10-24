@@ -1,4 +1,4 @@
-name: Validate
+name: Tests
 
 on:
   push:
@@ -26,6 +26,9 @@ jobs:
         git config --global user.name tester
         git config --global user.email tester@example.com
     - run: tox -e py
+    - uses: codecov/codecov-action@v1
+      with:
+        file: .tox/test-reports/coverage.xml
 
   linter:
 
