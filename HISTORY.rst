@@ -2,6 +2,16 @@
 Release notes
 =============
 
+2.7.16 (2020-10-26)
+-------------------
+
+* Corrected support for inlined versions (``__version__ = "..."`` in user's code)
+
+* Stop using deprecated ``imp`` module with python3
+
+* Moved to github actions
+
+
 2.7.15 (2020-10-10)
 -------------------
 

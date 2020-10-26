@@ -15,7 +15,7 @@ __title__ = "My cplx-nm_here"
 
 
 setup(
-    versioning="distance;.hooks/bump",
+    versioning="dev;.hooks/bump",
     setup_requires=["setupmeta"],
     # This will overshadow classifiers.txt
     classifiers=["Programming Language :: Python"],

@@ -462,13 +462,11 @@ class Versioning:
 
         rendered = self.strategy.rendered(gv)
         if cv and gv:
-            cvc = setupmeta.version_components(cv)
-            cvv = Version(main="%s.%s.%s" % cvc[:3], distance=cvc[4], commitid=gv.commitid, dirty=cvc[5])
-            actual = self.strategy.rendered(cvv, auto_bumped=False)
-            cleaned = self.strategy.rendered(gv.non_dirty)
-            if actual not in (cleaned, rendered):
+            cv_adapted = Version(cv, distance=gv.distance, commitid=gv.commitid, dirty=gv.dirty)
+            actual = cv_adapted.main_text
+            expected = gv.main_text
+            if actual != expected:
                 source = vdef.sources[0].source
-                expected = self.strategy.rendered(gv, extra=False)
                 msg = "In %s version should be '%s', not '%s'" % (source, expected, cv)
                 setupmeta.warn(msg)
 
