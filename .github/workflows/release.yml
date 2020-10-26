@@ -27,7 +27,7 @@ jobs:
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
-      run: twine upload --non-interactive dist/*
+      run: twine upload dist/*
 
   publish-eggs:
 
@@ -50,4 +50,4 @@ jobs:
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
-      run: twine upload --non-interactive dist/*
+      run: twine upload dist/*

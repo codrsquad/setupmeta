@@ -5,17 +5,19 @@ Release notes
 2.7.16 (2020-10-26)
 -------------------
 
+* Corrected egg publication for python 2.7
+
+
+2.7.15 (2020-10-26)
+-------------------
+
+* Publish egg for python 3.9, not publishing for 3.5 any more
+
 * Corrected support for inlined versions (``__version__ = "..."`` in user's code)
 
 * Stop using deprecated ``imp`` module with python3
 
 * Moved to github actions
-
-
-2.7.15 (2020-10-10)
--------------------
-
-* Publish egg for python 3.9, not publishing for 3.5 any more
 
 
 2.7.14 (2020-08-26)
