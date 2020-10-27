@@ -288,9 +288,16 @@ def run_program(program, *args, **kwargs):
 
         return merged(output, None)
 
-    if p.returncode and fatal:
-        print("%s exited with code %s:\n%s" % (represented, p.returncode, error))
-        sys.exit(p.returncode)
+    if p.returncode:
+        if fatal or TESTING:
+            message = error
+            if TESTING:
+                message = "stdout: %s\nstderr: %s" % (output, error)
+
+            print("%s exited with code %s:\n%s" % (represented, p.returncode, message))
+
+        if fatal:
+            sys.exit(p.returncode)
 
     return p.returncode
 
