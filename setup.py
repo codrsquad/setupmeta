@@ -12,12 +12,10 @@ EGG = os.path.join(HERE, "setupmeta.egg-info")
 
 ENTRY_POINTS = """
 [distutils.commands]
-uber_egg = setupmeta.commands:UberEggCommand
 check = setupmeta.commands:CheckCommand
 cleanall = setupmeta.commands:CleanCommand
 entrypoints = setupmeta.commands:EntryPointsCommand
 explain = setupmeta.commands:ExplainCommand
-twine = setupmeta.commands:TwineCommand
 version = setupmeta.commands:VersionCommand
 
 [setuptools.finalize_distribution_options]

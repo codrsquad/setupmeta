@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.8.0 (2020-10-29)
+------------------
+
+* Removed commands ``twine`` and ``uber_egg``, turns out they're not useful
+
+
 2.7.16 (2020-10-26)
 -------------------
 
