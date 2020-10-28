@@ -90,6 +90,7 @@ def get_words(text):
 def to_int(text, default=None):
     try:
         return int(text)
+
     except (ValueError, TypeError):
         return default
 
@@ -98,26 +99,35 @@ def short(text, c=None):
     """ Short representation of 'text' """
     if not text:
         return "%s" % text
+
     if c is None:
         c = Console.columns()
+
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~")
     result = re.sub(RE_SPACES, " ", result)
     if WINDOWS:  # pragma: no cover
         result = result.replace("\\", "/")
+
     if c and len(result) > abs(c):
         if c < 0:
             return "%s..." % result[:-c]
+
         if isinstance(text, dict):
             summary = "%s keys" % len(text)
+
         elif isinstance(text, list):
             summary = "%s items" % len(text)
+
         else:
             return "%s..." % result[:c - 3]
+
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
             return summary
+
         return "%s: %s..." % (summary, result[:cutoff])
+
     return result
 
 
@@ -125,12 +135,14 @@ def strip_dash(text):
     """ Strip leading dashes from 'text' """
     if not text:
         return text
+
     return text.strip("-")
 
 
 def is_executable(path):
     if WINDOWS:  # pragma: no cover
         return path and os.path.isfile(path) and path.endswith(".exe")
+
     return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
 
@@ -180,20 +192,20 @@ def version_components(text):
 def which(program):
     if not program:
         return None
+
     if WINDOWS and not program.endswith(".exe"):  # pragma: no cover
         program += ".exe"
+
     if os.path.isabs(program):
         if is_executable(program):
             return program
+
         return None
+
     for p in os.environ.get("PATH", "").split(os.pathsep):
         fp = os.path.join(p, program)
         if is_executable(fp):
             return fp
-    ppath = project_path(program)
-    if is_executable(ppath):
-        return ppath
-    return None
 
 
 def represented_args(args, separator=" "):
@@ -203,16 +215,20 @@ def represented_args(args, separator=" "):
         if not text or " " in text:
             sep = "'" if '"' in text else '"'
             result.append("%s%s%s" % (sep, text, sep))
+
         else:
             result.append(text)
+
     return separator.join(result)
 
 
 def merged(output, error):
     if output and error:
         return "%s\n%s" % (output, error)
+
     if not output and error:
         return error
+
     return output
 
 
@@ -242,6 +258,7 @@ def run_program(program, *args, **kwargs):
     if problem:
         if fatal:
             sys.exit(problem)
+
         return None if capture else 1
 
     if capture is None:
@@ -320,6 +337,7 @@ def decode(value):
     """Python 2/3 friendly decoding of output"""
     if isinstance(value, bytes):
         return value.decode("utf-8")
+
     return value
 
 
@@ -328,8 +346,10 @@ def quoted(text):
     if text:
         if "\n" in text:
             return '"""%s"""' % text
+
         if '"' in text:
             return "'%s'" % text
+
     return '"%s"' % text
 
 
@@ -338,6 +358,7 @@ def _strs(value, bracket, first, sep, quote, indent):
     if isinstance(value, dict):
         rep = sep.join("%s: %s" % (stringify(k, quote=quote), stringify(v, quote=quote, indent=indent)) for k, v in sorted(value.items()))
         return "{%s%s%s}" % (first, rep, first[:-4])
+
     quote = quote or quote is None
     return "%s%s%s%s%s" % (bracket[0], first, sep.join(stringify(s, quote=quote, indent=indent) for s in value), first[:-4], bracket[1])
 
@@ -347,6 +368,7 @@ def _strm(value, bracket, quote, indent, chars=80):
     result = _strs(value, bracket, "", ", ", quote, indent)
     if len(value) <= 1 or len(result) <= chars:
         return result
+
     sep = ",\n%s" % indent if indent else ", "
     first = "\n%s" % indent if indent else ""
     return _strs(value, bracket, first, sep, quote, indent)
@@ -356,14 +378,19 @@ def stringify(value, quote=None, indent=""):
     """Avoid having the annoying u'..' in str() representations repr"""
     if isinstance(value, list):
         return _strm(value, "[]", quote=quote, indent=indent)
+
     if isinstance(value, tuple):
         return _strm(value, "()", quote=quote, indent=indent)
+
     if isinstance(value, dict):
         return _strm(value, "{}", quote=quote, indent=indent)
+
     if callable(value):
         return "function '%s'" % value.__name__
+
     if quote:
         return quoted("%s" % value)
+
     return "%s" % value
 
 
@@ -371,10 +398,13 @@ def listify(text, separator=None):
     """Turn 'text' into a list using 'separator'"""
     if isinstance(text, list):
         return text
+
     if isinstance(text, (set, tuple)):
         return list(text)
+
     if separator:
         text = text.replace("\n", separator)
+
     return [s.strip() for s in text.split(separator) if s.strip()]
 
 

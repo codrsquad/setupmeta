@@ -114,21 +114,6 @@ Handily clean build artifacts. Cleans the usual suspects: ``.cache/ .tox/ build/
     deleted 14 .pyc files
 
 
-twine
-=====
-
-This is a convenience command to publish to pypi using twine. Example (publish egg for all python versions, but sdist and wheel only if invoking python is 2.7)::
-
-    ~/dev/github/setupmeta: ./setup.py twine --commit --rebuild --egg=all --wheel=2.7
-    running twine
-    Deleting dist/
-    Running python setup.py bdist_egg
-    Running python setup.py bdist_wheel --universal
-    Uploading to PyPi via twine
-    Running: twine upload dist/setupmeta-1.1.2-py2.7.egg dist/setupmeta-1.1.2-none-any.whl
-    Deleting build/
-
-
 entrypoints
 ===========
 

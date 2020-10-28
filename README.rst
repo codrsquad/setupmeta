@@ -77,7 +77,7 @@ The goal of this project is to:
 * Support tag-based versioning_ (like setuptools_scm_, but with super simple configuration/defaults and automated ``bump`` capability)
 
 * Provide useful Commands_ to see the metadata (**explain**), **version** (including support for bumping versions),
-  **cleanall**, **twine**, etc
+  **cleanall**, etc
 
 
 How it works?

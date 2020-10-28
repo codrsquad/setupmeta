@@ -1,13 +1,11 @@
 import os
 import re
-import shutil
 
-import pytest
 from mock import patch
 from six import StringIO
 
 import setupmeta
-from setupmeta.commands import _show_dependencies, DepTree, find_venv, get_pip_config
+from setupmeta.commands import _show_dependencies, DepTree, find_venv
 
 from . import conftest
 
@@ -39,27 +37,6 @@ def test_check(sample_project):
     # check should report that as a pending change
     output = conftest.run_setup_py(sample_project, "check")
     assert "Pending changes:" in output
-
-
-@pytest.mark.skipif(True, reason="Imports pip, which breaks setuptools currently, https://github.com/pypa/setuptools/issues/2355")
-def test_uber_egg(sample_project):
-    assert get_pip_config("foo") is None
-
-    output = conftest.run_setup_py(sample_project, "uber_egg")
-    assert "1 dependencies in requirements.txt" in output
-    assert "Fetched 1 eggs" in output
-    assert "Force-zipped click" in output
-    eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
-    assert len(eggs) == 1
-    assert eggs[0].startswith("click")
-
-    output = conftest.run_setup_py(sample_project, "uber_egg", "-rreqs2.txt")
-    assert "2 dependencies in reqs2.txt" in output
-    assert "Fetched 6 eggs" in output
-    eggs = [f for f in os.listdir("dist") if f.endswith(".egg")]
-    assert len(eggs) == 7  # 2 versions of click should be installed
-    assert any(e.startswith("click-7.1.1") for e in eggs)
-    assert any(e.startswith("requests-2.23.0") for e in eggs)
 
 
 def test_check_dependencies():
@@ -282,68 +259,3 @@ def test_clean(sample_project):
     )
     # Run a 2nd time: nothing to be cleaned anymore
     run_setup_py(["cleanall"], "all clean, no deletable files found")
-
-
-@pytest.mark.skipif(setupmeta.WINDOWS, reason="No support for twine on windows")
-def test_twine(sample_project):
-    with patch.dict(os.environ, {"SETUPMETA_TWINE": "/dev/null/no-twine"}):
-        run_setup_py(["twine"], "Specify at least one of: --egg, --dist or --wheel")
-        run_setup_py(["twine", "--egg=all"], "twine is not installed")
-
-    mocked_twine = os.path.join(sample_project, "mocked-twine")
-    shutil.copy2(setupmeta.project_path("tests", "mock-twine"), mocked_twine)
-
-    with patch.dict(os.environ, {"SETUPMETA_TWINE": "mocked-twine"}):
-        run_setup_py(
-            ["twine", "--egg=all"],
-            """
-                Dryrun, use --commit to effectively build/publish
-                Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine
-            """,
-        )
-
-        run_setup_py(
-            ["twine", "--commit", "--egg=all", "--wheel=1.0"],
-            """
-                python.* setup.py bdist_egg
-                Uploading to PyPi via twine
-                Running: <target>/mocked-twine upload <target>/dist/sample-0.1.0-.+.egg
-                Deleting <target>/build
-            """,
-        )
-
-        run_setup_py(
-            ["twine", "--egg=all"],
-            """
-                Would delete .*/dist
-                Would build egg distribution: .*python.* setup.py bdist_egg
-                Would upload to PyPi via twine
-            """,
-        )
-
-        run_setup_py(
-            ["twine", "--commit", "--rebuild", "--egg=all", "--sdist=all", "--wheel=all"],
-            """
-                Deleting <target>/dist
-                python.* setup.py bdist_egg
-                python.* setup.py sdist
-                python.* setup.py bdist_wheel
-                Uploading to PyPi via twine
-                Running: <target>/mocked-twine upload <target>/dist
-                Deleting <target>/build
-            """,
-        )
-
-        run_setup_py(
-            ["twine", "--commit", "--rebuild", "--egg=1.0"],
-            """
-                Deleting <target>/dist
-                No files found in <target>/dist
-            """,
-        )
-
-
-def test_unsupported_twine(sample_project):
-    with patch("platform.python_implementation", return_value="pypy"):
-        run_setup_py(["twine"], "twine command not supported on pypy")

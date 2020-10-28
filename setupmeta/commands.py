@@ -4,9 +4,7 @@ Commands contributed by setupmeta
 
 import collections
 import os
-import platform
 import shutil
-import sys
 from distutils.command.check import check as check_cmd
 from itertools import chain
 
@@ -24,18 +22,6 @@ def abort(message):
     raise DistutilsSetupError(message)
 
 
-def get_pip_config(key, default=None):  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
-    """Configured pip key, if available (from ~/.config/pip/pip.conf or /etc/pip.conf)"""
-    try:
-        from pip._internal.configuration import Configuration
-        cc = Configuration(isolated=False)
-        cc.load()
-        return cc.get_value(key)
-
-    except (Exception, ImportError):
-        return default
-
-
 def MetaCommand(cls):
     """Decorator allowing for less boilerplate in our commands"""
     return setupmeta.MetaDefs.register_command(cls)
@@ -49,73 +35,6 @@ def longest_line(lines, maximum=70):
     lines = [setupmeta.stringify(line) for line in lines]
     longest = max(len(line) for line in lines if "\n" not in line)
     return min(longest, maximum)
-
-
-@MetaCommand
-class UberEggCommand(setuptools.Command):  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
-    """pack all dependencies as eggs"""
-
-    user_options = [
-        ('dist=', 'd', "directory to put eggs in"),
-        ("requirements=", "r", "grab egg for all dependencies listed in given requirements file"),
-    ]
-
-    def initialize_options(self):
-        self.dist = None
-        self.requirements = None
-
-    def run(self):
-        """
-        Grab an egg for each requirement, if any.
-        This is useful to mimic spark's "uber-jars" (https://spark.apache.org/docs/latest/index.html)
-        """
-        if self.dist is None:
-            self.dist = "dist"
-
-        if self.requirements is None:
-            self.requirements = "requirements.txt"
-
-        egg_target = os.path.abspath(self.dist)
-        if not os.path.isdir(egg_target):
-            os.mkdir(egg_target)
-
-        reqs = setupmeta.requirements_from_file(self.requirements)
-        print("%s dependencies in %s" % (len(reqs), self.requirements))
-        if reqs:
-            with setupmeta.temp_resource():
-                easy_install = os.path.join(os.path.dirname(sys.executable), "easy_install")
-                common_args = ["-zax", "-d", "."]
-                index_url = get_pip_config("global.index-url")
-                if index_url:  # pragma: no cover, only applicable if one has configured index url
-                    common_args.append("-i")
-                    common_args.append(index_url)
-
-                env = dict(os.environ)
-                env["PYTHONPATH"] = "."
-                for req in reqs:
-                    args = common_args[:]
-                    args.append(req)
-                    setupmeta.run_program(easy_install, *args, env=env)
-
-                eggs = [f for f in os.listdir(".") if f.endswith(".egg")]
-                print("Fetched %s eggs" % len(eggs))
-                for name in eggs:
-                    dest = os.path.join(egg_target, name)
-                    if os.path.exists(dest):  # pragma: no cover
-                        print("%s/%s already exists, skipping" % (self.dist, name))
-                        continue
-
-                    source = name
-                    action = "Grabbed"
-                    if os.path.isdir(source):
-                        # This disregards any `zip_safe=False` setting, this could be wrong
-                        # However, most libraries don't specify this, even though their project is zip-safe...
-                        # Spark users seem to get by with eggs just fine, so forcing a zip here
-                        action = "Force-zipped"
-                        source = shutil.make_archive(name, "zip", source)
-
-                    print("%s %s" % (action, name))
-                    shutil.copy2(source, dest)
 
 
 @MetaCommand
@@ -519,97 +438,6 @@ class CleanCommand(setuptools.Command):
 
         if self.deleted == 0:
             print("all clean, no deletable files found")
-
-
-@MetaCommand
-class TwineCommand(setuptools.Command):
-    """upload binary package to PyPI using twine"""
-
-    user_options = [
-        ("commit", "c", "commit publishing (dryrun by default)"),
-        ("rebuild", "r", "clean and rebuild before publishing"),
-        ("egg=", "e", "build/publish egg"),
-        ("sdist=", "s", "build/publish source distribution"),
-        ("wheel=", "w", "build/publish wheel"),
-    ]
-
-    def initialize_options(self):
-        major, minor = (sys.version_info.major, sys.version_info.minor)
-        self.current_python = ["%s.%s" % (major, minor), "%s%s" % (major, minor)]
-        self.commit = 0
-        self.rebuild = 0
-        self.egg = None
-        self.sdist = None
-        self.wheel = None
-
-    def clean(self, *relative_paths):
-        for relative_path in relative_paths:
-            path = setupmeta.project_path(relative_path)
-            if not os.path.exists(path):
-                continue
-
-            if self.commit:
-                print("Deleting %s..." % path)
-                shutil.rmtree(path)
-
-            else:
-                print("Would delete %s" % path)
-
-    def should_run(self, value):
-        return value == "all" or value in self.current_python
-
-    def run_command(self, message, *args):
-        if not self.commit:
-            print("Would %s: %s" % (message, setupmeta.represented_args(args)))
-            return
-
-        first, _, rest = message.partition(" ")
-        first = "%s%s" % (first[0].upper(), first[1:])
-        message = "%sing %s..." % (first, rest)
-        print(message)
-        setupmeta.run_program(*args, fatal=True)
-
-    def run(self):
-        if not self.setupmeta:
-            return
-
-        if platform.python_implementation() != "CPython":
-            abort("twine command not supported on %s" % platform.python_implementation())
-
-        if not self.egg and not self.sdist and not self.wheel:
-            abort("Specify at least one of: --egg, --dist or --wheel")
-
-        # Env var SETUPMETA_TWINE primarily used to allow for flexible testing
-        # Can be set to instruct setupmeta to use a particular twine executable as well
-        # Use absolute path, of filename (for example: "my-twine-wrapper")
-        twine = setupmeta.which(os.environ.get("SETUPMETA_TWINE", "twine"))
-        if not twine:
-            abort("twine is not installed")
-
-        if not self.commit:
-            print("Dryrun, use --commit to effectively build/publish")
-
-        dist = setupmeta.project_path("dist")
-        self.clean("dist", "build")
-
-        try:
-            if self.should_run(self.egg):
-                self.run_command("build egg distribution", sys.executable, "setup.py", "bdist_egg")
-
-            if self.should_run(self.sdist):
-                self.run_command("build source distribution", sys.executable, "setup.py", "sdist")
-
-            if self.should_run(self.wheel):
-                self.run_command("build wheel distribution", sys.executable, "setup.py", "bdist_wheel", "--universal")
-
-            if self.commit and not os.path.exists(dist):
-                abort("No files found in %s" % dist)
-
-            files = [os.path.join(dist, name) for name in sorted(os.listdir(dist))] if self.commit else ["dist/*"]
-            self.run_command("upload to PyPi via twine", twine, "upload", *files)
-
-        finally:
-            self.clean("build")
 
 
 def _show_dependencies(definitions):
