@@ -40,15 +40,17 @@ def test_check(sample_project):
 
 
 def test_check_dependencies():
-    run_setup_py(
-        ["check", "--deptree"],
-        """
-            tests_require:
-            mock==.+
-            pytest-cov==.+
-        """,
-        folder=conftest.PROJECT_DIR,
-    )
+    if os.environ.get("VIRTUAL_ENV"):
+        # check --deptree is only useful when ran from a venv, which is guaranteed when invoking tests via tox (but may not be otherwise)
+        run_setup_py(
+            ["check", "--deptree"],
+            """
+                tests_require:
+                mock==.+
+                pytest-cov==.+
+            """,
+            folder=conftest.PROJECT_DIR,
+        )
 
     with patch("setupmeta.commands.find_venv", return_value=None):
         with conftest.capture_output() as logged:
