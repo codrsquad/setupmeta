@@ -1,6 +1,7 @@
 include LICENSE
 include README.rst
 include tox.ini
+recursive-include docs *.rst
 graft examples
 graft tests
 global-exclude __pycache__ *.py[cod]

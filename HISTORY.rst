@@ -9,6 +9,8 @@ Release notes
 
 * Bundled tests in sdist, to allow for users wanting to rerun the tests to be able to do so from sdist
 
+* Using https://pypi.org/project/check-manifest/
+
 
 2.8.0 (2020-10-29)
 ------------------
