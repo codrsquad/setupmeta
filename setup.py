@@ -57,7 +57,36 @@ if __name__ == "__main__":
     have_egg = os.path.isdir(EGG)
 
     # Explicit on entry points due to bootstrap
-    args = dict(name="setupmeta", entry_points=ENTRY_POINTS, packages=["setupmeta"], zip_safe=True)
+    args = dict(
+        name="setupmeta",
+        entry_points=ENTRY_POINTS,
+        packages=["setupmeta"],
+        python_requires='>=2.7',
+        zip_safe=True,
+        classifiers=[
+            "Development Status :: 5 - Production/Stable",
+            "Intended Audience :: Developers",
+            "Operating System :: MacOS :: MacOS X",
+            "Operating System :: POSIX",
+            "Operating System :: Unix",
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 2",
+            "Programming Language :: Python :: 2.7",
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.7",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.9",
+            "Programming Language :: Python :: Implementation :: CPython",
+            "Programming Language :: Python :: Implementation :: PyPy",
+            "Topic :: Software Development :: Build Tools",
+            "Topic :: Software Development :: Libraries",
+            "Topic :: Software Development :: Version Control",
+            "Topic :: System :: Installation/Setup",
+            "Topic :: System :: Software Distribution",
+            "Topic :: Utilities",
+        ],
+    )
     if have_egg:
         # We're bootstrapped, we can self-refer
         complete_args(args)

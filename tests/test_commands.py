@@ -45,7 +45,6 @@ def test_check_dependencies():
         run_setup_py(
             ["check", "--deptree"],
             """
-                tests_require:
                 mock==.+
                 pytest-cov==.+
             """,
