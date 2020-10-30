@@ -2,6 +2,14 @@
 Release notes
 =============
 
+2.8.1 (2020-11-02)
+------------------
+
+* Explicitly state ``python_requires`` in ``setup.py`` to satisfy conda-forge linter
+
+* Bundled tests in sdist, to allow for users wanting to rerun the tests to be able to do so from sdist
+
+
 2.8.0 (2020-10-29)
 ------------------
 

@@ -33,12 +33,16 @@ def test_disabled():
             versioning.bump("major", commit=False)
 
 
-def test_project_scm():
+def test_project_scm(sample_project):
     assert setupmeta.versioning.find_scm_root(None, ".git") is None
     assert setupmeta.versioning.find_scm_root("", ".git") is None
     assert setupmeta.versioning.find_scm_root("/", ".git") is None
-    assert setupmeta.versioning.find_scm_root(conftest.TESTS, ".git") == conftest.PROJECT_DIR
-    assert setupmeta.versioning.find_scm_root(conftest.resouce("scenarios", "complex", "src", "complex"), ".git") == conftest.PROJECT_DIR
+
+    assert setupmeta.versioning.find_scm_root(".", ".git") == "."
+    assert setupmeta.versioning.find_scm_root("./subfolder", ".git") == "."
+
+    assert setupmeta.versioning.find_scm_root(sample_project, ".git") == sample_project
+    assert setupmeta.versioning.find_scm_root(os.path.join(sample_project, "subfolder", "foo"), ".git") == sample_project
 
 
 def test_snapshot_with_version_file():

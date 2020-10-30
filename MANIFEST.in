@@ -1,2 +1,6 @@
 include LICENSE
 include README.rst
+include tox.ini
+graft examples
+graft tests
+global-exclude __pycache__ *.py[cod]
