@@ -404,6 +404,12 @@ setup(
 """
 
 
+def check_version_output(expected):
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture="all")
+    output = conftest.cleaned_output(output)
+    assert output == expected
+
+
 def test_brand_new_project():
     with setupmeta.temp_resource():
         conftest.run_git("init")
@@ -411,9 +417,23 @@ def test_brand_new_project():
             fh.write(SAMPLE_EMPTY_PROJECT)
 
         # Test that we avoid warning about no tags etc on brand new empty git repos
-        output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture="all")
-        output = conftest.cleaned_output(output)
-        assert output == "0.0.0"
+        check_version_output("0.0.0")
+
+        # Now stage a file
+        conftest.run_git("add", "setup.py")
+        check_version_output("0.0.0.dirty")
+
+        # Unstage it
+        conftest.run_git("reset", "setup.py")
+        check_version_output("0.0.0")
+
+        # Commit it, and touch a new file
+        conftest.run_git("add", "setup.py")
+        conftest.run_git("commit", "-m", "Initial commit")
+        with open("foo", "w") as fh:
+            fh.write("foo\n")
+
+        check_version_output("0.0.1")
 
 
 def test_git_versioning(sample_project):
