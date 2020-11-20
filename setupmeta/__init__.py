@@ -784,14 +784,24 @@ class Requirements:
             self.tests_require = None
 
         else:
-            self.install_requires = find_requirements(True, "requirements.txt", "pinned.txt")
+            self.install_requires = find_requirements(
+                True,
+                "requirements.in",  # .in files are preferred when present
+                "requirements.txt",
+                "pinned.txt",
+            )
             self.tests_require = find_requirements(
                 False,
-                "tests/requirements.txt",  # Preferred
-                "requirements-dev.txt",  # Also accept other common variations
-                "dev-requirements.txt",
+                "tests/requirements.in",  # .in files are preferred when present
+                "test-requirements.in",
+                "requirements-test.in",
+                "dev-requirements.in",
+                "requirements-dev.in",
+                "tests/requirements.txt",  # Use the usual .txt when no .in files found
                 "test-requirements.txt",
                 "requirements-test.txt",
+                "dev-requirements.txt",
+                "requirements-dev.txt",
             )
             if self.install_requires and self.install_requires.reqs:
                 self.has_abstractions = any(not r.dependency_link for r in self.install_requires.reqs)
