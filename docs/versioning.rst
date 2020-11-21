@@ -7,10 +7,15 @@ The functionality is optional and has to be explicitly enabled, note that:
 
 * SCM tags are used for versioning
 
-* only git is supported currently (contributions for other SCMs welcome and should be easy, see `Scm class`_)
+# XXX: s/git/Git (but also throughout then) ?
+* only git is supported currently (contributions for other SCMs are welcome and should be easy, see `Scm class`_)
 
 * It can be a drop-in replacement for setuptools_scm_
 
+# XXX: also "dev" and "devcommit"?!
+# XXX: the code also handles "changes" (https://github.com/zsimic/setupmeta/blob/586102493f7167d47d633ff46eb9945ae36b730c/setupmeta/versioning.py#L305)
+# XXX: ...and "default", and "tag"
+# XXX: s/strategies/formats/ ?  (otherwise vice-versa below in the heading)
 * 3 strategies are pre-configured: post_, distance_ and build-id_, they yield versions that play well with PEP-440_ (while remaining very simple).
 
 * See Advanced_ for more info
@@ -22,7 +27,7 @@ In order to use setupmeta as a bridge to your git tags as versions, activate the
         ...
     )
 
-You can use then ``python setup.py version --bump`` to bump major/minor/patch (no need to assign tags manually).
+You can use ``python setup.py version --bump`` then to bump the major/minor/patch level (without having to assign tags manually).
 
 Note that if you still explicitly mention a ``__version__ = "..."``` in your ``__init__.py`` or ``__about__.py`` etc, setupmeta will find it and also bump it accordingly.
 This is done for convenience only, you don't need ``__version__`` anywhere if you use setupmeta versioning.
@@ -62,6 +67,7 @@ For example, if you have this:
 Now, running ``setup.py explain`` will show you something like this::
 
     version: (git          ) 1.0.0.post2+g123
+XXX:                         1.0.0.post2
          \_: (__init__.py:7) 1.0.0
 
 Which means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init_.py`` line 7 states it is "1.0.0".
@@ -71,7 +77,7 @@ If you commit your changes, your checkout won't be dirty anymore, and the number
     version: (git          ) 1.0.0.post3
          \_: (__init__.py:7) 1.0.0
 
-Ie:
+I.e.:
 
 * deduced version is 1.0.0, with 3 commits since latest tag
 
@@ -95,8 +101,9 @@ If you now run ``setup.py version --bump patch --commit``, the following would h
 Note that you do NOT need any ``__version__ = ...`` stated anywhere, we're showing this only here for illustration purposes.
 In general, you should simply use ``versioning="post"`` (or any other format you like).
 
-You could leverage this ``__version__`` possibility if you have specific use case for that
-(like: you'd like to show which version your code is at without using something like ``import pkg_resources``)
+You could leverage this ``__version__`` possibility if you have a specific use
+case for that, e.g. displaying the version from your code without using
+something like ``import pkg_resources``).
 
 
 Preconfigured formats
@@ -161,9 +168,9 @@ dev
 
 Similar to post_, with the following differences:
 
-- ``.dev`` prefix is used instead of ``post``, this makes untagged versions considered pre-release (have to use ``pip install --pre`` to get them)
+- ``.dev`` prefix is used instead of ``post``, this makes untagged versions considered to be pre-releases (you have to use ``pip install --pre`` to get them)
 
-- right-most bumpable component (typically **patch**) is assumed to be the next one that is going to be bumped...
+- the right-most bumpable component (typically **patch**) is assumed to be the next one that is going to be bumped...
   (this just means that if your current version is ``0.8.1``, you would get a ``0.8.2.dev1`` etc;
   even though you may be planning your next tag to be ``0.9.0``, and not ``0.8.2``)
 
@@ -172,40 +179,43 @@ Example:
 =======  ======  ================  =====================================================================================
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =====================================================================================
-no .git          0.0.0.dev0        Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0.dev0+g0000  No commit yet (but ``git init`` was ran)
-g1               0.0.0.dev1        Initial commit
-g1               0.0.0.dev1+g1     Same as above, only checkout was not clean anymore
-g2               0.0.0.dev2
-g3               0.0.0.dev3
+no .git          0.0.0             Version defaults to 0.0.0 (with no tag yet)
+none             0.0.0             No commit yet (but ``git init`` was ran)
+g1               0.0.1.dev1        Initial commit
+g1               0.0.1.dev1.dirty  Same as above, only checkout was not clean anymore
+g2               0.0.1.dev2
+g3               0.0.1.dev3
 g4       v0.1.0  0.1.0             ``version --bump minor --commit``
 g5               0.1.1.dev1        (1 commit since tag)
 g6               0.1.1.dev2
 g7       v0.1.1  0.1.1             ``version --bump patch --commit``
 g8               0.1.2.dev1
 g9       v1.0.0  1.0.0             ``version --bump major --commit``
-g10              1.0.0.dev1
+g10              1.0.1.dev1
 =======  ======  ================  =====================================================================================
 
 devcommit
 ---------
 
-Similar to dev_, except that it uses the commit id instead of distance.
+Similar to dev_, except that it uses the commit id instead of distance, and
+"-dirty" instead of ".dirty".
 
 Example:
 
 =======  ======  ==================  ===================================================================================
 Commit   Tag     Version             Note (command ran to add tag)
 =======  ======  ==================  ===================================================================================
-g1               0.0.0.dev-g1        Initial commit
-g1               0.0.0.dev-g1-dirty  Same as above, only checkout was not clean anymore
-g2               0.0.0.dev-g2
-g3               0.0.0.dev-g3
+no .git          0.0.0               Version defaults to 0.0.0 (with no tag yet)
+none             0.0.0               No commit yet (but ``git init`` was ran)
+g1               0.0.1.dev-g1        Initial commit
+g1               0.0.1.dev-g1-dirty  Same as above, only checkout was not clean anymore
+g2               0.0.1.dev-g2
+g3               0.0.1.dev-g3
 g4       v0.1.0  0.1.0               ``version --bump minor --commit``
 g5               0.1.1.dev-g5        (1 commit since tag)
 g6               0.1.1.dev-g6
 g7       v0.1.1  0.1.1               ``version --bump patch --commit``
-g8               0.1.2.dev-g7
+g8               0.1.2.dev-g8
 g9       v1.0.0  1.0.0               ``version --bump major --commit``
 g10              1.0.0.dev-g10
 =======  ======  ==================  ===================================================================================
@@ -235,9 +245,9 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =========================================================================================================
 no .git          0.0.0             Version defaults to 0.0 (when no tag yet)
-none             0.0.0+g0000000    No commit yet (but ``git init`` was ran)
+none             0.0.0             No commit yet (but ``git init`` was ran)
 g1               0.0.1             Initial commit, 0.0.1 means default v0.0 + 1 change
-g1               0.0.1.g1          Same as above, only checkout was not clean anymore
+g1               0.0.1.dirty       Same as above, only checkout was not clean anymore
 g2               0.0.2
 g3               0.0.3
 g4       v0.1.0  0.1.0             ``setup.py version --bump minor --commit``
@@ -250,15 +260,15 @@ g10      v1.0.0  1.0.0             ``setup.py version --bump major --commit``
 g11              1.0.1
 =======  ======  ================  =========================================================================================================
 
-* Without any tag, version defaults to ``0.0.*``
+* Without any tag, the version defaults to ``0.0.*``
 
-* First tag here is ``v0.1``, ``git describe`` will yield ``v0.1.0`` (no commits since last tag), and setupmeta will consider version to be ``0.1.0`` (tag 0.1 with 0 commits)
+* The first tag here is ``v0.1``, ``git describe`` will yield ``v0.1.0`` (no commits since last tag), and setupmeta will consider the version to be ``0.1.0`` (tag 0.1 with 0 commits)
 
-* A commit occurs and doesn't add a git tag, version for that commit will be ``0.1.1`` (tag 0.1 with 1 change since tag)
+* With a commit and no added git tag, the version for that commit will be ``0.1.1`` (tag 0.1 with 1 change since tag)
 
 * A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.2`` etc
 
-* Dirty checkouts will get a version of the form ``0.1.2+g123``
+* Dirty checkouts will get a version of the form ``0.1.2.dirty``
 
 * Use ``python setup.py version --bump [major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
 
@@ -326,9 +336,9 @@ Advanced
 
     * the ``<main>`` part (before the ``<separator>`` sign) specifies the format of the "main version" part (when checkout is clean)
 
-    * the ``<extra>`` part (after the ``<separator>`` sign indicates) what format to use when there checkout is dirty
+    * the ``<extra>`` part (after the ``<separator>`` sign) indicates what format to use when the checkout is dirty
 
-    * you can add an exclamation point ``!`` after separator to force the extra part to always be shown (even when checkout is not dirty)
+    * you can add an exclamation point ``!`` after the separator to force the extra part to always be shown (even when the checkout is not dirty)
 
     * characters that can be used as separators are: `` +@#%^/`` (space can be used as a demarcation, but will not be rendered in the version per se)
 
@@ -373,7 +383,7 @@ The following can be used as format specifiers:
   otherwise ``.postN`` (wehre ``N`` is ``{distance}``)
 
 * ``{dev}``: Designates a "dev" release (PEP-440_ friendly), empty when current commit is version-tagged,
-  otherwise ``[+1].devN`` (wehre ``N`` is ``{distance}``, a ``[+1]`` is the next revision of the right-most bumpable, usually ``patch``).
+  otherwise ``[+1].devN`` (where ``N`` is ``{distance}``, a ``[+1]`` is the next revision of the right-most bumpable, usually ``patch``).
   Example: ``1.2.dev3``.
 
 * ``{devcommit}``: Same as ``{dev}``, but with commit id instead of distance.
