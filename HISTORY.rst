@@ -2,6 +2,12 @@
 Release notes
 =============
 
+2.8.3 (2020-11-NN)
+------------------
+
+* Don't warn when bumping for the first time (with no git tags yet)
+
+
 2.8.2 (2020-11-19)
 ------------------
 

@@ -75,7 +75,6 @@ def sample_project():
             run_git("init", cwd=dest)
             run_git("add", *files, cwd=dest)
             run_git("commit", "-m", "Initial commit", cwd=dest)
-            run_git("tag", "-a", "v0.1.0", "-m", "Version 2.4.2", cwd=dest)
             os.chdir(dest)
             yield dest
 
