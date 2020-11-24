@@ -61,10 +61,10 @@ For example, if you have this:
 
 Now, running ``setup.py explain`` will show you something like this::
 
-    version: (git          ) 1.0.0.post2+g123
+    version: (git          ) 1.0.0.post2.dirty
          \_: (__init__.py:7) 1.0.0
 
-Which means that determined version of your project (from git tag) is ``1.0.0.post2+g123``, while ``__init_.py`` line 7 states it is "1.0.0".
+Which means that determined version of your project (from git tag) is ``1.0.0.post2.dirty``, while ``__init_.py`` line 7 states it is "1.0.0".
 
 If you commit your changes, your checkout won't be dirty anymore, and the number of commits since latest tag will be 3, so ``setup.py explain`` will now show::
 
@@ -121,23 +121,23 @@ Now, every time you commit a change, setupmeta will use the number of commits si
 
 Example:
 
-=======  ======  ================  =====================================================================================
-Commit   Tag     Version           Note (command ran to add tag)
-=======  ======  ================  =====================================================================================
-no .git          0.0.0             Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0+g0000000    No commit yet (but ``git init`` was ran)
-g1               0.0.0.post1       Initial commit
-g1               0.0.0.post1+g1    Same as above, only checkout was not clean anymore
+=======  ======  =================  =====================================================================================
+Commit   Tag     Version            Note (command ran to add tag)
+=======  ======  =================  =====================================================================================
+no .git          0.0.0              Version defaults to 0.0.0 (when no tag yet)
+none             0.0.0.dirty        No commit yet (but ``git init`` was ran)
+g1               0.0.0.post1        Initial commit
+g1               0.0.0.post1.dirty  Same as above, only checkout was not clean anymore
 g2               0.0.0.post2
 g3               0.0.0.post3
-g4       v0.1.0  0.1.0             ``version --bump minor --commit``
-g5               0.1.0.post1       (1 commit since tag)
+g4       v0.1.0  0.1.0              ``version --bump minor --commit``
+g5               0.1.0.post1        (1 commit since tag)
 g6               0.1.0.post2
-g7       v0.1.1  0.1.1             ``version --bump patch --commit``
+g7       v0.1.1  0.1.1              ``version --bump patch --commit``
 g8               0.1.1.post1
-g9       v1.0.0  1.0.0             ``version --bump major --commit``
+g9       v1.0.0  1.0.0              ``version --bump major --commit``
 g10              1.0.0.post1
-=======  ======  ================  =====================================================================================
+=======  ======  =================  =====================================================================================
 
 * Without any tag, version defaults to ``0.0.0``
 
@@ -147,7 +147,7 @@ g10              1.0.0.post1
 
 * A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.0.post2`` etc
 
-* Dirty checkouts will get a version of the form ``0.1.0.post2+g123``
+* Dirty checkouts will get a version of the form ``0.1.0.post2.dirty``
 
 * Use ``python setup.py version --bump [major|minor|patch]`` whenever you want to bump major, minor or patch revision (this will assign a git tag accordingly)
 
@@ -173,9 +173,9 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =====================================================================================
 no .git          0.0.0.dev0        Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0.dev0+g0000  No commit yet (but ``git init`` was ran)
+none             0.0.0.dev0.dirty  No commit yet (but ``git init`` was ran)
 g1               0.0.0.dev1        Initial commit
-g1               0.0.0.dev1+g1     Same as above, only checkout was not clean anymore
+g1               0.0.0.dev1.dirty  Same as above, only checkout was not clean anymore
 g2               0.0.0.dev2
 g3               0.0.0.dev3
 g4       v0.1.0  0.1.0             ``version --bump minor --commit``
@@ -235,9 +235,9 @@ Example:
 Commit   Tag     Version           Note (command ran to add tag)
 =======  ======  ================  =========================================================================================================
 no .git          0.0.0             Version defaults to 0.0 (when no tag yet)
-none             0.0.0+g0000000    No commit yet (but ``git init`` was ran)
+none             0.0.0.dirty       No commit yet (but ``git init`` was ran)
 g1               0.0.1             Initial commit, 0.0.1 means default v0.0 + 1 change
-g1               0.0.1.g1          Same as above, only checkout was not clean anymore
+g1               0.0.1.dirty       Same as above, only checkout was not clean anymore
 g2               0.0.2
 g3               0.0.3
 g4       v0.1.0  0.1.0             ``setup.py version --bump minor --commit``
@@ -258,7 +258,7 @@ g11              1.0.1
 
 * A 2nd commit occurs and doesn't add a git tag, version for that commit will be ``0.1.2`` etc
 
-* Dirty checkouts will get a version of the form ``0.1.2+g123``
+* Dirty checkouts will get a version of the form ``0.1.2.dirty``
 
 * Use ``python setup.py version --bump [major|minor]`` whenever you want to bump major or minor version (this will assign a git tag accordingly)
 
