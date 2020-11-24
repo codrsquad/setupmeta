@@ -370,10 +370,10 @@ The following can be used as format specifiers:
 * ``{distance}``: Number of commits since last version tag from current commit (0 if current commit is tagged)
 
 * ``{post}``: Designates a "post" release (PEP-440_ friendly), empty when current commit is version-tagged,
-  otherwise ``.postN`` (wehre ``N`` is ``{distance}``)
+  otherwise ``.postN`` (where ``N`` is ``{distance}``)
 
 * ``{dev}``: Designates a "dev" release (PEP-440_ friendly), empty when current commit is version-tagged,
-  otherwise ``[+1].devN`` (wehre ``N`` is ``{distance}``, a ``[+1]`` is the next revision of the right-most bumpable, usually ``patch``).
+  otherwise ``[+1].devN`` (where ``N`` is ``{distance}``, a ``[+1]`` is the next revision of the right-most bumpable, usually ``patch``).
   Example: ``1.2.dev3``.
 
 * ``{devcommit}``: Same as ``{dev}``, but with commit id instead of distance.
@@ -418,7 +418,8 @@ Examples
     * ``1.0.0.post1+h123.g123`` (dirty, with $BUILD_ID)
 
 
-* ``{major}.{minor}.{patch}{post}+!h{$BUILD_ID:local}.{commitid}`` would be the same as above, but ``extra`` part **always** shown:
+* ``{major}.{minor}.{patch}{post}+!h{$BUILD_ID:local}.{commitid}`` would be the same as above,
+  but ``extra`` part **always** shown (due to the ``!`` character):
 
     * ``1.0.0+hlocal.g123`` (clean, on tag, no $BUILD_ID)
 
@@ -439,7 +440,8 @@ Examples
 
 
 * ``{major}.{minor}.{distance}.{commitid}``: similar to above, except here there is no separator, and hence no ``extra`` part
-  (the ``.{commitid}`` is part of **main** part and will be always rendered, so equivalent to above with explamation point, like: ``{major}.{minor}.{distance} !.{commitid}``)
+  (the ``.{commitid}`` is part of **main** part and will be always rendered, so equivalent to above with exclamation point,
+  like: ``{major}.{minor}.{distance} !.{commitid}``)
 
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
