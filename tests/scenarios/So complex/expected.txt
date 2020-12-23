@@ -30,7 +30,6 @@ maintainer_email: (auto-adjust                         ) me@example.com
             name: (setup.py:14                         ) My cplx-nm_here
      package_dir: (auto-fill                           ) {: src}
         packages: (auto-fill                           ) ["My_cplx_nm_here", "My_cplx_nm_here.submodule"]
-      py_modules: (auto-fill                           ) ["My_cplx_nm_here"]
   setup_requires: (explicit                            ) ["setupmeta"]
    tests_require: (requirements-dev.txt                ) ["flake8", "pytest"]
           title*: (setup.py:14                         ) My cplx-nm_here
@@ -106,7 +105,6 @@ setup(
     name="My cplx-nm_here",                                  # from setup.py:14
     package_dir={"": "src"},
     packages=["My_cplx_nm_here", "My_cplx_nm_here.submodule"],
-    py_modules=["My_cplx_nm_here"],
     tests_require=["flake8", "pytest"],                      # from requirements-dev.txt
     url="https://example.com/complex",                       # from setup.py:3
     version=__version__,                                     # from git
@@ -216,7 +214,6 @@ maintainer_email: (auto-adjust                         ) me@example.com
             name: (setup.py:14                         ) My cplx-nm_here
      package_dir: (auto-fill                           ) {: src}
         packages: (auto-fill                           ) ["My_cplx_nm_here", "My_cplx_nm_here.submodule"]
-      py_modules: (auto-fill                           ) ["My_cplx_nm_here"]
   setup_requires: (explicit                            ) ["setupmeta"]
    tests_require: (requirements-dev.txt                ) ["flake8", "pytest"]
           title*: (setup.py:14                         ) My cplx-nm_here
