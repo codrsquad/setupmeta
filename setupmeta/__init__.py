@@ -297,8 +297,8 @@ def run_program(program, *args, **kwargs):
 
     if capture:
         if p.returncode:
-            if not error or not _should_ignore_run_fail(program, args, error.lower()):
-                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no output-"))
+            if not _should_ignore_run_fail(program, args, error):
+                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no stderr-"))
 
         if capture == "all":
             return merged(output, error)
@@ -326,11 +326,15 @@ def _should_ignore_run_fail(program, args, error):
 
     if args[0] in ("rev-list", "rev-parse") and "HEAD" in args:
         # No commits yet, brand new git repo
-        return "revision" in error
+        return error and "revision" in error.lower()
 
     if args[0] == "describe":
         # No tags are present, git states "No names found" in that case
-        return "no names" in error
+        return error and "no names" in error.lower()
+
+    if args[0] in ("show-ref", "ls-remote") and "--tags" in args:
+        # Used for version bump, don't warn if there are no tags yet or no remote defined
+        return True
 
 
 def decode(value):

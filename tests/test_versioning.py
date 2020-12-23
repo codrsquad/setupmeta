@@ -438,6 +438,15 @@ def test_brand_new_project():
 
 def test_git_versioning(sample_project):
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
+    assert output == "0.0.1"
+
+    # Bump with no initial tags shouldn't warn
+    output = setupmeta.run_program(sys.executable, "setup.py", "version", "--bump", "minor", capture="all")
+    assert "UserWarning" not in output
+    assert "Would run: git tag -a v0.1.0" in output
+
+    conftest.run_git("tag", "-a", "v0.1.0", "-m", "Version 2.4.2")
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.0"
 
     output = setupmeta.run_program(sys.executable, "setup.py", "explain", capture="all")
