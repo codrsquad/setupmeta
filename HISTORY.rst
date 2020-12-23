@@ -2,10 +2,12 @@
 Release notes
 =============
 
-2.8.3 (2020-11-NN)
+2.8.3 (2021-01-NN)
 ------------------
 
 * Don't warn when bumping for the first time (with no git tags yet)
+
+* Use the most common ``setuptools.find_packages()`` call (without arguments)
 
 
 2.8.2 (2020-11-19)

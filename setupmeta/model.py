@@ -11,7 +11,7 @@ import sys
 import setuptools
 
 from setupmeta import (
-    get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
+    current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
     Requirements, requirements_from_file, short, trace, warn
 )
 from setupmeta.content import (
@@ -493,11 +493,13 @@ class SetupMeta(Settings):
 
             else:
                 src_folder = project_path()
-                packages = setuptools.find_packages(where=src_folder)
-                if packages:
-                    # Take only found packages that start with the expected name
-                    # For any other use-case, user must explicitly list their packages
-                    packages = [p for p in packages if p.startswith(name)]
+                if os.path.isdir(src_folder):
+                    with current_folder(src_folder):
+                        packages = setuptools.find_packages()
+                        if packages:
+                            # Take only found packages that start with the expected name
+                            # For any other use-case, user must explicitly list their packages
+                            packages = [p for p in packages if p.startswith(name)]
 
                 if os.path.isfile(project_path("%s.py" % name)):
                     py_modules = [name]
