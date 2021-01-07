@@ -824,6 +824,24 @@ class Requirements:
                     return req.source
 
 
+class current_folder:
+    """
+    Temporarily change current folder
+    """
+
+    def __init__(self, path):
+        self.old_cwd = os.getcwd()
+        self.path = path
+
+    def __enter__(self):
+        if self.path:
+            os.chdir(self.path)
+
+    def __exit__(self, *args):
+        if self.path:
+            os.chdir(self.old_cwd)
+
+
 class temp_resource:
     """
     Context manager for creating / auto-deleting a temp working folder

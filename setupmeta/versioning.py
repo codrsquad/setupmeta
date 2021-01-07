@@ -335,7 +335,7 @@ class Strategy:
             main="{major}.{minor}.{patch}{post}",
             extra="{dirty}",
             separator="",
-            branches="master",
+            branches="main,master",
             hook=None,
         )
 

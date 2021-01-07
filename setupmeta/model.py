@@ -11,7 +11,7 @@ import sys
 import setuptools
 
 from setupmeta import (
-    get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
+    current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
     Requirements, requirements_from_file, short, trace, warn
 )
 from setupmeta.content import (
@@ -484,8 +484,9 @@ class SetupMeta(Settings):
             name = self.pythonified_name
             src_folder = project_path("src")
             if os.path.isdir(src_folder):
+                trace("looking for src packages in %s" % src_folder)
                 packages = setuptools.find_packages(where=src_folder)
-                if os.path.isfile(project_path("src", "%s.py" % name)):
+                if not packages and os.path.isfile(project_path("src", "%s.py" % name)):
                     py_modules = [name]
 
                 if packages or py_modules:
@@ -493,13 +494,18 @@ class SetupMeta(Settings):
 
             else:
                 src_folder = project_path()
-                packages = setuptools.find_packages(where=src_folder)
-                if packages:
-                    # Take only found packages that start with the expected name
-                    # For any other use-case, user must explicitly list their packages
-                    packages = [p for p in packages if p.startswith(name)]
+                if os.path.isdir(src_folder):
+                    trace("looking for direct packages in %s" % src_folder)
+                    with current_folder(src_folder):
+                        raw_packages = setuptools.find_packages()
+                        if raw_packages:
+                            # Keep only packages that start with the expected name
+                            # For any other use-case, user must explicitly list their packages
+                            packages = [p for p in raw_packages if p.startswith(name)]
+                            if packages != raw_packages:
+                                trace("all packages found: %s" % raw_packages)
 
-                if os.path.isfile(project_path("%s.py" % name)):
+                if not packages and os.path.isfile(project_path("%s.py" % name)):
                     py_modules = [name]
 
             if packages:
