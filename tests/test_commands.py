@@ -72,7 +72,6 @@ def test_check_dependencies():
 
 
 class FakeDist:
-
     def __init__(self, spec, requires):
         req = setupmeta.pkg_req(spec)
         self.key = req.key

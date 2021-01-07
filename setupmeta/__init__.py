@@ -973,6 +973,7 @@ class MetaDefs:
 
 class Console:
     """Small helper to determine terminal width, used to try and get a nice fit for commands like 'explain'"""
+
     _columns = None
 
     @classmethod

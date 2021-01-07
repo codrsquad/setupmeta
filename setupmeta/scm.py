@@ -134,9 +134,9 @@ class Git(Scm):
         text = self.get_output(*cmd)
         result = set()
         for line in text.splitlines():
-            p = line.rpartition('/')[2]
-            tag = str(p.partition('^')[0])
-            if tag.startswith('v') or tag[0].isdigit():
+            p = line.rpartition("/")[2]
+            tag = str(p.partition("^")[0])
+            if tag.startswith("v") or tag[0].isdigit():
                 result.add(tag)
         return result
 

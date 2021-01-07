@@ -268,13 +268,13 @@ def run_internal_setup_py(folder, *args):
 
 class MockGit(Git):
     def __init__(
-            self,
-            dirty=True,
-            describe="v0.1.2-3-g123",
-            branch="master",
-            commitid="abc123",
-            local_tags="",
-            remote_tags="",
+        self,
+        dirty=True,
+        describe="v0.1.2-3-g123",
+        branch="master",
+        commitid="abc123",
+        local_tags="",
+        remote_tags="",
     ):
         self.dirty = dirty
         self.describe = describe

@@ -209,7 +209,7 @@ class ExplainCommand(setuptools.Command):
 
         version = definitions.get("version")
         if version:
-            print('__version__ = %s\n\n' % setupmeta.stringify(version.value, quote=True))
+            print("__version__ = %s\n\n" % setupmeta.stringify(version.value, quote=True))
 
         print("setup(")
 
@@ -237,7 +237,7 @@ class ExplainCommand(setuptools.Command):
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
 
             elif definition.key == "long_description":
-                definition.value = 'open(%s).read()' % setupmeta.stringify(setupmeta.short(definition.source), quote=True)
+                definition.value = "open(%s).read()" % setupmeta.stringify(setupmeta.short(definition.source), quote=True)
 
             elif definition.key == "version":
                 definition.value = "__version__"
@@ -591,7 +591,7 @@ def find_venv():
 class DepTree:
     def __init__(self, ws, definitions):
         self.packages = dict((d.key, PipPackage(self, d)) for d in ws)
-        self.setup = definitions.get("setup_requires"),
+        self.setup = definitions.get("setup_requires")
         self.install_requires = definitions.get("install_requires")
         self.tests_require = definitions.get("tests_require")
         self.extras_require = definitions.get("extras_require")
@@ -635,9 +635,7 @@ class DepTree:
 
             result = ["%s%s" % (" " * indent, node.render())]
             children = sorted(self.get_children(node))
-            children = [aux(c, indent=indent + 2, chain=chain + [c.key])
-                        for c in children
-                        if c.key not in chain]
+            children = [aux(c, indent=indent + 2, chain=chain + [c.key]) for c in children if c.key not in chain]
 
             chain.append(node.key)
             p = self.packages.get(node.key)

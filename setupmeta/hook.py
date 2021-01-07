@@ -21,7 +21,7 @@ def finalize_dist(dist, setup_requires=None):
     setup_requires = setup_requires or dist.setup_requires
     setup_requires = setup_requires if isinstance(setup_requires, list) else [setup_requires]
 
-    if any(dep.startswith('setupmeta') for dep in setup_requires):
+    if any(dep.startswith("setupmeta") for dep in setup_requires):
         dist._setupmeta = SetupMeta().preprocess(dist)
         MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
 
@@ -34,11 +34,12 @@ def finalize_dist(dist, setup_requires=None):
 # See: https://github.com/pypa/setuptools/commit/6b210c65938527a4bbcea34942fe43971be3c014
 finalize_dist.order = -100
 
-
 # Reference to original distutils.dist.Distribution.parse_command_line
 parse_command_line_orig = distutils.dist.Distribution.parse_command_line
+
+
 def parse_command_line(dist, *args, **kwargs):  # noqa: E302 (keep override close to function it replaces)
-    """ distutils.dist.Distribution.parse_command_line replacement
+    """distutils.dist.Distribution.parse_command_line replacement
 
     This allows us to insert setupmeta's imputed values for various attributes
     after all configuration has interpreted and read from config files, and just
@@ -61,7 +62,7 @@ def register_keyword(dist, name, value):
 
     TODO: Add validation for the `versioning` keyword?
     """
-    if name == 'setup_requires' and not hasattr(dist, '_setupmeta'):
+    if name == "setup_requires" and not hasattr(dist, "_setupmeta"):
         finalize_dist(dist, setup_requires=value)
 
 
@@ -81,6 +82,6 @@ def register(dist, name, value):  # pragma: no cover; Should not be used in norm
         "for you, but we recommend uninstalling `setupmeta` from your environment."
         "`setupmeta` is only useful during the setup process, and does not need "
         "to be properly installed.",
-        RuntimeWarning
+        RuntimeWarning,
     )
     register_keyword(dist, name, value)
