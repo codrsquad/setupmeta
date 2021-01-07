@@ -5,16 +5,16 @@ Simplify your setup.py
     :target: https://pypi.org/project/setupmeta/
     :alt: Version on pypi
 
-.. image:: https://github.com/zsimic/setupmeta/workflows/Tests/badge.svg
-    :target: https://github.com/zsimic/setupmeta/actions
+.. image:: https://github.com/codrsquad/setupmeta/workflows/Tests/badge.svg
+    :target: https://github.com/codrsquad/setupmeta/actions
     :alt: Tested with Github Actions
 
-.. image:: https://codecov.io/gh/zsimic/setupmeta/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/zsimic/setupmeta
+.. image:: https://codecov.io/gh/codrsquad/setupmeta/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/codrsquad/setupmeta
     :alt: Test code codecov
 
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
-    :target: https://github.com/zsimic/setupmeta
+    :target: https://github.com/codrsquad/setupmeta
     :alt: Python versions tested (link to github project)
 
 ----
@@ -177,7 +177,7 @@ How it works?
 
     * URLs can be simplified:
 
-        * if ``url`` points to your general github repo (like: https://github.com/zsimic),
+        * if ``url`` points to your general github repo (like: https://github.com/codrsquad),
           the ``name`` of your project is auto-appended to it
 
         * relative urls are auto-filled by prefixing them with ``url``
@@ -196,11 +196,11 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
-.. _commands: https://github.com/zsimic/setupmeta/blob/master/docs/commands.rst
+.. _commands: https://github.com/codrsquad/setupmeta/blob/master/docs/commands.rst
 
-.. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
+.. _requirements: https://github.com/codrsquad/setupmeta/blob/master/docs/requirements.rst
 
-.. _versioning: https://github.com/zsimic/setupmeta/blob/master/docs/versioning.rst
+.. _versioning: https://github.com/codrsquad/setupmeta/blob/master/docs/versioning.rst
 
 .. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
 
@@ -208,9 +208,9 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
-.. _setupmeta: https://github.com/zsimic/setupmeta
+.. _setupmeta: https://github.com/codrsquad/setupmeta
 
-.. _examples: https://github.com/zsimic/setupmeta/tree/master/examples
+.. _examples: https://github.com/codrsquad/setupmeta/tree/master/examples
 
 .. _rst comments: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#comments
 

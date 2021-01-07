@@ -18,7 +18,7 @@ For example, this is what setupmeta says about itself (it's self-using)::
                      author_email: (auto-adjust            ) zoran@simicweb.com
                       classifiers: (classifiers.txt        ) 21 items: ["Development Status :: 5 - Production/Stable", "Intend...
                       description: (setupmeta/__init__.py:2) Simplify your setup.py
-                     download_url: (auto-fill              ) https://github.com/zsimic/setupmeta/archive/v2.1.1.tar.gz
+                     download_url: (auto-fill              ) https://github.com/codrsquad/setupmeta/archive/v2.1.1.tar.gz
                                \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
                      entry_points: (explicit               ) [distutils.commands] check = setupmeta.commands:CheckCommand clea...
                          keywords: (setup.py:4             ) ["simple", "DRY", "setup.py"]
@@ -30,7 +30,7 @@ For example, this is what setupmeta says about itself (it's self-using)::
                    setup_requires: (explicit               ) ["setupmeta"]
                     tests_require: (tests/requirements.txt ) ["mock", "pytest-cov"]
                            title*: (setup.py:16            ) setupmeta
-                              url: (setupmeta/__init__.py:4) https://github.com/zsimic/setupmeta
+                              url: (setupmeta/__init__.py:4) https://github.com/codrsquad/setupmeta
                           version: (git                    ) 2.1.1
                        versioning: (explicit               ) dev
                          zip_safe: (explicit               ) True

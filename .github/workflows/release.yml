@@ -20,7 +20,7 @@ jobs:
         pip install -U pip setuptools wheel twine tox
         git config --global user.name tester
         git config --global user.email tester@example.com
-        tox -e py,docs,style,security
+    - run: tox -e py,docs,style,security
     - run: python setup.py sdist bdist_wheel --universal
 
     - name: Publish sdist and wheel

@@ -6,7 +6,7 @@ author: Someone someone@example.com
 """
 
 __version__ = "1.0.0"
-__url__ = "https://github.com/zsimic"
+__url__ = "https://github.com/codrsquad"
 __download_url__ = "archive/{version}.tar.gz"
 
 
