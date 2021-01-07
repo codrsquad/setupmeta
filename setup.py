@@ -61,7 +61,7 @@ if __name__ == "__main__":
         name="setupmeta",
         entry_points=ENTRY_POINTS,
         packages=["setupmeta"],
-        python_requires='>=2.7',
+        python_requires=">=2.7",
         zip_safe=True,
         classifiers=[
             "Development Status :: 5 - Production/Stable",

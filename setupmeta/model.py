@@ -10,15 +10,17 @@ import sys
 
 import setuptools
 
-from setupmeta import (
-    current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path,
-    Requirements, requirements_from_file, short, trace, warn
-)
-from setupmeta.content import (
-    find_contents, load_contents, load_list, load_readme, resolved_paths
-)
+from setupmeta import current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path
+from setupmeta import Requirements, requirements_from_file, short, trace, warn
+from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
+
+try:
+    basestring
+
+except NameError:
+    basestring = str
 
 
 # Used to mark which key/values were provided explicitly in setup.py
@@ -429,23 +431,19 @@ class SetupMeta(Settings):
     def preprocess(self, upstream):
         self.find_project_dir(MetaDefs.dist_to_dict(upstream).pop("_setup_py_path", None))
 
-        for require_field in ('install_requires', 'tests_require'):
+        for require_field in ("install_requires", "tests_require"):
             value = getattr(upstream, require_field)
-            if isinstance(value, str if sys.version_info.major >= 3 else basestring) and value.startswith('@'):  # noqa: E501, F821 (basestring used by Python 2)
+            if isinstance(value, basestring) and value.startswith("@"):
                 self.add_definition(require_field, value, EXPLICIT)
                 self.add_definition(require_field, requirements_from_file(value[1:]) or [], source=value[1:], override=True)
 
         if isinstance(upstream.extras_require, dict):
-            if any([
-                    isinstance(deps, str if sys.version_info.major >= 3 else basestring)  # noqa: F821 (basestring used by Python 2)
-                    and deps.startswith('@')
-                    for deps in upstream.extras_require.values()
-            ]):
-                self.add_definition('extras_require', upstream.extras_require, EXPLICIT)
-                self.add_definition('extras_require', {
-                    extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, str) and deps.startswith('@') else deps
-                    for extra, deps in upstream.extras_require.items()
-                }, 'preprocessed', override=True)
+            if any([isinstance(deps, basestring) and deps.startswith("@") for deps in upstream.extras_require.values()]):
+                self.add_definition("extras_require", upstream.extras_require, EXPLICIT)
+                self.add_definition("extras_require", {
+                        extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, basestring) and deps.startswith("@") else deps
+                        for extra, deps in upstream.extras_require.items()
+                    }, "preprocessed", override=True)
 
         return self
 

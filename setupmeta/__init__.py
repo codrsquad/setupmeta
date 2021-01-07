@@ -120,7 +120,7 @@ def short(text, c=None):
             summary = "%s items" % len(text)
 
         else:
-            return "%s..." % result[:c - 3]
+            return "%s..." % result[: c - 3]
 
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
@@ -973,6 +973,7 @@ class MetaDefs:
 
 class Console:
     """Small helper to determine terminal width, used to try and get a nice fit for commands like 'explain'"""
+
     _columns = None
 
     @classmethod

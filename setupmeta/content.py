@@ -57,7 +57,7 @@ def load_readme(relative_path, limit=0):
 
 
 def extract_list(content, comment="#"):
-    """ List of non-comment, non-empty strings from 'content'
+    """List of non-comment, non-empty strings from 'content'
 
     :param str|None content: Text content
     :param str|None comment: Optional comment marker
@@ -77,7 +77,7 @@ def extract_list(content, comment="#"):
 
 
 def load_list(relative_path, comment="#", limit=0):
-    """ List of non-comment, non-empty strings from file
+    """List of non-comment, non-empty strings from file
 
     :param str relative_path: Relative path to file
     :param str|None comment: Optional comment marker
@@ -108,7 +108,7 @@ def resolved_paths(relative_paths):
 
 
 def find_contents(relative_paths, loader=None, limit=0):
-    """ Return contents of first file found in 'relative_paths', globs OK
+    """Return contents of first file found in 'relative_paths', globs OK
 
     :param list(str) relative_paths: Ex: "README.rst", "README*"
     :param callable|None loader: Optional custom loader function
