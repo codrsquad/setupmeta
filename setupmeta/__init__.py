@@ -120,7 +120,7 @@ def short(text, c=None):
             summary = "%s items" % len(text)
 
         else:
-            return "%s..." % result[: c - 3]
+            return "%s..." % result[:c - 3]
 
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
