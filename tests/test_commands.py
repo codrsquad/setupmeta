@@ -187,7 +187,7 @@ def test_explain():
             author:.+ Zoran Simic
             description:.+ Simplify your setup.py
             license:.+ MIT
-            url:.+ https://github.com/zsimic/setupmeta
+            url:.+ https://github.com/codrsquad/setupmeta
             version:.+ [0-9]+\\.[0-9]
         """,
         folder=conftest.PROJECT_DIR,

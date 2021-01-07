@@ -15,8 +15,8 @@ This folder contains test case scenarios. The tests consist of:
 
 
 
-.. _examples: https://github.com/zsimic/setupmeta/tree/master/examples
+.. _examples: https://github.com/codrsquad/setupmeta/tree/master/examples
 
-.. _test_scenarios.py: https://github.com/zsimic/setupmeta/blob/master/tests/test_scenarios.py
+.. _test_scenarios.py: https://github.com/codrsquad/setupmeta/blob/master/tests/test_scenarios.py
 
-.. _scenarios.py: https://github.com/zsimic/setupmeta/blob/master/tests/scenarios.py
+.. _scenarios.py: https://github.com/codrsquad/setupmeta/blob/master/tests/scenarios.py

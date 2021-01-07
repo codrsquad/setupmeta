@@ -9,7 +9,7 @@ Development
 
 To get going locally, simply do this::
 
-    git clone https://github.com/zsimic/setupmeta.git
+    git clone https://github.com/codrsquad/setupmeta.git
     cd setupmeta
 
     tox -e venv

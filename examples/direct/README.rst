@@ -52,8 +52,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
     """
 
     __version__ = '1.0.0'
-    __url__ = "https://github.com/zsimic/simple"
-    __download_url__ = "https://github.com/zsimic/simple/archive/{version}.tar.gz"
+    __url__ = "https://github.com/codrsquad/simple"
+    __download_url__ = "https://github.com/codrsquad/simple/archive/{version}.tar.gz"
 
 
     def main():
@@ -67,8 +67,8 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
         author_email: (auto-adjust          ) someone@example.com
          classifiers: (classifiers.txt      ) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
          description: (direct/__init__.py:2 ) A package implemented by one direct ((not under src/)) module folder
-        download_url: (auto-fill            ) https://github.com/zsimic/simple/archive/1.0.0.tar.gz
-                  \_: (direct/__init__.py:10) https://github.com/zsimic/simple/archive/{version}.tar.gz
+        download_url: (auto-fill            ) https://github.com/codrsquad/simple/archive/1.0.0.tar.gz
+                  \_: (direct/__init__.py:10) https://github.com/codrsquad/simple/archive/{version}.tar.gz
         entry_points: (entry_points.ini     ) [console_scripts] direct = direct:main
     install_requires: (requirements.txt     ) ['click>=6.7']
             keywords: (direct/__init__.py:4 ) ['direct', 'package']
@@ -78,5 +78,5 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
             packages: (auto-fill            ) ['direct']
       setup_requires: (explicit             ) ['setupmeta']
               title*: (setup.py:4           ) direct
-                 url: (direct/__init__.py:9 ) https://github.com/zsimic/simple
+                 url: (direct/__init__.py:9 ) https://github.com/codrsquad/simple
              version: (direct/__init__.py:8 ) 1.0.0

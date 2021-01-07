@@ -2,12 +2,14 @@
 Release notes
 =============
 
-2.8.3 (2021-01-NN)
+2.8.3 (2021-01-07)
 ------------------
 
 * Don't warn when bumping for the first time (with no git tags yet)
 
 * Use the most common ``setuptools.find_packages()`` call (without arguments)
+
+* Moved repo to https://github.com/codrsquad
 
 
 2.8.2 (2020-11-19)
@@ -410,7 +412,7 @@ Release notes
 * Allow to use include other files in long description via something like ``.. [[include HISTORY.rst]]``
 
 
-.. _requirements: https://github.com/zsimic/setupmeta/blob/master/docs/requirements.rst
+.. _requirements: https://github.com/codrsquad/setupmeta/blob/master/docs/requirements.rst
 
 .. _spark: https://spark.apache.org/docs/latest/index.html
 
