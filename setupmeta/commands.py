@@ -292,7 +292,6 @@ class ExplainCommand(setuptools.Command):
         self.check_recommend("long_description", "add a README file")
         if self.recommend:
             self.check_recommend("author")
-            self.check_recommend("classifiers")
             self.check_recommend("download_url")
             self.check_recommend("license")
             self.check_recommend("url")

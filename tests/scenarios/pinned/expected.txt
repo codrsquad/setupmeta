@@ -2,7 +2,6 @@
           author: (auto-adjust) Someone
               \_: (pinned.py:5) Someone someone@example.com
     author_email: (auto-adjust) someone@example.com
-     classifiers: (missing    ) - Consider specifying 'classifiers'
      description: (setup.py:3 ) This is a package that has setupmeta pinned to an explicit version range.
     download_url: (missing    ) - Consider specifying 'download_url'
          license: (pinned.py:4) MIT

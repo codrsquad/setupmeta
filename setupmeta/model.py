@@ -12,7 +12,7 @@ import setuptools
 
 from setupmeta import current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path
 from setupmeta import Requirements, requirements_from_file, short, trace, warn
-from setupmeta.content import find_contents, load_contents, load_list, load_readme, resolved_paths
+from setupmeta.content import find_contents, load_contents, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
 
@@ -25,7 +25,6 @@ except NameError:
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = "explicit"
-CLASSIFIERS = "classifiers.txt"
 READMES = ["README.rst", "README.md", "README*"]
 
 # Accept reasonable variations of name + some separator + email
@@ -550,12 +549,10 @@ class SetupMeta(Settings):
         if self.requirements.dependency_links:
             self.auto_fill("dependency_links", self.requirements.dependency_links, self.requirements.links_source)
 
-        self.auto_fill_classifiers()
         self.auto_fill_entry_points()
         self.auto_fill_license()
         self.auto_fill_long_description()
         self.auto_fill_include_package_data()
-        self.sort_classifiers()
 
         return self
 
@@ -682,17 +679,6 @@ class SetupMeta(Settings):
     @property
     def version(self):
         return self.value("version")
-
-    def auto_fill_classifiers(self):
-        """ Add classifiers from classifiers.txt, if present """
-        # https://pypi.python.org/pypi?%3Aaction=list_classifiers
-        self.add_definition("classifiers", load_list(CLASSIFIERS), CLASSIFIERS)
-
-    def sort_classifiers(self):
-        """ Sort classifiers alphabetically """
-        classifiers = self.definitions.get("classifiers")
-        if classifiers and isinstance(classifiers.value, list):
-            classifiers.value = sorted(classifiers.value)
 
     def auto_fill_include_package_data(self):
         """Auto-fill 'include_package_data' if a MANIFEST.in file exists in project"""

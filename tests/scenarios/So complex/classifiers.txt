@@ -1,7 +1,0 @@
-#
-Programming Language :: Python      # Some comment
-
-Intended Audience :: Developers
-
-Operating System :: POSIX
-Operating System :: Unix

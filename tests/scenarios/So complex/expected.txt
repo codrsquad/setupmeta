@@ -4,7 +4,6 @@ WARNING: In setup.py:6 version should be '1.2.3', not '1.0a1'
               \_: (setup.py:2                          ) Someone someone@example.com
     author_email: (auto-adjust                         ) someone@example.com
      classifiers: (explicit                            ) ["Programming Language :: Python"]
-              \_: (classifiers.txt                     ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating S...
          contact: (src/My_cplx_nm_here/__init__.py:14  ) Someone
    contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@example.com
      description: (README:1                            ) My cplx-nm_here - Sample complex project
@@ -188,7 +187,6 @@ Running: <target>/.hooks/bump "My cplx-nm_here" master 2.0.0
               \_: (setup.py:2                          ) Someone someone@example.com
     author_email: (auto-adjust                         ) someone@example.com
      classifiers: (explicit                            ) ["Programming Language :: Python"]
-              \_: (classifiers.txt                     ) 4 items: ["Programming Language :: Python", "Intended Audience :: Developers", "Operating System :: POSIX", "Operating S...
          contact: (src/My_cplx_nm_here/__init__.py:14  ) Someone
    contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@example.com
      description: (README:1                            ) My cplx-nm_here - Sample complex project

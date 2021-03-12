@@ -56,37 +56,6 @@ def load_readme(relative_path, limit=0):
         return "".join(content).strip()
 
 
-def extract_list(content, comment="#"):
-    """List of non-comment, non-empty strings from 'content'
-
-    :param str|None content: Text content
-    :param str|None comment: Optional comment marker
-    :return list(str)|None: Contents, if any
-    """
-    if content is None:
-        return None
-    result = []
-    for line in content.strip().split("\n"):
-        if comment and comment in line:
-            i = line.index(comment)
-            line = line[:i]
-        line = line.strip()
-        if line:
-            result.append(line)
-    return result
-
-
-def load_list(relative_path, comment="#", limit=0):
-    """List of non-comment, non-empty strings from file
-
-    :param str relative_path: Relative path to file
-    :param str|None comment: Optional comment marker
-    :param int limit: Max number of lines to load
-    :return list(str)|None: Contents, if any
-    """
-    return extract_list(load_contents(relative_path, limit=limit), comment=comment)
-
-
 def resolved_paths(relative_paths):
     """
     :param list(str) relative_paths: Ex: "README.rst", "README*"

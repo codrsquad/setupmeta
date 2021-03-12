@@ -2,6 +2,14 @@
 Release notes
 =============
 
+
+2.9.0 (2021-03-15)
+------------------
+
+* Don't auto-complete ``classifiers`` from ``classifiers.txt`` any more,
+  the added value of that is negligible (and potentially confusing)
+
+
 2.8.3 (2021-01-07)
 ------------------
 

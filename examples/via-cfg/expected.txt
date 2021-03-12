@@ -2,7 +2,6 @@
                        author: (auto-adjust) Someone
                            \_: (explicit   ) Someone someone@example.org
                  author_email: (auto-adjust) someone@example.org
-                  classifiers: (missing    ) - Consider specifying 'classifiers'
                   description: (README.md:1) All settings come from `setup.cfg`
                  download_url: (missing    ) - Consider specifying 'download_url'
                  entry_points: (explicit   ) {console_scripts: ["pytest=pytest:main"]}

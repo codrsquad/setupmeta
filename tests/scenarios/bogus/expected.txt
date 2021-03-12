@@ -1,7 +1,6 @@
 :: explain -c180 -r
 WARNING: patch version component should be .0 for versioning strategy...
                        author: (missing    ) - Consider specifying 'author'
-                  classifiers: (missing    ) - Consider specifying 'classifiers'
                   description: (README.md:1) bogus versioning spec
                  download_url: (missing    ) - Consider specifying 'download_url'
                       license: (missing    ) - Consider specifying 'license'

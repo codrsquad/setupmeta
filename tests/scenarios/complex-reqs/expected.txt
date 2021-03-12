@@ -1,6 +1,5 @@
 :: explain -c180 -r
                        author: (missing             ) - Consider specifying 'author'
-                  classifiers: (missing             ) - Consider specifying 'classifiers'
              dependency_links: (requirements.txt    ) ["git+https://example.com/a.git#egg=flake8", "git+https://example.com/c.git#egg=flake8"]
                   description: (README.md:1         ) Project with a complex requirements.txt file
                  download_url: (missing             ) - Consider specifying 'download_url'
