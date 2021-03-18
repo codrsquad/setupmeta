@@ -1,6 +1,5 @@
 :: explain -c180 -r
                        author: (missing   ) - Consider specifying 'author'
-                  classifiers: (missing   ) - Consider specifying 'classifiers'
                   description: (README:1  ) Several readme files
                  download_url: (setup.py:2) http://example.com/readmes
                          foo*: (setup.py:3) bar

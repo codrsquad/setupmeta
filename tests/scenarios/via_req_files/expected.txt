@@ -1,6 +1,5 @@
 :: explain -c180 -r
                        author: (missing         ) - Consider specifying 'author'
-                  classifiers: (missing         ) - Consider specifying 'classifiers'
                   description: (README.md:1     ) via_req_files spec
                  download_url: (missing         ) - Consider specifying 'download_url'
                extras_require: (preprocessed    ) {extra: ["d", "e", "f"], feature: ["a", "b", "c"], missing: []}

@@ -1,6 +1,5 @@
 :: explain -c180 -r
           author: (missing  ) - Consider specifying 'author'
-     classifiers: (missing  ) - Consider specifying 'classifiers'
      description: (missing  ) - Consider specifying 'description', add a README or a docstring to your module
     download_url: (missing  ) - Consider specifying 'download_url'
          license: (missing  ) - Consider specifying 'license'

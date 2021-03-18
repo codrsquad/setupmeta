@@ -2,7 +2,6 @@
                        author: (auto-adjust ) Someone
                            \_: (single.py:5 ) Someone someone@example.com
                  author_email: (auto-adjust ) someone@example.com
-                  classifiers: (missing     ) - Consider specifying 'classifiers'
                   description: (README.rst:1) A package implemented by a single .py file
                            \_: (setup.py:3  ) Unicode chars in setup.py 😀 😎
                  download_url: (missing     ) - Consider specifying 'download_url'

@@ -70,7 +70,7 @@ KNOWN_LICENSES = [
 def determined_license(contents):
     """
     :param str|None contents: Contents to determine license from
-    :return tuple(str, str): Short name and classifier name
+    :return str: Short license name
     """
     for license in KNOWN_LICENSES:
         short = license.match(contents)

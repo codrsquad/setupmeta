@@ -44,7 +44,6 @@ note that a lot of info is typically extracted from your project, if you follow 
               author: (auto-adjust     ) Your Name
                   \_: (myproject.py:7  ) Your Name<your@email.com>
         author_email: (auto-adjust     ) your@email.com
-         classifiers: (classifiers.txt ) 6 items: ["Development Status :: ...
          description: (README.rst:1    ) First line of your README
         entry_points: (entry_points.ini) [console_scripts] ...
     install_requires: (requirements.txt) ["click", ...
@@ -92,8 +91,6 @@ How it works?
 * ``packages`` and ``package_dir`` is auto-filled accordingly if you have a ``<name>/__init__.py`` or ``src/<name>/__init__.py`` file
 
 * ``py_modules`` is auto-filled if you have a ``<name>.py`` file
-
-* ``classifiers`` is auto-filled from file ``classifiers.txt`` (one classification per line, ignoring empty lines and python style comments)
 
 * ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
 
