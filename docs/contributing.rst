@@ -1,6 +1,7 @@
 Contributions are welcome!
 
-``setupmeta`` has no dependencies, it should work as-is (standard libs only + obviously setuptools_).
+``setupmeta`` has no dependencies, it should work as-is
+(standard libs only + obviously setuptools_).
 
 tox_ is used for building and testing.
 
@@ -20,7 +21,8 @@ To get going locally, simply do this::
     python setup.py explain
     python setup.py version
 
-    # You can use this local setupmeta now on another project's setup.py (provided it has setup_requires='setupmeta')
+    # You can use this local setupmeta now on another project's setup.py
+    # (provided it has setup_requires='setupmeta')
     python .../path/to/some/project/setup.py explain
 
     deactivate
@@ -30,8 +32,8 @@ To get going locally, simply do this::
 Running the tests
 =================
 
-To run the tests, simply run ``tox``, this will run tests against all python versions you have locally installed.
-You can use pyenv_ for example to get python installations.
+To run the tests, simply run ``tox``, this will run tests against all python versions you have
+locally installed. You can use pyenv_ for example to get python installations.
 
 Run:
 
@@ -47,7 +49,8 @@ Run:
 Test coverage
 =============
 
-A coverage report is generated on all ``tox`` runs (coverage is combined across all the exercised python versions),
+A coverage report is generated on all ``tox`` runs
+(coverage is combined across all the exercised python versions),
 
 Run this to  see the generated html report::
 
@@ -57,13 +60,14 @@ Run this to  see the generated html report::
 Refreshing the test scenarios
 =============================
 
-If you've modified the code, and the tests don't pass anymore because you added/removed/changed something,
-you can refresh the test scenario replays by running::
+If you've modified the code, and the tests don't pass anymore because you added/removed/changed
+something, you can refresh the test scenario replays by running::
 
     tox -e refreshscenarios
 
 
-Inspect the diff (``git diff``), verify that the changes to ``tests/scenarios/*/expected.txt`` look good before committing
+Inspect the diff (``git diff``), verify that the changes to
+``tests/scenarios/*/expected.txt`` look good before committing
 
 Note that the tests replay ``tests/scenarios/*`` as well as ``examples/*``
 

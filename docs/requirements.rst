@@ -1,7 +1,8 @@
 Auto-fill for dependency requirements
 =====================================
 
-This only applies if you let setupmeta auto-fill your **install_requires** and/or **tests_require** section.
+This only applies if you let setupmeta auto-fill your **install_requires**
+and/or **tests_require** section.
 If you specify that section explicitly as in::
 
     setup(
@@ -12,7 +13,8 @@ If you specify that section explicitly as in::
 
 Then setupmeta will **not** auto-fill anything.
 
-It's recommended that you let setupmeta auto-fill your requirements if the following applies to you:
+It's recommended that you let setupmeta auto-fill your requirements
+if the following applies to you:
 
 - you don't have complex dependencies (like 99% of projects out there)
 
@@ -43,17 +45,20 @@ Setupmeta auto-fills dependency/requirements from the contents of the following 
     - ``dev-requirements.txt``
     - ``test-requirements.txt``
 
-Your requirement file is parsed and used to auto-fill the **install_requires** or **tests_require** section:
+Your requirement file is parsed and used to auto-fill the **install_requires**
+or **tests_require** section:
 
 - comments are stripped, but used as hints as to how to auto-fill
 
 - there are 3 categories of dependencies that setupmeta will consider:
 
-    - **abstract**: (default) minimal dependency, not bound to any specific version, example: ``requests``
+    - **abstract**: (default) minimal dependency, not bound to any specific version,
+      example: ``requests``
 
     - **pinned**: explicit dependency, example: ``requests==2.19.1``
 
-    - **indirect**: transitive dependency, not mentioned in **install_requires**, but will be pinned to a specific version when building/packaging
+    - **indirect**: transitive dependency, not mentioned in **install_requires**,
+      but will be pinned to a specific version when building/packaging
 
 - abstracting away applies only to simple ``==`` pinning, and nothing else, ie:
 
@@ -61,7 +66,9 @@ Your requirement file is parsed and used to auto-fill the **install_requires** o
 
     - however ``click>=6.7`` will not be abstracted in any case
 
-- sections of ``requirements.txt`` (or equivalent) can be marked via a comment line, all entries below that line (and up to next section) will have the stated category, for example::
+- sections of ``requirements.txt`` (or equivalent) can be marked via a comment line,
+  all entries below that line (and up to next section) will have the stated category,
+  for example::
 
     # pinned
     arrow==0.12.1
@@ -96,13 +103,17 @@ Example
 
 In the above example, we have:
 
-- the first section is considered **abstract** by default, so ``arrow`` and ``click`` will be auto-filled without their pinned versions
+- the first section is considered **abstract** by default,
+  so ``arrow`` and ``click`` will be auto-filled without their pinned versions
 
-- ``requests==2.19.1`` will be auto-filled as pinned, due to the ``# pinned`` explicit comment on that line
+- ``requests==2.19.1`` will be auto-filled as pinned,
+  due to the ``# pinned`` explicit comment on that line
 
-- ``retry>=0.9`` will be auto-filled as-is, since it's not a simple ``==`` pin (even though it is in the default abstract section)
+- ``retry>=0.9`` will be auto-filled as-is, since it's not a simple ``==`` pin
+  (even though it is in the default abstract section)
 
-- ``attrs==18.1.0`` and ``boto3==1.7.48`` will be auto-filled as pinned due to them being under the ``# pinned`` section
+- ``attrs==18.1.0`` and ``boto3==1.7.48`` will be auto-filled as pinned
+  due to them being under the ``# pinned`` section
 
 - finally, ``botocore`` will not be auto-filled, due it appearing in a **indirect** section
 
