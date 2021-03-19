@@ -303,11 +303,8 @@ class Version:
     @property
     def devcommit(self):
         """
-        {devcommit} marker for this version
+        {devcommit} marker for this version, alias for ".{commitid}"
 
-        :return str: '.dev{distance}-{commitid}' for distance > 0, empty string otherwise
+        :return str: '.{commitid}' for distance > 0, empty string otherwise
         """
-        if self.distance or self.dirty:
-            return "%s.dev%d-%s" % (self.additional, self.distance, self.commitid)
-
-        return self.additional
+        return ".%s" % self.commitid

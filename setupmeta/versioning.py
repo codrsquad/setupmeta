@@ -5,9 +5,30 @@ import re
 import setupmeta
 from setupmeta.scm import Git, Snapshot, Version
 
+try:
+    basestring
 
-BUMPABLE = "major minor patch".split()
+except NameError:
+    basestring = str
+
+
+BUMPABLE = {"major", "minor", "patch"}
+MAIN_BITS = {"{major}", "{minor}", "{patch}", "{distance}", "{post}", "{dev}"}
 RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$")
+RE_BITS = re.compile(r"{[^}]*}")
+PRECONFIGURED = {
+    "post": "{major}.{minor}.{patch}{post}+{dirty}",
+    "dev": "{major}.{minor}.{patch}{dev}+{dirty}",
+    "distance": "{major}.{minor}.{distance}+{dirty}",
+    "devcommit": "{major}.{minor}.{patch}{dev}+{devcommit}{dirty}",
+    "build-id": "{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}",
+}
+PRECONFIGURED_ALIAS = {
+    "": "post",
+    "changes": "distance",
+    "default": "post",
+    "tag": "post",
+}
 
 
 def find_scm_root(root, name):
@@ -50,7 +71,7 @@ class VersionBit:
         self.text = text
         self.alternative = alternative
         self.constant = constant
-        self.renderer = None
+        self.renderer = None  # type: callable
         self.problem = None
         if self.constant:
             self.renderer = self.rendered_constant
@@ -161,7 +182,7 @@ class VersionBit:
 
 
 class Strategy:
-    def __init__(self, main, extra, separator, branches, hook, **kwargs):
+    def __init__(self, main, extra, branches, hook, **kwargs):
         self.main = main
         self.extra = extra
         if kwargs:
@@ -175,14 +196,13 @@ class Strategy:
             self.bumpable = []
 
         self.extra_bits = self.bits(extra)
-        self.separator = separator
         self.branches = branches
         self.hook = hook
         if self.branches and hasattr(self.branches, "lstrip"):
             self.branches = self.branches.lstrip("(").rstrip(")")
 
         self.branches = setupmeta.listify(self.branches, separator=",")
-        self.text = self.formatted(self.branches, self.main, self.separator, self.extra)
+        self.text = self.formatted(self.branches, self.main, self.extra)
         if not self.main_bits:
             self.problem = "No versioning format specified"
             return
@@ -195,7 +215,7 @@ class Strategy:
         self.problem = "\n".join(problems) if problems else None
 
     @staticmethod
-    def formatted(branches, main, separator, extra):
+    def formatted(branches, main, extra):
         if isinstance(branches, list):
             branches = ",".join(branches)
 
@@ -203,10 +223,10 @@ class Strategy:
         if main:
             result += setupmeta.stringify(main)
 
-        if result or extra:
-            result += setupmeta.stringify(separator)
-
         if extra:
+            if result:
+                result += "+"
+
             result += setupmeta.stringify(extra)
 
         if branches:
@@ -217,9 +237,6 @@ class Strategy:
     def bits(self, fmt):
         if callable(fmt):
             return fmt
-
-        elif fmt and fmt[0] == "!":
-            fmt = fmt[1:]
 
         result = []
         if not fmt:
@@ -248,15 +265,6 @@ class Strategy:
     def __repr__(self):
         return self.text
 
-    def needs_extra(self, version):
-        if not self.extra:
-            return False
-
-        if not isinstance(self.extra_bits, list):
-            return True
-
-        return self.extra[0] == "!" or version.dirty
-
     def rendered(self, version, extra=True, auto_bumped=True):
         """
         :param Version version: Version to render
@@ -275,21 +283,23 @@ class Strategy:
             if auto_bumped and last and (last.text == "dev" or last.text == "devcommit") and prelast and prelast.text in BUMPABLE:
                 bits[-2] = prelast.auto_bumped()
 
-        result = self.rendered_bits(version, bits) or []
-        if extra and self.needs_extra(version):
+        result = self.rendered_bits(version, bits)
+        result = "" if not result else "".join(result)
+        if extra and self.extra:
             extra = self.rendered_bits(version, self.extra_bits)
             if extra:
-                if self.separator != " ":
-                    result.append(self.separator)
+                extra = [str(s) for s in extra if str(s)]
+                extra = "".join(extra)
 
-                result.extend(extra)
+            if extra:
+                result = "%s+%s" % (result, extra.strip("."))
 
-        return "".join(result)
+        return result
 
     @staticmethod
     def rendered_bits(version, bits):
         if isinstance(bits, list):
-            return [bit.rendered(version) for bit in bits]
+            return [x for x in (bit.rendered(version) for bit in bits) if x]
 
         if callable(bits):
             value = bits(version)
@@ -331,67 +341,79 @@ class Strategy:
         if not given:
             return None
 
-        data = dict(
-            main="{major}.{minor}.{patch}{post}",
-            extra="{dirty}",
-            separator="",
-            branches="main,master",
-            hook=None,
-        )
+        main, extra, branches, hook, rest_from_upstream = _parsed_versioning(given)
+        return cls(main, extra, branches, hook, **rest_from_upstream)
 
-        if isinstance(given, dict):
-            data.update(given)
 
-        elif given not in ("default", "post", "tag") and given is not True:
-            m = RE_VERSIONING.match(given)
-            if m.group(2):
-                data["branches"] = m.group(2)
+def _parsed_versioning(given):
+    # Defaults:
+    main = "post"
+    extra = "{dirty}"
+    branches = "main,master"
+    hook = None
+    rest_from_upstream = {}
+    if isinstance(given, dict):
+        # User wants advanced mode: passed a dict as versioning= in setup.py
+        given = dict(given)
+        main = given.pop("main", main)
+        extra = given.pop("extra", extra)
+        branches = given.pop("branches", branches)
+        hook = given.pop("hook", hook)
+        rest_from_upstream = given
+        given = main
 
-            main = m.group(3)
-            if main in ("distance", "build-id", "changes"):
-                if main == "build-id":
-                    data["separator"] = "+"
-                    data["extra"] = "!h{$*BUILD_ID:local}.{commitid}{dirty}"
+    if isinstance(given, basestring):
+        m = RE_VERSIONING.match(given)
+        if m.group(2):
+            branches = m.group(2)
 
-                main = "{major}.{minor}.{distance}"
+        main = m.group(3)
+        main = PRECONFIGURED_ALIAS.get(main, main)
+        if main in PRECONFIGURED:
+            main, _, extra = PRECONFIGURED[main].partition("+")
 
-            elif main == "dev":
-                main = "{major}.{minor}.{patch}{dev}"
+        if isinstance(main, basestring) and isinstance(extra, basestring):
+            extra = _parsed_extra(m.group(4), extra)
+            if m.group(7):
+                hook = m.group(7)
 
-            elif main == "devcommit":
-                main = "{major}.{minor}.{patch}{devcommit}"
-                data["extra"] = "-dirty"
-                data["separator"] = ""
+            to_be_moved = []
+            for bit in RE_BITS.findall(main):
+                if bit not in MAIN_BITS:
+                    main = main.replace(bit, "")
+                    to_be_moved.append(bit)
 
-            elif main in ("", "default", "post", "tag"):
-                main = data["main"]
+            for bit in reversed(to_be_moved):
+                if bit not in extra:
+                    extra = "%s%s" % (bit, extra)
 
-            extra = m.group(4)
-            if extra:
-                data["separator"] = extra[0]
-                extra = extra[1:]
-                if extra == "dev":
-                    if "{post}" in main:
-                        # Convenience: allow for stuff like: build-id+dev
-                        main = main.replace("{post}", "{dev}")
+            main = main.strip(".")
+            extra = extra.strip(".")
 
-                elif extra == "build-id":
-                    data["separator"] = "+"
-                    data["extra"] = "!h{$*BUILD_ID:local}.{commitid}{dirty}"
+    return main, extra, branches, hook, rest_from_upstream
 
-                else:
-                    data["extra"] = extra
 
-            if main and "{dirty}" in main and data["extra"] in ("{commitid}", "{dirty}"):
-                data["extra"] = None
+def _parsed_extra(given, default):
+    if not given:
+        return default
 
-            data["main"] = main
+    if given[0] not in "+!":
+        setupmeta.warn("PEP-440 allows only '+' as local version separator, please update your setup.py")
 
-            hook = m.group(7)
-            if hook:
-                data["hook"] = hook
+    given = given[1:]
+    if not given:
+        return given
 
-        return cls(**data)
+    if given[0] == "!":
+        setupmeta.warn("'!' character in 'versioning' is now deprecated, please remove it")
+        given = given[1:]
+        if not given:
+            return given
+
+    if given == "build-id":
+        return "h{$*BUILD_ID:local}.{commitid}{dirty}"
+
+    return given
 
 
 class Versioning:

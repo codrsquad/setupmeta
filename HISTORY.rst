@@ -3,6 +3,24 @@ Release notes
 =============
 
 
+2.9.1 (2021-03-22)
+------------------
+
+* This is relatively large change, it could have justified a major version bump,
+  but the previous addition was relatively minor. So going to hold off on bumping major yet.
+  If you find an issue, please pin to prev version, or ``<2.9`` and report_
+
+* Yield PEP-440_ compliant versions:
+
+    * ``"+"`` is the only possible "separator" between main version part and any custom (local) part
+      (issuing warning for now if user wanted any other separator)
+
+    * ``local`` parts will be joined using ``"."`` character (will not make it configurable...)
+
+    * ``local`` parts are always shown now, no need to use ``"!"`` character
+      (recommendation is: don't use local parts... but if you do, they'll always show up)
+
+
 2.9.0 (2021-03-15)
 ------------------
 
@@ -425,3 +443,5 @@ Release notes
 .. _spark: https://spark.apache.org/docs/latest/index.html
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
+
+.. _report: https://github.com/codrsquad/setupmeta/issues
