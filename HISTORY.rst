@@ -7,8 +7,9 @@ Release notes
 ------------------
 
 * This is relatively large change, it could have justified a major version bump,
-  but the previous addition was relatively minor. So going to hold off on bumping major yet.
-  If you find an issue, please pin to the previous version, or ``<2.9`` and report_ it.
+  but the previous release 2.9.0 is rather an un-impactful one.
+  So going to hold off on bumping major here.
+  If you find an issue, please pin to the previous version (or even ``< 2.9``) and report_ it.
 
 * Yield PEP-440_ compliant versions:
 
