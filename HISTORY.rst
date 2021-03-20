@@ -13,11 +13,11 @@ Release notes
   * Character ``"+"`` is used exclusively to demarcate the local part of the version
 
   * Character ``"."`` is used exclusively to demarcate local segments
-    (this is not configurable yet, and won't unless by popular request)
+    (this is not configurable yet, and won't be unless by popular request)
 
   * The "main" part remains intact, except for ``devcommit``, furthermore only known PEP-440
     "main version part" bits can ever be in the main part (anything that is mistakenly
-    specified to be in main part gets automatically shifted to the local part)
+    specified to be in the main part gets automatically shifted to the local part)
 
   * "local" part is always shown now, no need to use ``"!"`` character (now deprecated),
     except for ``{devcommit}`` and ``{dirty}`` markers, which will not lead to a local part
