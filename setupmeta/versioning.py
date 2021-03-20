@@ -410,7 +410,12 @@ def _parsed_extra(given, default):
         if not given:
             return given
 
+    if given == "devcommit":
+        # Allow for convenience notation of the form "dev+devcommit" or "post+devcommit" etc
+        return "{devcommit}{dirty}"
+
     if given == "build-id":
+        # Allow for convenience notation of the form "dev+build-id" or "post+build-id" etc
         return "h{$*BUILD_ID:local}.{commitid}{dirty}"
 
     return given

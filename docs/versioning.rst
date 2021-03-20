@@ -173,10 +173,10 @@ g10              1.0.0.post1
 * Use ``python setup.py version --bump [major|minor|patch]`` whenever you want to bump major,
   minor or patch revision (this will assign a git tag accordingly)
 
-    * ``python setup.py version --bump patch --commit`` -> tag "v0.1.1" is added,
-      version is now ``0.1.1``
+  * ``python setup.py version --bump patch --commit`` -> tag "v0.1.1" is added,
+    version is now ``0.1.1``
 
-    * Next commit after that will be version ``0.1.1.post1`` etc
+  * Next commit after that will be version ``0.1.1.post1`` etc
 
 
 dev
@@ -184,10 +184,10 @@ dev
 
 Similar to post_, with the following differences:
 
-- ``.dev`` prefix is used instead of ``.post``, this makes untagged versions considered
+* ``.dev`` prefix is used instead of ``.post``, this makes untagged versions considered
   pre-release (have to use ``pip install --pre`` to get them)
 
-- right-most bumpable component (typically **patch**) is assumed to be the next one
+* Right-most bumpable component (typically **patch**) is assumed to be the next one
   that is going to be bumped... (this just means that if your current version is ``0.8.1``,
   you would get a ``0.8.2.dev1`` etc; even though you may be planning your next tag to be
   ``0.9.0``, and not ``0.8.2``)
@@ -293,10 +293,10 @@ g11              1.0.1
 * Use ``python setup.py version --bump [major|minor]`` whenever you want to bump major
   or minor version (this will assign a git tag accordingly)
 
-    * ``python setup.py version --bump minor --commit`` -> tag "v0.2" is added,
-      version is now ``0.2.0``
+  * ``python setup.py version --bump minor --commit`` -> tag "v0.2" is added,
+    version is now ``0.2.0``
 
-    * Next commit after that will be version ``0.2.1`` etc
+  * Next commit after that will be version ``0.2.1`` etc
 
 
 build-id
@@ -342,7 +342,7 @@ g10              1.0.1+h300.g3
 =======  ======  ===========================  ====================================================
 
 * Similar to distance_, except that the ``extra`` part is always shown and will reflect whether
-build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
+  build took locally or on a CI server (which will define an env var ending with ``BUILD_ID``)
 
 
 Advanced
@@ -354,30 +354,30 @@ or a **dict** for even more customization:
 
 * a **string** can be of the form:
 
-    * a version format specified of the form ``branch(<branches>):<main>+<extra>``
+  * a version format specified of the form ``branch(<branches>):<main>+<extra>``
 
-    * ``branch(<branches>):`` is optional, and you would use this full form only if you wanted
-      version bumps to be possible on branches other than ``main`` or ``master``,
-      if you want bumps to be possible on both ``prod`` and ``test`` branches for example,
-      you would use ``branch(prod,test):...``
+  * ``branch(<branches>):`` is optional, and you would use this full form only if you wanted
+    version bumps to be possible on branches other than ``main`` or ``master``,
+    if you want bumps to be possible on both ``prod`` and ``test`` branches for example,
+    you would use ``branch(prod,test):...``
 
-    * See Formatting_ below to see what's usable for ``<main>`` and ``<extra>``
+  * See Formatting_ below to see what's usable for ``<main>`` and ``<extra>``
 
-    * the ``<main>`` part (before the ``"+"`` character) specifies the format of the
-      "main version" part (when checkout is clean)
+  * the ``<main>`` part (before the ``"+"`` character) specifies the format of the
+    "main version" part (when checkout is clean)
 
-    * the ``<extra>`` part (after the ``"+"`` character) indicates the ``local`` part of
-      your version, as per PEP-440_
+  * the ``<extra>`` part (after the ``"+"`` character) indicates the ``local`` part of
+    your version, as per PEP-440_
 
 * a **dict** with the following keys:
 
-    * ``main``: a **string** (see Formatting_) or callable
-      (if callable given, **version --bump** functionality becomes unusable)
+  * ``main``: a **string** (see Formatting_) or callable
+    (if callable given, **version --bump** functionality becomes unusable)
 
-    * ``extra``: a **string** (see Formatting_) or callable (custom function yielding
-      a string from a given ``Version``, see `Scm class`_)
+  * ``extra``: a **string** (see Formatting_) or callable (custom function yielding
+    a string from a given ``Version``, see `Scm class`_)
 
-    * ``branches``: list of branch names (or csv) where to allow **bump**
+  * ``branches``: list of branch names (or csv) where to allow **bump**
 
 
 This is what ``versioning="post"`` is a shortcut for::
@@ -414,13 +414,25 @@ The following can be used as format specifiers:
   the next revision of the right-most bumpable, usually ``patch``).
   Example: ``1.2.dev3``.
 
-* ``{devcommit}``: Same as ``{dev}``, with commit id added in ``local`` version part.
+* ``{devcommit}``: Same as ``{dev}``, with commit id added in ``local`` version part
+  when not exactly on version tag.
   Example: ``1.2.dev3+g12345``.
 
 * ``{commitid}``: short string identifying commit, like ``g3bf9221``
 
 * ``{dirty}``: Expands to ``.dirty`` when checkout is dirty (has pending changes),
   empty string otherwise
+
+* Convenience notations: the following shortcuts can be used for the local part of the
+  version:
+
+  * ``+devcommit``: Use the stated strategy, but add ``{devcommit}`` to the local part
+
+  * ``+build-id``: Use the stated strategy, but add the same info from build-id_ strategy
+      to the local part
+
+  * Example: ``dev+devcommit``, or ``post+build-id`` etc
+
 
 * ``foo``: constant ``foo`` (used as-is if specified)
 
@@ -431,15 +443,15 @@ The following can be used as format specifiers:
 
 * generalized env var spec is: ``{$*FOO*:default}``:
 
-    * ``$FOO`` will look for env var ``FOO`` exactly
+  * ``$FOO`` will look for env var ``FOO`` exactly
 
-    * ``$*FOO`` will use the first (alphabetically sorted) env var that ends with ``FOO``
+  * ``$*FOO`` will use the first (alphabetically sorted) env var that ends with ``FOO``
 
-    * ``$FOO*`` will use the first (alphabetically sorted) env var that starts with ``FOO``
+  * ``$FOO*`` will use the first (alphabetically sorted) env var that starts with ``FOO``
 
-    * ``$*FOO*`` will use the first (alphabetically sorted) env var that contains ``FOO``
+  * ``$*FOO*`` will use the first (alphabetically sorted) env var that contains ``FOO``
 
-    * ``default`` will be shown if no env var could be found
+  * ``default`` will be shown if no env var could be found
 
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
