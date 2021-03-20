@@ -188,7 +188,7 @@ def test_versioning_variants(*_):
         quick_check("foo", "foo+dirty")
 
         quick_check("dev", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
-        quick_check("devcommit", "0.1.9rc1+gebe2789", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("devcommit", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
         quick_check("post", "0.1.9rc1+dirty", dirty=True, describe="v0.1.9-rc.1-0-gebe2789")
 
         quick_check("dev", "0.1.9rc1.dev1", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
@@ -213,8 +213,9 @@ def test_versioning_variants(*_):
         # On tag
         quick_check("dev", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
         quick_check("dev", "0.1.3.dev0+dirty", describe="v0.1.2-0-g123", dirty=True)
-        quick_check("devcommit", "0.1.2+g0000000", describe="v0.1.2", dirty=False)
-        quick_check("devcommit", "0.1.2+g123", describe="v0.1.2-0-g123", dirty=False)
+        quick_check("devcommit", "0.1.2", describe="v0.1.2", dirty=False)
+        quick_check("devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
+        quick_check("devcommit", "0.1.3.dev7+g123", describe="v0.1.2-7-g123", dirty=False)
         quick_check("devcommit", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123", dirty=True)
 
         assert "patch version component should be .0" in logged

@@ -307,4 +307,7 @@ class Version:
 
         :return str: '.{commitid}' for distance > 0, empty string otherwise
         """
-        return ".%s" % self.commitid
+        if self.distance or self.dirty:
+            return ".%s" % self.commitid
+
+        return ""

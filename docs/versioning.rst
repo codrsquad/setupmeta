@@ -215,7 +215,7 @@ g10              1.0.0.dev1
 devcommit
 ---------
 
-Same as dev_, with commit id **always** added as ``local`` part (of yielded version).
+Same as dev_, with commit id added in ``local`` part when not exactly on a version tag.
 
 Example:
 
@@ -226,12 +226,12 @@ g1               0.0.0.dev1+g1        Initial commit
 g1               0.0.0.dev1+g1.dirty  Same as above, only checkout was not clean anymore
 g2               0.0.0.dev2+g2
 g3               0.0.0.dev3+g3
-g4       v0.1.0  0.1.0+g4             ``version --bump minor --commit``
+g4       v0.1.0  0.1.0                ``version --bump minor --commit``
 g5               0.1.1.dev1+g5        (1 commit since tag)
 g6               0.1.1.dev2+g6
-g7       v0.1.1  0.1.1+g7             ``version --bump patch --commit``
+g7       v0.1.1  0.1.1                ``version --bump patch --commit``
 g8               0.1.2.dev1+g7
-g9       v1.0.0  1.0.0+g9             ``version --bump major --commit``
+g9       v1.0.0  1.0.0                ``version --bump major --commit``
 g10              1.0.0.dev1+g10
 =======  ======  ===================  ============================================================
 
@@ -414,7 +414,7 @@ The following can be used as format specifiers:
   the next revision of the right-most bumpable, usually ``patch``).
   Example: ``1.2.dev3``.
 
-* ``{devcommit}``: Same as ``{dev}``, with commit id in ``local`` version part.
+* ``{devcommit}``: Same as ``{dev}``, with commit id added in ``local`` version part.
   Example: ``1.2.dev3+g12345``.
 
 * ``{commitid}``: short string identifying commit, like ``g3bf9221``

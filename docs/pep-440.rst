@@ -18,7 +18,7 @@ What's changed
 * ``devcommit``: ``.dev`` will NOT be alone anymore, but will yield a number indicating
   the number of commits since last tag: ``.devN``).
 
-* ``build-id``, ``devcommit`` and any strategy that wants to show the "commit id":
+* ``build-id`` and any strategy that wants to show the "commit id":
   the "local" part of your version will now **always** be shown
 
 * ``separator`` advanced argument is retired (you'll get a deprecation warning if you specify it)
