@@ -3,23 +3,27 @@ Release notes
 =============
 
 
-2.9.1 (2021-03-22)
+3.0.0 (2021-03-22)
 ------------------
 
-* This is relatively large change, it could have justified a major version bump,
-  but the previous release 2.9.0 is rather an un-impactful one.
-  So going to hold off on bumping major here.
-  If you find an issue, please pin to the previous version (or even ``< 2.9``) and report_ it.
+* Yield PEP-440_ compliant versions
 
-* Yield PEP-440_ compliant versions:
+* Versions yielded by ``setupmeta`` 3.0 will differ from pre-3.0 versions:
 
-    * ``"+"`` is the only possible "separator" between main version part and any custom (local) part
-      (issuing warning for now if user wanted any other separator)
+  * Character ``"+"`` is used exclusively to demarcate the local part of the version
 
-    * ``local`` parts will be joined using ``"."`` character (will not make it configurable...)
+  * Character ``"."`` is used exclusively to demarcate local segments
+    (this is not configurable yet, and won't unless by popular request)
 
-    * ``local`` parts are always shown now, no need to use ``"!"`` character
-      (recommendation is: don't use local parts... but if you do, they'll always show up)
+  * The "main" part remains intact, except for ``devcommit``, furthermore only known PEP-440
+    "main version part" bits can ever be in the main part (anything that is mistakenly
+    specified to be in main part gets automatically shifted to the local part)
+
+  * "local" part is always shown now, no need to use ``"!"`` character (now deprecated),
+    except for ``{devcommit}`` and ``{dirty}`` markers, which will not lead to a local part
+    being shown when exactly on git tag.
+
+  * See [pep-440.rst](./docs/pep-440.rst) for more details
 
 
 2.9.0 (2021-03-15)
@@ -96,9 +100,9 @@ Release notes
 
 * Further refine hooks (#56)
 
-    * Add legacy hook to ease transition in rare cases.
+  * Add legacy hook to ease transition in rare cases.
 
-    * Ensure our dist finalization runs first.
+  * Ensure our dist finalization runs first.
 
 
 2.7.11 (2020-06-30)
