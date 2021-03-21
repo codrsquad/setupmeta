@@ -1,6 +1,7 @@
 import os
 import sys
 
+import pep440
 import pytest
 from mock import patch
 
@@ -148,9 +149,13 @@ def test_version_from_env_var(*_):
         assert versioning.scm.is_dirty()
 
 
-def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123"):
+def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123", compliant=True):
     meta = new_meta(versioning, scm=conftest.MockGit(dirty, describe=describe))
     assert meta.version == expected
+    if compliant:
+        main_part, _, _ = meta.version.partition("+")
+        assert pep440.is_canonical(main_part)
+
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.generate_version_file
@@ -185,7 +190,7 @@ def test_versioning_variants(*_):
 
         # Edge cases
         quick_check("1.2.3", "1.2.3+dirty")
-        quick_check("foo", "foo+dirty")
+        quick_check("foo", "foo+dirty", compliant=False)
 
         quick_check("dev+{commitid}{dirty}", "0.1.3.dev5+g123.dirty")
         quick_check("dev+{commitid}{dirty}", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123")
@@ -213,7 +218,7 @@ def test_versioning_variants(*_):
         quick_check("build-id", "0.1.5+h543.g123.dirty")
 
         quick_check("post", "5.0.0a1.post1", dirty=False, describe="v5.0-a.1-1-gebe2789")
-        quick_check("post", "5.0.0a1.rc2.post7", dirty=False, describe="v5.a1rc2-7-gebe2789")
+        quick_check("post", "5.0.0a1.rc2.post7", dirty=False, describe="v5.a1rc2-7-gebe2789", compliant=False)
         quick_check("dev", "0.1.0a0.dev8", dirty=False, describe="v0.1.a-8-gebe2789")
 
         # Patch is not bumpable
