@@ -36,13 +36,11 @@ class Scm:
         """
         :return str: Current branch name
         """
-        pass
 
     def get_version(self):
         """
         :return Version: Current version as computed from latest SCM version tag
         """
-        pass
 
     def commit_files(self, commit, push, relative_paths, next_version):
         """
@@ -53,7 +51,6 @@ class Scm:
         :param list(str) relative_paths: Relative paths to commit
         :param str next_version: Version that is about to be applied, of the form 1.0.0 (used for commit message)
         """
-        pass
 
     def apply_tag(self, commit, push, next_version, branch):
         """
@@ -64,7 +61,6 @@ class Scm:
         :param str next_version: Version to use for tag
         :param str branch: Branch on which tag is being applied
         """
-        pass
 
     def get_output(self, *args, **kwargs):
         """
@@ -107,9 +103,7 @@ class Snapshot(Scm):
 
     def is_dirty(self):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
-        if v and "dirty" in v:
-            return True
-        return False
+        return v and "dirty" in v
 
     def get_branch(self):
         """Consider branch to be always HEAD for snapshots"""
@@ -119,6 +113,7 @@ class Snapshot(Scm):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
         if v:
             return Git.parsed_version(v)
+
         path = os.path.join(self.root, setupmeta.VERSION_FILE)
         with open(path) as fh:
             return Git.parsed_version(fh.readline(), False)
@@ -138,6 +133,7 @@ class Git(Scm):
             tag = str(p.partition("^")[0])
             if tag.startswith("v") or tag[0].isdigit():
                 result.add(tag)
+
         return result
 
     def local_tags(self):
@@ -160,7 +156,9 @@ class Git(Scm):
                 if dirty is None:
                     # This is only settable via env var SCM_DESCRIBE
                     dirty = m.group(4) == "-dirty"
+
                 return Version(main, distance, commitid, dirty, text)
+
         return None
 
     def is_dirty(self):
@@ -173,6 +171,7 @@ class Git(Scm):
         exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", capture=False)
         if exitcode == 0:
             exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", "--staged", capture=False)
+
         return exitcode != 0
 
     def get_branch(self):
@@ -199,6 +198,7 @@ class Git(Scm):
     def has_origin(self):
         if self._has_origin is None:
             self._has_origin = bool(self.get_output("config", "--get", "remote.origin.url"))
+
         return self._has_origin
 
     def commit_files(self, commit, push, relative_paths, next_version):
@@ -211,6 +211,7 @@ class Git(Scm):
         if push:
             if self.has_origin():
                 self.run(commit, "push", "origin")
+
             else:
                 print("Won't push: no origin defined")
 
@@ -229,7 +230,6 @@ class Git(Scm):
         tag = "v%s" % next_version
 
         self.run(commit, "tag", "-a", tag, "-m", bump_msg)
-
         if push:
             if self.has_origin():
                 self.run(commit, "push", "--tags", "origin")
@@ -303,11 +303,11 @@ class Version:
     @property
     def devcommit(self):
         """
-        {devcommit} marker for this version
+        {devcommit} marker for this version, alias for ".{commitid}"
 
-        :return str: '.dev{distance}-{commitid}' for distance > 0, empty string otherwise
+        :return str: '.{commitid}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return "%s.dev%d-%s" % (self.additional, self.distance, self.commitid)
+            return ".%s" % self.commitid
 
-        return self.additional
+        return ""

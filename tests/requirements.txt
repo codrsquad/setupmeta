@@ -1,3 +1,4 @@
 mock  # Won't be needed anymore when py2 support is dropped
+pep440
 pytest-cov
 six

@@ -22,9 +22,9 @@ if the following applies to you:
 
 - you agree with this `community recommendation`_, ie:
 
-    - in general your **install_requires** should not be pinning dependencies to specific versions
+  - in general your **install_requires** should not be pinning dependencies to specific versions
 
-    - you may want to pin to specific versions when building/packaging (in ``requirements.txt``)
+  - you may want to pin to specific versions when building/packaging (in ``requirements.txt``)
 
 
 How it works
@@ -34,16 +34,16 @@ Setupmeta auto-fills dependency/requirements from the contents of the following 
 
 - **install_requires** from:
 
-    - ``requirements.txt`` (recommended)
+  - ``requirements.txt`` (recommended)
 
-    - ``pinned.txt``
+  - ``pinned.txt``
 
 - **tests_require** from:
 
-    - ``tests/requirements.txt`` (recommended)
-    - ``requirements-dev.txt``
-    - ``dev-requirements.txt``
-    - ``test-requirements.txt``
+  - ``tests/requirements.txt`` (recommended)
+  - ``requirements-dev.txt``
+  - ``dev-requirements.txt``
+  - ``test-requirements.txt``
 
 Your requirement file is parsed and used to auto-fill the **install_requires**
 or **tests_require** section:
@@ -52,19 +52,19 @@ or **tests_require** section:
 
 - there are 3 categories of dependencies that setupmeta will consider:
 
-    - **abstract**: (default) minimal dependency, not bound to any specific version,
-      example: ``requests``
+  - **abstract**: (default) minimal dependency, not bound to any specific version,
+    example: ``requests``
 
-    - **pinned**: explicit dependency, example: ``requests==2.19.1``
+  - **pinned**: explicit dependency, example: ``requests==2.19.1``
 
-    - **indirect**: transitive dependency, not mentioned in **install_requires**,
-      but will be pinned to a specific version when building/packaging
+  - **indirect**: transitive dependency, not mentioned in **install_requires**,
+    but will be pinned to a specific version when building/packaging
 
 - abstracting away applies only to simple ``==`` pinning, and nothing else, ie:
 
-    - ``click==6.7`` will be abstracted as click
+  - ``click==6.7`` will be abstracted as click
 
-    - however ``click>=6.7`` will not be abstracted in any case
+  - however ``click>=6.7`` will not be abstracted in any case
 
 - sections of ``requirements.txt`` (or equivalent) can be marked via a comment line,
   all entries below that line (and up to next section) will have the stated category,

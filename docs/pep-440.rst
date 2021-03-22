@@ -1,0 +1,26 @@
+PEP-440 Compliance changes
+==========================
+
+``setupmeta`` v2.9.1 corrects yielded versions so they are PEP-440 compliant.
+
+This does change how yielded versions look like,
+especially if you use complex ones like ``build-id``.
+
+What remains unchanged
+======================
+
+The "main part" of your version will remain unchanged for all strategies except ``devcommit``.
+
+
+What's changed
+==============
+
+* ``devcommit``: ``.dev`` will NOT be alone anymore, but will yield a number indicating
+  the number of commits since last tag: ``.devN``).
+
+* ``build-id`` and any strategy that wants to show the "commit id":
+  the "local" part of your version will now **always** be shown
+
+* ``separator`` advanced argument is retired (you'll get a deprecation warning if you specify it)
+
+* Any separator other than ``"+"`` will generate a deprecation warning

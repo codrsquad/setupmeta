@@ -3,6 +3,29 @@ Release notes
 =============
 
 
+3.0.0 (2021-03-22)
+------------------
+
+* Yield PEP-440_ compliant versions
+
+* Versions yielded by ``setupmeta`` 3.0 will differ from pre-3.0 versions:
+
+  * Character ``"+"`` is used exclusively to demarcate the local part of the version
+
+  * Character ``"."`` is used exclusively to demarcate local segments
+    (this is not configurable yet, and won't be unless by popular request)
+
+  * The "main" part remains intact, except for ``devcommit``, furthermore only known PEP-440
+    "main version part" bits can ever be in the main part (anything that is mistakenly
+    specified to be in the main part gets automatically shifted to the local part)
+
+  * "local" part is always shown now, no need to use ``"!"`` character (now deprecated),
+    except for ``{devcommit}`` and ``{dirty}`` markers, which will not lead to a local part
+    being shown when exactly on git tag.
+
+  * See [pep-440.rst](./docs/pep-440.rst) for more details
+
+
 2.9.0 (2021-03-15)
 ------------------
 
@@ -77,9 +100,9 @@ Release notes
 
 * Further refine hooks (#56)
 
-    * Add legacy hook to ease transition in rare cases.
+  * Add legacy hook to ease transition in rare cases.
 
-    * Ensure our dist finalization runs first.
+  * Ensure our dist finalization runs first.
 
 
 2.7.11 (2020-06-30)
@@ -425,3 +448,5 @@ Release notes
 .. _spark: https://spark.apache.org/docs/latest/index.html
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
+
+.. _report: https://github.com/codrsquad/setupmeta/issues
