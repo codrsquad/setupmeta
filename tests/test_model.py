@@ -152,7 +152,7 @@ def test_meta():
     assert is_setup_py_path("/foo/setup.pyc")
 
 
-def test_dependency_link_extraction():
+def test_canonicalized_local_path():
     assert setupmeta.canonicalized_local_path(conftest.TESTS) is None  # Existing folder, but no setup.py
 
     # No such folder

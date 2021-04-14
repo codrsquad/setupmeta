@@ -8,10 +8,9 @@ click==7.1.2; python_version >= '3.6'  # We abstract the ==<version> part only (
 [:python_version < "3.7"]
 setuptools
 
-# URLs properly auto-filled as dependency_links
+# URLs passed through as-is, with `-e` stripped
 -e git://example.com/p1.git#egg=flake8
 pytest-cov @ https://example.com/a.git@u/pp
 
-# Folders taken as-is
-file:///tmp/bar1
-/tmp/bar2
+# Bogus folders not used for auto-fill
+-e /dev/null

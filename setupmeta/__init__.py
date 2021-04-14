@@ -481,7 +481,6 @@ def canonicalized_local_path(line):
     :return str: Folder references turned into canonical PEP-508 form
     """
     if line.startswith(".") or line.startswith("file://") or os.path.isabs(line):
-        trace("  found folder dependency link %s" % line)
         path = line[7:] if line.startswith("file://") else line
         setup_py = os.path.join(path, "setup.py")
         if os.path.exists(setup_py):
@@ -489,7 +488,11 @@ def canonicalized_local_path(line):
             if output and not isinstance(output, int):
                 m = RE_PKG_NAME.match(output.strip())
                 if m:
+                    trace("  found folder reference: %s" % line)
                     return "%s @ file://%s" % (m.group(1), os.path.abspath(path))
+
+        else:
+            trace("  found invalid folder reference: %s" % line)
 
         return None  # Do not auto-fill mentions of non-existing folders with a proper setup.py
 
@@ -524,7 +527,7 @@ class ReqEntry(object):
         line = line.replace("\t", " ").strip()
         self.given = line  # Given parsed line, as-is
         self.comment = None  # Extracted comment, if any
-        self.editable = False  # True if dependency link is editable
+        self.editable = False  # True if entry was marked `--editable` (or `-e` for short)
         self.requirement = None  # Associated requirement name, if any
         self.abstracted = None  # True if self.requirement was auto-abstracted
         self.refers = None  # Another requirements.txt this one refers to

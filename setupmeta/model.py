@@ -347,7 +347,6 @@ class PackageInfo:
         self.path = os.path.join(root, "PKG-INFO")
         self.info = {}
         self.name = None
-        self.dependency_links = None
         self.entry_points_txt = None
         self.requires_txt = None
         lines = readlines(self.path)
@@ -397,7 +396,6 @@ class PackageInfo:
 
         path = os.path.join(folder, "%s.egg-info" % self.pythonified_name)
         if os.path.isdir(path):
-            self.dependency_links = self.checked_file(path, "dependency_links.txt")
             self.entry_points_txt = self.checked_file(path, "entry_points.txt")
             self.requires_txt = self.checked_file(path, "requires.txt")
             return True
