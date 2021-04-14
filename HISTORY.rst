@@ -2,6 +2,16 @@
 Release notes
 =============
 
+3.1.0 (2021-04-15)
+------------------
+
+* Don't try and modify any git url from ``requirements.txt``, it is too much of a moving target
+  and the whole thing is debated: https://github.com/pypa/pip/issues/5898
+
+* Do not auto-fill any ``dependency_links`` at all
+
+* For convenience, turn references such as ``-e .../path/to/folder`` to a PEP-508_ compliant form
+
 
 3.0.0 (2021-03-22)
 ------------------
@@ -448,5 +458,7 @@ Release notes
 .. _spark: https://spark.apache.org/docs/latest/index.html
 
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/#public-version-identifiers
+
+.. _PEP-508: https://www.python.org/dev/peps/pep-0508/
 
 .. _report: https://github.com/codrsquad/setupmeta/issues
