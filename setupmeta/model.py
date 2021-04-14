@@ -546,9 +546,6 @@ class SetupMeta(Settings):
         self.requirements = Requirements(self.pkg_info)
         self.auto_fill_requires("install_requires")
         self.auto_fill_requires("tests_require")
-        if self.requirements.dependency_links:
-            self.auto_fill("dependency_links", self.requirements.dependency_links, self.requirements.links_source)
-
         self.auto_fill_entry_points()
         self.auto_fill_license()
         self.auto_fill_long_description()

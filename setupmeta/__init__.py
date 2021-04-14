@@ -39,8 +39,6 @@ WINDOWS = PLATFORM.startswith("win")
 PKGID = "[A-Za-z0-9][-A-Za-z0-9_.]*"
 
 # Simplistic parsing of known formats used in requirements.txt
-RE_DEPENDENCY_AT = re.compile(r"\s*(%s)\s*@\s*(.+)" % PKGID)
-RE_DEPENDENCY_EGG = re.compile(r".+#egg=(%s).*" % PKGID)
 RE_SIMPLE_PIN = re.compile(r"^(%s)\s*==\s*([^;\s]+)\s*(;.*)?$" % PKGID)
 RE_WORDS = re.compile(r"[^\w]+")
 RE_PKG_NAME = re.compile(r"^(%s)$" % PKGID)
@@ -477,63 +475,25 @@ def requirements_from_file(path):
         return r.filled_requirements
 
 
-def corrected_editable(link, editable):
-    # Couldn't find a reference explaining why a git:// uri ends up being git+git:// when -e is used
-    if editable and "git" in link and not link.startswith("git+"):
-        trace("  added git+ prefix to %s" % link)
-        link = "git+%s" % link
-
-    return link
-
-
-def extract_project_name_from_folder(path):
-    if path:
+def canonicalized_local_path(line):
+    """
+    :param str line: Line from requirements.txt
+    :return str: Folder references turned into canonical PEP-508 form
+    """
+    if line.startswith(".") or line.startswith("file://") or os.path.isabs(line):
+        trace("  found folder dependency link %s" % line)
+        path = line[7:] if line.startswith("file://") else line
         setup_py = os.path.join(path, "setup.py")
         if os.path.exists(setup_py):
             output = run_program(sys.executable, setup_py, "--name", capture=True)
             if output and not isinstance(output, int):
                 m = RE_PKG_NAME.match(output.strip())
                 if m:
-                    return m.group(1)
+                    return "%s @ file://%s" % (m.group(1), os.path.abspath(path))
 
+        return None  # Do not auto-fill mentions of non-existing folders with a proper setup.py
 
-def extracted_dependency_link(line, editable):
-    """
-    :param str line: Line to parse
-    :param bool editable: True if link was marked as --editable
-    :return (str, str): Extracted dependency link and name
-    """
-    if line.startswith("."):
-        # Ignore local paths
-        return None, None
-
-    if line.startswith("file:"):
-        trace("  found explicit file dependency link %s" % line)
-        if line.startswith("file://"):
-            return line, extract_project_name_from_folder(line[7:].strip())
-
-        return line, None
-
-    m = RE_DEPENDENCY_EGG.match(line)
-    if m:
-        link = corrected_editable(line, editable)
-        name = m.group(1)
-        trace("  found egg dependency link %s %s" % (name, link))
-        return link, name
-
-    m = RE_DEPENDENCY_AT.match(line)
-    if m:
-        link = corrected_editable(m.group(2), editable)
-        name = m.group(1)
-        trace("  found @ dependency link %s %s" % (name, link))
-        return link, name
-
-    if os.path.isabs(line):
-        trace("  found folder dependency link %s" % line)
-        name = extract_project_name_from_folder(line.strip())
-        return "file://%s" % line, name
-
-    return None, line
+    return line  # Leave any other req as-is, up to the user to respect PEP-508
 
 
 def first_word(text):
@@ -564,7 +524,6 @@ class ReqEntry(object):
         line = line.replace("\t", " ").strip()
         self.given = line  # Given parsed line, as-is
         self.comment = None  # Extracted comment, if any
-        self.dependency_link = None  # Extracted dependency link, if any
         self.editable = False  # True if dependency link is editable
         self.requirement = None  # Associated requirement name, if any
         self.abstracted = None  # True if self.requirement was auto-abstracted
@@ -604,11 +563,11 @@ class ReqEntry(object):
             # Ignore anything that doesn't look like a valid req
             return
 
-        self.dependency_link, self.requirement = extracted_dependency_link(line, self.editable)
-        if not self.dependency_link and not self.requirement:
+        self.requirement = canonicalized_local_path(line)
+        if not self.requirement:
             self.comment = None  # Ensure potential comment on the line doesn't count as section
 
-        if self.parent.do_abstract and not self.dependency_link and self.requirement and self.section != INDIRECT:
+        if self.parent.do_abstract and self.requirement and self.section != INDIRECT:
             # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
             self.abstracted = False
             if self.section != PINNED:
@@ -629,9 +588,6 @@ class ReqEntry(object):
         if self.refers:
             result.append("-r %s" % (self.source or self.refers))
 
-        if self.dependency_link:
-            result.append("%s#egg=%s" % (self.dependency_link, self.requirement))
-
         elif self.requirement:
             result.append(self.requirement)
 
@@ -640,7 +596,7 @@ class ReqEntry(object):
 
     @property
     def is_empty(self):
-        return not self.dependency_link and not self.requirement and not self.refers
+        return not self.requirement and not self.refers
 
     @property
     def section(self):
@@ -701,11 +657,9 @@ def iterate_req_txt(seen, parent, source_path, lines):
                 for r in iterate_req_txt(seen, parent, req_entry.refers, readlines(req_entry.refers)):
                     yield r
 
-            else:
-                key = "%s %s" % (req_entry.requirement, req_entry.dependency_link)
-                if key not in seen:
-                    seen.add(key)
-                    yield req_entry
+            elif req_entry.requirement not in seen:
+                seen.add(req_entry.requirement)
+                yield req_entry
 
 
 class RequirementsFile:
@@ -714,7 +668,6 @@ class RequirementsFile:
     def __init__(self, do_abstract=True):
         self.do_abstract = do_abstract
         self.reqs = None
-        self.dependency_links = None
         self.abstracted = None
         self.filled_requirements = None
         self.ignored = None
@@ -736,7 +689,6 @@ class RequirementsFile:
             self.reqs.append(r)
 
     def finalize(self):
-        self.dependency_links = [r.dependency_link for r in self.reqs if r.dependency_link and not r.is_ignored]
         self.filled_requirements = non_repeat([r.requirement for r in self.reqs if r.requirement and not r.is_ignored])
         self.abstracted = [r for r in self.reqs if r.abstracted is True]
         self.ignored = [r for r in self.reqs if r.requirement and r.is_ignored]
@@ -747,16 +699,15 @@ class RequirementsFile:
                 break
 
     @classmethod
-    def from_file(cls, *paths, **kwargs):
+    def from_file(cls, path, do_abstract=True):
         """
-        :param str paths: Path to requirements.txt file(s) to read
+        :param str path: Path to requirements.txt file to read
         :param bool do_abstract: If True, automatically abstract reqs of the form <name>==<version>
         :return RequirementsFile|None: Associated object, if possible
         """
-        req = cls(do_abstract=kwargs.pop("do_abstract", True))  # `kwargs` needed because of py2
-        for path in paths:
-            if path:
-                req.scan(readlines(path), source_path=os.path.abspath(path))
+        req = cls(do_abstract=do_abstract)
+        if path:
+            req.scan(readlines(path), source_path=os.path.abspath(path))
 
         if req.reqs is not None:
             req.finalize()
@@ -782,46 +733,30 @@ class Requirements:
         """
         :param setupmeta.model.PackageInfo pkg_info: PKG-INFO, when available
         """
-        self.has_abstractions = False
-        if pkg_info and (pkg_info.requires_txt or pkg_info.dependency_links):
-            self.install_requires = RequirementsFile.from_file(pkg_info.requires_txt, pkg_info.dependency_links, do_abstract=False)
+        if pkg_info and pkg_info.requires_txt:
+            self.install_requires = RequirementsFile.from_file(pkg_info.requires_txt, do_abstract=False)
             self.tests_require = None
+            return
 
-        else:
-            self.install_requires = find_requirements(
-                True,
-                "requirements.in",  # .in files are preferred when present
-                "requirements.txt",
-                "pinned.txt",
-            )
-            self.tests_require = find_requirements(
-                False,
-                "tests/requirements.in",  # .in files are preferred when present
-                "test-requirements.in",
-                "requirements-test.in",
-                "dev-requirements.in",
-                "requirements-dev.in",
-                "tests/requirements.txt",  # Use the usual .txt when no .in files found
-                "test-requirements.txt",
-                "requirements-test.txt",
-                "dev-requirements.txt",
-                "requirements-dev.txt",
-            )
-            if self.install_requires and self.install_requires.reqs:
-                self.has_abstractions = any(not r.dependency_link for r in self.install_requires.reqs)
-
-    @property
-    def dependency_links(self):
-        if self.install_requires:
-            return self.install_requires.dependency_links
-
-    @property
-    def links_source(self):
-        """str: First requirement source with a dependency link"""
-        if self.install_requires:
-            for req in self.install_requires.reqs:
-                if req.dependency_link:
-                    return req.source
+        self.install_requires = find_requirements(
+            True,
+            "requirements.in",  # .in files are preferred when present
+            "requirements.txt",
+            "pinned.txt",
+        )
+        self.tests_require = find_requirements(
+            False,
+            "tests/requirements.in",  # .in files are preferred when present
+            "test-requirements.in",
+            "requirements-test.in",
+            "dev-requirements.in",
+            "requirements-dev.in",
+            "tests/requirements.txt",  # Use the usual .txt when no .in files found
+            "test-requirements.txt",
+            "requirements-test.txt",
+            "dev-requirements.txt",
+            "requirements-dev.txt",
+        )
 
 
 class current_folder:
