@@ -3,5 +3,5 @@ pytest-cov
 # This req will not get abstracted, as we abstract 'install_requires' only
 pytest==3.7.4 # abstract, this req will not get abstracted, as we abstract 'install_requires' only
 
-# This dep link won't make it do dependency_links (because tests_require), only the package name will make it there
+# Will be auto-filled as-is, except for the `-e` part
 -e https://example.com/d.git#egg=flake8

@@ -186,6 +186,20 @@ def should_ignore_output(line):
         return True
 
 
+def simplified_temp_path(line, *paths):
+    if line:
+        for path in paths:
+            if path:
+                p = os.path.realpath(path)
+                if p in line:
+                    return line.replace(p, "<target>")
+
+                if path in line:
+                    return line.replace(path, "<target>")
+
+    return line
+
+
 def cleaned_output(text, folder=None):
     text = decode(text)
     if not text:
@@ -202,11 +216,8 @@ def cleaned_output(text, folder=None):
             if " \\_: " not in line:
                 line = line.replace("\\", "/")
 
-        if folder:
-            line = line.replace(folder, "<target>")
-
-        line = line.replace(cwd, "<target>")
-        # Ingore minor change in how missing meta-data warning is phrased...
+        line = simplified_temp_path(line, folder, cwd)
+        # Ignore minor change in how missing meta-data warning is phrased...
         line = line.replace(" must be supplied", " should be supplied")
         result.append(line)
 

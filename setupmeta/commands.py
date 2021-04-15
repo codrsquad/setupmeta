@@ -74,20 +74,14 @@ class CheckCommand(check_cmd):
 
     def _show_requirements_synopsis(self):
         """Show how many requirements were auto-abstracted or ignored, if any"""
-        reqs = self.setupmeta.requirements
-        if reqs and reqs.has_abstractions:
-            reqs = reqs.install_requires
-            if reqs.filled_requirements and (reqs.abstracted or reqs.ignored or reqs.dependency_links):
-                message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
-                    len(reqs.abstracted),
-                    len(reqs.ignored),
-                    len(reqs.untouched),
-                )
-
-                if reqs.dependency_links:
-                    message += ", %s dependency links" % len(reqs.dependency_links)
-
-                print(message)
+        reqs = self.setupmeta.requirements and self.setupmeta.requirements.install_requires
+        if reqs and reqs.filled_requirements and (reqs.abstracted or reqs.ignored):
+            message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
+                len(reqs.abstracted),
+                len(reqs.ignored),
+                len(reqs.untouched),
+            )
+            print(message)
 
     def _show_git_status(self):
         if self.setupmeta.versioning:

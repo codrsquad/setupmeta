@@ -67,19 +67,20 @@ def test_requirements():
 
     sample = conftest.resouce("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
-    assert len(f.reqs) == 8
+    assert len(f.reqs) == 6
     assert str(f.reqs[0]) == "wheel from tests/scenarios/disabled/requirements.txt:2, abstracted by default"
-    assert str(f.reqs[4]) == "-e git+git://example.com/p1.git#egg=flake8#egg=flake8 from tests/scenarios/disabled/requirements.txt:12"
-    assert f.filled_requirements == ["wheel", "click; python_version >= '3.6'", "setuptools", "flake8", "pytest-cov"]
-    assert f.dependency_links == [
-        "git+git://example.com/p1.git#egg=flake8",
-        "https://example.com/a.git@u/pp",
-        "file:///tmp/bar1",
-        "file:///tmp/bar2",
+    assert str(f.reqs[4]) == "-e git://example.com/p1.git#egg=flake8 from tests/scenarios/disabled/requirements.txt:12"
+    assert f.filled_requirements == [
+        "wheel",
+        "click; python_version >= '3.6'",
+        "setuptools",
+        "git://example.com/p1.git#egg=flake8",
+        "pytest-cov @ https://example.com/a.git@u/pp",
     ]
+
     assert len(f.abstracted) == 2
     assert len(f.ignored) == 1
-    assert len(f.untouched) == 1
+    assert len(f.untouched) == 3
 
     sample = conftest.resouce("scenarios/complex-reqs/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
@@ -94,7 +95,6 @@ def test_requirements():
     f.finalize()
     assert len(f.reqs) == 2
     assert f.filled_requirements == ["a", "b; python_version >= '3.6'"]
-    assert not f.dependency_links
     assert len(f.abstracted) == 1
     assert len(f.ignored) == 0
     assert len(f.untouched) == 1
@@ -107,7 +107,6 @@ def test_requirements():
     f.finalize()
     assert f.reqs == []
     assert f.filled_requirements == []
-    assert f.dependency_links == []
     assert f.abstracted == []
 
 
@@ -153,18 +152,13 @@ def test_meta():
     assert is_setup_py_path("/foo/setup.pyc")
 
 
-def test_dependency_link_extraction():
-    assert setupmeta.extract_project_name_from_folder(conftest.TESTS) is None  # Existing folder, but no setup.py
+def test_standard_req():
+    assert setupmeta.standard_req("foo-bar") == "foo-bar"
+    assert setupmeta.standard_req("foo==1.0") == "foo==1.0"
 
-    # No such folder
-    assert setupmeta.extracted_dependency_link("/dev/null/foo", True) == ("file:///dev/null/foo", None)
-    assert setupmeta.extracted_dependency_link("file:///dev/null/foo", False) == ("file:///dev/null/foo", None)
-
-    # setup.py exists
-    full_uri = "file://%s" % conftest.PROJECT_DIR
-    assert setupmeta.extracted_dependency_link(conftest.PROJECT_DIR, False) == (full_uri, "setupmeta")
-    assert setupmeta.extracted_dependency_link(full_uri, True) == (full_uri, "setupmeta")
-
-    # Try and determine name from 'file://' uri only
-    incomplete_uri = "file:%s" % conftest.PROJECT_DIR
-    assert setupmeta.extracted_dependency_link(incomplete_uri, True) == (incomplete_uri, None)
+    assert setupmeta.standard_req("file://foo") is None
+    assert setupmeta.standard_req("/dev/null") is None
+    assert setupmeta.standard_req("42-foo") is None
+    assert setupmeta.standard_req(".foo") is None
+    assert setupmeta.standard_req(".") is None
+    assert setupmeta.standard_req("") is None

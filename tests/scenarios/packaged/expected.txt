@@ -2,7 +2,6 @@
                        author: (PKG-INFO                                ) Someone
                  author_email: (PKG-INFO                                ) someone@example.com
                   classifiers: (PKG-INFO                                ) ["Intended Audience :: Developers", "Programming Language :: Python"]
-             dependency_links: (src/pre_packaged.egg-info/dependency_links.txt) ["git+https://example.com/p1.git#egg=flake8"]
                   description: (PKG-INFO                                ) Project description
                  download_url: (PKG-INFO                                ) http://example.com/pre-packaged/releases/download/v1.7.1/pickley
                  entry_points: (src/pre_packaged.egg-info/entry_points.txt) [console_scripts] pre-packaged-test = pre_packaged:main
@@ -39,7 +38,6 @@ setup(
     author="Someone",                                                # from PKG-INFO
     author_email="someone@example.com",                              # from PKG-INFO
     classifiers=["Intended Audience :: Developers", "Programming Language :: Python"], # from PKG-INFO
-    dependency_links=["git+https://example.com/p1.git#egg=flake8"],  # from src/pre_packaged.egg-info/dependency_links.txt
     description="Project description",                               # from PKG-INFO
     download_url="http://example.com/pre-packaged/releases/download/v1.7.1/pickley", # from PKG-INFO
     entry_points="""[console_scripts]
