@@ -10,8 +10,6 @@ Release notes
 
 * Do not auto-fill any ``dependency_links`` at all
 
-* For convenience, turn references such as ``-e .../path/to/folder`` to a PEP-508_ compliant form
-
 
 3.0.0 (2021-03-22)
 ------------------

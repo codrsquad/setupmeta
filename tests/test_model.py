@@ -152,14 +152,13 @@ def test_meta():
     assert is_setup_py_path("/foo/setup.pyc")
 
 
-def test_canonicalized_local_path():
-    assert setupmeta.canonicalized_local_path(conftest.TESTS) is None  # Existing folder, but no setup.py
+def test_standard_req():
+    assert setupmeta.standard_req("foo-bar") == "foo-bar"
+    assert setupmeta.standard_req("foo==1.0") == "foo==1.0"
 
-    # No such folder
-    assert setupmeta.canonicalized_local_path("/dev/null/foo") is None
-    assert setupmeta.canonicalized_local_path("file:///dev/null/foo") is None
-
-    # setup.py exists
-    full_uri = "setupmeta @ file://%s" % conftest.PROJECT_DIR
-    assert setupmeta.canonicalized_local_path(conftest.PROJECT_DIR) == full_uri
-    assert setupmeta.canonicalized_local_path(full_uri) == full_uri
+    assert setupmeta.standard_req("file://foo") is None
+    assert setupmeta.standard_req("/dev/null") is None
+    assert setupmeta.standard_req("42-foo") is None
+    assert setupmeta.standard_req(".foo") is None
+    assert setupmeta.standard_req(".") is None
+    assert setupmeta.standard_req("") is None

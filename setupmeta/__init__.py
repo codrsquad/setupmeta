@@ -475,30 +475,6 @@ def requirements_from_file(path):
         return r.filled_requirements
 
 
-def canonicalized_local_path(line):
-    """
-    :param str line: Line from requirements.txt
-    :return str: Folder references turned into canonical PEP-508 form
-    """
-    if line.startswith(".") or line.startswith("file://") or os.path.isabs(line):
-        path = line[7:] if line.startswith("file://") else line
-        setup_py = os.path.join(path, "setup.py")
-        if os.path.exists(setup_py):
-            output = run_program(sys.executable, setup_py, "--name", capture=True)
-            if output and not isinstance(output, int):
-                m = RE_PKG_NAME.match(output.strip())
-                if m:
-                    trace("  found folder reference: %s" % line)
-                    return "%s @ file://%s" % (m.group(1), os.path.abspath(path))
-
-        else:
-            trace("  found invalid folder reference: %s" % line)
-
-        return None  # Do not auto-fill mentions of non-existing folders with a proper setup.py
-
-    return line  # Leave any other req as-is, up to the user to respect PEP-508
-
-
 def first_word(text):
     """
     :param str|None text: Text to extract first word from
@@ -507,6 +483,15 @@ def first_word(text):
     words = get_words(text)
     if words:
         return words[0].lower()
+
+
+def standard_req(line):
+    """
+    :param str line: Line from requirements.txt to inspect
+    :return str: Req that should be auto-filled (if usable)
+    """
+    if line and line[0].isalpha() and not line.startswith("file:") and not os.path.isabs(line):
+        return line
 
 
 class ReqEntry(object):
@@ -562,15 +547,12 @@ class ReqEntry(object):
 
             return
 
-        if not line or (line[0] not in "_./\\" and not line[0].isalnum()):
-            # Ignore anything that doesn't look like a valid req
-            return
-
-        self.requirement = canonicalized_local_path(line)
+        self.requirement = standard_req(line)
         if not self.requirement:
             self.comment = None  # Ensure potential comment on the line doesn't count as section
+            return
 
-        if self.parent.do_abstract and self.requirement and self.section != INDIRECT:
+        if self.parent.do_abstract and self.section != INDIRECT:
             # Abstract only very specific and simple name==version reqs, that are not in an explicitly 'pinned' section
             self.abstracted = False
             if self.section != PINNED:
