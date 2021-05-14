@@ -699,12 +699,13 @@ class RequirementsFile:
             return req
 
 
-def find_requirements(do_abstract, *relative_paths):
+def find_requirements(*relative_paths):
     """ Read old-school requirements.txt type file """
     for path in relative_paths:
         if path:
             path = project_path(path)
             if os.path.isfile(path):
+                do_abstract = not path.endswith(".in")
                 trace("found requirements: %s %s" % (path, " (auto-abstracted)" if do_abstract else ""))
                 r = RequirementsFile.from_file(path, do_abstract=do_abstract)
                 if r is not None:
@@ -724,19 +725,19 @@ class Requirements:
             return
 
         self.install_requires = find_requirements(
-            True,
             "requirements.in",  # .in files are preferred when present
             "requirements.txt",
-            "pinned.txt",
+            "pinned.txt",  # To be phased out as well
         )
+        # Note: to be confirmed, but I believe `tests_require` is a dead thing now, setuptools gave up on it
+        # Setupmeta should stop bothering with `tests_require` in the near future
         self.tests_require = find_requirements(
-            False,
-            "tests/requirements.in",  # .in files are preferred when present
+            "tests/requirements.in",
             "test-requirements.in",
             "requirements-test.in",
             "dev-requirements.in",
             "requirements-dev.in",
-            "tests/requirements.txt",  # Use the usual .txt when no .in files found
+            "tests/requirements.txt",
             "test-requirements.txt",
             "requirements-test.txt",
             "dev-requirements.txt",

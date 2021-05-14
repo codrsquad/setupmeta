@@ -2,6 +2,15 @@
 Release notes
 =============
 
+3.2.0 (2021-05-17)
+------------------
+
+* Do not abstract ``requirements.in`` files any more, use them as-is (since they're intended to
+  be a spec for pip-compile_)
+
+* Next minor version of setupmeta will not auto-fill ``tests_require`` any more.
+
+
 3.1.0 (2021-04-15)
 ------------------
 
@@ -460,3 +469,5 @@ Release notes
 .. _PEP-508: https://www.python.org/dev/peps/pep-0508/
 
 .. _report: https://github.com/codrsquad/setupmeta/issues
+
+.. _pip-compile: https://pypi.org/project/pip-tools/

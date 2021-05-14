@@ -1,3 +1,3 @@
-# Project with a complex requirements.txt file
+# Project with complex requirements files
 
-This scenario tests parsing of a complex requirements.txt file (and all other info missing, including version)
+This scenario tests parsing of a complex requirements.in file (and all other info missing, including version)
