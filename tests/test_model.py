@@ -82,7 +82,7 @@ def test_requirements():
     assert len(f.ignored) == 1
     assert len(f.untouched) == 3
 
-    sample = conftest.resouce("scenarios/complex-reqs/requirements.txt")
+    sample = conftest.resouce("scenarios/complex-reqs/requirements.in")
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 5
 

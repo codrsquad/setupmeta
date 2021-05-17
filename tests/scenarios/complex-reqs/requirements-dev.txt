@@ -1,7 +1,7 @@
 pytest-cov
 
-# This req will not get abstracted, as we abstract 'install_requires' only
-pytest==3.7.4 # abstract, this req will not get abstracted, as we abstract 'install_requires' only
+# Gets abstracted by default
+pytest==3.7.4
 
 # Will be auto-filled as-is, except for the `-e` part
 -e https://example.com/d.git#egg=flake8

@@ -1,8 +1,7 @@
 Auto-fill for dependency requirements
 =====================================
 
-This only applies if you let setupmeta auto-fill your **install_requires**
-and/or **tests_require** section.
+This only applies if you let setupmeta auto-fill your **install_requires**.
 If you specify that section explicitly as in::
 
     setup(
@@ -34,19 +33,20 @@ Setupmeta auto-fills dependency/requirements from the contents of the following 
 
 - **install_requires** from:
 
+  - ``requirements.in`` (if present, ``.in`` files are NOT abstracted, used as-is)
+
   - ``requirements.txt`` (recommended)
 
-  - ``pinned.txt``
+  - ``pinned.txt`` (deprecated... some old projects used that convention for some reason, will be removed)
 
-- **tests_require** from:
 
-  - ``tests/requirements.txt`` (recommended)
-  - ``requirements-dev.txt``
-  - ``dev-requirements.txt``
-  - ``test-requirements.txt``
+Note: **tests_require** was auto-filled up to setupmeta 3.2.0, but setuptools seems to have
+abandoned that idea, the `setuptools documentation`_ doesn't even mention that field any more.
+A future version of setupmeta will stop auto-filling this useless field.
 
-Your requirement file is parsed and used to auto-fill the **install_requires**
-or **tests_require** section:
+Your requirement file is parsed and used to auto-fill the **install_requires**:
+
+- ``.in`` files are used as-is, not abstracted by default
 
 - comments are stripped, but used as hints as to how to auto-fill
 
@@ -121,3 +121,5 @@ In the above example, we have:
 .. _not repeat yourself: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
 .. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
+
+.. _setuptools documentation: https://setuptools.readthedocs.io/en/latest/setuptools.html
