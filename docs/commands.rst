@@ -30,7 +30,6 @@ For example, this is what setupmeta says about itself (it's self-using)::
                              name: (setup.py:16            ) setupmeta
                          packages: (auto-fill              ) ["setupmeta"]
                    setup_requires: (explicit               ) ["setupmeta"]
-                    tests_require: (tests/requirements.txt ) ["mock", "pytest-cov"]
                            title*: (setup.py:16            ) setupmeta
                               url: (setupmeta/__init__.py:4) https://github.com/codrsquad/setupmeta
                           version: (git                    ) 2.1.1
@@ -62,8 +61,6 @@ In the above output:
 
 * ``name`` came from line 16 of setup.py, note that ``title`` also came from that line -
   this simply means the constant ``__title__`` was used as ``name``
-
-* ``tests_require`` was deduced from ``tests/requirements.txt``
 
 * Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta sees
   the value and can use it, but doesn't transfer it to setuptools

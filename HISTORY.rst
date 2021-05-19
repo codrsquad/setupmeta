@@ -2,6 +2,13 @@
 Release notes
 =============
 
+3.3.0 (2021-05-24)
+------------------
+
+* Do not auto-fill ``tests_require`` any more, it is deprecated,
+  see https://setuptools.readthedocs.io/en/latest/userguide/dependency_management.html#optional-dependencies
+
+
 3.2.0 (2021-05-17)
 ------------------
 

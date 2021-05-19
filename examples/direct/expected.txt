@@ -24,7 +24,6 @@ long_description_content_type: (README.rst           ) text/x-rst
     install_requires=[
         "click>=6.7",  # from requirements.txt:1
     ],
-    tests_require=None,   # no auto-fill
 
 :: explain --expand
 """

@@ -17,3 +17,5 @@ i==1 # pinned (explicitly pinned in an abstract section)
 # indirect
 j==1
 k>=1
+
+-r tests/extra-reqs.txt  # No-op, extra-reqs.txt brings nothing new

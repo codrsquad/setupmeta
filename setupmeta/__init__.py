@@ -721,27 +721,12 @@ class Requirements:
         """
         if pkg_info and pkg_info.requires_txt:
             self.install_requires = RequirementsFile.from_file(pkg_info.requires_txt, do_abstract=False)
-            self.tests_require = None
             return
 
         self.install_requires = find_requirements(
             "requirements.in",  # .in files are preferred when present
             "requirements.txt",
             "pinned.txt",  # To be phased out as well
-        )
-        # Note: to be confirmed, but I believe `tests_require` is a dead thing now, setuptools gave up on it
-        # Setupmeta should stop bothering with `tests_require` in the near future
-        self.tests_require = find_requirements(
-            "tests/requirements.in",
-            "test-requirements.in",
-            "requirements-test.in",
-            "dev-requirements.in",
-            "requirements-dev.in",
-            "tests/requirements.txt",
-            "test-requirements.txt",
-            "requirements-test.txt",
-            "dev-requirements.txt",
-            "requirements-dev.txt",
         )
 
 

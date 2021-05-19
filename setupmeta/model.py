@@ -428,7 +428,7 @@ class SetupMeta(Settings):
     def preprocess(self, upstream):
         self.find_project_dir(MetaDefs.dist_to_dict(upstream).pop("_setup_py_path", None))
 
-        for require_field in ("install_requires", "tests_require"):
+        for require_field in ("install_requires",):
             value = getattr(upstream, require_field)
             if isinstance(value, basestring) and value.startswith("@"):
                 self.add_definition(require_field, value, EXPLICIT)
@@ -543,7 +543,6 @@ class SetupMeta(Settings):
 
         self.requirements = Requirements(self.pkg_info)
         self.auto_fill_requires("install_requires")
-        self.auto_fill_requires("tests_require")
         self.auto_fill_entry_points()
         self.auto_fill_license()
         self.auto_fill_long_description()
