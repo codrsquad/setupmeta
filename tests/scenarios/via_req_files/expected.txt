@@ -11,8 +11,6 @@
 long_description_content_type: (README.md       ) text/markdown
                          name: (explicit        ) via_req_files
                setup_requires: (explicit        ) ["setupmeta"]
-                tests_require: (requirements.txt) ["a", "b", "c"]
-                           \_: (explicit        ) @requirements.txt
                           url: (missing         ) - Consider specifying 'url'
                       version: (missing         ) - Consider specifying 'version', you can use setupmeta's versioning='...'
 
@@ -23,7 +21,6 @@ long_description_content_type: (README.md       ) text/markdown
         "b",  # from requirements.txt:2
         "c",  # from requirements.txt:3
     ],
-    tests_require=None,   # no auto-fill
 
 :: explain --expand
 """
@@ -37,7 +34,6 @@ setup(
     long_description=open("README.md").read(),                       # from README.md
     long_description_content_type="text/markdown",                   # from README.md
     name="via_req_files",
-    tests_require=["a", "b", "c"],                                   # from requirements.txt
 )
 
 :: check

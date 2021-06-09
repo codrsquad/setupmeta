@@ -14,7 +14,6 @@ long_description: (missing  ) - Consider specifying 'long_description', add a RE
 :: explain -d
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=None,   # no auto-fill
-    tests_require=None,   # no auto-fill
 
 :: explain --expand
 """

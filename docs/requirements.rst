@@ -25,6 +25,9 @@ if the following applies to you:
 
   - you may want to pin to specific versions when building/packaging (in ``requirements.txt``)
 
+Note: **tests_require** was auto-filled up to setupmeta 3.2.0, it has been deprecated in
+setuptools 41.5.0 (Oct 2019). As of setupmeta 3.3.0, that field is not auto-filled anymore.
+
 
 How it works
 ============
@@ -39,10 +42,6 @@ Setupmeta auto-fills dependency/requirements from the contents of the following 
 
   - ``pinned.txt`` (deprecated... some old projects used that convention for some reason, will be removed)
 
-
-Note: **tests_require** was auto-filled up to setupmeta 3.2.0, but setuptools seems to have
-abandoned that idea, the `setuptools documentation`_ doesn't even mention that field any more.
-A future version of setupmeta will stop auto-filling this useless field.
 
 Your requirement file is parsed and used to auto-fill the **install_requires**:
 

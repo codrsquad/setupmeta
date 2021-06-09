@@ -27,7 +27,6 @@ long_description_content_type: (README.rst                     ) text/x-rst
         "click>=6.7",  # from requirements.txt:1
         "pytest-cov",  # from requirements.txt:2
     ],
-    tests_require=None,   # no auto-fill
 
 :: explain --expand
 """

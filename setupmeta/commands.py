@@ -184,16 +184,13 @@ class ExplainCommand(setuptools.Command):
         print("    %s=%s" % (setup_key, content))
 
     def show_dependencies(self):
-        """Copy-pastable code snippet with install_requires/tests_require"""
+        """Copy-pastable code snippet with install_requires"""
         print("    # This reflects only auto-fill, doesn't look at explicit settings from your setup.py")
         install_requires = None
-        tests_require = None
         if self.setupmeta.requirements:
             install_requires = self.setupmeta.requirements.install_requires
-            tests_require = self.setupmeta.requirements.tests_require
 
         self.show_requirements("install_requires", install_requires)
-        self.show_requirements("tests_require", tests_require)
 
     def show_expanded_python(self):
         """Copy-pastable setup.py, if one wants to get rid of setupmeta"""
@@ -586,7 +583,6 @@ class DepTree:
         self.packages = dict((d.key, PipPackage(self, d)) for d in ws)
         self.setup = definitions.get("setup_requires")
         self.install_requires = definitions.get("install_requires")
-        self.tests_require = definitions.get("tests_require")
         self.extras_require = definitions.get("extras_require")
         self.conflicts = set()
         self.cycles = {}
@@ -651,9 +647,6 @@ class DepTree:
 
         if self.install_requires:
             self.render_section(result, seen, "install_requires", self.install_requires.value)
-
-        if self.tests_require:
-            self.render_section(result, seen, "tests_require", self.tests_require.value)
 
         if self.extras_require and self.extras_require.value:
             for name, value in self.extras_require.value.items():

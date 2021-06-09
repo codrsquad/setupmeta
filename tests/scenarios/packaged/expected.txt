@@ -26,7 +26,6 @@ long_description_content_type: (PKG-INFO                                ) text/m
         "pytest-cov",        # from src/pre_packaged.egg-info/requires.txt:2
         "flake8",            # from src/pre_packaged.egg-info/requires.txt:3
     ],
-    tests_require=None,   # no auto-fill
 
 :: explain --expand
 """

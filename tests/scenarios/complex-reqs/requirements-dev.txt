@@ -1,7 +1,0 @@
-pytest-cov
-
-# Gets abstracted by default
-pytest==3.7.4
-
-# Will be auto-filled as-is, except for the `-e` part
--e https://example.com/d.git#egg=flake8

@@ -118,7 +118,6 @@ def test_empty():
             assert not meta.name
             assert isinstance(meta.requirements, setupmeta.Requirements)
             assert not meta.requirements.install_requires
-            assert not meta.requirements.tests_require
             assert not meta.version
             assert not meta.versioning.enabled
             assert meta.versioning.problem == "setupmeta versioning not enabled"
