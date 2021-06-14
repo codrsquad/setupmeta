@@ -2,7 +2,7 @@
 Release notes
 =============
 
-3.3.0 (2021-05-24)
+3.3.0 (2021-06-14)
 ------------------
 
 * Do not auto-fill ``tests_require`` any more, it is deprecated,
