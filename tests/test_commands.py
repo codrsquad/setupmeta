@@ -15,11 +15,9 @@ def run_setup_py(args, expected, folder=None):
     output = conftest.run_setup_py(folder or os.getcwd(), *args)
     for line in expected:
         line = line.strip()
-        if not line:
-            continue
-
-        m = re.search(line, output)
-        assert m, "'%s' not present in output of '%s': %s" % (line, " ".join(args), output)
+        if line:
+            m = re.search(line, output)
+            assert m, "'%s' not present in output of '%s': %s" % (line, " ".join(args), output)
 
 
 def test_check(sample_project):
@@ -81,16 +79,19 @@ class FakeDist:
     def requires(self):
         return self._requires
 
-    @classmethod
-    def from_string(self, specs):
+    @staticmethod
+    def from_string(specs):
         result = []
         for spec in specs.split():
             name, _, req = spec.partition(":")
             if req:
                 req = [setupmeta.pkg_req(r) for r in req.split("+")]
+
             else:
                 req = []
+
             result.append(FakeDist(name, req))
+
         return result
 
 
@@ -239,21 +240,21 @@ def touch(folder, isdir, *paths):
     for path in paths:
         full_path = os.path.join(folder, path)
         if isdir:
-            os.mkdir(full_path)
+            os.makedirs(full_path)
+
         else:
             with open(full_path, "w") as fh:
                 fh.write("from setuptools import setup\nsetup(setup_requires='setupmeta')\n")
 
 
 def test_clean(sample_project):
-    touch(sample_project, True, ".idea", "build", "dd", "dd/__pycache__", "foo.egg-info")
-    touch(sample_project, False, "foo", "a.pyc", ".pyo", "bar.pyc", "setup.py", "dd/__pycache__/a.pyc")
+    touch(sample_project, True, ".idea", "build", "foo.egg-info", "subfolder/foo/__pycache__")
+    touch(sample_project, False, "subfolder/foo/__pycache__/foo.pyc", "a.pyc", ".pyo", "bar.pyc", "setup.py")
     run_setup_py(
         ["cleanall"],
         """
         deleted build
         deleted foo.egg-info
-        deleted dd.__pycache__
         deleted 2 .pyc files, 1 .pyo files
         """,
     )
