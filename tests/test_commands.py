@@ -1,7 +1,7 @@
 import os
 import re
+from unittest.mock import patch
 
-from mock import patch
 from six import StringIO
 
 import setupmeta
@@ -43,7 +43,7 @@ def test_check_dependencies():
         run_setup_py(
             ["check", "--deptree"],
             """
-                mock==.+
+                pep440==.+
                 pytest-cov==.+
             """,
             folder=conftest.PROJECT_DIR,

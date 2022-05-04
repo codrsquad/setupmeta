@@ -1,7 +1,6 @@
 import os
 import sys
-
-from mock import patch
+from unittest.mock import patch
 
 import setupmeta
 from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path

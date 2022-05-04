@@ -1,9 +1,9 @@
 import os
 import sys
+from unittest.mock import patch
 
 import pep440
 import pytest
-from mock import patch
 
 import setupmeta
 import setupmeta.versioning
