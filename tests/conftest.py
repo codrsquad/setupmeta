@@ -10,13 +10,13 @@ from setupmeta import decode
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
 
-try:
-    from unittest import mock
-    from io import StringIO
+try:  # py2
+    import mock
+    from six import StringIO
 
 except ImportError:
-    import mock  # noqa
-    from StringIO import StringIO
+    from unittest import mock  # noqa
+    from io import StringIO
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
