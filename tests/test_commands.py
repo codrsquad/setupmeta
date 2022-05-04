@@ -1,8 +1,6 @@
 import os
 import re
 
-from io import StringIO
-
 import setupmeta
 from setupmeta.commands import _show_dependencies, DepTree, find_venv
 
@@ -231,7 +229,7 @@ def test_version(sample_project):
 
 
 @patch("sys.stdout.isatty", return_value=True)
-@patch("os.popen", return_value=StringIO("60"))
+@patch("os.popen", return_value=conftest.StringIO("60"))
 @patch.dict(os.environ, {"TERM": "testing"})
 def test_console(*_):
     setupmeta.Console._columns = None
