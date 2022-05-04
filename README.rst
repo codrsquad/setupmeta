@@ -17,6 +17,10 @@ Simplify your setup.py
     :target: https://github.com/codrsquad/setupmeta
     :alt: Python versions tested (link to github project)
 
+.. image:: https://img.shields.io/conda/vn/conda-forge/setupmeta
+    :target: https://anaconda.org/conda-forge/setupmeta
+    :alt: Version on conda-forge
+
 ----
 
 Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.

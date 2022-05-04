@@ -3,7 +3,6 @@ import sys
 
 import pep440
 import pytest
-from mock import patch
 
 import setupmeta
 import setupmeta.versioning
@@ -13,8 +12,11 @@ from setupmeta.scm import Version
 from . import conftest
 
 
+patch = conftest.mock.patch
+
+
 def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs):
-    setup_py = setup_py or conftest.resouce("setup.py")
+    setup_py = setup_py or conftest.resource("setup.py")
     upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
     if name:
         # Allow to test "missing name" case

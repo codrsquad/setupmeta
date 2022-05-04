@@ -4,12 +4,19 @@ import sys
 import warnings
 
 import pytest
-from six import StringIO
 
 import setupmeta
 from setupmeta import decode
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
+
+try:  # py2
+    import mock
+    from StringIO import StringIO
+
+except ImportError:
+    from unittest import mock  # noqa
+    from io import StringIO
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
@@ -21,7 +28,7 @@ os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 sys.dont_write_bytecode = True
 
 
-def resouce(*relative_path):
+def resource(*relative_path):
     """Full path for 'relative_path'"""
     return os.path.join(TESTS, *relative_path)
 
@@ -68,7 +75,7 @@ def sample_project():
     old_cd = os.getcwd()
     try:
         with setupmeta.temp_resource() as temp:
-            source = resouce("sample")
+            source = resource("sample")
             dest = os.path.join(temp, "sample")
             shutil.copytree(source, dest)
             files = os.listdir(dest)

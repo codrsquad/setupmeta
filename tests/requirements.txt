@@ -1,4 +1,3 @@
-mock  # Won't be needed anymore when py2 support is dropped
+mock; python_version < "3"
 pep440
 pytest-cov
-six
