@@ -1,6 +1,5 @@
 import os
 import sys
-from unittest.mock import patch
 
 import pep440
 import pytest
@@ -11,6 +10,9 @@ from setupmeta.model import SetupMeta
 from setupmeta.scm import Version
 
 from . import conftest
+
+
+patch = conftest.mock.patch
 
 
 def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs):

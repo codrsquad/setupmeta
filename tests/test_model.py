@@ -1,11 +1,13 @@
 import os
 import sys
-from unittest.mock import patch
 
 import setupmeta
 from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path
 
 from . import conftest
+
+
+patch = conftest.mock.patch
 
 
 def test_first_word():

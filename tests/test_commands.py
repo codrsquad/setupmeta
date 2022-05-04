@@ -1,13 +1,15 @@
 import os
 import re
-from unittest.mock import patch
 
-from six import StringIO
+from io import StringIO
 
 import setupmeta
 from setupmeta.commands import _show_dependencies, DepTree, find_venv
 
 from . import conftest
+
+
+patch = conftest.mock.patch
 
 
 def run_setup_py(args, expected, folder=None):

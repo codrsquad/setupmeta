@@ -2,14 +2,20 @@ import os
 import shutil
 import sys
 import warnings
+from io import StringIO
 
 import pytest
-from six import StringIO
 
 import setupmeta
 from setupmeta import decode
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
+
+try:
+    from unittest import mock
+
+except ImportError:
+    import mock  # noqa
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
