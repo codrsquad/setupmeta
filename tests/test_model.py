@@ -66,7 +66,7 @@ def test_requirements():
 
     assert setupmeta.requirements_from_file("/dev/null/foo") is None
 
-    sample = conftest.resouce("scenarios/disabled/requirements.txt")
+    sample = conftest.resource("scenarios/disabled/requirements.txt")
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 6
     assert str(f.reqs[0]) == "wheel from tests/scenarios/disabled/requirements.txt:2, abstracted by default"
@@ -83,7 +83,7 @@ def test_requirements():
     assert len(f.ignored) == 1
     assert len(f.untouched) == 3
 
-    sample = conftest.resouce("scenarios/complex-reqs/requirements.in")
+    sample = conftest.resource("scenarios/complex-reqs/requirements.in")
     f = setupmeta.RequirementsFile.from_file(sample)
     assert len(f.reqs) == 5
 
