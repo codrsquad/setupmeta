@@ -12,7 +12,7 @@ from setupmeta.scm import Git
 
 try:  # py2
     import mock
-    from six import StringIO
+    from StringIO import StringIO
 
 except ImportError:
     from unittest import mock  # noqa
