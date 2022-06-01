@@ -22,7 +22,7 @@ def finalize_dist(dist, setup_requires=None):
     setup_requires = setup_requires if isinstance(setup_requires, list) else [setup_requires]
 
     if setup_requires:
-        if any(dep.startswith("setupmeta") for dep in setup_requires if dep):
+        if any(dep.startswith("setupmeta") for dep in setup_requires if hasattr(dep, "startswith")):
             dist._setupmeta = SetupMeta().preprocess(dist)
             MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
 
