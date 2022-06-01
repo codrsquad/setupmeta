@@ -21,12 +21,13 @@ def finalize_dist(dist, setup_requires=None):
     setup_requires = setup_requires or dist.setup_requires
     setup_requires = setup_requires if isinstance(setup_requires, list) else [setup_requires]
 
-    if any(dep.startswith("setupmeta") for dep in setup_requires):
-        dist._setupmeta = SetupMeta().preprocess(dist)
-        MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
+    if setup_requires:
+        if any(dep.startswith("setupmeta") for dep in setup_requires if dep):
+            dist._setupmeta = SetupMeta().preprocess(dist)
+            MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
 
-        # Override parse_command_line for this instance only.
-        dist.parse_command_line = functools.partial(parse_command_line, dist)
+            # Override parse_command_line for this instance only.
+            dist.parse_command_line = functools.partial(parse_command_line, dist)
 
 
 # Make sure we are run before any other finalizer.
