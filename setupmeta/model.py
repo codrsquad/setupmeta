@@ -533,6 +533,9 @@ class SetupMeta(Settings):
 
         scm = scm or project_scm(MetaDefs.project_dir)
         self.versioning = Versioning(self, scm)
+        if scm and self.versioning.strategy and self.versioning.strategy.version_tag:
+            scm.version_tag = self.versioning.strategy.version_tag
+
         self.versioning.auto_fill_version()
 
         self.fill_urls()

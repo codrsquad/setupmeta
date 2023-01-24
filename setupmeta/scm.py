@@ -12,6 +12,7 @@ class Scm:
     """API used by setupmeta for versioning using SCM tags"""
 
     program = None  # type: str # Program name (like 'git' or 'hg')
+    version_tag = None  # type: str # Format for tags to consider as version tags in underlying SCM, when applicable
 
     def __init__(self, root):
         """
@@ -181,7 +182,12 @@ class Git(Scm):
     def get_version(self):
         dirty = self.is_dirty()
         # Allow to override git describe command via env var SETUPMETA_GIT_DESCRIBE_COMMAND (just in case)
-        cmd = os.environ.get("SETUPMETA_GIT_DESCRIBE_COMMAND", "describe --dirty --tags --long --match *.* --first-parent")
+        cmd = os.environ.get("SETUPMETA_GIT_DESCRIBE_COMMAND")
+        if not cmd:
+            # TODO: Consider changing the default version tag to be of the form `v*.*` instead
+            version_tag = self.version_tag or "*.*"
+            cmd = "describe --dirty --tags --long --match %s --first-parent" % version_tag
+
         cmd = cmd.split(" ")
         text = self.get_output(*cmd)
         version = self.parsed_version(text, dirty)

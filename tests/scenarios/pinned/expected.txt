@@ -34,7 +34,7 @@ setup(
 )
 
 :: check
-warning: CheckCommand: missing required meta-data: url
+
 
 :: entrypoints
 

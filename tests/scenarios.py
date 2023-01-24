@@ -112,7 +112,8 @@ class Scenario:
         self.target = os.path.join(self.temp, "work")
 
         os.makedirs(self.origin)
-        self.run_git("init", "--bare", self.origin, cwd=self.temp)
+        # TODO: need to stop defaulting to 'master' branch, and use non-hardcoded git default instead ('main' nowadays)
+        self.run_git("init", "--bare", self.origin, "--initial-branch=master", cwd=self.temp)
         self.run_git("clone", self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
 

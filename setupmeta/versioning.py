@@ -185,6 +185,7 @@ class Strategy:
     def __init__(self, main, extra, branches, hook, **kwargs):
         self.main = main
         self.extra = extra
+        self.version_tag = kwargs.pop("version_tag", "*.*")
         if kwargs:
             setupmeta.warn("Ignored fields for 'versioning': %s" % kwargs)
 
