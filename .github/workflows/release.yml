@@ -53,9 +53,9 @@ jobs:
       run: twine upload dist/*
 
   publish-eol-eggs:
-    # Last ditch effort to publish eggs for ancient python versions
+    # Last ditch effort to publish eggs for ancient python versions (this may be refused by pypi, retire such versions then)
 
-    needs: publish-wheel
+    needs: publish-eggs
     runs-on: ubuntu-20.04
 
     strategy:
