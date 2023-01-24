@@ -2,10 +2,18 @@
 Release notes
 =============
 
-3.3.3 (2023-01-25)
+3.4.0 (2023-01-25)
 ------------------
 
-* Allow to configure format of git version tag
+* Allow to configure format of git version tag via the advanced dict-form of ``versioning``,
+  example::
+
+    versioning={
+        "main": "{major}.{minor}.{distance}",
+        "extra": "{dirty}",
+        "branches": "master",
+        "version_tag": "v*.*",
+    },
 
 
 3.3.2 (2022-06-01)
