@@ -2,6 +2,24 @@
 Release notes
 =============
 
+3.3.3 (2023-01-25)
+------------------
+
+* Allow to configure format of git version tag
+
+
+3.3.2 (2022-06-01)
+------------------
+
+* Protect against hook setup call in ancient setuptools versions
+
+
+3.3.1 (2022-05-04)
+------------------
+
+* Test with 3.10, publish sdist with 3.9
+
+
 3.3.0 (2021-06-14)
 ------------------
 
