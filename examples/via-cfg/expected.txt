@@ -39,7 +39,7 @@ setup(
 )
 
 :: check
-warning: CheckCommand: missing required meta-data: url
+
 
 :: entrypoints
 pytest=pytest:main

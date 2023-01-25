@@ -387,9 +387,20 @@ This is what ``versioning="post"`` is a shortcut for::
             "main": "{major}.{minor}.{patch}{post}",
             "extra": "{dirty}",
             "branches": ["main"],
+            "version_tag": "*.*",
         },
         ...
     )
+
+``version_tag`` is the glob pattern of git tags to consider as version tags.
+Unfortunately (for historical reasons), the default form is ``*.*`` (ie: any git tag
+with a dot in it), and arguably should have been ``v*.*`` (ie: git tags that start with ``v``
+and have dot in them...)
+
+Ideally, git would allow to state a full regex, as only tags that match this regex
+would ideally be considered as version tags: ``^v?\d+\.\d+(\.\d+)?$``, however this is not
+possible with git (if it is possible, setupmeta will be upgraded to simplify things by using
+this regex, in which case the ``version_tag`` setting will be sunset).
 
 
 Formatting

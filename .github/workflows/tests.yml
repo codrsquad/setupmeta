@@ -13,7 +13,31 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - run: |
+        pip install -U pip tox
+        git config --global user.name tester
+        git config --global user.email tester@example.com
+    - run: tox -e py
+    - uses: codecov/codecov-action@v1
+      with:
+        file: .tox/test-reports/coverage.xml
+
+  test-eol:
+    # EOL-ed versions of python are exercised on older linux distros
+    # Testing against these versions will eventually be retired
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.6']
 
     steps:
     - uses: actions/checkout@v2

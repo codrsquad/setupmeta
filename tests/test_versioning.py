@@ -326,6 +326,15 @@ def test_malformed():
         assert "WARNING: 'name' not specified in setup.py" in logged
 
 
+def test_custom_version_tag():
+    with conftest.capture_output():
+        meta = new_meta(dict(main="distance", extra="", version_tag="v*.*"), scm=conftest.MockGit())
+        versioning = meta.versioning
+        assert versioning.strategy.version_tag == "v*.*"
+        assert versioning.scm.version_tag == "v*.*"
+        assert str(versioning.scm.get_version()) == "v0.1.2-3-g123"
+
+
 def test_distance_marker():
     with conftest.capture_output():
         meta = new_meta("{major}.{minor}.{distance}", scm=conftest.MockGit())

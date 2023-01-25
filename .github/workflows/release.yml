@@ -36,7 +36,31 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - run: pip install -U pip setuptools wheel twine
+    - run: python setup.py bdist_egg
+    - name: Publish egg
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.SETUPMETA_TOKEN }}
+      run: twine upload dist/*
+
+  publish-eol-eggs:
+    # Last ditch effort to publish eggs for ancient python versions (this may be refused by pypi, retire such versions then)
+
+    needs: publish-eggs
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.6']
 
     steps:
     - uses: actions/checkout@v2
