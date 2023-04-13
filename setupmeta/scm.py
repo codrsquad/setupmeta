@@ -4,8 +4,8 @@ import re
 import setupmeta
 
 
-RE_BRANCH_STATUS = re.compile(r"^## (.+)\.\.\.(([^/]+)/)?([^ ]+)\s*(\[(.+)\])?$")
-RE_GIT_DESCRIBE = re.compile(r"^v?(.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
+RE_BRANCH_STATUS = re.compile(r"^## (.+)\.\.\.(([^/]+)/)?([^ ]+)\s*(\[(.+)])?$")
+RE_GIT_DESCRIBE = re.compile(r"^v?([0-9]+\.[0-9]+.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
 
 
 class Scm:
@@ -22,6 +22,12 @@ class Scm:
 
     def __repr__(self):
         return "%s %s" % (self.name, self.root)
+
+    def is_dirty(self):
+        """
+        Returns:
+            (bool): Is checkout folder 'self.root' currently dirty?
+        """
 
     @property
     def name(self):
@@ -65,7 +71,7 @@ class Scm:
 
     def get_output(self, *args, **kwargs):
         """
-        Run SCM's CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
+        Run underlying SCM CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
         Command is ran with cwd being 'self.root'
 
         :param args: CLI arguments (example: describe --tags)
@@ -78,7 +84,7 @@ class Scm:
 
     def run(self, commit, *args, **kwargs):
         """
-        Run SCM's CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
+        Run underlying SCM CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
         Output is "passed through" to stdout/stderr.
 
         :param bool commit: Effectively run the command if True, otherwise just print "Would run: ..."
@@ -93,7 +99,7 @@ class Scm:
 
 class Snapshot(Scm):
     """
-    Implementation for cases where project lives in a subfolder of a git checkout
+    Implementation for cases where project lives in a sub-folder of a git checkout
 
     If one runs: python -m pip wheel ...
     pip copies current folder to a temp location, and invokes setup.py there, any .git info is lost in that case
@@ -113,11 +119,11 @@ class Snapshot(Scm):
     def get_version(self):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
         if v:
-            return Git.parsed_version(v)
+            return Git.parsed_git_describe(v, origin="env var SCM_DESCRIBE")
 
         path = os.path.join(self.root, setupmeta.VERSION_FILE)
         with open(path) as fh:
-            return Git.parsed_version(fh.readline(), False)
+            return Git.parsed_git_describe(fh.readline(), origin=path)
 
 
 class Git(Scm):
@@ -146,7 +152,7 @@ class Git(Scm):
         return self._get_tags("ls-remote", "--tags")
 
     @staticmethod
-    def parsed_version(text, dirty=None):
+    def parsed_git_describe(text, origin=None):
         if text:
             m = RE_GIT_DESCRIBE.match(text)
             if m:
@@ -154,18 +160,15 @@ class Git(Scm):
                 distance = setupmeta.strip_dash(m.group(2))
                 distance = setupmeta.to_int(distance, default=0)
                 commitid = setupmeta.strip_dash(m.group(3))
-                if dirty is None:
-                    # This is only settable via env var SCM_DESCRIBE
-                    dirty = m.group(4) == "-dirty"
+                dirty = bool(m.group(4))
+                return Version(main=main, distance=distance, commitid=commitid, dirty=dirty, text=text)
 
-                return Version(main, distance, commitid, dirty, text)
-
-        return None
+        if origin:
+            setupmeta.warn("Ignoring invalid version from %s: %s" % (origin, text))
+            return Version(main="0.0.0", dirty=True)
 
     def is_dirty(self):
         """
-        :return bool: Is checkout folder self.root currently dirty?
-
         This checks both the working tree and index, in a single command.
         Ref: https://stackoverflow.com/a/2659808/15690
         """
@@ -179,18 +182,37 @@ class Git(Scm):
         branch = self.get_output("rev-parse", "--abbrev-ref", "HEAD")
         return branch and branch.strip()
 
-    def get_version(self):
-        dirty = self.is_dirty()
-        # Allow to override git describe command via env var SETUPMETA_GIT_DESCRIBE_COMMAND (just in case)
-        cmd = os.environ.get("SETUPMETA_GIT_DESCRIBE_COMMAND")
-        if not cmd:
-            # TODO: Consider changing the default version tag to be of the form `v*.*` instead
-            version_tag = self.version_tag or "*.*"
-            cmd = "describe --dirty --tags --long --match %s --first-parent" % version_tag
+    def git_describe_output(self):
+        """
+        Determine version tag from git
+        Unfortunately 'git describe --match' does not accept regexes, otherwise we'd do '^v?[0-9]+\\.'
+        """
+        override = os.environ.get("SETUPMETA_GIT_DESCRIBE_COMMAND")
+        if override:
+            # Override was given, just use it as-is
+            setupmeta.trace("Using SETUPMETA_GIT_DESCRIBE_COMMAND: %s" % override)
+            cmd = override.split(" ")
+            return self.get_output(*cmd)
 
-        cmd = cmd.split(" ")
+        version_tag = self.version_tag
+        cmd = ["describe", "--dirty", "--tags", "--long", "--first-parent", "--match", version_tag]
+        if version_tag:
+            # A custom version tag was configured, use it
+            setupmeta.trace("Using configured version_tag: %s" % version_tag)
+            return self.get_output(*cmd)
+
+        # No overrides, try v*.* first, then fall back to '*.*' if need be
+        cmd[-1] = "v*.*"
         text = self.get_output(*cmd)
-        version = self.parsed_version(text, dirty)
+        if not text:
+            cmd[-1] = "*.*"
+            text = self.get_output(*cmd)
+
+        return text
+
+    def get_version(self):
+        text = self.git_describe_output()
+        version = self.parsed_git_describe(text)
         if version:
             return version
 
@@ -199,7 +221,7 @@ class Git(Scm):
         commitid = "g%s" % commitid if commitid else ""
         distance = self.get_output("rev-list", "HEAD")
         distance = distance.count("\n") + 1 if distance else 0
-        return Version(None, distance, commitid, dirty)
+        return Version(main=None, distance=distance, commitid=commitid, dirty=self.is_dirty())
 
     def has_origin(self):
         if self._has_origin is None:

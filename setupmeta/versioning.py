@@ -6,7 +6,7 @@ import setupmeta
 from setupmeta.scm import Git, Snapshot, Version
 
 try:
-    basestring
+    basestring  # noqa
 
 except NameError:
     basestring = str
@@ -174,10 +174,11 @@ class VersionBit:
         :param Version version: Version to render
         :return str: Rendered version bit
         """
-        if not self.renderer:
+        func = self.renderer
+        if not func:
             return "invalid"
 
-        value = self.renderer(version)
+        value = func(version)
         return str(value)
 
 
@@ -185,7 +186,7 @@ class Strategy:
     def __init__(self, main, extra, branches, hook, **kwargs):
         self.main = main
         self.extra = extra
-        self.version_tag = kwargs.pop("version_tag", "*.*")
+        self.version_tag = kwargs.pop("version_tag", None)
         if kwargs:
             setupmeta.warn("Ignored fields for 'versioning': %s" % kwargs)
 
@@ -279,8 +280,7 @@ class Strategy:
             # - regular versioning (no special hook, no additional version bits given)
             # - only if it's "simple enough", ie: last bit is "dev", and the bit before that is bumpable
             bits = list(bits)
-            last = bits[-1]
-            prelast = bits[-2]
+            prelast, last = bits[-2:]
             if auto_bumped and last and (last.text == "dev" or last.text == "devcommit") and prelast and prelast.text in BUMPABLE:
                 bits[-2] = prelast.auto_bumped()
 
@@ -447,10 +447,7 @@ class Versioning:
         setupmeta.trace("versioning given: '%s', strategy: [%s], problem: [%s]" % (given, self.strategy, self.problem))
 
     def auto_fill_version(self):
-        """
-        Auto-fill version as defined by self.strategy
-        :param setupmeta.model.SetupMeta meta: Parent meta object
-        """
+        """Autofill version as defined by 'self.strategy'"""
         pygradle_version = os.environ.get("PYGRADLE_PROJECT_VERSION")
         if pygradle_version:
             # Minimal support for https://github.com/linkedin/pygradle
@@ -579,7 +576,7 @@ class Versioning:
                 for line in fh.readlines():
                     line_number += 1
                     if line_number == target_line:
-                        revised = updated_line(line, next_version, vdef)
+                        revised = updated_line(line, next_version)
                         if revised and revised != line:
                             changed += 1
                             line = revised
@@ -604,7 +601,7 @@ class Versioning:
         self.scm.commit_files(commit, push, modified, next_version)
 
 
-def updated_line(line, next_version, vdef):
+def updated_line(line, next_version):
     line = line.strip()
     sep = "=" if "=" in line else ":"
     space = ""

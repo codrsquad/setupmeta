@@ -63,7 +63,11 @@ See examples_ for more.
 
 **Note**: ``setupmeta``'s versioning is based on::
 
-    git describe --dirty --tags --long --match *.* --first-parent
+    git describe --dirty --tags --long --first-parent --match 'v*.*'
+
+    # Then, if above yields nothing, we try the more vague '*.*'
+
+    git describe --dirty --tags --long --first-parent --match '*.*'
 
 you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
 
