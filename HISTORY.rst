@@ -2,6 +2,15 @@
 Release notes
 =============
 
+3.5.0 (2023-04-13)
+------------------
+
+* Look for ``v*.*`` git tags first, then ``*.*``
+
+* Ignore git tags that do not pass regex ``^v?[0-9]+\.[0-9]+``,
+  default to ``0.0.0`` in that case, and issue a WARNING
+
+
 3.4.0 (2023-01-25)
 ------------------
 

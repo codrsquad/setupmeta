@@ -15,7 +15,7 @@ def test_scm():
 
 
 def test_git():
-    git = conftest.MockGit(describe=None, commitid="abc123")
+    git = conftest.MockGit(describe="", commitid="abc123")
     assert str(git.get_version()) == "v0.0.0-1-gabc123"
 
     with conftest.capture_output() as out:
@@ -54,3 +54,23 @@ def test_git():
 def test_ignore_git_failures():
     assert setupmeta._should_ignore_run_fail("git", ["rev-list", "HEAD"], "ambiguous argument 'HEAD': unknown revision or path")
     assert setupmeta._should_ignore_run_fail("git", ["describe"], "fatal: no names found, cannot describe anything.")
+
+
+def test_git_describe_override(monkeypatch):
+    monkeypatch.setenv("SETUPMETA_GIT_DESCRIBE_COMMAND", "describe foo")
+
+    # `git describe` returned garbage, fall back to 'git rev-parse' etc.
+    git = conftest.MockGit(describe="foo", commitid="abc")
+    v = git.get_version()
+    assert v.text == "v0.0.0-1-gabc"
+    assert v.main_text == "0.0.0"
+    assert v.distance == 1
+    assert v.commitid == "gabc"
+
+    # If SETUPMETA_GIT_DESCRIBE_COMMAND led to proper output, verify it does get used
+    git = conftest.MockGit(describe="v1.2.3-4-gabc123-dirty")
+    v = git.get_version()
+    assert v.text == "v1.2.3-4-gabc123-dirty"
+    assert v.main_text == "1.2.3"
+    assert v.distance == 4
+    assert v.commitid == "gabc123"

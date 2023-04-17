@@ -285,23 +285,18 @@ def run_internal_setup_py(folder, *args):
 
 
 class MockGit(Git):
-    def __init__(
-        self,
-        dirty=True,
-        describe="v0.1.2-3-g123",
-        branch="master",
-        commitid="abc123",
-        local_tags="",
-        remote_tags="",
-    ):
-        self.dirty = dirty
+    def __init__(self, describe="v0.1.2-3-g123-dirty", branch="master", commitid="abc123", local_tags="", remote_tags=""):
         self.describe = describe
         self.branch = branch
         self.commitid = commitid
-        self.status_message = "## master...origin/master"
+        self.status_message = "## %s...origin/%s" % (branch, branch)
         self._local_tags = local_tags
         self._remote_tags = remote_tags
         Git.__init__(self, TESTS)
+
+    @property
+    def dirty(self):
+        return "-dirty" in self.describe
 
     def get_output(self, cmd, *args, **kwargs):
         if cmd.startswith("diff"):

@@ -17,7 +17,7 @@ from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
 
 try:
-    basestring
+    basestring  # noqa
 
 except NameError:
     basestring = str
@@ -291,8 +291,8 @@ def get_pip():  # pragma: no cover, see https://github.com/pypa/setuptools/issue
     """
     try:
         # pip >= 19.3
-        from pip._internal.req import parse_requirements
-        from pip._internal.network.session import PipSession
+        from pip._internal.req import parse_requirements  # noqa
+        from pip._internal.network.session import PipSession  # noqa
 
         return parse_requirements, PipSession
 
@@ -301,8 +301,8 @@ def get_pip():  # pragma: no cover, see https://github.com/pypa/setuptools/issue
 
     try:
         # pip >= 10.0
-        from pip._internal.req import parse_requirements
-        from pip._internal.download import PipSession
+        from pip._internal.req import parse_requirements  # noqa
+        from pip._internal.download import PipSession  # noqa
 
         return parse_requirements, PipSession
 
@@ -404,13 +404,17 @@ class PackageInfo:
             if self.load_more_info(os.path.join(folder, fname), depth=depth - 1):
                 return True
 
-    def checked_file(self, folder, filename):
+    @staticmethod
+    def checked_file(folder, basename):
         """
-        :param str folder: Folder
-        :param str filename: Basename
-        :return str|None: Full path to file, if it exists
+        Args:
+            folder (str): Folder
+            basename (str): Basename
+
+        Returns:
+            (str | None): Full path, if it exists
         """
-        path = os.path.join(folder, filename)
+        path = os.path.join(folder, basename)
         if os.path.exists(path):
             return path
 
@@ -418,10 +422,11 @@ class PackageInfo:
 class SetupMeta(Settings):
     """ Find usable definitions throughout a project SetupPy SetupMeta """
 
+    pkg_info = None  # type: PackageInfo
+    requirements = None  # type: Requirements
+    versioning = None  # type: Versioning
+
     def __init__(self):
-        """
-        :param upstream: Either a dict or Distribution
-        """
         Settings.__init__(self)
         self.attrs = {}
 
@@ -461,14 +466,14 @@ class SetupMeta(Settings):
             if key in MetaDefs.all_fields:
                 self.add_definition(key, value, relative_path(self.pkg_info.path))
 
-        # Allow to auto-fill 'name' from setup.py's __title__, if any
+        # Allow to autofill 'name' from setup.py __title__, if any
         self.merge(SimpleModule("setup.py"))
         title = self.definitions.get("title")
         if title:
             self.auto_fill("name", title.value, source=title.source)
 
         if "--name" in sys.argv[1:3]:
-            # No need to waste time auto-filling anything if all we need to show is package name
+            # No need to waste time filling anything if all we need to show is package name
             return self
 
         packages = self.attrs.get("packages", [])
@@ -555,8 +560,12 @@ class SetupMeta(Settings):
 
     def resolved_url(self, url, base=None):
         """
-        :param str|None url: Url to resolve
-        :return str|None: Resolve {name} and {version} markers in given url
+        Args:
+            url (str | None): Url to resolve
+            base (str | None): Base url to use
+
+        Returns:
+            (str): Resolved url, with {name} and {version} markers filled
         """
         if base and url and "://" not in url:
             # Convenience: auto-complete relative urls
@@ -565,7 +574,7 @@ class SetupMeta(Settings):
         return url and url.format(name=self.name, version=self.version)
 
     def fill_urls(self):
-        """ Auto-fill url and download_url """
+        """Autofill 'url' and 'download_url'"""
         url = self.value("url")
         download_url = self.value("download_url")
         bugtrack_url = self.value("bugtrack_url")
@@ -584,12 +593,14 @@ class SetupMeta(Settings):
         self.auto_fill("download_url", self.resolved_url(download_url, base=url))
         self.auto_fill("bugtrack_url", self.resolved_url(bugtrack_url, base=url))
 
-    def find_project_dir(self, setup_py_path):
+    @staticmethod
+    def find_project_dir(setup_py_path):
         """
-        :param str|None setup_py_path: Given setup.py (when invoked from test)
+        Args:
+            setup_py_path (str | None): Given setup.py (when invoked from test)
         """
         if not setup_py_path:
-            # Determine path to setup.py module from call stack
+            # Determine path to 'setup.py' module from call stack
             for frame in inspect.stack():
                 module = inspect.getmodule(frame[0])
                 if module and is_setup_py_path(module.__file__):
@@ -624,7 +635,7 @@ class SetupMeta(Settings):
                 return description
 
     def auto_fill_long_description(self):
-        """ Auto-fille descriptions from README file """
+        """Autofill descriptions from README file"""
         docstring_lead = self.definitions.pop("docstring_lead", None)
         if docstring_lead and not self.value("description"):
             self.auto_fill("description", docstring_lead.value, source=docstring_lead.source)
@@ -653,12 +664,12 @@ class SetupMeta(Settings):
         path = "%s.ini" % key
         self.add_definition(key, load_contents(path), path)
 
-    def auto_fill_license(self, key="license"):
-        """ Try to auto-determine the license """
+    def auto_fill_license(self):
+        """Try to auto-determine the license"""
         contents, _ = find_contents(["LICENSE*"], limit=20)
-        short = determined_license(contents)
-        if short:
-            self.auto_fill("license", short)
+        contents = determined_license(contents)
+        if contents:
+            self.auto_fill("license", contents)
 
     def auto_fill_requires(self, field):
         req = getattr(self.requirements, field)
@@ -678,14 +689,14 @@ class SetupMeta(Settings):
         return self.value("version")
 
     def auto_fill_include_package_data(self):
-        """Auto-fill 'include_package_data' if a MANIFEST.in file exists in project"""
+        """Autofill 'include_package_data' if a MANIFEST.in file exists in project"""
         if "include_package_data" not in self.attrs:
             manifest = os.path.join(MetaDefs.project_dir, "MANIFEST.in")
             if os.path.isfile(manifest):
                 self.add_definition("include_package_data", True, os.path.basename(manifest))
 
     def auto_fill(self, field, value, source="auto-fill", override=False):
-        """ Auto-fill 'field' with 'value' """
+        """Autofill 'field' with 'value'"""
         if value and (override or value != self.value(field)):
             override = override or field not in self.attrs
             self.add_definition(field, value, source, override=override)

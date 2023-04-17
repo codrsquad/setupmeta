@@ -29,7 +29,7 @@ def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs)
 def test_deprecated_strategy_notation():
     """Custom separators, and the `!` marker will be removed in the future"""
     with conftest.capture_output() as logged:
-        meta = new_meta("post !", scm=conftest.MockGit(True))
+        meta = new_meta("post !", scm=conftest.MockGit())
         versioning = meta.versioning
         assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{patch}{post}"
         check_render(versioning, "1.0.0")
@@ -37,7 +37,7 @@ def test_deprecated_strategy_notation():
         assert "'!' character in 'versioning' is now deprecated" in logged
 
     with conftest.capture_output() as logged:
-        meta = new_meta("distance+!foo", scm=conftest.MockGit(True))
+        meta = new_meta("distance+!foo", scm=conftest.MockGit())
         versioning = meta.versioning
         assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+foo"
         check_render(versioning, "1.0.0+foo")
@@ -62,10 +62,10 @@ def test_project_scm(sample_project):
     assert setupmeta.versioning.find_scm_root("/", ".git") is None
 
     assert setupmeta.versioning.find_scm_root(".", ".git") == "."
-    assert setupmeta.versioning.find_scm_root("./subfolder", ".git") == "."
+    assert setupmeta.versioning.find_scm_root("./sub-folder", ".git") == "."
 
     assert setupmeta.versioning.find_scm_root(sample_project, ".git") == sample_project
-    assert setupmeta.versioning.find_scm_root(os.path.join(sample_project, "subfolder", "foo"), ".git") == sample_project
+    assert setupmeta.versioning.find_scm_root(os.path.join(sample_project, "sub-folder", "foo"), ".git") == sample_project
 
 
 def test_snapshot_with_version_file():
@@ -91,7 +91,7 @@ def test_snapshot_with_version_file():
             assert "WARNING: No 'packages' or 'py_modules' defined" in logged
 
 
-@patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1"})
+@patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1.0"})
 def test_find_scm_in_parent():
     with conftest.capture_output():
         meta = new_meta("post")
@@ -151,8 +151,8 @@ def test_version_from_env_var(*_):
         assert versioning.scm.is_dirty()
 
 
-def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123", compliant=True):
-    meta = new_meta(versioning, scm=conftest.MockGit(dirty, describe=describe))
+def quick_check(versioning, expected, describe="v0.1.2-5-g123-dirty", compliant=True):
+    meta = new_meta(versioning, scm=conftest.MockGit(describe=describe))
     assert meta.version == expected
     if compliant:
         main_part, _, _ = meta.version.partition("+")
@@ -162,19 +162,24 @@ def quick_check(versioning, expected, dirty=True, describe="v0.1.2-5-g123", comp
     assert versioning.enabled
     assert not versioning.generate_version_file
     assert not versioning.problem
-    assert versioning.scm.is_dirty() == dirty
+    expected_dirty = "-dirty" in describe
+    assert versioning.scm.is_dirty() == expected_dirty
 
 
 @patch.dict(os.environ, {"BUILD_ID": "543"})
 def test_versioning_variants(*_):
     with conftest.capture_output() as logged:
+        # Verify that an unfortunate 'v.N.' does not get interpreted as 'vN.'
+        quick_check("dev", "0.0.1.dev1", describe="v.28.0-0-gbd750b5")
+        quick_check("dev", "0.0.1.dev1+dirty", describe="v.28.0-0-gbd750b5-dirty")
+
         quick_check("{major}.{minor}", "0.1+dirty")
         quick_check("{major}.{minor}+", "0.1")
         quick_check("{major}.{minor}{dirty}", "0.1+dirty")
         quick_check("{major}.{minor}{dirty}+", "0.1+dirty")
-        quick_check("{major}.{minor}", "0.1", dirty=False)
-        quick_check("{major}.{minor}+", "0.1", dirty=False)
-        quick_check("{major}.{minor}+", "0.1", dirty=True)
+        quick_check("{major}.{minor}", "0.1", describe="v0.1.2-5-g123")
+        quick_check("{major}.{minor}+", "0.1", describe="v0.1.2-5-g123")
+        quick_check("{major}.{minor}+", "0.1", describe="v0.1.2-5-g123-dirty")
 
         quick_check("distance", "0.1.5+dirty")
         quick_check("post", "0.1.2.post5+dirty")
@@ -195,54 +200,54 @@ def test_versioning_variants(*_):
         quick_check("foo", "foo+dirty", compliant=False)
 
         quick_check("dev+{commitid}{dirty}", "0.1.3.dev5+g123.dirty")
-        quick_check("dev+{commitid}{dirty}", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123")
-        quick_check("dev+{commitid}{dirty}", "0.1.2+g123", describe="v0.1.2-0-g123", dirty=False)
+        quick_check("dev+{commitid}{dirty}", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123-dirty")
+        quick_check("dev+{commitid}{dirty}", "0.1.2+g123", describe="v0.1.2-0-g123")
 
         quick_check("dev+devcommit", "0.1.3.dev5+g123.dirty")
-        quick_check("dev+devcommit", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123")
-        quick_check("dev+devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
+        quick_check("dev+devcommit", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123-dirty")
+        quick_check("dev+devcommit", "0.1.2", describe="v0.1.2-0-g123")
 
         quick_check("post+devcommit", "0.1.2.post5+g123.dirty")
-        quick_check("post+devcommit", "0.1.2+g123.dirty", describe="v0.1.2-0-g123")
-        quick_check("post+devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
+        quick_check("post+devcommit", "0.1.2+g123.dirty", describe="v0.1.2-0-g123-dirty")
+        quick_check("post+devcommit", "0.1.2", describe="v0.1.2-0-g123")
 
-        quick_check("dev", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
-        quick_check("devcommit", "0.1.9rc1", dirty=False, describe="v0.1.9-rc.1-0-gebe2789")
-        quick_check("post", "0.1.9rc1+dirty", dirty=True, describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("dev", "0.1.9rc1", describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("devcommit", "0.1.9rc1", describe="v0.1.9-rc.1-0-gebe2789")
+        quick_check("post", "0.1.9rc1+dirty", describe="v0.1.9-rc.1-0-gebe2789-dirty")
 
-        quick_check("dev", "0.1.9rc1.dev1", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
-        quick_check("devcommit", "0.1.9rc1.dev1+gebe2789", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
-        quick_check("devcommit", "0.1.9rc1.dev1+gebe2789.dirty", dirty=True, describe="v0.1.9-rc.1-1-gebe2789")
-        quick_check("post", "0.1.9rc1.post1", dirty=False, describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("dev", "0.1.9rc1.dev1", describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("devcommit", "0.1.9rc1.dev1+gebe2789", describe="v0.1.9-rc.1-1-gebe2789")
+        quick_check("devcommit", "0.1.9rc1.dev1+gebe2789.dirty", describe="v0.1.9-rc.1-1-gebe2789-dirty")
+        quick_check("post", "0.1.9rc1.post1", describe="v0.1.9-rc.1-1-gebe2789")
 
-        quick_check("devcommit", "0.1.3.dev5+g123", dirty=False)
+        quick_check("devcommit", "0.1.3.dev5+g123", describe="v0.1.2-5-g123")
         quick_check("devcommit", "0.1.3.dev5+g123.dirty")
         quick_check("build-id", "0.1.5+h543.g123.dirty")
 
-        quick_check("post", "5.0.0a1.post1", dirty=False, describe="v5.0-a.1-1-gebe2789")
-        quick_check("post", "5.0.0a1.rc2.post7", dirty=False, describe="v5.a1rc2-7-gebe2789", compliant=False)
-        quick_check("dev", "0.1.0a0.dev8", dirty=False, describe="v0.1.a-8-gebe2789")
+        quick_check("post", "5.0.0a1.post1", describe="v5.0-a.1-1-gebe2789")
+        quick_check("post", "0.0.0.post1", describe="v5.a1rc2-7-gebe2789", compliant=False)
+        quick_check("dev", "0.1.0a0.dev8", describe="v0.1.a-8-gebe2789")
 
-        # Patch is not bumpable
-        quick_check("dev", "0.1.0rc0.dev5+dirty", describe="v0.1.rc-5-g123")
-        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc1-5-g123")
-        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc.1-5-g123")
-        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc-1-5-g123")
+        # Patch is not bump-able
+        quick_check("dev", "0.1.0rc0.dev5+dirty", describe="v0.1.rc-5-g123-dirty")
+        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc1-5-g123-dirty")
+        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc.1-5-g123-dirty")
+        quick_check("dev", "0.1.0rc1.dev5+dirty", describe="v0.1.rc-1-5-g123-dirty")
 
         # On tag
-        quick_check("dev", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
-        quick_check("dev", "0.1.3.dev0+dirty", describe="v0.1.2-0-g123", dirty=True)
-        quick_check("devcommit", "0.1.2", describe="v0.1.2", dirty=False)
-        quick_check("devcommit", "0.1.2", describe="v0.1.2-0-g123", dirty=False)
-        quick_check("devcommit", "0.1.3.dev7+g123", describe="v0.1.2-7-g123", dirty=False)
-        quick_check("devcommit", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123", dirty=True)
+        quick_check("dev", "0.1.2", describe="v0.1.2-0-g123")
+        quick_check("dev", "0.1.3.dev0+dirty", describe="v0.1.2-0-g123-dirty")
+        quick_check("devcommit", "0.1.2", describe="v0.1.2")
+        quick_check("devcommit", "0.1.2", describe="v0.1.2-0-g123")
+        quick_check("devcommit", "0.1.3.dev7+g123", describe="v0.1.2-7-g123")
+        quick_check("devcommit", "0.1.3.dev0+g123.dirty", describe="v0.1.2-0-g123-dirty")
 
         assert "patch version component should be .0" in logged
 
 
 def test_bump_patch():
     with conftest.capture_output() as logged:
-        meta = new_meta("post", scm=conftest.MockGit(False, describe="v0.1.2.rc-5-g123"))
+        meta = new_meta("post", scm=conftest.MockGit(describe="v0.1.2.rc-5-g123"))
         versioning = meta.versioning
         versioning.bump("patch")
         assert "Would run: git tag -a v0.1.3" in logged
@@ -252,14 +257,14 @@ def test_bump_patch():
 
 def test_no_extra():
     with conftest.capture_output() as logged:
-        meta = new_meta("{major}.{minor}+", scm=conftest.MockGit(True))
+        meta = new_meta("{major}.{minor}+", scm=conftest.MockGit())
         versioning = meta.versioning
         assert str(versioning.strategy) == "branch(main,master):{major}.{minor}"
         check_render(versioning, "1.0")
         check_render(versioning, "1.0", distance=2)
         check_render(versioning, "1.0", distance=2, dirty=True)
 
-        meta = new_meta("{major}.{minor}.{$FOO}+", scm=conftest.MockGit(True))
+        meta = new_meta("{major}.{minor}.{$FOO}+", scm=conftest.MockGit())
         versioning = meta.versioning
         assert meta.version == "0.1+None"
         assert str(versioning.strategy) == "branch(main,master):{major}.{minor}+{$FOO}"
@@ -318,7 +323,7 @@ def test_invalid_main():
 
 def test_malformed():
     with conftest.capture_output() as logged:
-        meta = new_meta(dict(main=None, extra=""), name=None, scm=conftest.MockGit())
+        meta = new_meta(dict(main=None, extra=""), name="", scm=conftest.MockGit())
         versioning = meta.versioning
         assert meta.version is None
         assert not versioning.enabled
@@ -328,7 +333,7 @@ def test_malformed():
 
 def test_custom_version_tag():
     with conftest.capture_output():
-        meta = new_meta(dict(main="distance", extra="", version_tag="v*.*"), scm=conftest.MockGit())
+        meta = new_meta(dict(main="distance", extra="", version_tag="v*.*"), scm=conftest.MockGit(describe="v0.1.2-3-g123"))
         versioning = meta.versioning
         assert versioning.strategy.version_tag == "v*.*"
         assert versioning.scm.version_tag == "v*.*"
@@ -369,14 +374,14 @@ def check_preconfigured(expected, *shorts):
 @patch.dict(os.environ, {"BUILD_ID": "543"})
 def test_preconfigured_strategies(*_):
     with conftest.capture_output():
-        check_strategy_distance(True)
-        check_strategy_distance(False)
-        check_strategy_build_id(True)
-        check_strategy_build_id(False)
+        check_strategy_distance("v0.1.2-3-g123-dirty")
+        check_strategy_distance("v0.1.2-3-g123")
+        check_strategy_build_id("v0.1.2-3-g123-dirty")
+        check_strategy_build_id("v0.1.2-3-g123")
 
 
-def check_strategy_distance(dirty):
-    meta = new_meta("distance", scm=conftest.MockGit(dirty))
+def check_strategy_distance(describe):
+    meta = new_meta("distance", scm=conftest.MockGit(describe=describe))
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.problem
@@ -384,7 +389,7 @@ def check_strategy_distance(dirty):
     assert "major" in str(versioning.strategy.main_bits)
     assert "dirty" in str(versioning.strategy.extra_bits)
     assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+{dirty}"
-    if dirty:
+    if "dirty" in describe:
         assert meta.version == "0.1.3+dirty"
 
         with pytest.raises(setupmeta.UsageError):
@@ -401,8 +406,8 @@ def check_strategy_distance(dirty):
     check_bump(versioning)
 
 
-def check_strategy_build_id(dirty):
-    meta = new_meta("build-id", scm=conftest.MockGit(dirty))
+def check_strategy_build_id(describe):
+    meta = new_meta("build-id", scm=conftest.MockGit(describe=describe))
     versioning = meta.versioning
     assert versioning.enabled
     assert not versioning.problem
@@ -410,7 +415,7 @@ def check_strategy_build_id(dirty):
     assert "major" in str(versioning.strategy.main_bits)
     assert "commitid" in str(versioning.strategy.extra_bits)
     assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}"
-    if dirty:
+    if "dirty" in describe:
         assert meta.version == "0.1.3+h543.g123.dirty"
 
         with pytest.raises(setupmeta.UsageError):
@@ -465,7 +470,7 @@ setup(
 
 
 def check_version_output(expected):
-    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture="all")
+    output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     output = conftest.cleaned_output(output)
     assert output == expected
 
@@ -476,14 +481,14 @@ def test_brand_new_project():
         with open("setup.py", "w") as fh:
             fh.write(SAMPLE_EMPTY_PROJECT)
 
-        # Test that we avoid warning about no tags etc on brand new empty git repos
+        # Test that we avoid warning about no tags etc. on brand-new empty git repos
         check_version_output("0.0.0")
 
         # Now stage a file
         conftest.run_git("add", "setup.py")
         check_version_output("0.0.0+dirty")
 
-        # Unstage it
+        # Un-stage it
         conftest.run_git("reset", "setup.py")
         check_version_output("0.0.0")
 
@@ -543,7 +548,7 @@ def test_git_versioning(sample_project):
 
 def test_missing_tags():
     with conftest.capture_output() as logged:
-        meta = new_meta("distance", scm=conftest.MockGit(False, local_tags="v1.0\nv1.1", remote_tags="v1.0\nv2.0"))
+        meta = new_meta("distance", scm=conftest.MockGit(describe="v0.1.2-3-g123", local_tags="v1.0\nv1.1", remote_tags="v1.0\nv2.0"))
         versioning = meta.versioning
         assert versioning.enabled
         assert not versioning.problem
