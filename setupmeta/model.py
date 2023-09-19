@@ -16,12 +16,6 @@ from setupmeta.content import find_contents, load_contents, load_readme, resolve
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
 
-try:
-    basestring  # noqa
-
-except NameError:
-    basestring = str
-
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = "explicit"
@@ -435,15 +429,15 @@ class SetupMeta(Settings):
 
         for require_field in ("install_requires",):
             value = getattr(upstream, require_field)
-            if isinstance(value, basestring) and value.startswith("@"):
+            if isinstance(value, str) and value.startswith("@"):
                 self.add_definition(require_field, value, EXPLICIT)
                 self.add_definition(require_field, requirements_from_file(value[1:]) or [], source=value[1:], override=True)
 
         if isinstance(upstream.extras_require, dict):
-            if any([isinstance(deps, basestring) and deps.startswith("@") for deps in upstream.extras_require.values()]):
+            if any([isinstance(deps, str) and deps.startswith("@") for deps in upstream.extras_require.values()]):
                 self.add_definition("extras_require", upstream.extras_require, EXPLICIT)
                 self.add_definition("extras_require", {
-                        extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, basestring) and deps.startswith("@") else deps
+                        extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, str) and deps.startswith("@") else deps
                         for extra, deps in upstream.extras_require.items()
                     }, "preprocessed", override=True)
 

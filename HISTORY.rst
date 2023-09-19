@@ -2,8 +2,10 @@
 Release notes
 =============
 
-3.5.0 (2023-04-13)
+3.5.0 (2023-09-20)
 ------------------
+
+* Removed support for py2
 
 * Look for ``v*.*`` git tags first, then ``*.*``
 

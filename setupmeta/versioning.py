@@ -5,12 +5,6 @@ import re
 import setupmeta
 from setupmeta.scm import Git, Snapshot, Version
 
-try:
-    basestring  # noqa
-
-except NameError:
-    basestring = str
-
 
 BUMPABLE = {"major", "minor", "patch"}
 MAIN_BITS = {"{major}", "{minor}", "{patch}", "{distance}", "{post}", "{dev}"}
@@ -363,7 +357,7 @@ def _parsed_versioning(given):
         rest_from_upstream = given
         given = main
 
-    if isinstance(given, basestring):
+    if isinstance(given, str):
         m = RE_VERSIONING.match(given)
         if m.group(2):
             branches = m.group(2)
@@ -373,7 +367,7 @@ def _parsed_versioning(given):
         if main in PRECONFIGURED:
             main, _, extra = PRECONFIGURED[main].partition("+")
 
-        if isinstance(main, basestring) and isinstance(extra, basestring):
+        if isinstance(main, str) and isinstance(extra, str):
             extra = _parsed_extra(m.group(4), extra)
             if m.group(7):
                 hook = m.group(7)

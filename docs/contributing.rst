@@ -37,7 +37,7 @@ locally installed. You can use pyenv_ for example to get python installations.
 
 Run:
 
-* ``tox -e py27`` (for example) to limit test run to only one python version.
+* ``tox -e py310`` (for example) to limit test run to only one python version.
 
 * ``tox -e style`` to run style checks only
 

@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import warnings
+from io import StringIO
 
 import pytest
 
@@ -9,14 +10,6 @@ import setupmeta
 from setupmeta import decode
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
-
-try:  # py2
-    import mock
-    from StringIO import StringIO
-
-except ImportError:
-    from unittest import mock  # noqa
-    from io import StringIO
 
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
