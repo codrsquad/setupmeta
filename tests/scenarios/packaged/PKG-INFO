@@ -7,6 +7,9 @@ Author: Someone
 Author-email: someone@example.com
 License: MIT
 Download-URL: http://example.com/pre-packaged/releases/download/v1.7.1/pickley
+Requires-Dist: setuptools>=46.1
+Requires-Dist: pytest-cov
+Requires-Dist: flake8
 Description:
         # Project description
 

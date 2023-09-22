@@ -5,7 +5,7 @@
                   description: (PKG-INFO                                ) Project description
                  download_url: (PKG-INFO                                ) http://example.com/pre-packaged/releases/download/v1.7.1/pickley
                  entry_points: (src/pre_packaged.egg-info/entry_points.txt) [console_scripts] pre-packaged-test = pre_packaged:main
-             install_requires: (src/pre_packaged.egg-info/requires.txt  ) ["setuptools>=46.1", "pytest-cov", "flake8"]
+             install_requires: (PKG-INFO/Requires-Dist                  ) ["setuptools>=46.1", "pytest-cov", "flake8"]
                       license: (PKG-INFO                                ) MIT
              long_description: (PKG-INFO                                ) # Project description This scenario simulates a PKG, with no git source available. During testing, `src...
                            \_: (README.md                               ) # Project description This scenario simulates a PKG, with no git source available. During testing, `src...
@@ -22,9 +22,9 @@ long_description_content_type: (PKG-INFO                                ) text/m
 :: explain -d
     # This reflects only auto-fill, doesn't look at explicit settings from your setup.py
     install_requires=[
-        "setuptools>=46.1",  # from src/pre_packaged.egg-info/requires.txt:1
-        "pytest-cov",        # from src/pre_packaged.egg-info/requires.txt:2
-        "flake8",            # from src/pre_packaged.egg-info/requires.txt:3
+        "setuptools>=46.1",  # from PKG-INFO/Requires-Dist:1
+        "pytest-cov",        # from PKG-INFO/Requires-Dist:2
+        "flake8",            # from PKG-INFO/Requires-Dist:3
     ],
 
 :: explain --expand
@@ -41,7 +41,7 @@ setup(
     download_url="http://example.com/pre-packaged/releases/download/v1.7.1/pickley", # from PKG-INFO
     entry_points="""[console_scripts]
 pre-packaged-test = pre_packaged:main""",                            # from src/pre_packaged.egg-info/entry_points.txt
-    install_requires=["setuptools>=46.1", "pytest-cov", "flake8"],   # from src/pre_packaged.egg-info/requires.txt
+    install_requires=["setuptools>=46.1", "pytest-cov", "flake8"],   # from PKG-INFO/Requires-Dist
     license="MIT",                                                   # from PKG-INFO
     long_description=open("PKG-INFO").read(),                        # from PKG-INFO
     long_description_content_type="text/markdown",                   # from PKG-INFO

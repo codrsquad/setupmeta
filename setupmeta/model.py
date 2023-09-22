@@ -11,7 +11,7 @@ import sys
 import setuptools
 
 from setupmeta import current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path
-from setupmeta import Requirements, requirements_from_file, short, trace, warn
+from setupmeta import Requirements, requirements_from_file, RequirementsFile, short, trace, warn
 from setupmeta.content import find_contents, load_contents, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
@@ -343,6 +343,7 @@ class PackageInfo:
         self.name = None
         self.entry_points_txt = None
         self.requires_txt = None
+        self.requires_dist = None
         lines = readlines(self.path)
         if not lines:
             return
@@ -354,10 +355,18 @@ class PackageInfo:
             if m:
                 key = m.group(1).lower().replace("-", "_")
                 key = self._canonical_names.get(key, key)
+                value = m.group(2)
+                if key == "requires_dist":
+                    # This code tries to support PEP-517, until setuptools retired
+                    if self.requires_dist is None:
+                        self.requires_dist = []
+
+                    self.requires_dist.append(value)
+                    continue
+
                 if key not in MetaDefs.all_fields:
                     continue
 
-                value = m.group(2)
                 if key in self._list_types:
                     if key not in self.info:
                         self.info[key] = []
@@ -378,6 +387,18 @@ class PackageInfo:
         self.pythonified_name = pythonified_name(self.name)
         self.info["long_description"] = "\n".join(self.info.get("long_description", []))
         self.load_more_info(root)
+
+    def get_requirements(self):
+        """
+        Returns:
+            (RequirementsFile): Requirements extracted from PKG-INFO
+        """
+        if self.requires_dist:
+            return RequirementsFile.from_lines(self.requires_dist, do_abstract=False, source_path="PKG-INFO/Requires-Dist")
+
+        if self.requires_txt:
+            # requires.txt is not produced anymore by setuptools 68.2+
+            return RequirementsFile.from_file(self.requires_txt, do_abstract=False)
 
     def load_more_info(self, folder, depth=3):
         """
