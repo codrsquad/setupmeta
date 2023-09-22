@@ -2,7 +2,7 @@
 Release notes
 =============
 
-3.5.0 (2023-09-22)
+3.5.1 (2023-09-22)
 ------------------
 
 * Better support for PEP-517, extract ``Requires-Dist:`` from ``PKG-INFO`` if ``requires.txt`` is missing
