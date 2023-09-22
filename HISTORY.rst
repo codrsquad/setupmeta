@@ -7,6 +7,8 @@ Release notes
 
 * Better support for PEP-517, extract ``Requires-Dist:`` from ``PKG-INFO`` if ``requires.txt`` is missing
 
+* ``.egg`` files are not published anymore, see https://blog.pypi.org/posts/2023-06-26-deprecate-egg-uploads/
+
 
 3.4.1 (2023-09-22)
 ------------------
