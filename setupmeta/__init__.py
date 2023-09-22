@@ -691,6 +691,20 @@ class RequirementsFile:
             req.finalize()
             return req
 
+    @classmethod
+    def from_lines(cls, lines, do_abstract=False, source_path=None):
+        """
+        :param list[str] lines: Requirement lines, as found in METADATA 'Requires-Dist:' for example
+        :param bool do_abstract: If True, automatically abstract reqs of the form <name>==<version>
+        :param str source_path: Reference to file where 'lines' came from
+        :return RequirementsFile|None: Associated object, if possible
+        """
+        req = cls(do_abstract=do_abstract)
+        req.scan(lines, source_path=source_path)
+        if req.reqs is not None:
+            req.finalize()
+            return req
+
 
 def find_requirements(*relative_paths):
     """ Read old-school requirements.txt type file """
@@ -712,9 +726,10 @@ class Requirements:
         """
         :param setupmeta.model.PackageInfo pkg_info: PKG-INFO, when available
         """
-        if pkg_info and pkg_info.requires_txt:
-            self.install_requires = RequirementsFile.from_file(pkg_info.requires_txt, do_abstract=False)
-            return
+        if pkg_info:
+            self.install_requires = pkg_info.get_requirements()
+            if self.install_requires:
+                return
 
         self.install_requires = find_requirements(
             "requirements.in",  # .in files are preferred when present
