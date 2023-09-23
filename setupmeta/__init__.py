@@ -801,13 +801,15 @@ class MetaDefs:
     # Determined project directory
     project_dir = os.getcwd()
 
-    # See http://setuptools.readthedocs.io/en/latest/setuptools.html listify
+    # Fields that setuptools expects in `dist.metadata`
     metadata_fields = listify("""
-        author author_email bugtrack_url classifiers description download_url keywords
-        license long_description long_description_content_type
+        author author_email bugtrack_url classifiers description download_url extras_require install_requires
+        keywords license long_description long_description_content_type
         maintainer maintainer_email name obsoletes
-        platforms provides requires url version
+        platforms project_urls provides requires url version
     """)
+
+    # Fields that setuptools expects in `dist` (some are found in both `dist.metadata` and `dist`)
     dist_fields = listify("""
         cmdclass contact contact_email dependency_links eager_resources
         entry_points exclude_package_data extras_require include_package_data
@@ -878,10 +880,11 @@ class MetaDefs:
 
     @classmethod
     def set_field(cls, dist, key, value):
-        if hasattr(dist.metadata, key):
+        if key in cls.metadata_fields and hasattr(dist.metadata, key):
             setattr(dist.metadata, key, value)
 
-        elif hasattr(dist, key):
+        # setuptools 68.2+ needs some info in both `dist.metadata` AND `dist`, see https://github.com/thatch/debug-setupmeta
+        if key in cls.dist_fields and hasattr(dist, key):
             setattr(dist, key, value)
 
 
