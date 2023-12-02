@@ -235,7 +235,7 @@ class Git(Scm):
 
         relative_paths = sorted(set(relative_paths))
         self.run(commit, "add", *relative_paths)
-        self.run(commit, "commit", "-m", "Version %s" % next_version)
+        self.run(commit, "commit", "-m", "Version %s" % next_version, "--no-verify")
         if push:
             if self.has_origin():
                 self.run(commit, "push", "origin")
