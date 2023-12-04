@@ -469,4 +469,4 @@ The following can be used as format specifiers:
 
 .. _setuptools_scm: https://github.com/pypa/setuptools_scm
 
-.. _Scm class: https://github.com/codrsquad/setupmeta/blob/master/setupmeta/scm.py
+.. _Scm class: https://github.com/codrsquad/setupmeta/blob/main/setupmeta/scm.py

@@ -196,7 +196,7 @@ def test_version(sample_project):
     run_setup_py(["version", "--bump", "major", "--simulate-branch=HEAD"], "Can't bump branch 'HEAD'")
 
     run_setup_py(
-        ["version", "--bump", "major", "--simulate-branch=master", "--push"],
+        ["version", "--bump", "major", "--simulate-branch=main", "--push"],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
@@ -205,7 +205,7 @@ def test_version(sample_project):
     )
 
     run_setup_py(
-        ["version", "--bump", "minor", "--simulate-branch=master"],
+        ["version", "--bump", "minor", "--simulate-branch=main"],
         """
             Not committing bump, use --commit to commit
             Would run: git tag -a v[\\d.]+ -m "Version [\\d.]+"
@@ -213,7 +213,7 @@ def test_version(sample_project):
     )
 
     run_setup_py(
-        ["version", "-b", "patch", "--simulate-branch=master"],
+        ["version", "-b", "patch", "--simulate-branch=main"],
         """
             Can't bump 'patch', it's out of scope of main format .+ acceptable values: major, minor
         """,

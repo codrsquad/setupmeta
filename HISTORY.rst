@@ -2,6 +2,13 @@
 Release notes
 =============
 
+3.6.0 (2023-12-04)
+------------------
+
+* Use ``--no-verify`` with ``git commit`` when bumping a version, to support projects with a
+  ``no-commit-to-branch`` hook (OK to commit version bump to branch, but not other changes)
+
+
 3.5.2 (2023-09-22)
 ------------------
 
@@ -36,7 +43,7 @@ Release notes
     versioning={
         "main": "{major}.{minor}.{distance}",
         "extra": "{dirty}",
-        "branches": "master",
+        "branches": "main",
         "version_tag": "v*.*",
     },
 
@@ -518,7 +525,7 @@ Release notes
 * Allow to use include other files in long description via something like ``.. [[include HISTORY.rst]]``
 
 
-.. _requirements: https://github.com/codrsquad/setupmeta/blob/master/docs/requirements.rst
+.. _requirements: https://github.com/codrsquad/setupmeta/blob/main/docs/requirements.rst
 
 .. _spark: https://spark.apache.org/docs/latest/index.html
 

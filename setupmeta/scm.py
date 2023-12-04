@@ -251,7 +251,7 @@ class Git(Scm):
             if m and m.group(1) == branch:
                 state = m.group(6)
                 if state and ("behind" in state or "gone" in state):
-                    # Example: Local branch 'master' is out of date (behind 1), can't bump
+                    # Example: Local branch 'main' is out of date (behind 1), can't bump
                     setupmeta.abort("Local branch '%s' is out of date (%s), can't bump" % (branch, state))
 
         bump_msg = "Version %s" % next_version
