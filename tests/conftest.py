@@ -278,7 +278,7 @@ def run_internal_setup_py(folder, *args):
 
 
 class MockGit(Git):
-    def __init__(self, describe="v0.1.2-3-g123-dirty", branch="master", commitid="abc123", local_tags="", remote_tags=""):
+    def __init__(self, describe="v0.1.2-3-g123-dirty", branch="main", commitid="abc123", local_tags="", remote_tags=""):
         self.describe = describe
         self.branch = branch
         self.commitid = commitid

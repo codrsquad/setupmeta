@@ -112,8 +112,7 @@ class Scenario:
         self.target = os.path.join(self.temp, "work")
 
         os.makedirs(self.origin)
-        # TODO: need to stop defaulting to 'master' branch, and use non-hardcoded git default instead ('main' nowadays)
-        self.run_git("init", "--bare", self.origin, "--initial-branch=master", cwd=self.temp)
+        self.run_git("init", "--bare", self.origin, "--initial-branch=main", cwd=self.temp)
         self.run_git("clone", self.origin, self.target, cwd=self.temp)
         copytree(self.folder, self.target)
 
@@ -131,9 +130,9 @@ class Scenario:
 
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")
-        self.run_git("push", "origin", "master")
+        self.run_git("push", "origin", "main")
         self.run_git("tag", "-a", "v1.2.3", "-m", "Initial tag at v1.2.3")
-        self.run_git("push", "--tags", "origin", "master")
+        self.run_git("push", "--tags", "origin", "main")
 
     def clean(self):
         if not self.temp:

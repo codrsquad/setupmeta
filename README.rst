@@ -9,7 +9,7 @@ Simplify your setup.py
     :target: https://github.com/codrsquad/setupmeta/actions
     :alt: Tested with Github Actions
 
-.. image:: https://codecov.io/gh/codrsquad/setupmeta/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/codrsquad/setupmeta/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/codrsquad/setupmeta
     :alt: Test code codecov
 
@@ -201,11 +201,11 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
 
-.. _commands: https://github.com/codrsquad/setupmeta/blob/master/docs/commands.rst
+.. _commands: https://github.com/codrsquad/setupmeta/blob/main/docs/commands.rst
 
-.. _requirements: https://github.com/codrsquad/setupmeta/blob/master/docs/requirements.rst
+.. _requirements: https://github.com/codrsquad/setupmeta/blob/main/docs/requirements.rst
 
-.. _versioning: https://github.com/codrsquad/setupmeta/blob/master/docs/versioning.rst
+.. _versioning: https://github.com/codrsquad/setupmeta/blob/main/docs/versioning.rst
 
 .. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
 
@@ -215,17 +215,17 @@ If you need advanced stuff, you can still leverage setupmeta_ for all the usual 
 
 .. _setupmeta: https://github.com/codrsquad/setupmeta
 
-.. _examples: https://github.com/codrsquad/setupmeta/tree/master/examples
+.. _examples: https://github.com/codrsquad/setupmeta/tree/main/examples
 
 .. _rst comments: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#comments
 
-.. _requests: https://github.com/requests/requests/tree/master/requests
+.. _requests: https://github.com/psf/requests/tree/main/src/requests
 
-.. _cryptography: https://github.com/pyca/cryptography/tree/master/src/cryptography
+.. _cryptography: https://github.com/pyca/cryptography/tree/main/src/cryptography
 
-.. _changes: https://github.com/michaeljoseph/changes/blob/master/changes/__init__.py
+.. _changes: https://github.com/michaeljoseph/changes/blob/main/changes/__init__.py
 
-.. _arrow: https://github.com/crsmithdev/arrow/blob/master/arrow/__init__.py
+.. _arrow: https://github.com/arrow-py/arrow/blob/master/arrow/__init__.py
 
 .. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
 

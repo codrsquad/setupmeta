@@ -1,2 +1,3 @@
 pep440
 pytest-cov
+setuptools  # Needed by definition, as setupmeta is setuptools hook

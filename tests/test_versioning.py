@@ -13,6 +13,9 @@ from setupmeta.scm import Version
 from . import conftest
 
 
+DEFAULT_BRANCH_SPEC = f"branch({setupmeta.versioning.DEFAULT_BRANCHES})"
+
+
 def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs):
     setup_py = setup_py or conftest.resource("setup.py")
     upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
@@ -24,12 +27,16 @@ def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs)
     return SetupMeta().finalize(upstream=upstream)
 
 
+def check_strategy(versioning, expected):
+    assert str(versioning.strategy) == f"{DEFAULT_BRANCH_SPEC}:{expected}"
+
+
 def test_deprecated_strategy_notation():
     """Custom separators, and the `!` marker will be removed in the future"""
     with conftest.capture_output() as logged:
         meta = new_meta("post !", scm=conftest.MockGit())
         versioning = meta.versioning
-        assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{patch}{post}"
+        check_strategy(versioning, "{major}.{minor}.{patch}{post}")
         check_render(versioning, "1.0.0")
         assert "PEP-440 allows only '+' as local" in logged
         assert "'!' character in 'versioning' is now deprecated" in logged
@@ -37,7 +44,7 @@ def test_deprecated_strategy_notation():
     with conftest.capture_output() as logged:
         meta = new_meta("distance+!foo", scm=conftest.MockGit())
         versioning = meta.versioning
-        assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+foo"
+        check_strategy(versioning, "{major}.{minor}.{distance}+foo")
         check_render(versioning, "1.0.0+foo")
         check_render(versioning, "1.0.2+foo", distance=2)
         assert "PEP-440 allows" not in logged
@@ -257,7 +264,7 @@ def test_no_extra():
     with conftest.capture_output() as logged:
         meta = new_meta("{major}.{minor}+", scm=conftest.MockGit())
         versioning = meta.versioning
-        assert str(versioning.strategy) == "branch(main,master):{major}.{minor}"
+        check_strategy(versioning, "{major}.{minor}")
         check_render(versioning, "1.0")
         check_render(versioning, "1.0", distance=2)
         check_render(versioning, "1.0", distance=2, dirty=True)
@@ -265,7 +272,7 @@ def test_no_extra():
         meta = new_meta("{major}.{minor}.{$FOO}+", scm=conftest.MockGit())
         versioning = meta.versioning
         assert meta.version == "0.1+None"
-        assert str(versioning.strategy) == "branch(main,master):{major}.{minor}+{$FOO}"
+        check_strategy(versioning, "{major}.{minor}+{$FOO}")
         check_render(versioning, "1.0+None")
         check_render(versioning, "1.0+None", distance=2)
         check_render(versioning, "1.0+None", distance=2, dirty=True)
@@ -291,7 +298,7 @@ def test_invalid_part():
         assert "invalid" in str(versioning.strategy.main_bits)
         assert meta.version is None
         assert versioning.problem == "invalid versioning part 'foo'"
-        assert str(versioning.strategy) == "branch(main,master):{foo}.{major}.{minor}{+function 'extra_version'"
+        check_strategy(versioning, "{foo}.{major}.{minor}{+function 'extra_version'")
         check_render(versioning, "invalid.1.0")
         check_render(versioning, "invalid.1.0+d2", distance=2)
         check_render(versioning, "invalid.1.0+extra", distance=2, dirty=True)
@@ -309,7 +316,7 @@ def test_invalid_main():
     with conftest.capture_output() as logged:
         meta = new_meta(dict(main=extra_version, extra=""), scm=conftest.MockGit())
         versioning = meta.versioning
-        assert str(versioning.strategy) == "branch(main,master):function 'extra_version'"
+        check_strategy(versioning, "function 'extra_version'")
         check_render(versioning, "")
         check_render(versioning, "d2", distance=2)
         check_render(versioning, "extra", distance=2, dirty=True)
@@ -346,16 +353,16 @@ def test_distance_marker():
         assert not versioning.problem
         assert not versioning.strategy.problem
         assert meta.version == "0.1.3+dirty"
-        assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+{dirty}"
+        check_strategy(versioning, "{major}.{minor}.{distance}+{dirty}")
 
 
 def test_preconfigured_build_id():
     """Verify that short notations expand to the expected format"""
-    check_preconfigured("branch(main,master):{major}.{minor}.{patch}{post}+{dirty}", "post", "default", "tag")
-    check_preconfigured("branch(main,master):{major}.{minor}.{distance}+{dirty}", "distance", "changes")
-    check_preconfigured("branch(main,master):{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}", "build-id")
-    check_preconfigured("branch(main,master):{major}.{minor}.{patch}{dev}+h{$*BUILD_ID:local}.{commitid}{dirty}", "dev+build-id")
-    check_preconfigured("branch(main,master):{major}.{minor}.{patch}{post}+h{$*BUILD_ID:local}.{commitid}{dirty}", "post+build-id")
+    check_preconfigured("{major}.{minor}.{patch}{post}+{dirty}", "post", "default", "tag")
+    check_preconfigured("{major}.{minor}.{distance}+{dirty}", "distance", "changes")
+    check_preconfigured("{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}", "build-id")
+    check_preconfigured("{major}.{minor}.{patch}{dev}+h{$*BUILD_ID:local}.{commitid}{dirty}", "dev+build-id")
+    check_preconfigured("{major}.{minor}.{patch}{post}+h{$*BUILD_ID:local}.{commitid}{dirty}", "post+build-id")
 
 
 def check_preconfigured(expected, *shorts):
@@ -366,7 +373,7 @@ def check_preconfigured(expected, *shorts):
             assert versioning.enabled
             assert not versioning.problem
             assert not versioning.strategy.problem
-            assert str(versioning.strategy) == expected
+            check_strategy(versioning, expected)
 
 
 @patch.dict(os.environ, {"BUILD_ID": "543"})
@@ -386,7 +393,7 @@ def check_strategy_distance(describe):
     assert not versioning.strategy.problem
     assert "major" in str(versioning.strategy.main_bits)
     assert "dirty" in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+{dirty}"
+    check_strategy(versioning, "{major}.{minor}.{distance}+{dirty}")
     if "dirty" in describe:
         assert meta.version == "0.1.3+dirty"
 
@@ -412,7 +419,7 @@ def check_strategy_build_id(describe):
     assert not versioning.strategy.problem
     assert "major" in str(versioning.strategy.main_bits)
     assert "commitid" in str(versioning.strategy.extra_bits)
-    assert str(versioning.strategy) == "branch(main,master):{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}"
+    check_strategy(versioning, "{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}")
     if "dirty" in describe:
         assert meta.version == "0.1.3+h543.g123.dirty"
 

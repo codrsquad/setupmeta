@@ -7,6 +7,7 @@ from setupmeta.scm import Git, Snapshot, Version
 
 
 BUMPABLE = {"major", "minor", "patch"}
+DEFAULT_BRANCHES = "main,master"
 MAIN_BITS = {"{major}", "{minor}", "{patch}", "{distance}", "{post}", "{dev}"}
 RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$")
 RE_BITS = re.compile(r"{[^}]*}")
@@ -344,7 +345,7 @@ def _parsed_versioning(given):
     # Defaults:
     main = "post"
     extra = "{dirty}"
-    branches = "main,master"
+    branches = DEFAULT_BRANCHES
     hook = None
     rest_from_upstream = {}
     if isinstance(given, dict):
