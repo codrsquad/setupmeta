@@ -41,7 +41,7 @@ def test_check_dependencies():
         run_setup_py(
             ["check", "--deptree"],
             """
-                pep440==.+
+                packaging==.+
                 pytest-cov==.+
             """,
             folder=conftest.PROJECT_DIR,
