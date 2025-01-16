@@ -78,9 +78,9 @@ def test_run_program():
         assert setupmeta.run_program("ls", capture=True, dryrun=True) is None
         assert setupmeta.run_program("ls", capture=False, dryrun=True) == 0
         assert setupmeta.run_program("ls", "foo/does/not/exist", capture=None) != 0
-        assert setupmeta.run_program("pip", "--version", capture=True)
-        assert setupmeta.run_program("pip", "foo bar", capture=True) == ""
-        assert "unknown command" in setupmeta.run_program("pip", "foo bar", capture="all")
+        assert setupmeta.run_program("python", "--version", capture=True)
+        assert setupmeta.run_program("python", "-c", "foo", capture=True) == ""
+        assert "NameError:" in setupmeta.run_program("python", "-c", "foo", capture="all")
         assert setupmeta.run_program("/foo/does/not/exist", capture=True, dryrun=True) is None
         assert setupmeta.run_program("/foo/does/not/exist", capture=False) != 0
 
