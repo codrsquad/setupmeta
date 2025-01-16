@@ -10,7 +10,7 @@
 long_description_content_type: (README.rst  ) text/x-rst
                          name: (explicit    ) single
                    py_modules: (auto-fill   ) ["single"]
-               setup_requires: (explicit    ) ["setupmeta", "setuptools_scm"]
+               setup_requires: (explicit    ) ["setupmeta"]
                           url: (missing     ) - Consider specifying 'url'
                       version: (single.py:8 ) 0.1.0
 
@@ -33,7 +33,6 @@ setup(
     long_description_content_type="text/x-rst", # from README.rst
     name="single",
     py_modules=["single"],
-    setup_requires=["setuptools_scm"],
     version=__version__,                    # from single.py:8
 )
 

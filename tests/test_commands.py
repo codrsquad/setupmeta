@@ -40,8 +40,8 @@ def test_check_dependencies():
         # check --deptree is only useful when ran from a venv, which is guaranteed when invoking tests via tox (but may not be otherwise)
         run_setup_py(
             ["check", "--deptree"],
-            """
-                pep440==.+
+            r"""
+                packaging \[required: Any, installed: [\d+.]+\]
                 pytest-cov==.+
             """,
             folder=conftest.PROJECT_DIR,

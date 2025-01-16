@@ -2,8 +2,8 @@ import os
 import sys
 from unittest.mock import patch
 
-import pep440
 import pytest
+from packaging.version import parse
 
 import setupmeta
 import setupmeta.versioning
@@ -161,7 +161,7 @@ def quick_check(versioning, expected, describe="v0.1.2-5-g123-dirty", compliant=
     assert meta.version == expected
     if compliant:
         main_part, _, _ = meta.version.partition("+")
-        assert pep440.is_canonical(main_part)
+        assert str(parse(main_part)) == main_part
 
     versioning = meta.versioning
     assert versioning.enabled
