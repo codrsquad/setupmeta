@@ -2,8 +2,8 @@ import os
 import sys
 from unittest.mock import patch
 
-from packaging.version import parse
 import pytest
+from packaging.version import parse
 
 import setupmeta
 import setupmeta.versioning
