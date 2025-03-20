@@ -61,7 +61,7 @@ if __name__ == "__main__":
         name="setupmeta",
         entry_points=ENTRY_POINTS,
         packages=["setupmeta"],
-        python_requires=">=3.6",
+        python_requires=">=3.7",
         zip_safe=True,
         classifiers=[
             "Development Status :: 5 - Production/Stable",
@@ -71,7 +71,6 @@ if __name__ == "__main__":
             "Operating System :: Unix",
             "Programming Language :: Python",
             "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
