@@ -2,7 +2,7 @@
 Release notes
 =============
 
-3.7.0 (2025-03-20)
+3.7.1 (2025-03-20)
 ------------------
 
 * Adapted ``CheckCommand`` to setuptools v77.0.3
