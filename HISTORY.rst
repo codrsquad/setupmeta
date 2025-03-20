@@ -2,6 +2,14 @@
 Release notes
 =============
 
+3.7.0 (2025-03-20)
+------------------
+
+* Adapted ``CheckCommand`` to setuptools v77.0.3
+
+* Dropped support for Python 3.6
+
+
 3.6.0 (2023-12-04)
 ------------------
 
