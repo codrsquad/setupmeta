@@ -783,7 +783,14 @@ class temp_resource:
 def meta_command_init(self, dist, **kwargs):
     """Custom __init__ injected to commands decorated with @MetaCommand"""
     self.setupmeta = getattr(dist, "_setupmeta", None)
-    setuptools.Command.__init__(self, dist, **kwargs)
+    ancestor = setuptools.Command
+    if not isinstance(self, setuptools.Command):
+        # See https://github.com/pypa/setuptools/issues/4902
+        import distutils.cmd
+
+        ancestor = distutils.cmd.Command
+
+    ancestor.__init__(self, dist, **kwargs)
 
 
 class UsageError(Exception):
