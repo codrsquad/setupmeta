@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import shutil
 import sys
@@ -182,9 +183,6 @@ def should_ignore_output(line):
         # Edge case when pinning setupmeta itself to a certain version
         return True
 
-    if "pkg_resources.working_set.add" in line:
-        return True
-
 
 def simplified_temp_path(line, *paths):
     if line:
@@ -246,20 +244,9 @@ def run_internal_setup_py(folder, *args):
             sys.argv = [setup_py, "-q"] + list(args)
             run_output = ""
             try:
-                basename = "setup"
-                if sys.version_info[0] > 2:
-                    import importlib.util
-
-                    spec = importlib.util.spec_from_file_location(basename, setup_py)
-                    module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
-
-                else:
-                    # With python2, we have to use deprecated imp module
-                    import imp
-
-                    fp, pathname, description = imp.find_module(basename, [folder])
-                    imp.load_module(basename, fp, pathname, description)
+                spec = importlib.util.spec_from_file_location("setup", setup_py)
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
 
             except SystemExit as e:
                 run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)
