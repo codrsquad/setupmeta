@@ -8,7 +8,7 @@ Release notes
 * Stopped using ``pkg_resources``.
 
 * Removed ``--deptree`` flag from redefined ``check`` command, this way of visualizing
-  a dependency tree is not useful anymore, please use ``uv pip tree`` or pipdeptree_ instead.
+  a dependency tree is not useful anymore, please use ``uv pip tree`` or hdeps_ instead.
 
 
 3.7.2 (2025-03-20)
@@ -554,4 +554,4 @@ Release notes
 
 .. _pip-compile: https://pypi.org/project/pip-tools/
 
-.. _pipdeptree: https://pypi.org/project/pipdeptree/
+.. _hdeps: https://pypi.org/project/hdeps/
