@@ -113,8 +113,8 @@ here for illustration purposes. In general, you should simply use ``versioning="
 (or any other format you like).
 
 You could leverage this ``__version__`` possibility if you have specific use case for that
-(like: you'd like to show which version your code is at without using something like
-``import pkg_resources``)
+(like: you'd like to show which version your code is at without having to do any
+dynamic query)
 
 
 Preconfigured formats

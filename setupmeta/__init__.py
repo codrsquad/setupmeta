@@ -18,14 +18,6 @@ import warnings
 
 import setuptools
 
-try:
-    import pkg_resources
-
-except ImportError:  # pragma: no cover
-    warnings.warn("pkg_resources is not available, expect limited functionality", category=RuntimeWarning)
-    pkg_resources = None
-
-
 USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get("SETUPMETA_DEBUG")
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
@@ -65,19 +57,6 @@ def trace(message):
         return
     sys.stderr.write(":: %s\n" % message)
     sys.stderr.flush()
-
-
-def pkg_req(text):
-    """
-    :param str|None text: Text to parse
-    :return pkg_resources.Requirement|None: Corresponding parsed requirement, if valid
-    """
-    if text:
-        try:
-            return pkg_resources.Requirement(text)
-
-        except Exception:
-            return None
 
 
 def get_words(text):
