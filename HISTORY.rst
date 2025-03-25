@@ -2,6 +2,15 @@
 Release notes
 =============
 
+3.8.0 (2025-03-25)
+------------------
+
+* Stopped using ``pkg_resources``.
+
+* Removed ``--deptree`` flag from redefined ``check`` command, this way of visualizing
+  a dependency tree is not useful anymore, please use ``uv pip tree`` or hdeps_ instead.
+
+
 3.7.2 (2025-03-20)
 ------------------
 
@@ -544,3 +553,5 @@ Release notes
 .. _report: https://github.com/codrsquad/setupmeta/issues
 
 .. _pip-compile: https://pypi.org/project/pip-tools/
+
+.. _hdeps: https://pypi.org/project/hdeps/

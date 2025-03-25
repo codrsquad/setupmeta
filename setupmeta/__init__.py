@@ -6,7 +6,6 @@ download_url: archive/v{version}.tar.gz
 author: Zoran Simic zoran@simicweb.com
 """
 
-import io
 import os
 import platform
 import re
@@ -17,14 +16,6 @@ import tempfile
 import warnings
 
 import setuptools
-
-try:
-    import pkg_resources
-
-except ImportError:  # pragma: no cover
-    warnings.warn("pkg_resources is not available, expect limited functionality", category=RuntimeWarning)
-    pkg_resources = None
-
 
 USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get("SETUPMETA_DEBUG")
@@ -40,7 +31,7 @@ PKGID = "[A-Za-z0-9][-A-Za-z0-9_.]*"
 
 # Simplistic parsing of known formats used in requirements.txt
 RE_SIMPLE_PIN = re.compile(r"^(%s)\s*==\s*([^;\s]+)\s*(;.*)?$" % PKGID)
-RE_WORDS = re.compile(r"[^\w]+")
+RE_WORDS = re.compile(r"\W+")
 RE_PKG_NAME = re.compile(r"^(%s)$" % PKGID)
 
 ABSTRACT = "abstract"
@@ -65,19 +56,6 @@ def trace(message):
         return
     sys.stderr.write(":: %s\n" % message)
     sys.stderr.flush()
-
-
-def pkg_req(text):
-    """
-    :param str|None text: Text to parse
-    :return pkg_resources.Requirement|None: Corresponding parsed requirement, if valid
-    """
-    if text:
-        try:
-            return pkg_resources.Requirement(text)
-
-        except Exception:
-            return None
 
 
 def get_words(text):
@@ -170,7 +148,7 @@ def version_components(text):
             component = "%s%s" % (qualifier, component)
             qualifier = ""
 
-        additional.append(component)
+        additional.append(str(component))
 
     while len(main_triplet) < 3:
         main_triplet.append(0)
@@ -183,7 +161,6 @@ def version_components(text):
         additional.append(qualifier)
 
     dirty = "dirty" in additional
-
     return main_triplet[0], main_triplet[1], main_triplet[2], ".".join(additional), distance, dirty
 
 
@@ -316,7 +293,7 @@ def _should_ignore_run_fail(program, args, error):
         return False
 
     if args[0] in ("rev-list", "rev-parse") and "HEAD" in args:
-        # No commits yet, brand new git repo
+        # No commits yet, brand-new git repo
         return error and "revision" in error.lower()
 
     if args[0] == "describe":
@@ -418,7 +395,7 @@ def readlines(relative_path, limit=0):
         try:
             result = []
             full_path = project_path(relative_path)
-            with io.open(full_path, "rt") as fh:
+            with open(full_path, "rt") as fh:
                 for line in fh:
                     limit -= 1
                     if limit == 0:

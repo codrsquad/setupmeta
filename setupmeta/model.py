@@ -396,8 +396,7 @@ class PackageInfo:
         if self.requires_dist:
             return RequirementsFile.from_lines(self.requires_dist, do_abstract=False, source_path="PKG-INFO/Requires-Dist")
 
-        if self.requires_txt:
-            # requires.txt is not produced anymore by setuptools 68.2+
+        if self.requires_txt:  # pragma: no cover, requires.txt is not produced anymore by setuptools 68.2+
             return RequirementsFile.from_file(self.requires_txt, do_abstract=False)
 
     def load_more_info(self, folder, depth=3):

@@ -59,9 +59,6 @@ def test_representation():
 
 
 def test_requirements():
-    assert setupmeta.pkg_req(None) is None
-    assert setupmeta.pkg_req("#foo") is None
-
     assert setupmeta.requirements_from_file("/dev/null/foo") is None
 
     sample = conftest.resource("scenarios/disabled/requirements.txt")

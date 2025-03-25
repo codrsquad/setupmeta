@@ -2,8 +2,6 @@
 Verify that ../examples/*/setup.py behave as expected
 """
 
-import sys
-
 import pytest
 
 import setupmeta
@@ -18,14 +16,8 @@ def scenario_folder(request):
         yield request.param
 
 
-@pytest.mark.skipif(sys.version_info < (3, 7), reason="EOL-ed versions have minor diffs in warnings coming from old setuptools checks")
 def test_scenario(scenario_folder):
     """Check that 'scenario' yields expected explain output"""
-    py = ".".join(str(s) for s in sys.version_info[:2])
-    if py < "3.7" and "via-cfg" in scenario_folder:
-        # For some reason, older pythons don't all seem to handle setup.cfg well... maybe min version of setuptools needed?
-        pytest.skip("via-cfg scenario useful only in 3.7+")
-
     scenario = scenarios.Scenario(scenario_folder)
     expected = scenario.expected_contents()
     output = scenario.replay()

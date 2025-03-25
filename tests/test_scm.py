@@ -54,6 +54,7 @@ def test_git():
 def test_ignore_git_failures():
     assert setupmeta._should_ignore_run_fail("git", ["rev-list", "HEAD"], "ambiguous argument 'HEAD': unknown revision or path")
     assert setupmeta._should_ignore_run_fail("git", ["describe"], "fatal: no names found, cannot describe anything.")
+    assert not setupmeta._should_ignore_run_fail("foo", ["bar"], "some error")
 
 
 def test_git_describe_override(monkeypatch):
