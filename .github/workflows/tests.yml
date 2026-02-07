@@ -40,9 +40,37 @@ jobs:
         flag-name: python-${{ matrix.python-version }}
         parallel: true
 
+  test-eol:
+    name: Test py${{ matrix.python-version }} (EOL)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.7"]  # Only one ancient python needed for test coverage...
+
+    steps:
+    - uses: actions/checkout@v6
+    - uses: deadsnakes/action@v3.2.0
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Configure git
+      run: |
+        git config --global user.name "GH-actions-bot"
+        git config --global user.email "gh-actions-bot@noreply.github.com"
+
+    - uses: astral-sh/setup-uv@v7
+    - run: uvx --with tox-uv tox -e py
+
+    - uses: coverallsapp/github-action@v2
+      with:
+        file: .tox/test-reports/coverage.xml
+        flag-name: python-${{ matrix.python-version }}
+        parallel: true
+
   coveralls-finish:
     name: Finish Coveralls
-    needs: test
+    needs: [test, test-eol]
     runs-on: ubuntu-latest
     steps:
     - name: Finish parallel build
