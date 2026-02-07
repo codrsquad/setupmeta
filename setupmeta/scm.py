@@ -3,7 +3,6 @@ import re
 
 import setupmeta
 
-
 RE_BRANCH_STATUS = re.compile(r"^## (.+)\.\.\.(([^/]+)/)?([^ ]+)\s*(\[(.+)])?$")
 RE_GIT_DESCRIBE = re.compile(r"^v?([0-9]+\.[0-9]+.+?)(-\d+)?(-g\w+)?(-dirty)?$", re.IGNORECASE)  # Output expected from git describe
 
@@ -94,6 +93,9 @@ class Scm:
         """
         fatal = kwargs.pop("fatal", True)
         capture = kwargs.pop("capture", None)
+        if capture is None and commit and os.environ.get("SETUPMETA_RUNNING_SCENARIOS"):
+            capture = "testing-scenarios"
+
         return self.get_output(*args, capture=capture, fatal=fatal, dryrun=not commit, **kwargs)
 
 
@@ -271,15 +273,15 @@ class Version:
     Version broken down for setupmeta usage purposes
     """
 
-    text = None         # type: str # Full text of version as received
+    text = None  # type: str # Full text of version as received
 
-    major = 0           # type: int # Major part of version
-    minor = 0           # type: int # Minor part of version
-    patch = 0           # type: int # Patch part of version
-    distance = 0        # type: int # Number of commits since last version tag
-    commitid = None     # type: str # Commit id
-    dirty = ""          # type: str # Dirty marker
-    additional = ""     # type: str # Additional version markers (if any)
+    major = 0  # type: int # Major part of version
+    minor = 0  # type: int # Minor part of version
+    patch = 0  # type: int # Patch part of version
+    distance = 0  # type: int # Number of commits since last version tag
+    commitid = None  # type: str # Commit id
+    dirty = ""  # type: str # Dirty marker
+    additional = ""  # type: str # Additional version markers (if any)
 
     def __init__(self, main=None, distance=0, commitid=None, dirty=False, text=None):
         """

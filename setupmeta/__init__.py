@@ -6,11 +6,12 @@ download_url: archive/v{version}.tar.gz
 author: Zoran Simic zoran@simicweb.com
 """
 
+import contextlib
 import os
 import platform
 import re
 import shutil
-import subprocess  # nosec
+import subprocess
 import sys
 import tempfile
 import warnings
@@ -21,12 +22,10 @@ USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
 DEBUG = os.environ.get("SETUPMETA_DEBUG")
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
-TESTING = False  # Set to True while running tests
 RE_SPACES = re.compile(r"\s+", re.MULTILINE)
 RE_VERSION_COMPONENT = re.compile(r"(\d+|[A-Za-z]+)")
 
 PLATFORM = platform.system().lower()
-WINDOWS = PLATFORM.startswith("win")
 PKGID = "[A-Za-z0-9][-A-Za-z0-9_.]*"
 
 # Simplistic parsing of known formats used in requirements.txt
@@ -54,6 +53,7 @@ def trace(message):
     """Output 'message' if tracing is on"""
     if not DEBUG:
         return
+
     sys.stderr.write(":: %s\n" % message)
     sys.stderr.flush()
 
@@ -72,7 +72,7 @@ def to_int(text, default=None):
 
 
 def short(text, c=None):
-    """ Short representation of 'text' """
+    """Short representation of 'text'"""
     if not text:
         return "%s" % text
 
@@ -82,9 +82,6 @@ def short(text, c=None):
     result = stringify(text).strip()
     result = result.replace(USER_HOME, "~")
     result = re.sub(RE_SPACES, " ", result)
-    if WINDOWS:  # pragma: no cover
-        result = result.replace("\\", "/")
-
     if c and len(result) > abs(c):
         if c < 0:
             return "%s..." % result[:-c]
@@ -96,7 +93,7 @@ def short(text, c=None):
             summary = "%s items" % len(text)
 
         else:
-            return "%s..." % result[:c - 3]
+            return "%s..." % result[: c - 3]
 
         cutoff = c - len(summary) - 5
         if cutoff <= 0:
@@ -108,7 +105,7 @@ def short(text, c=None):
 
 
 def strip_dash(text):
-    """ Strip leading dashes from 'text' """
+    """Strip leading dashes from 'text'"""
     if not text:
         return text
 
@@ -116,9 +113,6 @@ def strip_dash(text):
 
 
 def is_executable(path):
-    if WINDOWS:  # pragma: no cover
-        return path and os.path.isfile(path) and path.endswith(".exe")
-
     return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
 
@@ -167,9 +161,6 @@ def version_components(text):
 def which(program):
     if not program:
         return None
-
-    if WINDOWS and not program.endswith(".exe"):  # pragma: no cover
-        program += ".exe"
 
     if os.path.isabs(program):
         if is_executable(program):
@@ -224,7 +215,6 @@ def run_program(program, *args, **kwargs):
     dryrun = kwargs.pop("dryrun", False)
     capture = kwargs.pop("capture", None)
     represented = "%s %s" % (program, represented_args(args))
-
     if dryrun:
         print("Would run: %s" % represented)
         return None if capture else 0
@@ -236,22 +226,17 @@ def run_program(program, *args, **kwargs):
 
         return None if capture else 1
 
-    if capture is None:
+    if capture in (None, "testing-scenarios"):
         print("Running: %s" % represented)
-        if TESTING:
-            # Avoid pass-through chatter in tests
-            kwargs["stdout"] = subprocess.PIPE
-            kwargs["stderr"] = subprocess.PIPE
 
-    else:
+    if capture is not None or capture == "testing-scenarios":
         kwargs["stdout"] = subprocess.PIPE
         kwargs["stderr"] = subprocess.PIPE
 
-    p = subprocess.Popen([full_path] + list(args), **kwargs)  # nosec
+    p = subprocess.Popen([full_path, *args], **kwargs)  # noqa: S603
     output, error = p.communicate()
     output = decode(output)
     error = decode(error)
-
     trace_msg = "ran [%s], exitcode: %s" % (represented, p.returncode)
     if output:
         output = output.rstrip()
@@ -262,24 +247,18 @@ def run_program(program, *args, **kwargs):
         trace_msg = "%s, error: [%s]" % (trace_msg, error.strip())
 
     trace(trace_msg)
-
     if capture:
-        if p.returncode:
-            if not _should_ignore_run_fail(program, args, error):
-                warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no stderr-"))
+        if p.returncode and not _should_ignore_run_fail(program, args, error):
+            warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no stderr-"))
 
         if capture == "all":
             return merged(output, error)
 
-        return merged(output, None)
+        return output
 
     if p.returncode:
-        if fatal or TESTING:
-            message = error
-            if TESTING:
-                message = "stdout: %s\nstderr: %s" % (output, error)
-
-            print("%s exited with code %s:\n%s" % (represented, p.returncode, message))
+        if fatal:
+            print("%s exited with code %s:\n%s" % (represented, p.returncode, error))
 
         if fatal:
             sys.exit(p.returncode)
@@ -308,7 +287,7 @@ def _should_ignore_run_fail(program, args, error):
 def decode(value):
     """Python 2/3 friendly decoding of output"""
     if isinstance(value, bytes):
-        return value.decode("utf-8")
+        value = value.decode("utf-8")
 
     return value
 
@@ -387,7 +366,7 @@ def project_path(*relative_paths):
 
 def relative_path(full_path):
     """Relative path to current project_dir"""
-    return full_path[len(MetaDefs.project_dir) + 1:] if full_path and full_path.startswith(MetaDefs.project_dir) else full_path
+    return full_path[len(MetaDefs.project_dir) + 1 :] if full_path and full_path.startswith(MetaDefs.project_dir) else full_path
 
 
 def readlines(relative_path, limit=0):
@@ -404,10 +383,12 @@ def readlines(relative_path, limit=0):
                     result.append(line)
 
             trace("read %s lines from %s" % (len(result), relative_path))
-            return result
 
         except IOError:
             return None
+
+        else:
+            return result
 
 
 def requirements_from_text(text):
@@ -496,15 +477,15 @@ class ReqEntry(object):
         if " #" in line:
             # Trailing comments can direct us to treat that particular line in a certain way regarding pinning
             i = line.index(" #")
-            self.local_section = self._set_comment(line[i + 2:])
+            self.local_section = self._set_comment(line[i + 2 :])
             line = line[:i].strip()
 
-        if line.startswith("-e ") or line.startswith("--editable "):
+        if line.startswith(("-e ", "--editable ")):
             self.editable = True
             p = line.partition(" ")
             line = p[2].strip()
 
-        elif line.startswith("-r ") or line.startswith("--requirement "):
+        elif line.startswith(("-r ", "--requirement ")):
             _, _, self.refers = line.partition(" ")
             self.refers = self.refers.strip()
             if self.refers:
@@ -618,7 +599,7 @@ def iterate_req_txt(seen, parent, source_path, lines):
 
 
 class RequirementsFile:
-    """ Keeps track of where requirements came from """
+    """Keeps track of where requirements came from"""
 
     def __init__(self, do_abstract=True):
         self.do_abstract = do_abstract
@@ -684,7 +665,7 @@ class RequirementsFile:
 
 
 def find_requirements(*relative_paths):
-    """ Read old-school requirements.txt type file """
+    """Read old-school requirements.txt type file"""
     for path in relative_paths:
         if path:
             path = project_path(path)
@@ -697,7 +678,7 @@ def find_requirements(*relative_paths):
 
 
 class Requirements:
-    """ Allows to auto-fill requires from requirements.txt """
+    """Allows to auto-fill requires from requirements.txt"""
 
     def __init__(self, pkg_info):
         """
@@ -750,17 +731,14 @@ class temp_resource:
 
     def __exit__(self, *args):
         os.chdir(self.old_cwd)
-        try:
+        with contextlib.suppress(OSError):
             shutil.rmtree(self.path)
 
-        except OSError:  # pragma: no cover
-            pass
 
-
-def meta_command_init(self, dist, **kwargs):
+def meta_command_init(self, dist, **_):
     """Custom __init__ injected to commands decorated with @MetaCommand"""
     self.setupmeta = getattr(dist, "_setupmeta", None)
-    super(self.__class__, self).__init__(dist, **kwargs)
+    super(self.__class__, self).__init__(dist)
 
 
 class UsageError(Exception):
@@ -799,14 +777,14 @@ class MetaDefs:
 
     @classmethod
     def register_command(cls, command):
-        """ Register our own 'command' """
+        """Register our own 'command'"""
         command.description = command.__doc__.strip().split("\n")[0]
         command.__init__ = meta_command_init
         if command.initialize_options == setuptools.Command.initialize_options:
-            command.initialize_options = lambda x: None
+            command.initialize_options = lambda _: None
 
         if command.finalize_options == setuptools.Command.finalize_options:
-            command.finalize_options = lambda x: None
+            command.finalize_options = lambda _: None
 
         if not hasattr(command, "user_options"):
             command.user_options = []
@@ -817,7 +795,7 @@ class MetaDefs:
     @classmethod
     def dist_to_dict(cls, dist):
         """
-        :param distutils.dist.Distribution dist: Distribution or attrs
+        :param setuptools.dist.Distribution dist: Distribution or attrs
         :return dict:
         """
         if not dist or isinstance(dist, dict):
@@ -873,7 +851,7 @@ class Console:
     @classmethod
     def columns(cls, default=160):
         if cls._columns is None and sys.stdout.isatty() and "TERM" in os.environ:
-            cols = os.popen("tput cols", "r").read()  # nosec
+            cols = os.popen("tput cols", "r").read()  # noqa: S605, S607
             cols = decode(cols)
             cls._columns = to_int(cols, default=None)
 

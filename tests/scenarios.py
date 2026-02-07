@@ -1,4 +1,5 @@
 import argparse
+import contextlib
 import io
 import logging
 import os
@@ -8,8 +9,9 @@ import tempfile
 import setupmeta
 from setupmeta.content import load_contents
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     import conftest
+
 else:
     from . import conftest
 
@@ -26,13 +28,13 @@ def valid_scenarios(folder):
         full_path = os.path.join(folder, name)
         setup_py = os.path.join(full_path, "setup.py")
         if os.path.isdir(full_path) and os.path.isfile(setup_py):
-            if not setupmeta.WINDOWS or not os.path.exists(os.path.join(full_path, ".hooks")):
-                result.append(conftest.relative_path(full_path))
+            result.append(conftest.relative_path(full_path))
+
     return result
 
 
 def scenario_paths():
-    """ Available scenario names """
+    """Available scenario names"""
     return valid_scenarios(SCENARIOS) + valid_scenarios(EXAMPLES)
 
 
@@ -43,26 +45,27 @@ def copytree(src, dst):
         if os.path.isdir(s):
             if os.path.isdir(d):
                 copytree(s, d)
+
             else:
                 shutil.copytree(s, d)
+
         else:
             shutil.copy2(s, d)
 
 
 class Scenario:
-
-    folder = None       # type: str # Folder where scenario is defined
+    folder = None  # type: str # Folder where scenario is defined
     preparation = None  # type: list[str] # Commands to run in preparation step
-    commands = None     # type: list[str] # setup.py commands to run
-    target = None       # type: str # Folder where to run the scenario (temp folder for full git modification support)
+    commands = None  # type: list[str] # setup.py commands to run
+    target = None  # type: str # Folder where to run the scenario (temp folder for full git modification support)
 
-    temp = None         # type: str # Optional temp folder used
-    origin = None       # type: str # Temp SCM origin to use
+    temp = None  # type: str # Optional temp folder used
+    origin = None  # type: str # Temp SCM origin to use
 
     def __init__(self, relative_path, in_place=False):
         self.short_name = relative_path
         src = os.path.join(conftest.PROJECT_DIR, relative_path)
-        if in_place:
+        if in_place:  # pragma: no cover, only used for baseline regeneration
             self.folder = src
             self.target = relative_path
 
@@ -72,9 +75,12 @@ class Scenario:
                 fdest = os.path.join(os.getcwd(), fname)
                 if os.path.isdir(fsrc):
                     shutil.copytree(fsrc, fdest)
+
                 else:
                     shutil.copy(fsrc, fdest)
+
                 shutil.copystat(fsrc, fdest)
+
             self.folder = os.getcwd()
             self.target = self.folder
 
@@ -86,10 +92,11 @@ class Scenario:
             self.target = None
             with io.open(extra_commands, "rt") as fh:
                 for line in fh:
-                    line = str(conftest.decode(line).strip())  # coerce to str() to not confuse py2 with unicode
+                    line = setupmeta.decode(line).strip()
                     if line:
                         if line.startswith(":"):
                             self.preparation.append(line[1:])
+
                         else:
                             self.commands.append(line)
 
@@ -97,6 +104,7 @@ class Scenario:
         return self.short_name
 
     def run_git(self, *args, **kwargs):
+        kwargs.setdefault("capture", False)
         kwargs.setdefault("cwd", self.target)
         output = conftest.run_git(*args, **kwargs)
         return output
@@ -117,16 +125,7 @@ class Scenario:
         copytree(self.folder, self.target)
 
         for command in self.preparation:
-            if command.startswith("mv"):
-                # Unfortunately there is no 'mv' on Windows
-                _, source, dest = command.split()
-                source = os.path.join(self.target, source)
-                dest = os.path.join(self.target, dest)
-                shutil.copytree(source, dest)
-                shutil.rmtree(source)
-
-            else:
-                setupmeta.run_program(*command.split(), cwd=self.target)
+            setupmeta.run_program(*command.split(), cwd=self.target)
 
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")
@@ -139,17 +138,15 @@ class Scenario:
             del os.environ[setupmeta.SCM_DESCRIBE]
             return
 
-        try:
+        with contextlib.suppress(OSError):
             shutil.rmtree(self.temp)
-        except OSError:
-            pass
 
     def replay(self):
         try:
             self.prepare()
             result = []
             for command in self.commands:
-                output = ":: %s\n%s" % (command, conftest.run_setup_py(self.target, *command.split()))
+                output = ":: %s\n%s" % (command, conftest.spawn_setup_py(self.target, *command.split()))
                 result.append(output)
 
             return "\n\n".join(result).rstrip()
@@ -164,23 +161,25 @@ class Scenario:
         content = load_contents(self.expected_path())
         return content and content.strip()
 
-    def refresh_example(self, dryrun):
-        logging.info("Refreshing %s" % self)
+    def refresh_example(self, dryrun):  # pragma: no cover, for manual runs
+        logging.info("Refreshing %s", self)
         output = self.replay()
         if dryrun:
             print(output)
             return
+
         with io.open(self.expected_path(), "wt") as fh:
             fh.write("%s\n" % output)
 
 
-def main():
+def main():  # pragma: no cover
     """
     Refresh tests/scenarios/*/expected.txt and examples/*/expected.txt
     """
     parser = argparse.ArgumentParser(description=main.__doc__.strip())
     parser.add_argument("--debug", action="store_true", help="Show debug info")
     parser.add_argument("--dryrun", "-n", action="store_true", help="Print output rather, don't update expected.txt")
+    parser.add_argument("command", choices=("replay", "regen"), help="replay or regen")
     parser.add_argument("scenario", nargs="*", help="Scenarios to regenerate (default: all)")
     args = parser.parse_args()
 
@@ -191,12 +190,30 @@ def main():
     if not args.scenario:
         args.scenario = scenario_paths()
 
-    os.chdir(conftest.PROJECT_DIR)
+    os.environ["SETUPMETA_RUNNING_SCENARIOS"] = "1"
+    with setupmeta.current_folder(conftest.PROJECT_DIR):
+        for folder in args.scenario:
+            if args.command == "regen":
+                scenario = Scenario(folder, in_place=True)
+                scenario.refresh_example(args.dryrun)
 
-    for folder in args.scenario:
-        scenario = Scenario(folder, in_place=True)
-        scenario.refresh_example(args.dryrun)
+            elif args.command == "replay":
+                folder = os.path.abspath(folder)
+                with setupmeta.temp_resource():
+                    import difflib
+
+                    scenario = Scenario(folder, in_place=False)
+                    expected = scenario.expected_contents()
+                    output = scenario.replay()
+                    print("----")
+                    if expected == output:
+                        print("OK, no diffs found")
+
+                    else:
+                        print("Diffs found:")
+                        diff = difflib.ndiff(expected.splitlines(), output.splitlines())
+                        print("\n".join(diff))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

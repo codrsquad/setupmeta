@@ -12,7 +12,7 @@ import setuptools
 
 import setupmeta
 
-
+CLEANABLE_EXTENSIONS = {"egg-info", "pyc", "pyo", "pyd"}
 flatten = chain.from_iterable
 
 
@@ -115,9 +115,9 @@ class VersionCommand(setuptools.Command):
                 print(self.setupmeta.version)
 
         except setupmeta.UsageError as e:
-            from distutils.errors import DistutilsSetupError
+            from setuptools.errors import SetupError
 
-            raise DistutilsSetupError(e)
+            raise SetupError(e) from None
 
 
 @MetaCommand
@@ -242,12 +242,7 @@ class ExplainCommand(setuptools.Command):
             if source and source != "explicit":
                 comment = "# from %s" % setupmeta.short(source)
                 rest, _, last_line = line.rpartition("\n")
-                if len(last_line) < longest:
-                    padding = " " * (longest - len(last_line))
-
-                else:
-                    padding = " "
-
+                padding = " " * max(1, longest - len(last_line))
                 last_line = "%s%s%s" % (last_line, padding, comment)
                 line = "%s\n%s" % (rest, last_line) if rest else last_line
 
@@ -280,14 +275,13 @@ class ExplainCommand(setuptools.Command):
 
         if definitions:
             longest_key = min(30, max(len(key) for key in definitions))
-            sources = sum((d.sources for d in definitions.values()), [])
+            sources = [s for d in definitions.values() for s in d.sources]
             longest_source = min(40, max(len(s.source) for s in sources))
             form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
             max_chars = max(60, self.chars - longest_key - longest_source - 5)
 
             for definition in sorted(definitions.values()):
-                count = 0
-                for source in definition.sources:
+                for count, source in enumerate(definition.sources):
                     if count:
                         prefix = "\\_"
 
@@ -300,7 +294,6 @@ class ExplainCommand(setuptools.Command):
                     preview = setupmeta.short(source.value, c=max_chars)
                     s = form % (prefix, setupmeta.short(source.source), preview)
                     print(s)
-                    count += 1
 
 
 @MetaCommand
@@ -357,11 +350,6 @@ def get_console_scripts(entry_points):
 class CleanCommand(setuptools.Command):
     """Clean build artifacts and virtual envs"""
 
-    direct = set(".cache .tox build dist venv".split())
-    ignored = set(".git .gradle .idea .venv".split())
-    dirs = set("__pycache__".split())
-    extensions = set("egg-info pyc pyo pyd".split())
-
     deleted = 0
     by_ext = None
 
@@ -377,7 +365,7 @@ class CleanCommand(setuptools.Command):
         self.deleted += 1
 
     def clean_direct(self):
-        for target in self.direct:
+        for target in (".cache", ".tox", "build", "dist", "venv"):
             full_path = setupmeta.project_path(target)
             if os.path.exists(full_path):
                 self.delete(full_path)
@@ -392,16 +380,16 @@ class CleanCommand(setuptools.Command):
         for dirpath, dirnames, filenames in os.walk(setupmeta.MetaDefs.project_dir):
             remove = []
             for dname in dirnames:
-                if dname in self.ignored:
+                if dname in (".git", ".gradle", ".idea", ".venv"):
                     remove.append(dname)
 
-                elif dname in self.dirs:
+                elif dname == "__pycache__":
                     remove.append(dname)
                     self.delete(os.path.join(dirpath, dname))
 
                 else:
                     ext = dname.rpartition(".")[2]
-                    if ext in self.extensions:
+                    if ext in CLEANABLE_EXTENSIONS:
                         remove.append(dname)
                         self.delete(os.path.join(dirpath, dname))
 
@@ -410,7 +398,7 @@ class CleanCommand(setuptools.Command):
 
             for fname in filenames:
                 ext = fname.rpartition(".")[2]
-                if ext in self.extensions:
+                if ext in CLEANABLE_EXTENSIONS:
                     self.delete(os.path.join(dirpath, fname))
 
         if self.by_ext:

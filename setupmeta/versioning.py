@@ -5,11 +5,10 @@ import re
 import setupmeta
 from setupmeta.scm import Git, Snapshot, Version
 
-
 BUMPABLE = {"major", "minor", "patch"}
 DEFAULT_BRANCHES = "main,master"
 MAIN_BITS = {"{major}", "{minor}", "{patch}", "{distance}", "{post}", "{dev}"}
-RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/]!?(.*))?(;(.*))?$")
+RE_VERSIONING = re.compile(r"^(branch(\([\w\s,\-]+\))?:)?(.*?)([ +@#%^/;]!?(.*))?$")
 RE_BITS = re.compile(r"{[^}]*}")
 PRECONFIGURED = {
     "post": "{major}.{minor}.{patch}{post}+{dirty}",
@@ -19,8 +18,7 @@ PRECONFIGURED = {
     "build-id": "{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}",
 }
 PRECONFIGURED_ALIAS = {
-    "": "post",
-    "changes": "distance",
+    "": "dev",
     "default": "post",
     "tag": "post",
 }
@@ -85,12 +83,7 @@ class VersionBit:
         if self.alternative:
             text = "%s:%s" % (text, self.alternative)
 
-        if self.constant:
-            text = "'%s'" % text
-
-        else:
-            text = "{%s}" % text
-
+        text = ("'%s'" if self.constant else "{%s}") % text
         if self.problem:
             text = " [%s]" % self.problem
 
@@ -119,21 +112,21 @@ class VersionBit:
         """
         return getattr(version, self.text, None)
 
-    def rendered_constant(self, version):
+    def rendered_constant(self, version):  # noqa: ARG002
         """
         :param Version version: Version to render
         :return str: Rendered version bit
         """
         return self.text
 
-    def rendered_env_var(self, version):
+    def rendered_env_var(self, version):  # noqa: ARG002
         """
         :param Version version: Version to render
         :return str: Rendered version bit
         """
         i = self.text.index("$")
         prefix = self.text[:i]
-        env_var = self.text[i + 1:]
+        env_var = self.text[i + 1 :]
         if env_var.startswith("*") and env_var.endswith("*"):
             env_var = env_var[1:-1]
             candidates = [n for n in os.environ if env_var in n]
@@ -178,7 +171,7 @@ class VersionBit:
 
 
 class Strategy:
-    def __init__(self, main, extra, branches, hook, **kwargs):
+    def __init__(self, main, extra, branches, **kwargs):
         self.main = main
         self.extra = extra
         self.version_tag = kwargs.pop("version_tag", None)
@@ -194,7 +187,6 @@ class Strategy:
 
         self.extra_bits = self.bits(extra)
         self.branches = branches
-        self.hook = hook
         if self.branches and hasattr(self.branches, "lstrip"):
             self.branches = self.branches.lstrip("(").rstrip(")")
 
@@ -272,7 +264,7 @@ class Strategy:
         bits = self.main_bits
         if isinstance(bits, list) and len(bits) > 1 and not version.additional and (version.distance > 0 or version.dirty):
             # Support for '.dev' versioning scheme: apply it only for:
-            # - regular versioning (no special hook, no additional version bits given)
+            # - regular versioning (no additional version bits given)
             # - only if it's "simple enough", ie: last bit is "dev", and the bit before that is bumpable
             bits = list(bits)
             prelast, last = bits[-2:]
@@ -337,8 +329,8 @@ class Strategy:
         if not given:
             return None
 
-        main, extra, branches, hook, rest_from_upstream = _parsed_versioning(given)
-        return cls(main, extra, branches, hook, **rest_from_upstream)
+        main, extra, branches, rest_from_upstream = _parsed_versioning(given)
+        return cls(main, extra, branches, **rest_from_upstream)
 
 
 def _parsed_versioning(given):
@@ -346,7 +338,6 @@ def _parsed_versioning(given):
     main = "post"
     extra = "{dirty}"
     branches = DEFAULT_BRANCHES
-    hook = None
     rest_from_upstream = {}
     if isinstance(given, dict):
         # User wants advanced mode: passed a dict as versioning= in setup.py
@@ -354,7 +345,6 @@ def _parsed_versioning(given):
         main = given.pop("main", main)
         extra = given.pop("extra", extra)
         branches = given.pop("branches", branches)
-        hook = given.pop("hook", hook)
         rest_from_upstream = given
         given = main
 
@@ -370,9 +360,6 @@ def _parsed_versioning(given):
 
         if isinstance(main, str) and isinstance(extra, str):
             extra = _parsed_extra(m.group(4), extra)
-            if m.group(7):
-                hook = m.group(7)
-
             to_be_moved = []
             for bit in RE_BITS.findall(main):
                 if bit not in MAIN_BITS:
@@ -386,7 +373,7 @@ def _parsed_versioning(given):
             main = main.strip(".")
             extra = extra.strip(".")
 
-    return main, extra, branches, hook, rest_from_upstream
+    return main, extra, branches, rest_from_upstream
 
 
 def _parsed_extra(given, default):
@@ -546,13 +533,6 @@ class Versioning:
 
         self.scm.apply_tag(commit, push, next_version, branch)
 
-        if not self.strategy.hook:
-            return
-
-        hook = setupmeta.project_path(self.strategy.hook)
-        if setupmeta.is_executable(hook):
-            setupmeta.run_program(hook, self.meta.name, branch, next_version, fatal=True, dryrun=not commit, cwd=setupmeta.project_path())
-
     def update_sources(self, next_version, commit, push, vdefs):
         modified = []
         for vdef in vdefs.sources:
@@ -615,6 +595,6 @@ def updated_line(line, next_version):
     comment = ""
     if "#" in value:
         i = value.index("#")
-        comment = "  #%s" % value[i + 1:]
+        comment = "  #%s" % value[i + 1 :]
 
     return "%s%s%s%s%s%s%s\n" % (key, sep, space, quote, next_version, quote, comment)

@@ -3,7 +3,7 @@ import sys
 from unittest.mock import patch
 
 import setupmeta
-from setupmeta.model import Definition, DefinitionEntry, is_setup_py_path
+from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path
 
 from . import conftest
 
@@ -20,6 +20,18 @@ def test_first_word():
     assert setupmeta.first_word("FOO bar") == "foo"
     assert setupmeta.first_word(" FOO, bar") == "foo"
     assert setupmeta.first_word("123") == "123"
+
+
+def test_get_pip():
+    with conftest.capture_output():
+        result = get_pip()
+        if result is None:
+            assert "pip" not in sys.modules
+
+        else:
+            parse_requirements, PipSession = result
+            assert parse_requirements
+            assert PipSession
 
 
 def test_setup_py_determination():
@@ -107,35 +119,32 @@ def test_requirements():
 
 
 def test_empty():
-    with conftest.capture_output():
-        with conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py") as meta:
-            assert not meta.attrs
-            assert not meta.definitions
-            assert not meta.name
-            assert isinstance(meta.requirements, setupmeta.Requirements)
-            assert not meta.requirements.install_requires
-            assert not meta.version
-            assert not meta.versioning.enabled
-            assert meta.versioning.problem == "setupmeta versioning not enabled"
-            assert not meta.versioning.scm
-            assert not meta.versioning.strategy
-            assert str(meta).startswith("0 definitions, ")
+    with conftest.capture_output(), conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py") as meta:
+        assert not meta.attrs
+        assert not meta.definitions
+        assert not meta.name
+        assert isinstance(meta.requirements, setupmeta.Requirements)
+        assert not meta.requirements.install_requires
+        assert not meta.version
+        assert not meta.versioning.enabled
+        assert meta.versioning.problem == "setupmeta versioning not enabled"
+        assert not meta.versioning.scm
+        assert not meta.versioning.strategy
+        assert str(meta).startswith("0 definitions, ")
 
 
 @patch.dict(os.environ, {"PYGRADLE_PROJECT_VERSION": "1.2.3"})
 def test_pygradle_version():
-    with conftest.capture_output() as logged:
-        with conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py", name="pygradle_project") as meta:
-            assert len(meta.definitions) == 2
-            assert meta.value("name") == "pygradle_project"
-            assert meta.value("version") == "1.2.3"
+    with conftest.capture_output(), conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py", name="pygradle_project") as meta:
+        assert len(meta.definitions) == 2
+        assert meta.value("name") == "pygradle_project"
+        assert meta.value("version") == "1.2.3"
 
-            name = meta.definitions["name"]
-            version = meta.definitions["version"]
+        name = meta.definitions["name"]
+        version = meta.definitions["version"]
 
-            assert name.is_explicit
-            assert not version.is_explicit
-            assert "WARNING: No 'packages' or 'py_modules' defined" in logged
+        assert name.is_explicit
+        assert not version.is_explicit
 
 
 def test_meta():

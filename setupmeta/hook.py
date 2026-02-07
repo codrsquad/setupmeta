@@ -2,9 +2,10 @@
 Hook for setuptools/distutils
 """
 
-import distutils.dist
 import functools
 import warnings
+
+import setuptools.dist
 
 from setupmeta.model import MetaDefs, SetupMeta
 
@@ -20,14 +21,12 @@ def finalize_dist(dist, setup_requires=None):
     """
     setup_requires = setup_requires or dist.setup_requires
     setup_requires = setup_requires if isinstance(setup_requires, list) else [setup_requires]
+    if setup_requires and any(dep.startswith("setupmeta") for dep in setup_requires if hasattr(dep, "startswith")):
+        dist._setupmeta = SetupMeta().preprocess(dist)
+        MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
 
-    if setup_requires:
-        if any(dep.startswith("setupmeta") for dep in setup_requires if hasattr(dep, "startswith")):
-            dist._setupmeta = SetupMeta().preprocess(dist)
-            MetaDefs.fill_dist(dist, dist._setupmeta.to_dict(only_meaningful=False))
-
-            # Override parse_command_line for this instance only.
-            dist.parse_command_line = functools.partial(parse_command_line, dist)
+        # Override parse_command_line for this instance only.
+        dist.parse_command_line = functools.partial(parse_command_line, dist)
 
 
 # Make sure we are run before any other finalizer.
@@ -35,12 +34,12 @@ def finalize_dist(dist, setup_requires=None):
 # See: https://github.com/pypa/setuptools/commit/6b210c65938527a4bbcea34942fe43971be3c014
 finalize_dist.order = -100
 
-# Reference to original distutils.dist.Distribution.parse_command_line
-parse_command_line_orig = distutils.dist.Distribution.parse_command_line
+# Reference to original setuptools.dist.Distribution.parse_command_line
+parse_command_line_orig = setuptools.dist.Distribution.parse_command_line
 
 
-def parse_command_line(dist, *args, **kwargs):  # noqa: E302 (keep override close to function it replaces)
-    """distutils.dist.Distribution.parse_command_line replacement
+def parse_command_line(dist, *_, **__):
+    """setuptools.dist.Distribution.parse_command_line replacement
 
     This allows us to insert setupmeta's imputed values for various attributes
     after all configuration has interpreted and read from config files, and just
@@ -49,8 +48,7 @@ def parse_command_line(dist, *args, **kwargs):  # noqa: E302 (keep override clos
     """
     dist._setupmeta.finalize(dist)
     MetaDefs.fill_dist(dist, dist._setupmeta.to_dict())
-
-    return parse_command_line_orig(dist, *args, **kwargs)
+    return parse_command_line_orig(dist)
 
 
 def register_keyword(dist, name, value):
@@ -84,5 +82,6 @@ def register(dist, name, value):  # pragma: no cover; Should not be used in norm
         "`setupmeta` is only useful during the setup process, and does not need "
         "to be properly installed.",
         RuntimeWarning,
+        stacklevel=2,
     )
     register_keyword(dist, name, value)

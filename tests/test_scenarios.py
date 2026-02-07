@@ -6,7 +6,7 @@ import pytest
 
 import setupmeta
 
-from . import scenarios
+from . import conftest, scenarios
 
 
 @pytest.fixture(params=scenarios.scenario_paths())
@@ -18,7 +18,9 @@ def scenario_folder(request):
 
 def test_scenario(scenario_folder):
     """Check that 'scenario' yields expected explain output"""
-    scenario = scenarios.Scenario(scenario_folder)
-    expected = scenario.expected_contents()
-    output = scenario.replay()
-    assert output == expected
+    with conftest.capture_output():
+        scenario = scenarios.Scenario(scenario_folder)
+        assert str(scenario) == scenario_folder
+        expected = scenario.expected_contents()
+        output = scenario.replay()
+        assert output == expected

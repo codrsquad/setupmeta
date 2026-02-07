@@ -10,6 +10,7 @@
              long_description: (README.md       ) # via_req_files spec This scenario tests using references to requirement files from the the `setup.py` spec.
 long_description_content_type: (README.md       ) text/markdown
                          name: (explicit        ) via_req_files
+                   py_modules: (explicit        ) ["foo"]
                setup_requires: (explicit        ) ["setupmeta"]
                           url: (missing         ) - Consider specifying 'url'
                       version: (missing         ) - Consider specifying 'version', you can use setupmeta's versioning='...'
@@ -34,6 +35,7 @@ setup(
     long_description=open("README.md").read(),                       # from README.md
     long_description_content_type="text/markdown",                   # from README.md
     name="via_req_files",
+    py_modules=["foo"],
 )
 
 :: check

@@ -2,6 +2,14 @@
 Release notes
 =============
 
+3.9.0 (2026-02-09)
+------------------
+
+* Test with py3.14, publish sdist with py3.13
+
+* Internal project modernizations (use ``uv``, ``ruff`` etc)
+
+
 3.8.0 (2025-03-25)
 ------------------
 

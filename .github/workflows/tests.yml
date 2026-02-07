@@ -6,63 +6,76 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-
+    name: Test Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - run: |
-        pip install -U pip tox
-        git config --global user.name tester
-        git config --global user.email tester@example.com
-    - run: tox -e py
-    - uses: codecov/codecov-action@v4
+    - name: Configure git
+      run: |
+        git config --global user.name "GH-actions-bot"
+        git config --global user.email "gh-actions-bot@noreply.github.com"
+
+    - uses: astral-sh/setup-uv@v7
+    - run: uvx --with tox-uv tox -e py
+
+    - uses: codecov/codecov-action@v5
       with:
         files: .tox/test-reports/coverage.xml
+        flags: python-${{ matrix.python-version }}
 
   test-eol:
-    # EOL-ed versions of python are exercised on older linux distros
-    # Testing against these versions will eventually be retired
+    name: Test Python ${{ matrix.python-version }} (EOL)
+    # EOL-ed versions of python are exercised on older linux distros, will eventually be retired
     runs-on: ubuntu-20.04
 
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ["3.7", "3.8", "3.9"]
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
-    - run: |
-        pip install -U pip tox
-        git config --global user.name tester
-        git config --global user.email tester@example.com
-    - run: tox -e py
-    - uses: codecov/codecov-action@v4
+    - name: Configure git
+      run: |
+        git config --global user.name "GH-actions-bot"
+        git config --global user.email "gh-actions-bot@noreply.github.com"
+
+    - uses: astral-sh/setup-uv@v7
+    - run: uvx --with tox-uv tox -e py
+
+    - uses: codecov/codecov-action@v5
       with:
         files: .tox/test-reports/coverage.xml
+        flags: python-${{ matrix.python-version }}
 
   linters:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
       with:
-        python-version: '3.13'
+        python-version: "3.14"
 
-    - run: pip install -U pip tox
-    - run: tox -e docs,style,security
+    - uses: astral-sh/setup-uv@v7
+    - run: uvx --with tox-uv tox -e docs,style

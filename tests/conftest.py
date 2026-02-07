@@ -8,17 +8,15 @@ from io import StringIO
 import pytest
 
 import setupmeta
-from setupmeta import decode
 from setupmeta.model import SetupMeta
 from setupmeta.scm import Git
-
 
 TESTS = os.path.abspath(os.path.dirname(__file__))
 PROJECT_DIR = os.path.dirname(TESTS)
 
 setupmeta.MetaDefs.project_dir = PROJECT_DIR
-setupmeta.TESTING = True
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+os.environ["SETUPMETA_RUNNING_SCENARIOS"] = "1"
 sys.dont_write_bytecode = True
 
 
@@ -28,7 +26,11 @@ def resource(*relative_path):
 
 
 def relative_path(full_path):
-    return full_path[len(PROJECT_DIR) + 1:]
+    return full_path[len(PROJECT_DIR) + 1 :]
+
+
+def ignore_warning(*_, **__):
+    pass
 
 
 def print_warning(message, *_, **__):
@@ -41,17 +43,7 @@ def run_program(program, *args, **kwargs):
     fatal = kwargs.pop("fatal", True)
     represented = "%s %s" % (program, setupmeta.represented_args(args))
     print("Running: %s" % represented)
-    if not setupmeta.WINDOWS and "PYCHARM_HOSTED" in os.environ and "python" in program and args and args[0].startswith("-m"):
-        # Temporary workaround for https://youtrack.jetbrains.com/issue/PY-40692
-        wrapper = os.path.join(os.path.dirname(__file__), "pydev-wrapper.sh")
-        args = [wrapper, program] + list(args)
-        program = "/bin/sh"
-
     output = setupmeta.run_program(program, *args, capture=capture, fatal=fatal, **kwargs)
-    if output and capture:
-        print("output:")
-        print(output)
-
     return output
 
 
@@ -66,21 +58,16 @@ def run_git(*args, **kwargs):
 @pytest.fixture
 def sample_project():
     """Yield a sample git project, seeded with files from tests/sample"""
-    old_cd = os.getcwd()
-    try:
-        with setupmeta.temp_resource() as temp:
-            source = resource("sample")
-            dest = os.path.join(temp, "sample")
-            shutil.copytree(source, dest)
-            files = os.listdir(dest)
-            run_git("init", cwd=dest)
-            run_git("add", *files, cwd=dest)
-            run_git("commit", "-m", "Initial commit", cwd=dest)
-            os.chdir(dest)
+    with setupmeta.temp_resource() as temp:
+        source = resource("sample")
+        dest = os.path.join(temp, "sample")
+        shutil.copytree(source, dest)
+        files = os.listdir(dest)
+        run_git("init", cwd=dest)
+        run_git("add", *files, cwd=dest)
+        run_git("commit", "-m", "Initial commit", cwd=dest)
+        with setupmeta.current_folder(dest):
             yield dest
-
-    finally:
-        os.chdir(old_cd)
 
 
 class TestMeta:
@@ -97,6 +84,25 @@ class TestMeta:
         setupmeta.MetaDefs.project_dir = self.old_pd
 
 
+class capture_warnings:
+    """
+    Context manager allowing to temporarily silence setuptools warnings, capture only setupmeta's warnings.
+    """
+
+    def __init__(self):
+        self.old_setupmeta_warnings = setupmeta.warn
+        self.old_warnings = warnings.warn
+
+    def __enter__(self):
+        setupmeta.warn = print_warning
+        warnings.warn = ignore_warning
+        return self
+
+    def __exit__(self, *args):
+        setupmeta.warn = self.old_setupmeta_warnings
+        warnings.warn = self.old_warnings
+
+
 class capture_output:
     """
     Context manager allowing to temporarily grab stdout/stderr output.
@@ -109,27 +115,24 @@ class capture_output:
         assert "some message" in logged
     """
 
-    def __init__(self, stdout=True, stderr=True, ownwarn=False):
+    def __init__(self, stdout=True, stderr=True):
         """
         :param bool stdout: If True, capture stdout
         :param bool stderr: If True, capture stderr
-        :param bool ownwarn: If True, capture only setupmeta's warnings (drop the rest)
         """
+        self.capture_warn = capture_warnings()
         self.old_out = sys.stdout if stdout else None
         self.old_err = sys.stderr if stderr else None
-        self.ownwarn = ownwarn
-        self.old_warnings = warnings.warn
-        self.old_setupmeta_warnings = setupmeta.warn
         self.out_buffer = None
         self.err_buffer = None
 
     def __repr__(self):
         result = ""
         if self.out_buffer:
-            result += decode(self.out_buffer.getvalue())
+            result += setupmeta.decode(self.out_buffer.getvalue())
 
         if self.err_buffer:
-            result += decode(self.err_buffer.getvalue())
+            result += setupmeta.decode(self.err_buffer.getvalue())
 
         return result.rstrip()
 
@@ -140,14 +143,7 @@ class capture_output:
         if self.old_err is not None:
             sys.stderr = self.err_buffer = StringIO()
 
-        if self.ownwarn:
-            # Only let setupmeta's own warning through
-            setupmeta.warn = print_warning
-            warnings.warn = lambda *_, **__: None
-
-        else:
-            warnings.warn = print_warning
-
+        self.capture_warn.__enter__()
         return self
 
     def __exit__(self, *args):
@@ -159,47 +155,25 @@ class capture_output:
 
         self.out_buffer = None
         self.err_buffer = None
-        warnings.warn = self.old_warnings
-        setupmeta.warn = self.old_setupmeta_warnings
+        self.capture_warn.__exit__(*args)
 
     def __contains__(self, item):
         return item in str(self)
 
-    def __len__(self):
-        return len(str(self))
 
-    def __add__(self, other):
-        return "%s %s" % (self, other)
+def simplified_output_path(line, representation, path):
+    if line and path:
+        rp = os.path.realpath(path)
+        if rp not in line:
+            rp = path
 
-
-def should_ignore_output(line):
-    if not line:
-        return True
-
-    if line.startswith("pydev debugger:"):
-        return True
-
-    if "Module setupmeta was already imported" in line:
-        # Edge case when pinning setupmeta itself to a certain version
-        return True
-
-
-def simplified_temp_path(line, *paths):
-    if line:
-        for path in paths:
-            if path:
-                p = os.path.realpath(path)
-                if p in line:
-                    return line.replace(p, "<target>")
-
-                if path in line:
-                    return line.replace(path, "<target>")
+        return line.replace(rp, representation)
 
     return line
 
 
 def cleaned_output(text, folder=None):
-    text = decode(text)
+    text = setupmeta.decode(text)
     if not text:
         return text
 
@@ -207,48 +181,47 @@ def cleaned_output(text, folder=None):
     cwd = os.getcwd()
     for line in text.splitlines():
         line = line.rstrip()
-        if should_ignore_output(line):
+        if not line or line.startswith(("pydev debugger:", "Connected to: <socket")) or "Module setupmeta was already imported" in line:
             continue
 
-        if setupmeta.WINDOWS:
-            if " \\_: " not in line:
-                line = line.replace("\\", "/")
-
-        line = simplified_temp_path(line, folder, cwd)
-        # Ignore minor change in how missing meta-data warning is phrased...
-        line = line.replace(" must be supplied", " should be supplied")
+        line = simplified_output_path(line, "<target>", folder)
+        line = simplified_output_path(line, "<tests>", TESTS)
+        line = simplified_output_path(line, "<setupmeta>", PROJECT_DIR)
+        line = simplified_output_path(line, "<cwd>", cwd)
         result.append(line)
 
     return "\n".join(result).rstrip()
 
 
-def run_setup_py(folder, *args):
-    if folder == setupmeta.project_path() or not os.path.isabs(folder):
-        output = run_program(sys.executable, os.path.join(folder, "setup.py"), "-q", *args, capture="all")
-        return cleaned_output(output)
+def spawn_setup_py(folder, *args):
+    """Invoke `setup.py` from `folder` as an external process, silence all warnings"""
+    with setupmeta.current_folder(folder):
+        env = dict(os.environ)
+        env["PYTHONWARNINGS"] = "ignore"
+        output = run_program(sys.executable, "setup.py", "-q", *args, env=env)
+        output = cleaned_output(output)
+        return output
 
-    return run_internal_setup_py(folder, *args)
 
+def invoke_setup_py(folder, *args):
+    """Run `setup.py` from `folder` in-process if possible, to record coverage properly"""
+    if folder == setupmeta.project_path():
+        return spawn_setup_py(folder, *args)
 
-def run_internal_setup_py(folder, *args):
-    """Run setup.py without an external process, to record coverage properly"""
-    old_cd = os.getcwd()
     old_argv = sys.argv
     old_pd = setupmeta.MetaDefs.project_dir
     setupmeta.DEBUG = False
-    fp = None
     try:
-        os.chdir(folder)
         setup_py = os.path.join(folder, "setup.py")
-        with capture_output(ownwarn=True) as logged:
-            sys.argv = [setup_py, "-q"] + list(args)
+        with capture_output() as logged:
+            sys.argv = [setup_py, "-q", *args]
             run_output = ""
             try:
                 spec = importlib.util.spec_from_file_location("setup", setup_py)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
 
-            except SystemExit as e:
+            except (SystemExit, setupmeta.UsageError) as e:
                 run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)
                 run_output += "%s\n" % e
 
@@ -256,12 +229,8 @@ def run_internal_setup_py(folder, *args):
             return cleaned_output(run_output, folder=folder)
 
     finally:
-        if fp:
-            fp.close()
-
         setupmeta.MetaDefs.project_dir = old_pd
         sys.argv = old_argv
-        os.chdir(old_cd)
 
 
 class MockGit(Git):

@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -12,13 +13,12 @@ from setupmeta.scm import Version
 
 from . import conftest
 
-
 DEFAULT_BRANCH_SPEC = f"branch({setupmeta.versioning.DEFAULT_BRANCHES})"
 
 
 def new_meta(versioning, name="just-testing", scm=None, setup_py=None, **kwargs):
     setup_py = setup_py or conftest.resource("setup.py")
-    upstream = dict(versioning=versioning, scm=scm, _setup_py_path=setup_py)
+    upstream = {"versioning": versioning, "scm": scm, "_setup_py_path": setup_py}
     if name:
         # Allow to test "missing name" case
         upstream["name"] = name
@@ -57,7 +57,7 @@ def test_disabled():
         versioning = meta.versioning
         assert not versioning.enabled
         assert versioning.problem == "setupmeta versioning not enabled"
-        with pytest.raises(Exception):
+        with pytest.raises(setupmeta.UsageError, match="versioning not enabled"):
             versioning.bump("major", commit=False)
 
 
@@ -74,26 +74,28 @@ def test_project_scm(sample_project):
 
 
 def test_snapshot_with_version_file():
-    with setupmeta.temp_resource() as temp:
-        with conftest.capture_output() as logged:
-            with open(os.path.join(temp, setupmeta.VERSION_FILE), "w") as fh:
-                fh.write("v1.2.3-4-g1234567")
+    with setupmeta.temp_resource() as temp, conftest.capture_output():
+        version_file = Path(temp) / setupmeta.VERSION_FILE
+        with open(version_file, "w") as fh:
+            fh.write("v1.2.3-4-g1234567")
 
-            setup_py = os.path.join(temp, "setup.py")
-            meta = SetupMeta().finalize(dict(_setup_py_path=setup_py, name="just-testing", versioning="post", setup_requires="setupmeta"))
+        setup_py = os.path.join(temp, "setup.py")
+        meta = SetupMeta().finalize(
+            {"_setup_py_path": setup_py, "name": "just-testing", "versioning": "post", "setup_requires": "setupmeta"}
+        )
 
-            versioning = meta.versioning
-            assert meta.version == "1.2.3.post4"
-            assert not versioning.generate_version_file
-            assert versioning.scm.program is None
-            assert str(versioning.scm).startswith("snapshot ")
-            assert not versioning.scm.is_dirty()
-            assert versioning.scm.get_branch() == "HEAD"
+        versioning = meta.versioning
+        assert meta.version == "1.2.3.post4"
+        assert not versioning.generate_version_file
+        assert versioning.scm.program is None
+        assert str(versioning.scm).startswith("snapshot ")
+        assert not versioning.scm.is_dirty()
+        assert versioning.scm.get_branch() == "HEAD"
 
-            # Trigger artificial rewriting of version file
-            versioning.generate_version_file = True
-            versioning.auto_fill_version()
-            assert "WARNING: No 'packages' or 'py_modules' defined" in logged
+        # Trigger artificial rewriting of version file
+        versioning.generate_version_file = True
+        versioning.auto_fill_version()
+        assert version_file.read_text() == "v1.2.3-4-g1234567"
 
 
 @patch.dict(os.environ, {setupmeta.SCM_DESCRIBE: "1.0"})
@@ -112,9 +114,8 @@ def check_render(v, expected, main="1.0", distance=None, cid=None, dirty=False):
     assert v.strategy.rendered(version) == expected
 
 
-@patch("setupmeta.model.project_scm", return_value=None)
-def test_no_scm(_, monkeypatch):
-    with conftest.capture_output() as logged:
+def test_no_scm(monkeypatch):
+    with conftest.capture_output() as logged, patch("setupmeta.model.project_scm", return_value=None):
         fmt = "branch(a,b):{major}.{minor}.{patch}{post}+{.$*FOO*}.{$BAR1*:}{$*BAR2:}{$BAZ:z}{dirty}"
         meta = new_meta(fmt)
         versioning = meta.versioning
@@ -139,7 +140,7 @@ def test_no_scm(_, monkeypatch):
         monkeypatch.setenv("TEST_FOO2", "baz")
         check_render(versioning, "1.0.0.post2+bar.z.dirty", distance=2, dirty=True)
 
-        with pytest.raises(setupmeta.UsageError):
+        with pytest.raises(setupmeta.UsageError, match="project not under a supported SCM"):
             versioning.bump("patch")
 
 
@@ -196,7 +197,6 @@ def test_versioning_variants(*_):
         quick_check("post+build-id", "0.1.2.post5+h543.g123.dirty")
 
         # Aliases
-        quick_check("changes", "0.1.5+dirty")
         quick_check("default", "0.1.2.post5+dirty")
         quick_check("tag", "0.1.2.post5+dirty")
 
@@ -292,7 +292,7 @@ def extra_version(version):
 
 def test_invalid_part():
     with conftest.capture_output() as logged:
-        versioning = dict(foo="bar", main="{foo}.{major}.{minor}{", extra=extra_version)
+        versioning = {"foo": "bar", "main": "{foo}.{major}.{minor}{", "extra": extra_version}
         meta = new_meta(versioning, scm=conftest.MockGit())
         versioning = meta.versioning
         assert "invalid" in str(versioning.strategy.main_bits)
@@ -305,16 +305,13 @@ def test_invalid_part():
 
         assert "Ignored fields for 'versioning': {'foo': 'bar'}" in logged
 
-        with pytest.raises(setupmeta.UsageError):
-            versioning.bump("minor")
-
-        with pytest.raises(setupmeta.UsageError):
+        with pytest.raises(setupmeta.UsageError, match="invalid versioning part 'foo'"):
             versioning.get_bump("minor")
 
 
 def test_invalid_main():
     with conftest.capture_output() as logged:
-        meta = new_meta(dict(main=extra_version, extra=""), scm=conftest.MockGit())
+        meta = new_meta({"main": extra_version, "extra": ""}, scm=conftest.MockGit())
         versioning = meta.versioning
         check_strategy(versioning, "function 'extra_version'")
         check_render(versioning, "")
@@ -327,18 +324,17 @@ def test_invalid_main():
 
 
 def test_malformed():
-    with conftest.capture_output() as logged:
-        meta = new_meta(dict(main=None, extra=""), name="", scm=conftest.MockGit())
+    with conftest.capture_output():
+        meta = new_meta({"main": None, "extra": ""}, name="", scm=conftest.MockGit())
         versioning = meta.versioning
         assert meta.version is None
         assert not versioning.enabled
         assert versioning.problem == "No versioning format specified"
-        assert "WARNING: 'name' not specified in setup.py" in logged
 
 
 def test_custom_version_tag():
     with conftest.capture_output():
-        meta = new_meta(dict(main="distance", extra="", version_tag="v*.*"), scm=conftest.MockGit(describe="v0.1.2-3-g123"))
+        meta = new_meta({"main": "distance", "extra": "", "version_tag": "v*.*"}, scm=conftest.MockGit(describe="v0.1.2-3-g123"))
         versioning = meta.versioning
         assert versioning.strategy.version_tag == "v*.*"
         assert versioning.scm.version_tag == "v*.*"
@@ -359,7 +355,7 @@ def test_distance_marker():
 def test_preconfigured_build_id():
     """Verify that short notations expand to the expected format"""
     check_preconfigured("{major}.{minor}.{patch}{post}+{dirty}", "post", "default", "tag")
-    check_preconfigured("{major}.{minor}.{distance}+{dirty}", "distance", "changes")
+    check_preconfigured("{major}.{minor}.{distance}+{dirty}", "distance")
     check_preconfigured("{major}.{minor}.{distance}+h{$*BUILD_ID:local}.{commitid}{dirty}", "build-id")
     check_preconfigured("{major}.{minor}.{patch}{dev}+h{$*BUILD_ID:local}.{commitid}{dirty}", "dev+build-id")
     check_preconfigured("{major}.{minor}.{patch}{post}+h{$*BUILD_ID:local}.{commitid}{dirty}", "post+build-id")
@@ -449,14 +445,6 @@ def check_bump(versioning):
         versioning.bump("foo")
 
 
-def check_get_bump(versioning):
-    assert versioning.get_bump("major") == "1.0.0"
-    assert versioning.get_bump("minor") == "0.2.0"
-
-    with pytest.raises(setupmeta.UsageError):
-        versioning.get_bump("foo")
-
-
 def write_to_file(path, text):
     with open(path, "w") as fh:
         fh.write(text)
@@ -506,7 +494,7 @@ def test_brand_new_project():
         check_version_output("0.0.1")
 
 
-def test_git_versioning(sample_project):
+def test_git_versioning(sample_project):  # noqa: ARG001, fixture
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.0.1"
 
@@ -529,7 +517,7 @@ def test_git_versioning(sample_project):
     assert output == "0.1.0"
 
     # Modify existing file makes checkout dirty
-    write_to_file("sample.py", "print('hello')")
+    write_to_file("sample.py", "__version__ = '0.1.0'\nprint('hello')")
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.1.0+dirty"
 
@@ -546,9 +534,12 @@ def test_git_versioning(sample_project):
     # Bump minor, we should get 0.2.0
     output = setupmeta.run_program(sys.executable, "setup.py", "version", "--bump", "minor", "--commit", capture=True)
     assert "Not pushing bump, use --push to push" in output
+    assert "Running: git add sample.py" in output
     assert "Running: git tag -a v0.2.0" in output
     output = setupmeta.run_program(sys.executable, "setup.py", "--version", capture=True)
     assert output == "0.2.0"
+    content = Path("sample.py").read_text()
+    assert content.startswith("__version__ = '0.2.0'\n")
 
 
 def test_missing_tags():

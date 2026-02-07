@@ -8,7 +8,6 @@ import re
 
 import setupmeta
 
-
 # Recognized README tokens
 RE_README_TOKEN = re.compile(r"(.?)\.\. \[\[([a-z]+) (.+)\]\](.)?")
 
@@ -26,7 +25,7 @@ def load_contents(relative_path, limit=0):
 
 
 def load_readme(relative_path, limit=0):
-    """ Loader for README files """
+    """Loader for README files"""
     lines = setupmeta.readlines(relative_path, limit=limit)
     if lines is not None:
         content = []

@@ -11,7 +11,6 @@ Like the Shadoks say: why do simple when one can do complicated?
 
 import re
 
-
 RE_VERSION = re.compile(r"version (\d+(.\d+)?)", re.IGNORECASE)
 
 
@@ -72,7 +71,7 @@ def determined_license(contents):
     :param str|None contents: Contents to determine license from
     :return str: Short license name
     """
-    for license in KNOWN_LICENSES:
-        short = license.match(contents)
+    for license_spec in KNOWN_LICENSES:
+        short = license_spec.match(contents)
         if short:
             return short

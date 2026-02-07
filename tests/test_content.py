@@ -27,7 +27,7 @@ def test_shortening():
 
     assert setupmeta.short("found in %s" % path) == "found in ~/foo/bar"
 
-    assert setupmeta.short(dict(foo="bar"), c=8) == "1 keys"
+    assert setupmeta.short({"foo": "bar"}, c=8) == "1 keys"
 
     assert setupmeta.merged("a", None) == "a"
     assert setupmeta.merged(None, "a") == "a"
@@ -70,7 +70,7 @@ def test_which():
     assert setupmeta.which(None) is None
     assert setupmeta.which("/foo/does/not/exist") is None
     assert setupmeta.which("foo/does/not/exist") is None
-    assert setupmeta.which("pip")
+    assert setupmeta.which("python3")
 
 
 def test_run_program():
@@ -112,9 +112,3 @@ def test_stringify():
     assert setupmeta.listify("a b") == ["a", "b"]
     assert sorted(setupmeta.listify(set("ab"))) == ["a", "b"]
     assert setupmeta.listify(("a", "b")) == ["a", "b"]
-
-
-def test_meta_command_init():
-    with pytest.raises(Exception):
-        obj = setupmeta.MetaDefs()
-        setupmeta.meta_command_init(obj, {})

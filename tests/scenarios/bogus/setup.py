@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-def main_part(version):
+def main_part(_):
     return "1.0"
 
 
