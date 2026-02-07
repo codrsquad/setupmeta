@@ -9,7 +9,7 @@ import tempfile
 import setupmeta
 from setupmeta.content import load_contents
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     import conftest
 
 else:
@@ -65,7 +65,7 @@ class Scenario:
     def __init__(self, relative_path, in_place=False):
         self.short_name = relative_path
         src = os.path.join(conftest.PROJECT_DIR, relative_path)
-        if in_place:  # pragma: no cover, only used for baseline regeneration
+        if in_place:
             self.folder = src
             self.target = relative_path
 
@@ -161,7 +161,7 @@ class Scenario:
         content = load_contents(self.expected_path())
         return content and content.strip()
 
-    def refresh_example(self, dryrun):  # pragma: no cover, for manual runs
+    def refresh_example(self, dryrun):
         logging.info("Refreshing %s", self)
         output = self.replay()
         if dryrun:
@@ -172,7 +172,7 @@ class Scenario:
             fh.write("%s\n" % output)
 
 
-def main():  # pragma: no cover
+def main():
     """
     Refresh tests/scenarios/*/expected.txt and examples/*/expected.txt
     """
@@ -215,5 +215,5 @@ def main():  # pragma: no cover
                         print("\n".join(diff))
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     main()
