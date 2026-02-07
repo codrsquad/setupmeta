@@ -7,6 +7,8 @@ Release notes
 
 * Test with py3.14, publish sdist with py3.13
 
+* Removed post-version-bump hook support (unused, unnecessary, and was not well documented)
+
 * Internal project modernizations (use ``uv``, ``ruff``, enabled more linter rules, etc)
 
 * Use coveralls_ for test coverage reporting

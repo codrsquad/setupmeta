@@ -9,8 +9,8 @@ Simplify your setup.py
     :target: https://github.com/codrsquad/setupmeta/actions
     :alt: Tested with Github Actions
 
-.. image:: https://coveralls.io/repos/github/codrsquad/setupmeta/badge.svg
-    :target: https://coveralls.io/github/codrsquad/setupmeta
+.. image:: https://coveralls.io/repos/github/codrsquad/setupmeta/badge.svg?branch=main
+    :target: https://coveralls.io/github/codrsquad/setupmeta?branch=main
     :alt: Code coverage with coveralls
 
 .. image:: https://img.shields.io/pypi/pyversions/setupmeta.svg
