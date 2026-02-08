@@ -2,8 +2,8 @@
 """
 This is a package that has setupmeta pinned to an explicit version range.
 """
-from setuptools import setup
 
+from setuptools import setup
 
 setup(
     name="pinned",

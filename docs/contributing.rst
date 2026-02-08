@@ -37,13 +37,11 @@ locally installed. You can use pyenv_ for example to get python installations.
 
 Run:
 
-* ``tox -e py310`` (for example) to limit test run to only one python version.
+* ``tox -e py314`` (for example) to limit test run to only one python version.
 
 * ``tox -e style`` to run style checks only
 
 * ``tox -e docs`` to verify that the main README.rst renders properly
-
-* ``tox -e security`` to run the security checks
 
 
 Test coverage

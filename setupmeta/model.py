@@ -10,12 +10,25 @@ import sys
 
 import setuptools
 
-from setupmeta import current_folder, get_words, listify, MetaDefs, PKGID, project_path, readlines, relative_path
-from setupmeta import Requirements, requirements_from_file, RequirementsFile, short, trace, warn
+from setupmeta import (
+    current_folder,
+    get_words,
+    listify,
+    MetaDefs,
+    PKGID,
+    project_path,
+    readlines,
+    relative_path,
+    Requirements,
+    requirements_from_file,
+    RequirementsFile,
+    short,
+    trace,
+    warn,
+)
 from setupmeta.content import find_contents, load_contents, load_readme, resolved_paths
 from setupmeta.license import determined_license
 from setupmeta.versioning import project_scm, Versioning
-
 
 # Used to mark which key/values were provided explicitly in setup.py
 EXPLICIT = "explicit"
@@ -36,12 +49,20 @@ RE_PKG_KEY_VALUE = re.compile(r"^(%s):\s?(.*)$" % PKGID)
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
 
+PKG_CANONICAL_KEYS = {
+    "classifier": "classifiers",
+    "description": "long_description",
+    "description_content_type": "long_description_content_type",
+    "home_page": "url",
+    "summary": "description",
+}
+PKG_LIST_TYPES = {"classifiers", "long_description"}
+
 
 def is_setup_py_path(path):
-    """ Is 'path' pointing to a setup.py module? """
+    """Is 'path' pointing to a setup.py module?"""
     if path:
-        # Accept also setup.pyc
-        return os.path.basename(path).startswith("setup.py")
+        return os.path.basename(path).startswith("setup.py")  # Accept also setup.pyc
 
 
 def content_type_from_filename(filename):
@@ -49,13 +70,13 @@ def content_type_from_filename(filename):
     if filename:
         if filename.endswith(".rst"):
             return "text/x-rst"
+
         if filename.endswith(".md"):
             return "text/markdown"
-    return None
 
 
 class DefinitionEntry:
-    """ Record of where a definition was found and where it came from """
+    """Record of where a definition was found and where it came from"""
 
     def __init__(self, key, value, source):
         """
@@ -72,12 +93,12 @@ class DefinitionEntry:
 
     @property
     def is_explicit(self):
-        """ Did this entry come explicitly from setup(**attrs)? """
+        """Did this entry come explicitly from setup(**attrs)?"""
         return self.source == EXPLICIT
 
 
 class Definition(object):
-    """ Record definitions for a given key, and where they were found """
+    """Record definitions for a given key, and where they were found"""
 
     def __init__(self, key):
         """
@@ -88,10 +109,7 @@ class Definition(object):
         self.sources = []  # type: list[DefinitionEntry]
 
     def __repr__(self):
-        if len(self.sources) == 1:
-            source = self.sources[0].source
-        else:
-            source = "%s sources" % len(self.sources)
+        source = self.sources[0].source if len(self.sources) == 1 else "%s sources" % len(self.sources)
         return "%s=%s from %s" % (self.key, short(self.value), source)
 
     def __eq__(self, other):
@@ -109,21 +127,22 @@ class Definition(object):
 
     @property
     def source(self):
-        """ Winning source """
+        """Winning source"""
         if self.sources:
             return self.sources[0].source
 
     @property
     def is_explicit(self):
-        """ Did this entry come explicitly from setup(**attrs)? """
+        """Did this entry come explicitly from setup(**attrs)?"""
         return any(s.is_explicit for s in self.sources)
 
     def merge_sources(self, sources):
-        """ Record the fact that we saw this definition in 'sources' """
+        """Record the fact that we saw this definition in 'sources'"""
         for entry in sources:
             if not self.value and entry.value:
                 self.value = entry.value
                 trace("[-- %s] %s=%s" % (entry.source, self.key, entry.value))
+
             self.sources.append(entry)
 
     def add(self, value, source, override=False):
@@ -135,24 +154,27 @@ class Definition(object):
         if isinstance(source, list):
             self.merge_sources(source)
             return
+
         if override or not self.value:
             self.value = value
+
         entry = DefinitionEntry(self.key, value, source)
         if override:
             self.sources.insert(0, entry)
             trace("[<- %s] %s=%s" % (source, self.key, short(value)))
+
         else:
             self.sources.append(entry)
             trace("[-> %s] %s=%s" % (source, self.key, short(value)))
 
     @property
     def is_meaningful(self):
-        """ Should this definition make it to the final setup attrs? """
+        """Should this definition make it to the final setup attrs?"""
         return self.value is not None or self.is_explicit
 
 
 class Settings:
-    """ Collection of key/value pairs with info on where they came from """
+    """Collection of key/value pairs with info on where they came from"""
 
     def __init__(self):
         self.definitions = {}  # type: dict[str, Definition]
@@ -162,16 +184,17 @@ class Settings:
         return "%s definitions, %s" % (len(self.definitions), project_dir)
 
     def value(self, key):
-        """ Value currently associated to 'key', if any """
+        """Value currently associated to 'key', if any"""
         definition = self.definitions.get(key)
         return definition and definition.value
 
     def to_dict(self, only_meaningful=True):
-        """ Resolved attributes to pass to setuptools """
+        """Resolved attributes to pass to setuptools"""
         result = {}
         for definition in self.definitions.values():
             if not only_meaningful or definition.is_meaningful:
                 result[definition.key] = definition.value
+
         return result
 
     def add_definition(self, key, value, source, override=False):
@@ -184,21 +207,23 @@ class Settings:
         if key and (value or override):
             if key in ("keywords", "setup_requires"):
                 value = listify(value, separator=",")
+
             definition = self.definitions.get(key)
             if definition is None:
                 definition = Definition(key)
                 self.definitions[key] = definition
+
             definition.add(value, source, override=override)
 
     def merge(self, *others):
-        """ Merge settings from 'others' """
+        """Merge settings from 'others'"""
         for other in others:
             for definition in other.definitions.values():
                 self.add_definition(definition.key, definition.value, definition.sources)
 
 
 class SimpleModule(Settings):
-    """ Simple settings extracted from a module, such as __about__.py """
+    """Simple settings extracted from a module, such as __about__.py"""
 
     def __init__(self, *relative_paths):
         """
@@ -222,18 +247,23 @@ class SimpleModule(Settings):
                             docstring_marker = None
                             if docstring:
                                 self.scan_docstring(docstring, line_number=docstring_start - 1)
+
                         else:
                             docstring.append(line)
+
                         continue
-                    if line.startswith('"""') or line.startswith("'''"):
+
+                    if line.startswith(('"""', "'''")):
                         docstring_marker = line[:3]
                         if len(line) > 3 and line.endswith(docstring_marker):
                             # Single docstring line edge case
                             docstring_marker = None
                             continue
+
                         docstring_start = line_number
                         docstring.append(line[3:])
                         continue
+
                     self.scan_line(line, RE_PY_VALUE, line_number)
 
     def add_pair(self, key, value, line, **kwargs):
@@ -241,25 +271,28 @@ class SimpleModule(Settings):
             source = self.relative_path
             if line:
                 source = "%s:%s" % (source, line)
+
             self.add_definition(key, value, source, **kwargs)
 
     def scan_docstring(self, lines, line_number=0):
-        """ Scan docstring for definitions """
+        """Scan docstring for definitions"""
         if not lines[0]:
             # Disregard the 1st empty line, it's very common
             lines.pop(0)
             line_number += 1
-        if lines and lines[0]:
-            if not RE_DOC_VALUE.match(lines[0]):
-                # Take first non-empty, non key-value line as docstring lead
-                line = lines.pop(0).rstrip()
-                line_number += 1
-                if len(line) > 5 and line[0].isalnum():
-                    self.add_pair("docstring_lead", line, line_number)
+
+        if lines and lines[0] and not RE_DOC_VALUE.match(lines[0]):
+            # Take first non-empty, non key-value line as docstring lead
+            line = lines.pop(0).rstrip()
+            line_number += 1
+            if len(line) > 5 and line[0].isalnum():
+                self.add_pair("docstring_lead", line, line_number)
+
         if lines and not lines[0]:
             # Skip blank line after lead, if any
             lines.pop(0)
             line_number += 1
+
         for line in lines:
             line_number += 1
             line = line.rstrip()
@@ -268,53 +301,37 @@ class SimpleModule(Settings):
                 break
 
     def scan_line(self, line, regex, line_number):
-        """ Scan 'line' using 'regex', return True if no match found """
+        """Scan 'line' using 'regex', return True if no match found"""
         m = regex.match(line)
         if m:
             key = m.group(1)
             value = m.group(2)
             self.add_pair(key, value, line_number)
             return False
+
         return True
 
 
-def get_pip():  # pragma: no cover, see https://github.com/pypa/setuptools/issues/2355
+def get_pip():
     """
-    Deprecated, see https://github.com/codrsquad/setupmeta/issues/49
+    Deprecated, see https://github.com/pypa/setuptools/issues/2355 and https://github.com/codrsquad/setupmeta/issues/49
     Left around for a while because some callers import this, they will have to adapt to pip 20.1+
     """
-    try:
-        # pip >= 19.3
-        from pip._internal.req import parse_requirements  # noqa
-        from pip._internal.network.session import PipSession  # noqa
+    attempts = (
+        ("pip._internal.network.session", "pip._internal.req"),  # for pip >= 19.3
+        ("pip._internal.download", "pip._internal.req"),  # for pip >= 10.0
+        ("pip.download", "pip.req"),  # for pip < 10.0
+    )
+    for session_path, req_path in attempts:
+        try:
+            mod_session = __import__(session_path, fromlist=["PipSession"])
+            mod_req = __import__(req_path, fromlist=["parse_requirements"])
 
-        return parse_requirements, PipSession
+        except ImportError:  # pragma: no cover
+            continue
 
-    except ImportError:
-        pass
-
-    try:
-        # pip >= 10.0
-        from pip._internal.req import parse_requirements  # noqa
-        from pip._internal.download import PipSession  # noqa
-
-        return parse_requirements, PipSession
-
-    except ImportError:
-        pass
-
-    try:
-        # pip < 10.0
-        from pip.req import parse_requirements
-        from pip.download import PipSession
-
-        return parse_requirements, PipSession
-
-    except ImportError:
-        from setupmeta import warn
-
-        warn("Can't find PipSession, won't auto-fill requirements")
-        return None, None
+        else:
+            return mod_req.parse_requirements, mod_session.PipSession
 
 
 def pythonified_name(name):
@@ -327,15 +344,6 @@ def pythonified_name(name):
 
 class PackageInfo:
     """Retrieves info from PKG-INFO"""
-
-    _canonical_names = {
-        "classifier": "classifiers",
-        "description": "long_description",
-        "description_content_type": "long_description_content_type",
-        "home_page": "url",
-        "summary": "description",
-    }
-    _list_types = {"classifiers", "long_description"}
 
     def __init__(self, root):
         self.path = os.path.join(root, "PKG-INFO")
@@ -354,7 +362,7 @@ class PackageInfo:
             m = RE_PKG_KEY_VALUE.match(line)
             if m:
                 key = m.group(1).lower().replace("-", "_")
-                key = self._canonical_names.get(key, key)
+                key = PKG_CANONICAL_KEYS.get(key, key)
                 value = m.group(2)
                 if key == "requires_dist":
                     # This code tries to support PEP-517, until setuptools retired
@@ -367,7 +375,7 @@ class PackageInfo:
                 if key not in MetaDefs.all_fields:
                     continue
 
-                if key in self._list_types:
+                if key in PKG_LIST_TYPES:
                     if key not in self.info:
                         self.info[key] = []
 
@@ -376,7 +384,7 @@ class PackageInfo:
                 else:
                     self.info[key] = value
 
-            elif key in self._list_types:
+            elif key in PKG_LIST_TYPES:
                 # Indented description applying to previous key
                 self.info[key].append(line[8:].rstrip())
 
@@ -434,7 +442,7 @@ class PackageInfo:
 
 
 class SetupMeta(Settings):
-    """ Find usable definitions throughout a project SetupPy SetupMeta """
+    """Find usable definitions throughout a project SetupPy SetupMeta"""
 
     pkg_info = None  # type: PackageInfo
     requirements = None  # type: Requirements
@@ -446,29 +454,32 @@ class SetupMeta(Settings):
 
     def preprocess(self, upstream):
         self.find_project_dir(MetaDefs.dist_to_dict(upstream).pop("_setup_py_path", None))
-
         for require_field in ("install_requires",):
             value = getattr(upstream, require_field)
             if isinstance(value, str) and value.startswith("@"):
                 self.add_definition(require_field, value, EXPLICIT)
                 self.add_definition(require_field, requirements_from_file(value[1:]) or [], source=value[1:], override=True)
 
-        if isinstance(upstream.extras_require, dict):
-            if any([isinstance(deps, str) and deps.startswith("@") for deps in upstream.extras_require.values()]):
-                self.add_definition("extras_require", upstream.extras_require, EXPLICIT)
-                self.add_definition("extras_require", {
-                        extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, str) and deps.startswith("@") else deps
-                        for extra, deps in upstream.extras_require.items()
-                    }, "preprocessed", override=True)
+        if isinstance(upstream.extras_require, dict) and any(
+            isinstance(deps, str) and deps.startswith("@") for deps in upstream.extras_require.values()
+        ):
+            self.add_definition("extras_require", upstream.extras_require, EXPLICIT)
+            self.add_definition(
+                "extras_require",
+                {
+                    extra: (requirements_from_file(deps[1:]) or []) if isinstance(deps, str) and deps.startswith("@") else deps
+                    for extra, deps in upstream.extras_require.items()
+                },
+                "preprocessed",
+                override=True,
+            )
 
         return self
 
     def finalize(self, upstream):
         self.attrs.update(MetaDefs.dist_to_dict(upstream))
-
         self.find_project_dir(self.attrs.pop("_setup_py_path", None))
         scm = self.attrs.pop("scm", None)
-
         # Add definitions from setup()'s attrs (highest priority)
         for key, value in self.attrs.items():
             if key not in self.definitions:
@@ -492,7 +503,6 @@ class SetupMeta(Settings):
 
         packages = self.attrs.get("packages", [])
         py_modules = self.attrs.get("py_modules", [])
-
         if not packages and not py_modules and self.name:
             # Try to auto-determine a good default from 'self.name'
             name = self.pythonified_name
@@ -622,10 +632,9 @@ class SetupMeta(Settings):
                     trace("setup.py found from call stack: %s" % setup_py_path)
                     break
 
-        if not setup_py_path and sys.argv:
-            if is_setup_py_path(sys.argv[0]):
-                setup_py_path = sys.argv[0]
-                trace("setup.py found from sys.argv: %s" % setup_py_path)
+        if not setup_py_path and sys.argv and is_setup_py_path(sys.argv[0]):
+            setup_py_path = sys.argv[0]
+            trace("setup.py found from sys.argv: %s" % setup_py_path)
 
         if is_setup_py_path(setup_py_path):
             setup_py_path = os.path.abspath(setup_py_path)
@@ -641,10 +650,11 @@ class SetupMeta(Settings):
         size = len(description)
         if 4 <= size <= 256:
             m = RE_DESCRIPTION.match(description)
-            candidates = set([s.lower() for s in (self.name, self.pythonified_name) if s])
+            candidates = {s.lower() for s in (self.name, self.pythonified_name) if s}
             if m:
                 lead = m.group(3)
                 description = m.group(4 if lead and lead.lower() in candidates else 1)
+
             if len(description) >= 4 and description.lower() not in candidates:
                 return description
 
@@ -653,6 +663,7 @@ class SetupMeta(Settings):
         docstring_lead = self.definitions.pop("docstring_lead", None)
         if docstring_lead and not self.value("description"):
             self.auto_fill("description", docstring_lead.value, source=docstring_lead.source)
+
         best_content_type = None
         best_readme = None
         best_long = None
@@ -660,21 +671,25 @@ class SetupMeta(Settings):
             value = load_readme(readme)
             if not value:
                 continue
+
             short_desc = self.extract_short_description(value)
             if not best_long or len(best_long) < 512 <= len(value):
                 # The best README is the 1st one found
                 best_content_type = content_type_from_filename(readme)
                 best_readme = readme
                 best_long = value
+
             if short_desc:
                 self.auto_fill("description", short_desc, source="%s:1" % readme)
                 break
+
         self.add_definition("long_description", best_long, best_readme)
         self.add_definition("long_description_content_type", best_content_type, best_readme)
 
     def auto_fill_entry_points(self, key="entry_points"):
         if self.pkg_info.entry_points_txt:
             self.add_definition(key, load_contents(self.pkg_info.entry_points_txt), relative_path(self.pkg_info.entry_points_txt))
+
         path = "%s.ini" % key
         self.add_definition(key, load_contents(path), path)
 
@@ -716,20 +731,21 @@ class SetupMeta(Settings):
             self.add_definition(field, value, source, override=override)
 
     def auto_adjust(self, field, adjust):
-        """ Auto-adjust 'field' using 'adjust' function """
+        """Auto-adjust 'field' using 'adjust' function"""
         for key, value in adjust(field):
             self.add_definition(key, value, "auto-adjust", override=True)
 
     def extract_email(self, field):
-        """ Convenience: one line user+email specification """
+        """Convenience: one line user+email specification"""
         field_email = field + "_email"
         user_email = self.value(field_email)
         if user_email:
-            # Caller already separated email, nothing to do
-            return
+            return  # Caller already separated email, nothing to do
+
         user = self.value(field)
         if not user:
             return
+
         m = RE_EMAIL.match(user)
         if m:
             yield field, m.group(1)

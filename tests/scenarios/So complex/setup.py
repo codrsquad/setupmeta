@@ -8,26 +8,23 @@ version: 1.0a1
 
 from setuptools import setup
 
-
 __version__ = "1.0b1"
 __keywords__ = "some,list,of,keywords,here,long,enough,to,be,abbreviated,by,the,explain,command"
 __title__ = "My cplx-nm_here"
 
 
 setup(
-    versioning="dev;.hooks/bump",
+    versioning="branch(release,main):{major}.{minor}.{patch}+h{$*BUILD_ID:local}.{dirty}",
     setup_requires=["setupmeta"],
     # This will overshadow classifiers.txt
     classifiers=["Programming Language :: Python"],
-
-    extras_require=dict(
-        bar=["docutils"],
-        baz=["some", "long", "list-of", "requirements"],
-        foo=["long", "enough", "to-be", "abbreviated"],
-    ),
-
+    extras_require={
+        "bar": ["docutils"],
+        "baz": ["some", "long", "list-of", "requirements"],
+        "foo": ["long", "enough", "to-be", "abbreviated"],
+    },
     # Edge case galore
     keywords=__keywords__.split(","),
-    entry_points=dict(console_scripts="a=b"),
+    entry_points={"console_scripts": "a=b"},
     license="foo",
 )

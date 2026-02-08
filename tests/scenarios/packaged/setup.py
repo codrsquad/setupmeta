@@ -1,6 +1,5 @@
 from setuptools import setup
 
-
 setup(
     name="pre-packaged",
     setup_requires=["setupmeta"],

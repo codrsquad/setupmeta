@@ -2,6 +2,18 @@
 Release notes
 =============
 
+3.9.0 (2026-02-09)
+------------------
+
+* Test with py3.14, publish sdist with py3.13
+
+* Removed post-version-bump hook support (unused, unnecessary, and was not well documented)
+
+* Internal project modernizations (use ``uv``, ``ruff``, enabled more linter rules, etc)
+
+* Use coveralls_ for test coverage reporting
+
+
 3.8.0 (2025-03-25)
 ------------------
 
@@ -555,3 +567,5 @@ Release notes
 .. _pip-compile: https://pypi.org/project/pip-tools/
 
 .. _hdeps: https://pypi.org/project/hdeps/
+
+.. _coveralls: https://coveralls.io/
