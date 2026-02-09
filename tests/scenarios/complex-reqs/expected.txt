@@ -41,8 +41,5 @@ setup(
 :: check
 [setupmeta] install_requires: 0 abstracted, 1 ignored, 0 untouched
 
-:: entrypoints
-
-
 :: version
 None

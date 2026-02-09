@@ -392,8 +392,14 @@ This is what ``versioning="post"`` is a shortcut for::
         ...
     )
 
+Note that starting with setupmeta v4.0, only ``v*.*`` tags are taken into account by default.
+The above complex ``versioning`` form will be the only way to continue using old ``*.*`` version tags...
+
+Prior to setupmeta v4.0, setupmeta used to look for ``v*.*`` first, and if it didn't find anything,
+it would "try harder" by falling back to looking for ``*.*``.
+
 ``version_tag`` is the glob pattern of git tags to consider as version tags.
-Unfortunately (for historical reasons), the default form is ``*.*`` (ie: any git tag
+Unfortunately (for historical reasons), the default form was ``*.*`` (ie: any git tag
 with a dot in it), and arguably should have been ``v*.*`` (ie: git tags that start with ``v``
 and have dot in them...)
 

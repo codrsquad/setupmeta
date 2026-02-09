@@ -7,7 +7,7 @@ This folder contains test case scenarios. The tests consist of:
 
 * examples_ subfolders are also used as test case scenarios (the cases there are more "vanilla", while the cases here are edge-case oriented)
 
-* commands ``explain`` and ``entrypoints`` are ran on each example, and their output is compared to ``expected.txt`` (has to match)
+* commands ``explain`` and ``version`` are ran on each example, and their output is compared to ``expected.txt`` (has to match)
 
 * `scenarios.py`_ (or ``tox -e refreshscenarios``) can be used to regenerate ``expected.txt`` (see ``git diff`` to verify changes look good)
 

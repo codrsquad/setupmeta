@@ -106,40 +106,4 @@ Typical usage::
     python setup.py version --b minor --commit  # Effectively bump
 
 
-cleanall
-========
-
-Handily clean build artifacts. Cleans the usual suspects:
-``.cache/ .tox/ build/ dist/ venv/ __pycache__/ *.egg-info *.py[cod]``.
-
-Example::
-
-    🦎 3.9 ~/dev/github/setupmeta: ./setup.py cleanall
-    running cleanall
-    deleted .tox
-    deleted setupmeta.egg-info
-    deleted examples/direct/__pycache__
-    deleted examples/hierarchical/__pycache__
-    deleted examples/single/__pycache__
-    deleted setupmeta/__pycache__
-    deleted tests/__pycache__
-    deleted tests/scenarios/complex/tests/__pycache__
-    deleted tests/scenarios/readmes/__pycache__
-    deleted 14 .pyc files
-
-
-entrypoints
-===========
-
-This will simply show you your ``entry_points/console_scripts``.
-Can be handy for pygradle_ users.
-
-Example::
-
-    🦎 3.9 ~/github/pickley: python setup.py entrypoints
-
-    pickley = pickley.cli:protected_main
-
 .. _PEP-440: https://www.python.org/dev/peps/pep-0440/
-
-.. _pygradle: https://github.com/linkedin/pygradle/

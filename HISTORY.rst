@@ -2,14 +2,24 @@
 Release notes
 =============
 
-3.9.0 (2026-02-09)
+3.9.0 (2026-02-11)
 ------------------
 
 * Test with py3.14, publish sdist with py3.13
 
+* Removed commands: ``entrypoints``, ``cleanall``
+
 * Removed post-version-bump hook support (unused, unnecessary, and was not well documented)
 
-* Internal project modernizations (use ``uv``, ``ruff``, enabled more linter rules, etc)
+* Removed old ``register`` hook used with setuptools v50
+
+* Removed support for pygradle-style versioning
+
+* Internal project modernizations:
+
+    * Refactored usage of ``subrocess.run()``, removed last left overs from the py2 days
+
+    * use ``uv``, ``ruff``, enabled more linter rules, etc
 
 * Use coveralls_ for test coverage reporting
 

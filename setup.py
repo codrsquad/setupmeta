@@ -12,8 +12,6 @@ EGG = os.path.join(HERE, "setupmeta.egg-info")
 ENTRY_POINTS = """
 [distutils.commands]
 check = setupmeta.commands:CheckCommand
-cleanall = setupmeta.commands:CleanCommand
-entrypoints = setupmeta.commands:EntryPointsCommand
 explain = setupmeta.commands:ExplainCommand
 version = setupmeta.commands:VersionCommand
 
@@ -26,20 +24,13 @@ versioning = setupmeta.hook:register_keyword
 """
 
 
-def decode(text):
-    if isinstance(text, bytes):
-        return text.decode("utf-8")
-
-    return text
-
-
 def run_bootstrap(message):
-    sys.stderr.write("--- Bootstrapping %s\n" % message)
-    p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)  # noqa: S603
+    sys.stderr.write(f"--- Bootstrapping {message}\n")
+    p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)  # noqa: S603
     output, error = p.communicate()
     if p.returncode:
-        print(decode(output))
-        sys.stderr.write("%s\n" % decode(error))
+        print(output)
+        sys.stderr.write(f"{error}\n")
         sys.exit(p.returncode)
 
     if not os.path.isdir(EGG):
@@ -48,6 +39,7 @@ def run_bootstrap(message):
 
 def complete_args(args):
     args["setup_requires"] = ["setupmeta"]
+    args["install_requires"] = ["setuptools>=67"]
     args["versioning"] = "dev"
 
 

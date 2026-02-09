@@ -11,7 +11,6 @@ def test_scm():
     assert scm.get_version() is None
     assert scm.commit_files(False, False, None, "") is None
     assert scm.apply_tag(False, False, "", "main") is None
-    assert scm.get_output() is None
 
 
 def test_git():
@@ -23,12 +22,18 @@ def test_git():
         assert not str(out)
 
         git.commit_files(False, True, ["foo"], "2.0")
+        assert out.pop() == 'Would run: git add foo\nWould run: git commit -m "Version 2.0" --no-verify\nWould run: git push origin'
         git.apply_tag(False, True, "2.0", "main")
-        assert "Would run: git add foo" in out
-        assert 'Would run: git commit -m "Version 2.0"' in out
-        assert "Would run: git push origin" in out
-        assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
-        assert "Would run: git push --tags origin" in out
+        assert out.pop() == 'Would run: git fetch --all\nWould run: git tag -a v2.0 -m "Version 2.0"\nWould run: git push --tags origin'
+
+        with pytest.raises(SystemExit):
+            git.apply_tag(True, True, "2.0", "main")
+
+        assert out.pop() == "chatty stderr\ngit --tags origin exited with code 1:\noops push failed"
+
+        report = git.get_diff_report()
+        assert report == "some diff stats"
+        assert out.pop() == "WARNING: git --stat exited with code 1, stderr:\noops something happened"
 
     git._has_origin = ""
     with conftest.capture_output() as out:
@@ -36,25 +41,15 @@ def test_git():
         assert not str(out)
 
         git.commit_files(False, True, ["foo"], "2.0")
+        assert "Won't push: no origin defined" in out.pop()
         git.apply_tag(False, True, "2.0", "main")
-        assert "Would run: git add foo" in out
-        assert 'Would run: git commit -m "Version 2.0"' in out
-        assert 'Would run: git tag -a v2.0 -m "Version 2.0"' in out
-        assert "Not running 'git push --tags origin' as you don't have an origin" in out
-
-        assert "Would run: git push origin" not in out
-        assert "Would run: git push --tags origin" not in out
+        assert "Would run: git push " not in out
+        assert "Not running 'git push --tags origin' as you don't have an origin" in out.pop()
 
     git._has_origin = True
     git.status_message = "## main...origin/main [behind 1]"
-    with pytest.raises(setupmeta.UsageError):
+    with pytest.raises(setupmeta.UsageError, match="branch 'main' is out of date"):
         git.apply_tag(False, True, "2.0", "main")
-
-
-def test_ignore_git_failures():
-    assert setupmeta._should_ignore_run_fail("git", ["rev-list", "HEAD"], "ambiguous argument 'HEAD': unknown revision or path")
-    assert setupmeta._should_ignore_run_fail("git", ["describe"], "fatal: no names found, cannot describe anything.")
-    assert not setupmeta._should_ignore_run_fail("foo", ["bar"], "some error")
 
 
 def test_git_describe_override(monkeypatch):

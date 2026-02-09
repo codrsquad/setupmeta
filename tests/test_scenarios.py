@@ -2,7 +2,6 @@
 Verify that ../examples/*/setup.py behave as expected
 """
 
-import subprocess
 import sys
 
 import pytest
@@ -19,8 +18,9 @@ def scenario_folder(request):
         yield request.param
 
 
-def test_scenario(scenario_folder):
+def test_scenario(scenario_folder, monkeypatch):
     """Check that 'scenario' yields expected explain output"""
+    monkeypatch.setenv("SETUPMETA_RUNNING_SCENARIOS", "1")
     with conftest.capture_output():
         scenario = scenarios.Scenario(scenario_folder)
         assert str(scenario) == scenario_folder
@@ -31,7 +31,7 @@ def test_scenario(scenario_folder):
 
 def test_adhoc_replay():
     with setupmeta.current_folder(conftest.PROJECT_DIR):
-        result = subprocess.run([sys.executable, "tests/scenarios.py", "replay", "examples/single"], capture_output=True)  # noqa: S603
+        result = setupmeta.run_program(sys.executable, "tests/scenarios.py", "replay", "tests/scenarios/bogus")
         assert result.returncode == 0
-        output = setupmeta.decode(result.stdout)
+        output = conftest.cleaned_output(result)
         assert "OK, no diffs found" in output

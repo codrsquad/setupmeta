@@ -1,5 +1,6 @@
 import argparse
 import contextlib
+import difflib
 import io
 import logging
 import os
@@ -19,7 +20,7 @@ else:
 SCENARIOS = os.path.join(conftest.TESTS, "scenarios")
 EXAMPLES = os.path.join(conftest.PROJECT_DIR, "examples")
 
-SCENARIO_COMMANDS = ["explain -c180 -r", "explain -d", "explain --expand", "check", "entrypoints", "version"]
+SCENARIO_COMMANDS = ["explain -c180 -r", "explain -d", "explain --expand", "check", "version"]
 
 
 def valid_scenarios(folder):
@@ -57,7 +58,7 @@ class Scenario:
     folder = None  # type: str # Folder where scenario is defined
     preparation = None  # type: list[str] # Commands to run in preparation step
     commands = None  # type: list[str] # setup.py commands to run
-    target = None  # type: str # Folder where to run the scenario (temp folder for full git modification support)
+    target = None  # type: str | None # Folder where to run the scenario (temp folder for full git modification support)
 
     temp = None  # type: str # Optional temp folder used
     origin = None  # type: str # Temp SCM origin to use
@@ -65,6 +66,7 @@ class Scenario:
     def __init__(self, relative_path, in_place=False):
         self.short_name = relative_path
         src = os.path.join(conftest.PROJECT_DIR, relative_path)
+        assert isinstance(src, str)
         if in_place:
             self.folder = src
             self.target = relative_path
@@ -92,7 +94,7 @@ class Scenario:
             self.target = None
             with io.open(extra_commands, "rt") as fh:
                 for line in fh:
-                    line = setupmeta.decode(line).strip()
+                    line = line.strip()
                     if line:
                         if line.startswith(":"):
                             self.preparation.append(line[1:])
@@ -103,11 +105,8 @@ class Scenario:
     def __repr__(self):
         return self.short_name
 
-    def run_git(self, *args, **kwargs):
-        kwargs.setdefault("capture", False)
-        kwargs.setdefault("cwd", self.target)
-        output = conftest.run_git(*args, **kwargs)
-        return output
+    def run_git(self, *args, cwd=None):
+        return conftest.run_git(*args, cwd=cwd or self.target)
 
     def prepare(self):
         if self.target:
@@ -125,7 +124,10 @@ class Scenario:
         copytree(self.folder, self.target)
 
         for command in self.preparation:
-            setupmeta.run_program(*command.split(), cwd=self.target)
+            result = setupmeta.run_program(*command.split(), cwd=self.target)
+            output = conftest.cleaned_output(result)
+            if output:
+                logging.debug("Preparation %s: n%s", command, output)
 
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")
@@ -146,7 +148,8 @@ class Scenario:
             self.prepare()
             result = []
             for command in self.commands:
-                output = ":: %s\n%s" % (command, conftest.spawn_setup_py(self.target, *command.split()))
+                output = conftest.spawn_setup_py(self.target, *command.split())
+                output = ":: %s\n%s" % (command, output)
                 result.append(output)
 
             return "\n\n".join(result).rstrip()
@@ -200,8 +203,6 @@ def main():
             elif args.command == "replay":
                 folder = os.path.abspath(folder)
                 with setupmeta.temp_resource():
-                    import difflib
-
                     scenario = Scenario(folder, in_place=False)
                     expected = scenario.expected_contents()
                     output = scenario.replay()

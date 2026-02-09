@@ -28,8 +28,8 @@ jobs:
 
     - name: Configure git
       run: |
-        git config --global user.name "GH-actions-bot"
-        git config --global user.email "gh-actions-bot@noreply.github.com"
+        git config --global user.name "Tester"
+        git config --global user.email "test@example.com"
 
     - uses: astral-sh/setup-uv@v7
     - run: uvx --with tox-uv tox -e py
@@ -56,8 +56,8 @@ jobs:
 
     - name: Configure git
       run: |
-        git config --global user.name "GH-actions-bot"
-        git config --global user.email "gh-actions-bot@noreply.github.com"
+        git config --global user.name "Tester"
+        git config --global user.email "test@example.com"
 
     - uses: astral-sh/setup-uv@v7
     - run: uvx --with tox-uv tox -e py
