@@ -23,9 +23,11 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
 
     |-- LICENSE.txt
     |-- README.rst
-    |-- classifiers.txt
+    |-- MANIFEST.in
     |-- direct/                     # Python module as subfolder
     |   |-- __init__.py             # Definitions are taken from here
+    |   |-- some_submodule/
+    |       |-- __init__.py
     |-- entry_points.ini
     |-- requirements.txt
     |-- setup.py
@@ -65,7 +67,7 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
               author: (auto-adjust          ) Someone
                   \_: (direct/__init__.py:5 ) Someone someone@example.com
         author_email: (auto-adjust          ) someone@example.com
-         classifiers: (classifiers.txt      ) ['Framework :: Pytest', 'Programming Language :: Python', 'License :: OSI Approved :: Apache Software License']
+        bugtrack_url: (auto-fill            ) https://github.com/codrsquad/simple/issues
          description: (direct/__init__.py:2 ) A package implemented by one direct ((not under src/)) module folder
         download_url: (auto-fill            ) https://github.com/codrsquad/simple/archive/1.0.0.tar.gz
                   \_: (direct/__init__.py:10) https://github.com/codrsquad/simple/archive/{version}.tar.gz
@@ -75,8 +77,7 @@ This part will be ignored for setup.py ``long_description``, due to ``[[end long
              license: (auto-fill            ) Apache 2.0
     long_description: (README.rst           ) 611 chars: direct: A package implemented by one direct ((not under src/)) module folder ...
                 name: (setup.py:4           ) direct
-            packages: (auto-fill            ) ['direct']
+            packages: (auto-fill            ) ['direct', 'direct.some_submodule']
       setup_requires: (explicit             ) ['setupmeta']
-              title*: (setup.py:4           ) direct
                  url: (direct/__init__.py:9 ) https://github.com/codrsquad/simple
              version: (direct/__init__.py:8 ) 1.0.0

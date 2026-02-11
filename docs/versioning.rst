@@ -39,7 +39,7 @@ How does it work?
 
 **Note**: ``setupmeta``'s versioning is based on (by default)::
 
-    git describe --dirty --tags --long --match *.* --first-parent
+    git describe --dirty --tags --long --first-parent --match 'v*.*'
 
 you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
 
@@ -144,7 +144,7 @@ Example:
 Commit   Tag     Version            Note (command ran to add tag)
 =======  ======  =================  ==============================================================
 no .git          0.0.0              Version defaults to 0.0.0 (when no tag yet)
-none             0.0.0.dirty        No commit yet (but ``git init`` was ran)
+none             0.0.0+dirty        No commit yet (but ``git init`` was ran)
 g1               0.0.0.post1        Initial commit
 g1               0.0.0.post1+dirty  Same as above, only checkout was not clean anymore
 g2               0.0.0.post2
@@ -242,7 +242,7 @@ distance
 This is well suited if you want to publish a new version at every commit (but don't want to keep
 bumping version in code for every commit).
 
-``distance`` corresponds to this format: ``branch(main,master):{major}.{minor}.{distance}{dirty}``
+``distance`` corresponds to this format: ``branch(main,master):{major}.{minor}.{distance}+{dirty}``
 
 State this in your ``setup.py``::
 
@@ -387,21 +387,13 @@ This is what ``versioning="post"`` is a shortcut for::
             "main": "{major}.{minor}.{patch}{post}",
             "extra": "{dirty}",
             "branches": ["main"],
-            "version_tag": "*.*",
+            "version_tag": "v*.*",
         },
         ...
     )
 
-Note that starting with setupmeta v4.0, only ``v*.*`` tags are taken into account by default.
-The above complex ``versioning`` form will be the only way to continue using old ``*.*`` version tags...
-
-Prior to setupmeta v4.0, setupmeta used to look for ``v*.*`` first, and if it didn't find anything,
-it would "try harder" by falling back to looking for ``*.*``.
-
 ``version_tag`` is the glob pattern of git tags to consider as version tags.
-Unfortunately (for historical reasons), the default form was ``*.*`` (ie: any git tag
-with a dot in it), and arguably should have been ``v*.*`` (ie: git tags that start with ``v``
-and have dot in them...)
+The default form is ``v*.*`` (ie: git tags that start with ``v`` and have a dot in them).
 
 Ideally, git would allow to state a full regex, as only tags that match this regex
 would ideally be considered as version tags: ``^v?\d+\.\d+(\.\d+)?$``, however this is not

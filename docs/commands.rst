@@ -18,21 +18,23 @@ For example, this is what setupmeta says about itself (it's self-using)::
                            author: (auto-adjust            ) Zoran Simic
                                \_: (setupmeta/__init__.py:6) Zoran Simic zoran@simicweb.com
                      author_email: (auto-adjust            ) zoran@simicweb.com
-                      classifiers: (classifiers.txt        ) 21 items: ["Development Status :: 5 - Production/Stable", "Intend...
+                     bugtrack_url: (auto-fill              ) https://github.com/codrsquad/setupmeta/issues
+                      classifiers: (explicit               ) 23 items: ["Development Status :: 5 - Production/Stable", "Intend...
                       description: (setupmeta/__init__.py:2) Simplify your setup.py
-                     download_url: (auto-fill              ) https://github.com/codrsquad/setupmeta/archive/v2.1.1.tar.gz
+                     download_url: (auto-fill              ) https://github.com/codrsquad/setupmeta/archive/v3.9.0.tar.gz
                                \_: (setupmeta/__init__.py:5) archive/v{version}.tar.gz
-                     entry_points: (explicit               ) [distutils.commands] check = setupmeta.commands:CheckCommand clea...
-                         keywords: (setup.py:4             ) ["simple", "DRY", "setup.py"]
+                     entry_points: (explicit               ) [distutils.commands] check = setupmeta.commands:CheckCommand expla...
+             include_package_data: (MANIFEST.in            ) True
+                 install_requires: (explicit               ) ["setuptools>=67"]
                           license: (auto-fill              ) MIT
                  long_description: (README.rst             ) Simplify your setup.py ====================== .. image:: https://...
     long_description_content_type: (README.rst             ) text/x-rst
-                             name: (setup.py:16            ) setupmeta
-                         packages: (auto-fill              ) ["setupmeta"]
+                             name: (explicit               ) setupmeta
+                         packages: (explicit               ) ["setupmeta"]
+                  python_requires: (explicit               ) >=3.7
                    setup_requires: (explicit               ) ["setupmeta"]
-                           title*: (setup.py:16            ) setupmeta
                               url: (setupmeta/__init__.py:4) https://github.com/codrsquad/setupmeta
-                          version: (git                    ) 2.1.1
+                          version: (git                    ) 3.9.0
                        versioning: (explicit               ) dev
                          zip_safe: (explicit               ) True
 
@@ -48,9 +50,9 @@ In the above output:
   had a value that came from 2 different sources, final value showing at top,
   while all the other values seen showing below with the ``\_`` indicator.
 
-* ``classifiers`` came from file ``classifiers.txt``
+* ``classifiers`` came from explicit settings in ``setup.py``
 
-* ``description`` came from ``setup.py`` line 2
+* ``description`` came from ``setupmeta/__init__.py`` line 2
 
 * ``download_url`` was defined in ``setupmeta/__init__.py`` line 5, since it was mentioning
   ``{version}`` (and was a relative path), it got auto-expanded and filled in properly
@@ -59,25 +61,12 @@ In the above output:
 
 * ``long_description`` came from ``README.rst``
 
-* ``name`` came from line 16 of setup.py, note that ``title`` also came from that line -
-  this simply means the constant ``__title__`` was used as ``name``
+* ``name`` came from an explicit setting in setup.py
 
-* Note that ``title*`` is shown with an asterisk, the asterisk means that setupmeta sees
-  the value and can use it, but doesn't transfer it to setuptools
+* ``packages`` came from explicit settings in setup.py
 
-* ``packages`` was auto-filled to ``["setupmeta"]``
-
-* ``version`` was determined from git tag (due to ``versioning="post"`` in setup.py),
-  in this case ``1.1.2.post1+g816252c`` means:
-
-    * latest tag was 1.1.2
-
-    * there was 1 commit since that tag (``.post1`` means 1 change since tag,
-      ``".post"`` denotes this would be a "post-release" version,
-      and should play nicely with PEP-440_)
-
-    * the ``+g816252c`` suffix means that the checkout wasn't clean when ``explain`` command
-      was ran, local checkout was dirty at short git commit id "816252c"
+* ``version`` was determined from git (due to ``versioning="dev"`` in setup.py),
+  in this case ``3.9.0`` means current commit is exactly on a version tag
 
 
 If you'd like to see what your ``setup.py`` would look like without setupmeta

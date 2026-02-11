@@ -17,7 +17,7 @@ Release notes
 
 * Internal project modernizations:
 
-    * Refactored usage of ``subrocess.run()``, removed last left overs from the py2 days
+    * Refactored usage of ``subprocess.run()``, removed last left overs from the py2 days
 
     * use ``uv``, ``ruff``, enabled more linter rules, etc
 
