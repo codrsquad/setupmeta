@@ -127,7 +127,7 @@ class Scenario:
             result = setupmeta.run_program(*command.split(), cwd=self.target)
             output = conftest.cleaned_output(result)
             if output:
-                logging.debug("Preparation %s: n%s", command, output)
+                logging.debug("Preparation %s: \n%s", command, output)
 
         self.run_git("add", ".")
         self.run_git("commit", "-m", "Initial commit")
