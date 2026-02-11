@@ -2,20 +2,20 @@
           author: (auto-adjust                         ) Someone
               \_: (setup.py:2                          ) Someone someone@example.com
     author_email: (auto-adjust                         ) someone@example.com
-     classifiers: (explicit                            ) ["Programming Language :: Python"]
+     classifiers: (explicit                            ) ["Programming Language :: Python", "foo"]
          contact: (src/My_cplx_nm_here/__init__.py:14  ) Someone
    contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@example.com
-     description: (README:1                            ) My cplx-nm_here - Sample complex project
-              \_: (src/My_cplx_nm_here/__init__.py:2   ) Short description of complex project
+     description: (explicit                            ) Wassuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu...
+              \_: (README:1                            ) My cplx-nm_here - Sample complex project
     download_url: (auto-fill                           ) https://example.com/complex/archive/1.2.3+hlocal.tar.gz
               \_: (setup.py:4                          ) archive/{version}.tar.gz
     entry_points: (explicit                            ) {console_scripts: a=b}
               \_: (entry_points.ini                    ) [foo] [console_scripts] foo = My_cplx_nm_here.some_module:main_func bar = My_cplx_nm_here.some_module:bar
-  extras_require: (explicit                            ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+  extras_require: (explicit                            ) 3 keys: {bar: ["docutils"], baz: ["some", "really", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be",...
 install_requires: (pinned.txt                          ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
-        keywords: (explicit                            ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (setup.py:5                          ) ["setup", "docstring"]
-              \_: (setup.py:12                         ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+        keywords: (explicit                            ) 16 items: ["some", "really", "long", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by"...
+              \_: (setup.py:5                          ) ["setup", 'doc"string']
+              \_: (setup.py:12                         ) 16 items: ["some", "really", "long", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by"...
               \_: (src/My_cplx_nm_here/__version__.py:6) ["complex", "version"]
               \_: (src/My_cplx_nm_here/__init__.py:7   ) ["src", "complex", "init"]
          license: (explicit                            ) foo
@@ -61,20 +61,22 @@ __version__ = "1.2.3+hlocal"
 setup(
     author="Someone",                                                 # from setup.py:2
     author_email="someone@example.com",
-    classifiers=["Programming Language :: Python"],
+    classifiers=["Programming Language :: Python", "foo"],
     contact="Someone",                                                # from src/My_cplx_nm_here/__init__.py:14
     contact_email="me@example.com",                                   # from src/My_cplx_nm_here/__init__.py:15
-    description="My cplx-nm_here - Sample complex project",           # from README:1
+    description="Wassuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuup!?",
     download_url="https://example.com/complex/archive/%s.tar.gz" % __version__, # from setup.py:4
     entry_points={"console_scripts": "a=b"},
     extras_require={
         "bar": ["docutils"],
-        "baz": ["some", "long", "list-of", "requirements"],
+        "baz": ["some", "really", "long", "list-of", "requirements"],
         "foo": ["long", "enough", "to-be", "abbreviated"]
     },
     install_requires=["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"], # from pinned.txt
     keywords=[
         "some",
+        "really",
+        "long",
         "list",
         "of",
         "keywords",
@@ -104,9 +106,6 @@ setup(
 :: check
 [setupmeta] install_requires: 4 abstracted, 3 ignored, 5 untouched
 
-:: entrypoints
-a=b
-
 :: version
 1.2.3+hlocal
 
@@ -114,22 +113,24 @@ a=b
 Not committing bump, use --commit to commit
 Not pushing bump, use --push to push
 Would update setup.py:6 with: version: 1.2.4
-Would update setup.py:11 with: __version__ = "1.2.4"
+Would update setup.py:11 with: __version__ = '1.2.4'  # fmt: skip # noqa: Q000
 Would update src/My_cplx_nm_here/__version__.py:3 with: __version__ = "1.2.4"  # Ignored due to setuptools_scm ref
 Would update src/My_cplx_nm_here/__init__.py:8 with: __version__ = "1.2.4"
 Would run: git add setup.py src/My_cplx_nm_here/__init__.py src/My_cplx_nm_here/__version__.py
 Would run: git commit -m "Version 1.2.4" --no-verify
+Would run: git fetch --all
 Would run: git tag -a v1.2.4 -m "Version 1.2.4"
 
 :: version --bump minor --push
 Not committing bump, use --commit to commit
 Would update setup.py:6 with: version: 1.3.0
-Would update setup.py:11 with: __version__ = "1.3.0"
+Would update setup.py:11 with: __version__ = '1.3.0'  # fmt: skip # noqa: Q000
 Would update src/My_cplx_nm_here/__version__.py:3 with: __version__ = "1.3.0"  # Ignored due to setuptools_scm ref
 src/My_cplx_nm_here/__init__.py:8 already has the right version
 Would run: git add setup.py src/My_cplx_nm_here/__version__.py
 Would run: git commit -m "Version 1.3.0" --no-verify
 Would run: git push origin
+Would run: git fetch --all
 Would run: git tag -a v1.3.0 -m "Version 1.3.0"
 Would run: git push --tags origin
 
@@ -137,11 +138,12 @@ Would run: git push --tags origin
 Not committing bump, use --commit to commit
 Not pushing bump, use --push to push
 Would update setup.py:6 with: version: 2.0.0
-Would update setup.py:11 with: __version__ = "2.0.0"
+Would update setup.py:11 with: __version__ = '2.0.0'  # fmt: skip # noqa: Q000
 Would update src/My_cplx_nm_here/__version__.py:3 with: __version__ = "2.0.0"  # Ignored due to setuptools_scm ref
 Would update src/My_cplx_nm_here/__init__.py:8 with: __version__ = "2.0.0"
 Would run: git add setup.py src/My_cplx_nm_here/__init__.py src/My_cplx_nm_here/__version__.py
 Would run: git commit -m "Version 2.0.0" --no-verify
+Would run: git fetch --all
 Would run: git tag -a v2.0.0 -m "Version 2.0.0"
 
 :: version --bump minor --commit
@@ -149,12 +151,14 @@ Not pushing bump, use --push to push
 src/My_cplx_nm_here/__init__.py:8 already has the right version
 Running: git add setup.py src/My_cplx_nm_here/__version__.py
 Running: git commit -m "Version 1.3.0" --no-verify
+Running: git fetch --all
 Running: git tag -a v1.3.0 -m "Version 1.3.0"
 
 :: version --bump major --commit --push
 Running: git add setup.py src/My_cplx_nm_here/__init__.py src/My_cplx_nm_here/__version__.py
 Running: git commit -m "Version 2.0.0" --no-verify
 Running: git push origin
+Running: git fetch --all
 Running: git tag -a v2.0.0 -m "Version 2.0.0"
 Running: git push --tags origin
 
@@ -165,20 +169,20 @@ Running: git push --tags origin
           author: (auto-adjust                         ) Someone
               \_: (setup.py:2                          ) Someone someone@example.com
     author_email: (auto-adjust                         ) someone@example.com
-     classifiers: (explicit                            ) ["Programming Language :: Python"]
+     classifiers: (explicit                            ) ["Programming Language :: Python", "foo"]
          contact: (src/My_cplx_nm_here/__init__.py:14  ) Someone
    contact_email: (src/My_cplx_nm_here/__init__.py:15  ) me@example.com
-     description: (README:1                            ) My cplx-nm_here - Sample complex project
-              \_: (src/My_cplx_nm_here/__init__.py:2   ) Short description of complex project
+     description: (explicit                            ) Wassuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu...
+              \_: (README:1                            ) My cplx-nm_here - Sample complex project
     download_url: (auto-fill                           ) https://example.com/complex/archive/2.0.0+hlocal.tar.gz
               \_: (setup.py:4                          ) archive/{version}.tar.gz
     entry_points: (explicit                            ) {console_scripts: a=b}
               \_: (entry_points.ini                    ) [foo] [console_scripts] foo = My_cplx_nm_here.some_module:main_func bar = My_cplx_nm_here.some_module:bar
-  extras_require: (explicit                            ) {bar: ["docutils"], baz: ["some", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be", "abbreviated"]}
+  extras_require: (explicit                            ) 3 keys: {bar: ["docutils"], baz: ["some", "really", "long", "list-of", "requirements"], foo: ["long", "enough", "to-be",...
 install_requires: (pinned.txt                          ) ["a", "b", "c", "d>1", "e==1", "f", "g", "h", "i==1"]
-        keywords: (explicit                            ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
-              \_: (setup.py:5                          ) ["setup", "docstring"]
-              \_: (setup.py:12                         ) ["some", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by", "the", "explain", "command"]
+        keywords: (explicit                            ) 16 items: ["some", "really", "long", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by"...
+              \_: (setup.py:5                          ) ["setup", 'doc"string']
+              \_: (setup.py:12                         ) 16 items: ["some", "really", "long", "list", "of", "keywords", "here", "long", "enough", "to", "be", "abbreviated", "by"...
               \_: (src/My_cplx_nm_here/__version__.py:6) ["complex", "version"]
               \_: (src/My_cplx_nm_here/__init__.py:7   ) ["src", "complex", "init"]
          license: (explicit                            ) foo

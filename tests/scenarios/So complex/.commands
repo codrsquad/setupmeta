@@ -6,3 +6,4 @@ version --bump major --commit --push
 version
 explain -c180
 --name
+:/dev/null/does/not/exist --version

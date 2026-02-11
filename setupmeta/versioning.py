@@ -228,7 +228,7 @@ class Strategy:
             return fmt
 
         result = []
-        if not fmt:
+        if not isinstance(fmt, str):
             return result
 
         before, _, after = fmt.partition("{")
@@ -303,7 +303,7 @@ class Strategy:
         :return str: Represented next version, with 'what' bumped
         """
         if not isinstance(self.main_bits, list):
-            setupmeta.abort("Main format is not a list: %s" % setupmeta.stringify(self.main_bits))
+            setupmeta.abort("Can't bump with custom version definition: %s" % setupmeta.stringify(self.main_bits))
 
         if what not in self.bumpable:
             msg = "Can't bump '%s', it's out of scope" % what
@@ -430,12 +430,6 @@ class Versioning:
 
     def auto_fill_version(self):
         """Autofill version as defined by 'self.strategy'"""
-        pygradle_version = os.environ.get("PYGRADLE_PROJECT_VERSION")
-        if pygradle_version:
-            # Minimal support for https://github.com/linkedin/pygradle
-            self.meta.auto_fill("version", pygradle_version, "pygradle", override=True)
-            return
-
         if not self.enabled:
             setupmeta.trace("not auto-filling version, versioning is disabled")
             return

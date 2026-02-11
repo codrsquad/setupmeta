@@ -54,8 +54,5 @@ direct = direct:main""",                                             # from entr
 :: check
 
 
-:: entrypoints
-direct = direct:main
-
 :: version
 1.0.0

@@ -16,7 +16,6 @@ PROJECT_DIR = os.path.dirname(TESTS)
 
 setupmeta.MetaDefs.project_dir = PROJECT_DIR
 os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
-os.environ["SETUPMETA_RUNNING_SCENARIOS"] = "1"
 sys.dont_write_bytecode = True
 
 
@@ -38,21 +37,11 @@ def print_warning(message, *_, **__):
     print("WARNING: %s" % setupmeta.short(message, -60))
 
 
-def run_program(program, *args, **kwargs):
-    capture = kwargs.pop("capture", True)
-    fatal = kwargs.pop("fatal", True)
-    represented = "%s %s" % (program, setupmeta.represented_args(args))
-    print("Running: %s" % represented)
-    output = setupmeta.run_program(program, *args, capture=capture, fatal=fatal, **kwargs)
-    return output
-
-
-def run_git(*args, **kwargs):
+def run_git(*args, cwd=None):
     # git requires a user.email configured, which is usually done in ~/.gitconfig, however under tox, we don't have $HOME defined
-    kwargs.setdefault("capture", True)
-    kwargs.setdefault("fatal", True)
-    output = setupmeta.run_program("git", "-c", "user.name=Tester", "-c", "user.email=test@example.com", *args, **kwargs)
-    return output
+    result = setupmeta.run_program("git", "-c", "user.name=Tester", "-c", "user.email=test@example.com", *args, cwd=cwd)
+    result.require_success()
+    return result
 
 
 @pytest.fixture
@@ -129,12 +118,26 @@ class capture_output:
     def __repr__(self):
         result = ""
         if self.out_buffer:
-            result += setupmeta.decode(self.out_buffer.getvalue())
+            result += self.out_buffer.getvalue()
 
         if self.err_buffer:
-            result += setupmeta.decode(self.err_buffer.getvalue())
+            result += self.err_buffer.getvalue()
 
         return result.rstrip()
+
+    def clear(self):
+        """Clear captured content"""
+        if self.out_buffer is not None:
+            self.out_buffer.seek(0)
+            self.out_buffer.truncate(0)
+        if self.err_buffer is not None:
+            self.err_buffer.seek(0)
+            self.err_buffer.truncate(0)
+
+    def pop(self):
+        result = str(self)
+        self.clear()
+        return result
 
     def __enter__(self):
         if self.old_out is not None:
@@ -172,35 +175,42 @@ def simplified_output_path(line, representation, path):
     return line
 
 
-def cleaned_output(text, folder=None):
-    text = setupmeta.decode(text)
-    if not text:
-        return text
-
+def _cleaned_text(folder, cwd, text):
     result = []
-    cwd = os.getcwd()
     for line in text.splitlines():
         line = line.rstrip()
-        if not line or line.startswith(("pydev debugger:", "Connected to: <socket")) or "Module setupmeta was already imported" in line:
-            continue
+        if line and not line.startswith(("pydev debugger:", "Connected to: <socket")) and "Module setupmeta was" not in line:
+            line = simplified_output_path(line, "<target>", folder)
+            line = simplified_output_path(line, "<tests>", TESTS)
+            line = simplified_output_path(line, "<setupmeta>", PROJECT_DIR)
+            line = simplified_output_path(line, "<cwd>", cwd)
+            result.append(line)
 
-        line = simplified_output_path(line, "<target>", folder)
-        line = simplified_output_path(line, "<tests>", TESTS)
-        line = simplified_output_path(line, "<setupmeta>", PROJECT_DIR)
-        line = simplified_output_path(line, "<cwd>", cwd)
-        result.append(line)
+    return "\n".join(result).rstrip()
+
+
+def cleaned_output(run_result, folder=None):
+    cwd = os.getcwd()
+    result = []
+    output = _cleaned_text(folder, cwd, run_result.stdout)
+    if output:
+        result.append(output)
+
+    if run_result.returncode:
+        result.append(f"{setupmeta.represented_args(run_result.args)} exited with code {run_result.returncode}:")
+        output = _cleaned_text(folder, cwd, run_result.stderr)
+        if output:
+            result.append(output)
 
     return "\n".join(result).rstrip()
 
 
 def spawn_setup_py(folder, *args):
     """Invoke `setup.py` from `folder` as an external process, silence all warnings"""
-    with setupmeta.current_folder(folder):
-        env = dict(os.environ)
-        env["PYTHONWARNINGS"] = "ignore"
-        output = run_program(sys.executable, "setup.py", "-q", *args, env=env)
-        output = cleaned_output(output)
-        return output
+    env = dict(os.environ)
+    env["PYTHONWARNINGS"] = "ignore"
+    result = setupmeta.run_program(sys.executable, "setup.py", "-q", *args, cwd=folder, env=env)
+    return cleaned_output(result, folder=folder)
 
 
 def invoke_setup_py(folder, *args):
@@ -210,23 +220,22 @@ def invoke_setup_py(folder, *args):
 
     old_argv = sys.argv
     old_pd = setupmeta.MetaDefs.project_dir
-    setupmeta.DEBUG = False
     try:
         setup_py = os.path.join(folder, "setup.py")
+        sys.argv = [setup_py, "-q", *args]
+        result = setupmeta.RunResult(program=sys.executable, args=sys.argv)
         with capture_output() as logged:
-            sys.argv = [setup_py, "-q", *args]
-            run_output = ""
             try:
                 spec = importlib.util.spec_from_file_location("setup", setup_py)
                 module = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(module)
+                result.stdout = str(logged)
 
             except (SystemExit, setupmeta.UsageError) as e:
-                run_output += "'setup.py %s' exited with code 1:\n" % " ".join(args)
-                run_output += "%s\n" % e
+                result.returncode = 1
+                result.stderr = str(e)
 
-            run_output = "%s\n%s" % (logged, run_output.rstrip())
-            return cleaned_output(run_output, folder=folder)
+            return cleaned_output(result, folder=folder)
 
     finally:
         setupmeta.MetaDefs.project_dir = old_pd
@@ -243,40 +252,59 @@ class MockGit(Git):
         self._remote_tags = remote_tags
         Git.__init__(self, TESTS)
 
-    @property
-    def dirty(self):
-        return "-dirty" in self.describe
+    def run_program(self, cmd, *args, announce=False, dryrun=False):
+        if dryrun:
+            return setupmeta.run_program("git", cmd, *args, announce=announce, dryrun=dryrun)
 
-    def get_output(self, cmd, *args, **kwargs):
-        if cmd.startswith("diff"):
-            return 1 if self.dirty else 0
+        result = setupmeta.RunResult(program="git", args=(cmd, *args))
+        if cmd in ("fetch", "add", "commit"):
+            return result
+
+        if cmd == "tag":
+            result.stderr = "chatty stderr"  # Simulate output on stderr is passed through
+            return result
+
+        if cmd == "push":
+            result.returncode = 1
+            result.stderr = "oops push failed"
+            return result
+
+        if cmd == "diff":
+            if args[0] == "--quiet":
+                if "-dirty" in self.describe:
+                    result.returncode = 1
+
+            elif args[0] == "--stat":
+                result.returncode = 1
+                result.stdout = "some diff stats"
+                result.stderr = "oops something happened"
+
+            return result
 
         if cmd == "describe":
-            return self.describe
+            result.stdout = self.describe
+            return result
 
         if cmd == "rev-parse":
-            if "--abbrev-ref" in args:
-                return self.branch
-
-            return self.commitid
+            result.stdout = self.branch if "--abbrev-ref" in args else self.commitid.splitlines()[0]
+            return result
 
         if cmd == "rev-list":
-            return self.commitid.split()
+            result.stdout = self.commitid
+            return result
 
         if cmd == "config":
-            return args[1]
+            result.stdout = args[1]
+            return result
 
         if cmd == "show-ref":
-            return self._local_tags
+            result.stdout = self._local_tags
+            return result
 
         if cmd == "ls-remote":
-            return self._remote_tags
-
-        if cmd.startswith("fetch"):
-            return None
+            result.stdout = self._remote_tags
+            return result
 
         if cmd.startswith("status"):
-            return self.status_message
-
-        assert kwargs.get("dryrun") is True
-        return Git.get_output(self, cmd, *args, **kwargs)
+            result.stdout = self.status_message
+            return result

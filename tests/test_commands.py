@@ -85,11 +85,10 @@ def test_version(sample_project):  # noqa: ARG001, fixture
 
 
 @patch("sys.stdout.isatty", return_value=True)
-@patch("os.popen", return_value=conftest.StringIO("60"))
 @patch.dict(os.environ, {"TERM": "testing"})
 def test_console(*_):
     setupmeta.Console._columns = None
-    assert setupmeta.Console.columns() == 60
+    assert setupmeta.Console.columns() == 160
 
 
 def touch(folder, isdir, *paths):
@@ -101,18 +100,3 @@ def touch(folder, isdir, *paths):
         else:
             with open(full_path, "w") as fh:
                 fh.write("from setuptools import setup\nsetup(setup_requires='setupmeta')\n")
-
-
-def test_clean(sample_project):
-    touch(sample_project, True, ".idea", "build", "foo.egg-info", "subfolder/foo/__pycache__")
-    touch(sample_project, False, "subfolder/foo/__pycache__/foo.pyc", "a.pyc", ".pyo", "bar.pyc", "setup.py")
-    run_setup_py(
-        ["cleanall"],
-        """
-        deleted build
-        deleted foo.egg-info
-        deleted 2 .pyc files, 1 .pyo files
-        """,
-    )
-    # Run a 2nd time: nothing to be cleaned anymore
-    run_setup_py(["cleanall"], "all clean, no deletable files found")

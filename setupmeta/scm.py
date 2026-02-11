@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 
 import setupmeta
 
@@ -10,7 +11,6 @@ RE_GIT_DESCRIBE = re.compile(r"^v?([0-9]+\.[0-9]+.+?)(-\d+)?(-g\w+)?(-dirty)?$",
 class Scm:
     """API used by setupmeta for versioning using SCM tags"""
 
-    program = None  # type: str # Program name (like 'git' or 'hg')
     version_tag = None  # type: str # Format for tags to consider as version tags in underlying SCM, when applicable
 
     def __init__(self, root):
@@ -43,6 +43,16 @@ class Scm:
         :return str: Current branch name
         """
 
+    def get_diff_report(self):
+        """
+        This is legacy and will be removed in setupmeta v5.0
+        Textual diff report of the current repo, designed to show if any changes are pending (and thus why version is marked "dirty")
+
+        Returns
+        -------
+        str
+        """
+
     def get_version(self):
         """
         :return Version: Current version as computed from latest SCM version tag
@@ -68,36 +78,6 @@ class Scm:
         :param str branch: Branch on which tag is being applied
         """
 
-    def get_output(self, *args, **kwargs):
-        """
-        Run underlying SCM CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
-        Command is ran with cwd being 'self.root'
-
-        :param args: CLI arguments (example: describe --tags)
-        :param kwargs: Additional named arguments
-        :return str|int: Output if kwargs['capture'] is True, exit code otherwise
-        """
-        capture = kwargs.pop("capture", True)
-        cwd = kwargs.pop("cwd", self.root)
-        return setupmeta.run_program(self.program, *args, capture=capture, cwd=cwd, **kwargs)
-
-    def run(self, commit, *args, **kwargs):
-        """
-        Run underlying SCM CLI program with 'args' and optional additional 'kwargs' (passed through to subprocess.Popen)
-        Output is "passed through" to stdout/stderr.
-
-        :param bool commit: Effectively run the command if True, otherwise just print "Would run: ..."
-        :param args: CLI arguments (example: push origin)
-        :param kwargs: Additional named arguments
-        :return int: Exit code (always zero, unless fatal=False is passed explicitly in kwargs)
-        """
-        fatal = kwargs.pop("fatal", True)
-        capture = kwargs.pop("capture", None)
-        if capture is None and commit and os.environ.get("SETUPMETA_RUNNING_SCENARIOS"):
-            capture = "testing-scenarios"
-
-        return self.get_output(*args, capture=capture, fatal=fatal, dryrun=not commit, **kwargs)
-
 
 class Snapshot(Scm):
     """
@@ -107,8 +87,6 @@ class Snapshot(Scm):
     pip copies current folder to a temp location, and invokes setup.py there, any .git info is lost in that case
     This implementation allows to still be able to properly determine version even in that case
     """
-
-    program = None
 
     def is_dirty(self):
         v = os.environ.get(setupmeta.SCM_DESCRIBE)
@@ -131,11 +109,10 @@ class Snapshot(Scm):
 class Git(Scm):
     """Implementation for git"""
 
-    program = "git"
     _has_origin = None
 
     def _get_tags(self, *cmd):
-        text = self.get_output(*cmd)
+        text = self.git_output(*cmd)
         result = set()
         for line in text.splitlines():
             p = line.rpartition("/")[2]
@@ -174,15 +151,18 @@ class Git(Scm):
         This checks both the working tree and index, in a single command.
         Ref: https://stackoverflow.com/a/2659808/15690
         """
-        exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", capture=False)
-        if exitcode == 0:
-            exitcode = self.get_output("diff", "--quiet", "--ignore-submodules", "--staged", capture=False)
+        result = self.run_git("diff", "--quiet", "--ignore-submodules", fatal=False)
+        if result.returncode == 0:
+            result = self.run_git("diff", "--quiet", "--ignore-submodules", "--staged", fatal=False)
 
-        return exitcode != 0
+        return result.returncode != 0
 
     def get_branch(self):
-        branch = self.get_output("rev-parse", "--abbrev-ref", "HEAD")
+        branch = self.git_output("rev-parse", "--abbrev-ref", "HEAD")
         return branch and branch.strip()
+
+    def get_diff_report(self):
+        return self.git_output("diff", "--stat")
 
     def git_describe_output(self):
         """
@@ -194,21 +174,20 @@ class Git(Scm):
             # Override was given, just use it as-is
             setupmeta.trace("Using SETUPMETA_GIT_DESCRIBE_COMMAND: %s" % override)
             cmd = override.split(" ")
-            return self.get_output(*cmd)
+            return self.git_output(*cmd)
 
         version_tag = self.version_tag
-        cmd = ["describe", "--dirty", "--tags", "--long", "--first-parent", "--match", version_tag]
+        cmd = ["describe", "--dirty", "--tags", "--long", "--first-parent", "--match"]
         if version_tag:
             # A custom version tag was configured, use it
             setupmeta.trace("Using configured version_tag: %s" % version_tag)
-            return self.get_output(*cmd)
+            return self.git_output(*cmd, version_tag)
 
         # No overrides, try v*.* first, then fall back to '*.*' if need be
-        cmd[-1] = "v*.*"
-        text = self.get_output(*cmd)
+        text = self.git_output(*cmd, "v*.*")
         if not text:
-            cmd[-1] = "*.*"
-            text = self.get_output(*cmd)
+            # TODO(zsimic): Remove this for setupmeta v4.0
+            text = self.git_output(*cmd, "*.*")
 
         return text
 
@@ -219,15 +198,15 @@ class Git(Scm):
             return version
 
         # Try harder
-        commitid = self.get_output("rev-parse", "--short", "HEAD")
+        commitid = self.git_output("rev-parse", "--short", "HEAD")
         commitid = "g%s" % commitid if commitid else ""
-        distance = self.get_output("rev-list", "HEAD")
+        distance = self.git_output("rev-list", "HEAD")
         distance = distance.count("\n") + 1 if distance else 0
         return Version(main=None, distance=distance, commitid=commitid, dirty=self.is_dirty())
 
     def has_origin(self):
         if self._has_origin is None:
-            self._has_origin = bool(self.get_output("config", "--get", "remote.origin.url"))
+            self._has_origin = bool(self.git_output("config", "--get", "remote.origin.url"))
 
         return self._has_origin
 
@@ -236,18 +215,18 @@ class Git(Scm):
             return
 
         relative_paths = sorted(set(relative_paths))
-        self.run(commit, "add", *relative_paths)
-        self.run(commit, "commit", "-m", "Version %s" % next_version, "--no-verify")
+        self.run_git("add", *relative_paths, dryrun=not commit, passthrough=True)
+        self.run_git("commit", "-m", "Version %s" % next_version, "--no-verify", dryrun=not commit, passthrough=True)
         if push:
             if self.has_origin():
-                self.run(commit, "push", "origin")
+                self.run_git("push", "origin", dryrun=not commit, passthrough=True)
 
             else:
                 print("Won't push: no origin defined")
 
     def apply_tag(self, commit, push, next_version, branch):
-        self.get_output("fetch", "--all")
-        output = self.get_output("status", "--porcelain", "--branch")
+        self.run_git("fetch", "--all", dryrun=not commit, passthrough=True)
+        output = self.git_output("status", "--porcelain", "--branch")
         for line in output.splitlines():
             m = RE_BRANCH_STATUS.match(line)
             if m and m.group(1) == branch:
@@ -259,13 +238,81 @@ class Git(Scm):
         bump_msg = "Version %s" % next_version
         tag = "v%s" % next_version
 
-        self.run(commit, "tag", "-a", tag, "-m", bump_msg)
+        self.run_git("tag", "-a", tag, "-m", bump_msg, dryrun=not commit, passthrough=True)
         if push:
             if self.has_origin():
-                self.run(commit, "push", "--tags", "origin")
+                self.run_git("push", "--tags", "origin", dryrun=not commit, passthrough=True)
 
             else:
                 print("Not running 'git push --tags origin' as you don't have an origin")
+
+    def git_output(self, *args) -> str:
+        result = self.run_git(*args, fatal=False)
+        return result.stdout
+
+    def run_program(self, cmd, *args, announce=False, dryrun=False):
+        """Used to make mocking easier"""
+        return setupmeta.run_program("git", cmd, *args, announce=announce, cwd=self.root, dryrun=dryrun)
+
+    def run_git(self, *args, dryrun=False, fatal=True, passthrough=False):
+        """
+        Run git with `args`
+
+        Parameters
+        ----------
+        *args: str
+            CLI arguments (example: push origin)
+        dryrun : bool
+            When True, do not run, just print what would be run
+        passthrough: bool
+            When True, pass-through stderr/stdout
+        fatal: bool
+            When True, abort execution is command exited with code != 0
+
+        Returns
+        -------
+        setupmeta.RunResult
+        """
+        result = self.run_program(*args, announce=passthrough, dryrun=dryrun)
+        if result.returncode and result.stderr:
+            if self.should_ignore_error(result):
+                result.returncode = 0
+                result.stderr = ""
+
+            elif not fatal:
+                # Bubble up unexpected non-fatal errors as warnings
+                sys.stderr.write(f"WARNING: {result.represented_args} exited with code {result.returncode}, stderr:\n")
+                sys.stderr.write(f"{result.stderr}\n")
+                result.stderr = ""
+
+        if passthrough and os.environ.get("SETUPMETA_RUNNING_SCENARIOS"):
+            passthrough = False  # Reduce chatter when running test scenarios
+
+        if passthrough and result.stdout:
+            print(result.stdout)
+
+        if fatal:
+            result.require_success()  # stderr is always shown on failure, so don't repeat it with `passthrough` below
+
+        if passthrough and result.stderr:
+            sys.stderr.write(f"{result.stderr}\n")
+
+        return result
+
+    @staticmethod
+    def should_ignore_error(result):
+        """Edge case: don't warn for known expected failures"""
+        if result.args[0] in ("rev-list", "rev-parse") and "HEAD" in result.args:
+            # No commits yet, brand-new git repo
+            return result.stderr and "revision" in result.stderr.lower()
+
+        if result.args[0] == "describe":
+            # No tags are present, git states "No names found" in that case
+            return result.stderr and "no names" in result.stderr.lower()
+
+        if result.args[0] in ("show-ref", "ls-remote") and "--tags" in result.args:
+            # Used for version bump, don't warn if there are no tags yet or no remote defined
+            return True
 
 
 class Version:

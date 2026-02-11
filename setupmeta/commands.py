@@ -2,18 +2,11 @@
 Commands contributed by setupmeta
 """
 
-import collections
-import os
-import shutil
 from distutils.command.check import check as check_cmd
-from itertools import chain
 
 import setuptools
 
 import setupmeta
-
-CLEANABLE_EXTENSIONS = {"egg-info", "pyc", "pyo", "pyd"}
-flatten = chain.from_iterable
 
 
 def MetaCommand(cls):
@@ -44,6 +37,9 @@ class CheckCommand(check_cmd):
         check_cmd.initialize_options(self)
         self.status = None
         self.reqs = None
+
+    def finalize_options(self):
+        pass
 
     def run(self):
         if not self.setupmeta:
@@ -76,7 +72,7 @@ class CheckCommand(check_cmd):
         if self.setupmeta.versioning:
             scm = self.setupmeta.versioning.scm
             if scm:
-                diff = scm.get_output("diff", "--stat", capture=True)
+                diff = scm.get_diff_report()
                 if diff:
                     print("Pending changes:\n%s" % diff)
 
@@ -99,6 +95,9 @@ class VersionCommand(setuptools.Command):
         self.push = 0
         self.simulate_branch = None
         self.show_next = None
+
+    def finalize_options(self):
+        pass
 
     def run(self):
         if not self.setupmeta:
@@ -136,6 +135,9 @@ class ExplainCommand(setuptools.Command):
         self.expand = False
         self.recommend = False
         self.chars = setupmeta.Console.columns()
+
+    def finalize_options(self):
+        pass
 
     def check_recommend(self, key, hint=None):
         if key not in self.setupmeta.definitions:
@@ -294,116 +296,3 @@ class ExplainCommand(setuptools.Command):
                     preview = setupmeta.short(source.value, c=max_chars)
                     s = form % (prefix, setupmeta.short(source.source), preview)
                     print(s)
-
-
-@MetaCommand
-class EntryPointsCommand(setuptools.Command):
-    """List entry points for pygradle consumption"""
-
-    def run(self):
-        if not self.setupmeta:
-            return
-
-        entry_points = self.setupmeta.value("entry_points")
-        console_scripts = get_console_scripts(entry_points)
-        if not console_scripts:
-            return
-
-        if isinstance(console_scripts, list):
-            for ep in console_scripts:
-                print(ep)
-
-            return
-
-        for line in console_scripts.splitlines():
-            line = line.strip()
-            if line:
-                print(line)
-
-
-def get_console_scripts(entry_points):
-    """pygradle's 'entrypoints' are misnamed: they really mean 'consolescripts'"""
-    if not entry_points:
-        return None
-
-    if isinstance(entry_points, dict):
-        return entry_points.get("console_scripts")
-
-    if isinstance(entry_points, list):
-        result = []
-        in_console_scripts = False
-        for line in entry_points:
-            line = line.strip()
-            if line and line.startswith("["):
-                in_console_scripts = "console_scripts" in line
-                continue
-
-            if in_console_scripts:
-                result.append(line)
-
-        return result
-
-    return get_console_scripts(entry_points.split("\n"))
-
-
-@MetaCommand
-class CleanCommand(setuptools.Command):
-    """Clean build artifacts and virtual envs"""
-
-    deleted = 0
-    by_ext = None
-
-    def delete(self, full_path):
-        if os.path.isdir(full_path):
-            shutil.rmtree(full_path)
-            print("deleted %s" % setupmeta.relative_path(full_path))
-
-        else:
-            os.unlink(full_path)
-            self.by_ext[full_path.rpartition(".")[2]] += 1
-
-        self.deleted += 1
-
-    def clean_direct(self):
-        for target in (".cache", ".tox", "build", "dist", "venv"):
-            full_path = setupmeta.project_path(target)
-            if os.path.exists(full_path):
-                self.delete(full_path)
-
-    def run(self):
-        if not self.setupmeta:
-            return
-
-        self.deleted = 0
-        self.by_ext = collections.defaultdict(int)
-        self.clean_direct()
-        for dirpath, dirnames, filenames in os.walk(setupmeta.MetaDefs.project_dir):
-            remove = []
-            for dname in dirnames:
-                if dname in (".git", ".gradle", ".idea", ".venv"):
-                    remove.append(dname)
-
-                elif dname == "__pycache__":
-                    remove.append(dname)
-                    self.delete(os.path.join(dirpath, dname))
-
-                else:
-                    ext = dname.rpartition(".")[2]
-                    if ext in CLEANABLE_EXTENSIONS:
-                        remove.append(dname)
-                        self.delete(os.path.join(dirpath, dname))
-
-            for dname in remove:
-                dirnames.remove(dname)
-
-            for fname in filenames:
-                ext = fname.rpartition(".")[2]
-                if ext in CLEANABLE_EXTENSIONS:
-                    self.delete(os.path.join(dirpath, fname))
-
-        if self.by_ext:
-            info = ["%s .%s files" % (v, k) for k, v in sorted(self.by_ext.items())]
-            print("deleted %s" % ", ".join(info))
-
-        if self.deleted == 0:
-            print("all clean, no deletable files found")

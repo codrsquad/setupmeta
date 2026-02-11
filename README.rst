@@ -65,10 +65,6 @@ See examples_ for more.
 
     git describe --dirty --tags --long --first-parent --match 'v*.*'
 
-    # Then, if above yields nothing, we try the more vague '*.*'
-
-    git describe --dirty --tags --long --first-parent --match '*.*'
-
 you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
 
 
@@ -84,7 +80,7 @@ The goal of this project is to:
 * Support tag-based versioning_ (like setuptools_scm_, but with super simple configuration/defaults and automated ``bump`` capability)
 
 * Provide useful Commands_ to see the metadata (**explain**), **version** (including support for bumping versions),
-  **cleanall**, etc
+  and **check**
 
 
 How it works?
@@ -102,11 +98,9 @@ How it works?
 
 * ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
 
-* ``install_requires`` is auto-filled if you have a ``requirements.txt`` (or ``pinned.txt``) file,
+* ``install_requires`` is auto-filled from ``requirements.in`` (preferred), then ``requirements.txt``
+  (or ``pinned.txt`` for older projects),
   pinning is abstracted away by default as per `community recommendation`_, see requirements_ for more info.
-
-* ``tests_require`` is auto-filled if you have a ``tests/requirements.txt``, or ``requirements-dev.txt``,
-  or ``dev-requirements.txt``, or ``test-requirements.txt`` file
 
 * ``description`` will be the 1st line of your README (unless that 1st line is too short, or is just the project's name),
   or the 1st line of the first docstring found in the scanned files (see list below)
@@ -130,7 +124,7 @@ How it works?
 
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.5"
 
-        * if checkout is dirty, a marker is added -> version would be "1.0.5.post5.dirty"
+        * if checkout is dirty, a marker is added -> version would be "1.0.5+dirty"
 
     * With ``versioning="post"``, your git tags will be of the form ``v{major}.{minor}.{patch}``,
       a "post" addendum will be present if there are commits since latest version tag:
@@ -139,7 +133,7 @@ How it works?
 
         * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
 
-        * if checkout is dirty, a marker is added -> version would be "1.0.0.post5.dirty"
+        * if checkout is dirty, a marker is added -> version would be "1.0.0.post5+dirty"
 
     * With ``versioning="build-id"``, your git tags will be of the form ``v{major}.{minor}.0``,
       the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
@@ -154,7 +148,7 @@ How it works?
 
         * if checkout is dirty, a marker is added -> version would be "1.0.5+hlocal.g456.dirty"
 
-    * Use the **bump** command (see commands_) to easily bump (ie: increment major, minor or patch + apply git tag)
+    * Use the **version** command (see commands_) to easily bump (ie: increment major, minor or patch + apply git tag)
 
     * Version format can be customized, see versioning_ for more info
 

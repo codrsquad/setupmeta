@@ -52,7 +52,7 @@ A coverage report is generated on all ``tox`` runs
 
 Run this to  see the generated html report::
 
-    open .tox/coverage/index.html
+    open .tox/test-reports/htmlcov/index.html
 
 
 Refreshing the test scenarios

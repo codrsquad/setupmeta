@@ -10,6 +10,6 @@ setup(
     setup_requires="setupmeta",
     versioning={
         "main": main_part,
-        "extra": [],
+        "extra": ("foo", "bar"),
     },
 )
