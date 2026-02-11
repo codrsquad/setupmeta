@@ -127,10 +127,12 @@ class capture_output:
 
     def clear(self):
         """Clear captured content"""
-        self.out_buffer.seek(0)
-        self.out_buffer.truncate(0)
-        self.err_buffer.seek(0)
-        self.err_buffer.truncate(0)
+        if self.out_buffer is not None:
+            self.out_buffer.seek(0)
+            self.out_buffer.truncate(0)
+        if self.err_buffer is not None:
+            self.err_buffer.seek(0)
+            self.err_buffer.truncate(0)
 
     def pop(self):
         result = str(self)
