@@ -29,11 +29,11 @@ def test_git():
         with pytest.raises(SystemExit):
             git.apply_tag(True, True, "2.0", "main")
 
-        assert out.pop() == "chatty stderr\ngit --tags origin exited with code 1:\noops push failed"
+        assert out.pop() == "chatty stderr\ngit push --tags origin exited with code 1:\noops push failed"
 
         report = git.get_diff_report()
         assert report == "some diff stats"
-        assert out.pop() == "WARNING: git --stat exited with code 1, stderr:\noops something happened"
+        assert out.pop() == "WARNING: git diff --stat exited with code 1, stderr:\noops something happened"
 
     git._has_origin = ""
     with conftest.capture_output() as out:
