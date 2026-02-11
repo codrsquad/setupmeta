@@ -256,7 +256,7 @@ class MockGit(Git):
         if dryrun:
             return setupmeta.run_program("git", cmd, *args, announce=announce, dryrun=dryrun)
 
-        result = setupmeta.RunResult(program="git", args=args)
+        result = setupmeta.RunResult(program="git", args=(cmd, *args))
         if cmd in ("fetch", "add", "commit"):
             return result
 
