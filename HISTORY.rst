@@ -2,7 +2,7 @@
 Release notes
 =============
 
-3.9.0 (2026-02-11)
+3.9.0 (2026-02-17)
 ------------------
 
 * Test with py3.14, publish sdist with py3.13

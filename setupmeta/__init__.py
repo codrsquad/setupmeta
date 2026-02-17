@@ -242,7 +242,9 @@ def run_program(program, *args, announce=False, cwd=None, dryrun=False, env=None
     if dryrun or not result.full_path:
         return result
 
-    trace(f"Running: {result.represented_args}")
+    if not announce:
+        trace(f"Running: {result.represented_args}")
+
     r = subprocess.run(result.full_args, capture_output=True, cwd=cwd, env=env, text=True)  # noqa: S603
     result.returncode = r.returncode
     result.stdout = r.stdout.rstrip()

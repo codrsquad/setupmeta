@@ -7,9 +7,12 @@ Use it as the first source of truth for how to make changes safely and consisten
 
 ## Project Summary
 
-- `setupmeta` helps keep `setup.py` files minimal by auto-filling metadata and requirements.
-- It provides custom setup commands: `explain`, `version`, and `check`.
-- It supports git-tag-based versioning and automated version bumps.
+- `setupmeta` primarily supports git-tag-based versioning and automated version bumps.
+- Secondarily, it also:
+  - Provides custom setup commands: `explain`, `version`, and `check` (this will be phased out
+    as `setup.py` gets retired in favor of `pyproject.toml`).
+  - Helps keep `setup.py` files minimal by auto filling metadata and requirements (this will also
+    be sunset with `pyproject.toml`, as that format is declarative and doesn't lend itself to autofill).
 - The project is self-hosted: `setup.py` uses `setupmeta` itself and has bootstrap behavior.
 
 ## Core Principles
@@ -46,11 +49,13 @@ Use these commands from repo root:
 
 Notes:
 
-- `tox.ini` pins `UV_CACHE_DIR` to `.tox/.uv-cache`, so no command-line prefix is needed.
-- `py37` exists because it is the oldest Python still supported by this library.
-- If `py37` is unavailable locally (common on macOS arm64), substitute the oldest available interpreter and pair it with the newest one.
+- `tox.ini` pins `UV_CACHE_DIR` to `.tox/.uv-cache`, to help runs in sandboxed environments.
+- `py37` tox target exists because it is the oldest Python still supported by this library.
+- If `py37` is unavailable locally (common on macOS arm64), substitute the oldest available
+  interpreter and pair it with the newest one.
   Example: system Python `3.9` + `3.14` via `tox -e py39,py314,coverage`.
-- Intent: keep local runs fast while still exercising one older runtime and one modern runtime, with `coverage combine` validating cross-env coverage data.
+- Intent: keep local runs fast while still exercising one older runtime and one modern runtime,
+  with `coverage combine` validating cross-env coverage data.
 
 ## Code Change Expectations
 
