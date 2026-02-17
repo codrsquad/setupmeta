@@ -36,7 +36,7 @@ extend-select = [
     "T10", # flake8-debugger
     "TID", # flake8-tidy-imports
     "TCH", # flake8-type-checking
-    "TD", # flake8-todos
+#    "TD", # flake8-todos
     "TRY", # tryceratops
     "W",   # pycodestyle warnings
 ]

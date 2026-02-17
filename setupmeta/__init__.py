@@ -16,10 +16,8 @@ import sys
 import tempfile
 import warnings
 
-import setuptools
-
 USER_HOME = os.path.expanduser("~")  # Used to pretty-print subfolders of ~
-DEBUG = os.environ.get("SETUPMETA_DEBUG")
+TRACE_ENABLED = os.environ.get("SETUPMETA_DEBUG")
 VERSION_FILE = ".setupmeta.version"  # File used to work with projects that are in a subfolder of a git checkout
 SCM_DESCRIBE = "SCM_DESCRIBE"  # Name of env var used as pass-through for cases where git checkout is not available
 RE_SPACES = re.compile(r"\s+", re.MULTILINE)
@@ -50,12 +48,10 @@ def warn(message):
 
 
 def trace(message):
-    """Output 'message' if tracing is on"""
-    if not DEBUG:
-        return
-
-    sys.stderr.write(":: %s\n" % message)
-    sys.stderr.flush()
+    """Output `message` if tracing is on"""
+    if TRACE_ENABLED:
+        sys.stderr.write(f":: {message}\n")
+        sys.stderr.flush()
 
 
 def get_words(text):
@@ -74,7 +70,7 @@ def to_int(text, default=None):
 def short(text, c=None):
     """Short representation of 'text'"""
     if not text:
-        return "%s" % text
+        return f"{text}"
 
     if c is None:
         c = Console.columns()
@@ -84,22 +80,19 @@ def short(text, c=None):
     result = re.sub(RE_SPACES, " ", result)
     if c and len(result) > abs(c):
         if c < 0:
-            return "%s..." % result[:-c]
+            return f"{result[:-c]}..."
 
         if isinstance(text, dict):
-            summary = "%s keys" % len(text)
+            summary = f"{len(text)} keys"
 
         elif isinstance(text, list):
-            summary = "%s items" % len(text)
+            summary = f"{len(text)} items"
 
         else:
-            return "%s..." % result[: c - 3]
+            return f"{result[: c - 3]}..."
 
         cutoff = c - len(summary) - 5
-        if cutoff <= 0:
-            return summary
-
-        return "%s: %s..." % (summary, result[:cutoff])
+        return summary if cutoff <= 0 else f"{summary}: {result[:cutoff]}..."
 
     return result
 
@@ -110,10 +103,6 @@ def strip_dash(text):
         return text
 
     return text.strip("-")
-
-
-def is_executable(path):
-    return path and os.path.isfile(path) and os.access(path, os.X_OK)
 
 
 def version_components(text):
@@ -128,7 +117,7 @@ def version_components(text):
     distance = None
     for component in components:
         if not isinstance(component, int):
-            qualifier = "%s%s" % (qualifier, component)
+            qualifier = f"{qualifier}{component}"
             continue
 
         if not additional and not qualifier and len(main_triplet) < 3:
@@ -139,7 +128,7 @@ def version_components(text):
             if distance is None and qualifier in ("dev", "post"):
                 distance = component
 
-            component = "%s%s" % (qualifier, component)
+            component = f"{qualifier}{component}"
             qualifier = ""
 
         additional.append(str(component))
@@ -158,29 +147,13 @@ def version_components(text):
     return main_triplet[0], main_triplet[1], main_triplet[2], ".".join(additional), distance, dirty
 
 
-def which(program):
-    if not program:
-        return None
-
-    if os.path.isabs(program):
-        if is_executable(program):
-            return program
-
-        return None
-
-    for p in os.environ.get("PATH", "").split(os.pathsep):
-        fp = os.path.join(p, program)
-        if is_executable(fp):
-            return fp
-
-
 def represented_args(args, separator=" "):
     result = []
     for text in args:
         text = str(text)
         if not text or " " in text:
             sep = "'" if '"' in text else '"'
-            result.append("%s%s%s" % (sep, text, sep))
+            result.append(f"{sep}{text}{sep}")
 
         else:
             result.append(text)
@@ -188,120 +161,108 @@ def represented_args(args, separator=" "):
     return separator.join(result)
 
 
-def merged(output, error):
-    if output and error:
-        return "%s\n%s" % (output, error)
+class FullPathCache:
+    """Used to find and trace full paths to programs once."""
 
-    if not output and error:
-        return error
+    def __init__(self):
+        self.cache = {}
 
-    return output
+    def which(self, program):
+        if program not in self.cache:
+            full_path = shutil.which(program)
+            self.cache[program] = full_path
+            trace(f"Full path for {program}: {full_path or '-not installed-'}")
+
+        return self.cache[program]
 
 
-def run_program(program, *args, **kwargs):
+class RunResult:
+    full_path_cache = FullPathCache()
+
+    def __init__(self, program=None, args=None, returncode=0, stdout="", stderr=""):
+        self.program = program
+        self.full_path = self.full_path_cache.which(program)
+        self.full_args = [self.full_path or program, *args]
+        self.args = args
+        self.represented_args = f"{program} {represented_args(args)}".strip()
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        if not self.full_path:
+            self.returncode = returncode or 1
+            self.stderr = stderr or f"'{program}' is not installed"
+
+    def require_success(self):
+        """Abort execution if run was not successful"""
+        if self.returncode:
+            sys.stderr.write(f"{self.represented_args} exited with code {self.returncode}:\n{self.stderr or '-no stderr-'}\n")
+            sys.exit(self.returncode)
+
+    def trace_message(self):
+        trace_msg = f"{self.represented_args} exited with code: {self.returncode}"
+        if self.stdout:
+            trace_msg += f", stdout: [{self.stdout}]"
+
+        if self.stderr:
+            trace_msg += f", stderr: [{self.stderr}]"
+
+        return trace_msg
+
+
+def run_program(program, *args, announce=False, cwd=None, dryrun=False, env=None):
     """
-    Run 'program' with 'args'
+    Run `program` with `args`
 
-    :param str program: Path to program to run
-    :param args: Arguments to pass to program
-    :param bool dryrun: When True, do not run, just print what would be ran
-    :param bool fatal: When True, exit immediately on return code != 0
-    :param bool capture: None: let output pass through, return exit code
-                         False: ignore output, return exit code
-                         True: return exit code and output/error
+    Parameters
+    ----------
+    program : str
+        Program to run
+    *args : str
+        Arguments to pass to program
+    announce : bool
+        If True, announce the run
+    cwd : str | None
+        Working directory
+    dryrun : bool
+        When True, do not run, just print what would be run
+    env : dict | None
+        Environment variables
+
+    Returns
+    -------
+    RunResult
     """
-    full_path = which(program)
-    fatal = kwargs.pop("fatal", False)
-    dryrun = kwargs.pop("dryrun", False)
-    capture = kwargs.pop("capture", None)
-    represented = "%s %s" % (program, represented_args(args))
+    result = RunResult(program, args)
     if dryrun:
-        print("Would run: %s" % represented)
-        return None if capture else 0
+        print(f"Would run: {result.represented_args}")
 
-    problem = None if full_path else "'%s' is not installed" % program
-    if problem:
-        if fatal:
-            sys.exit(problem)
+    elif announce:
+        print(f"Running: {result.represented_args}")
 
-        return None if capture else 1
+    if dryrun or not result.full_path:
+        return result
 
-    if capture in (None, "testing-scenarios"):
-        print("Running: %s" % represented)
+    if not announce:
+        trace(f"Running: {result.represented_args}")
 
-    if capture is not None or capture == "testing-scenarios":
-        kwargs["stdout"] = subprocess.PIPE
-        kwargs["stderr"] = subprocess.PIPE
-
-    p = subprocess.Popen([full_path, *args], **kwargs)  # noqa: S603
-    output, error = p.communicate()
-    output = decode(output)
-    error = decode(error)
-    trace_msg = "ran [%s], exitcode: %s" % (represented, p.returncode)
-    if output:
-        output = output.rstrip()
-        trace_msg = "%s, output: [%s]" % (trace_msg, output.strip())
-
-    if error:
-        error = error.rstrip()
-        trace_msg = "%s, error: [%s]" % (trace_msg, error.strip())
-
-    trace(trace_msg)
-    if capture:
-        if p.returncode and not _should_ignore_run_fail(program, args, error):
-            warn("%s exited with error code %s\n%s" % (represented, p.returncode, error or "-no stderr-"))
-
-        if capture == "all":
-            return merged(output, error)
-
-        return output
-
-    if p.returncode:
-        if fatal:
-            print("%s exited with code %s:\n%s" % (represented, p.returncode, error))
-
-        if fatal:
-            sys.exit(p.returncode)
-
-    return p.returncode
-
-
-def _should_ignore_run_fail(program, args, error):
-    """Edge case: don't warn for known expected failures"""
-    if not program or not args or not args[0] or "git" not in program:
-        return False
-
-    if args[0] in ("rev-list", "rev-parse") and "HEAD" in args:
-        # No commits yet, brand-new git repo
-        return error and "revision" in error.lower()
-
-    if args[0] == "describe":
-        # No tags are present, git states "No names found" in that case
-        return error and "no names" in error.lower()
-
-    if args[0] in ("show-ref", "ls-remote") and "--tags" in args:
-        # Used for version bump, don't warn if there are no tags yet or no remote defined
-        return True
-
-
-def decode(value):
-    """Python 2/3 friendly decoding of output"""
-    if isinstance(value, bytes):
-        value = value.decode("utf-8")
-
-    return value
+    r = subprocess.run(result.full_args, capture_output=True, cwd=cwd, env=env, text=True)  # noqa: S603
+    result.returncode = r.returncode
+    result.stdout = r.stdout.rstrip()
+    result.stderr = r.stderr.rstrip()
+    trace(result.trace_message())
+    return result
 
 
 def quoted(text):
     """Quoted text, with single or double-quotes"""
     if text:
         if "\n" in text:
-            return '"""%s"""' % text
+            return f'"""{text}"""'
 
         if '"' in text:
-            return "'%s'" % text
+            return f"'{text}'"
 
-    return '"%s"' % text
+    return f'"{text}"'
 
 
 def _strs(value, bracket, first, sep, quote, indent):
@@ -780,15 +741,6 @@ class MetaDefs:
         """Register our own 'command'"""
         command.description = command.__doc__.strip().split("\n")[0]
         command.__init__ = meta_command_init
-        if command.initialize_options == setuptools.Command.initialize_options:
-            command.initialize_options = lambda _: None
-
-        if command.finalize_options == setuptools.Command.finalize_options:
-            command.finalize_options = lambda _: None
-
-        if not hasattr(command, "user_options"):
-            command.user_options = []
-
         cls.commands.append(command)
         return command
 
@@ -851,9 +803,8 @@ class Console:
     @classmethod
     def columns(cls, default=160):
         if cls._columns is None and sys.stdout.isatty() and "TERM" in os.environ:
-            cols = os.popen("tput cols", "r").read()  # noqa: S605, S607
-            cols = decode(cols)
-            cls._columns = to_int(cols, default=None)
+            result = run_program("tput", "cols")
+            cls._columns = to_int(result.stdout, default=None)
 
         if cls._columns is None:
             cls._columns = default

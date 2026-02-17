@@ -29,8 +29,5 @@ setup(
 :: check
 
 
-:: entrypoints
-
-
 :: version
 None

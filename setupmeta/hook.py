@@ -3,7 +3,6 @@ Hook for setuptools/distutils
 """
 
 import functools
-import warnings
 
 import setuptools.dist
 
@@ -63,25 +62,3 @@ def register_keyword(dist, name, value):
     """
     if name == "setup_requires" and not hasattr(dist, "_setupmeta"):
         finalize_dist(dist, setup_requires=value)
-
-
-# Add alias to register_keyword for backwards compatibility
-def register(dist, name, value):  # pragma: no cover; Should not be used in normal operations.
-    """
-    This is an alias for `register_keyword` that is used only when there is a
-    collision in expected entrypoints due to `setupmeta` being installed into
-    the runtime environment as well as via a local egg within a project. This
-    should eventually be able to be removed one everyone has migrated to
-    newer versions of setupmeta (>=2.7.10), and should only affect a handful
-    in any case.
-    """
-    warnings.warn(
-        "It appears that you have an installed version of `setupmeta` that is "
-        "interfering with a newer version's functionality. Things should still work "
-        "for you, but we recommend uninstalling `setupmeta` from your environment."
-        "`setupmeta` is only useful during the setup process, and does not need "
-        "to be properly installed.",
-        RuntimeWarning,
-        stacklevel=2,
-    )
-    register_keyword(dist, name, value)

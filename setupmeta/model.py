@@ -91,11 +91,6 @@ class DefinitionEntry:
     def __repr__(self):
         return "%s=%s from %s" % (self.key, short(self.value), self.source)
 
-    @property
-    def is_explicit(self):
-        """Did this entry come explicitly from setup(**attrs)?"""
-        return self.source == EXPLICIT
-
 
 class Definition(object):
     """Record definitions for a given key, and where they were found"""
@@ -131,11 +126,6 @@ class Definition(object):
         if self.sources:
             return self.sources[0].source
 
-    @property
-    def is_explicit(self):
-        """Did this entry come explicitly from setup(**attrs)?"""
-        return any(s.is_explicit for s in self.sources)
-
     def merge_sources(self, sources):
         """Record the fact that we saw this definition in 'sources'"""
         for entry in sources:
@@ -170,7 +160,7 @@ class Definition(object):
     @property
     def is_meaningful(self):
         """Should this definition make it to the final setup attrs?"""
-        return self.value is not None or self.is_explicit
+        return self.value is not None
 
 
 class Settings:
@@ -317,20 +307,17 @@ def get_pip():
     Deprecated, see https://github.com/pypa/setuptools/issues/2355 and https://github.com/codrsquad/setupmeta/issues/49
     Left around for a while because some callers import this, they will have to adapt to pip 20.1+
     """
+    import contextlib
+
     attempts = (
         ("pip._internal.network.session", "pip._internal.req"),  # for pip >= 19.3
         ("pip._internal.download", "pip._internal.req"),  # for pip >= 10.0
         ("pip.download", "pip.req"),  # for pip < 10.0
     )
     for session_path, req_path in attempts:
-        try:
+        with contextlib.suppress(ImportError):
             mod_session = __import__(session_path, fromlist=["PipSession"])
             mod_req = __import__(req_path, fromlist=["parse_requirements"])
-
-        except ImportError:  # pragma: no cover
-            continue
-
-        else:
             return mod_req.parse_requirements, mod_session.PipSession
 
 

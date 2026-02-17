@@ -54,8 +54,5 @@ pre-packaged-test = pre_packaged:main""",                            # from src/
 :: check
 
 
-:: entrypoints
-pre-packaged-test = pre_packaged:main
-
 :: version
 1.3.2.dev4

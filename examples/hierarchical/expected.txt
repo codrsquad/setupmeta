@@ -58,9 +58,5 @@ subm = hierarchical.submodule:main""",                                # from ent
 :: check
 
 
-:: entrypoints
-hierarchical = hierarchical:main
-subm = hierarchical.submodule:main
-
 :: version
 1.0.0

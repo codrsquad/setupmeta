@@ -1,6 +1,4 @@
-import os
 import sys
-from unittest.mock import patch
 
 import setupmeta
 from setupmeta.model import Definition, DefinitionEntry, get_pip, is_setup_py_path
@@ -131,20 +129,6 @@ def test_empty():
         assert not meta.versioning.scm
         assert not meta.versioning.strategy
         assert str(meta).startswith("0 definitions, ")
-
-
-@patch.dict(os.environ, {"PYGRADLE_PROJECT_VERSION": "1.2.3"})
-def test_pygradle_version():
-    with conftest.capture_output(), conftest.TestMeta(setup="/dev/null/shouldnotexist/setup.py", name="pygradle_project") as meta:
-        assert len(meta.definitions) == 2
-        assert meta.value("name") == "pygradle_project"
-        assert meta.value("version") == "1.2.3"
-
-        name = meta.definitions["name"]
-        version = meta.definitions["version"]
-
-        assert name.is_explicit
-        assert not version.is_explicit
 
 
 def test_meta():
