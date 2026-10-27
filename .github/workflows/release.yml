@@ -15,17 +15,17 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
       with:
-        python-version: "3.13"
+        python-version: "3.14"
 
     - name: Configure git
       run: |
         git config --global user.name "Tester"
         git config --global user.email "test@example.com"
 
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v10.3.2
     - run: uvx --with tox-uv tox -e py,docs,style
     - run: uv build
     - uses: pypa/gh-action-pypi-publish@release/v1

@@ -1,8 +1,8 @@
 include LICENSE
-include HISTORY.rst
+include CHANGELOG.md
 include README.rst
 include tox.ini
-recursive-include docs *.rst
+recursive-include docs *.md
 graft examples
 graft tests
 global-exclude __pycache__ *.py[cod]

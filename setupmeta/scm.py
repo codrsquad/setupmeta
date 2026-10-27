@@ -177,19 +177,13 @@ class Git(Scm):
             return self.git_output(*cmd)
 
         version_tag = self.version_tag
-        cmd = ["describe", "--dirty", "--tags", "--long", "--first-parent", "--match"]
         if version_tag:
-            # A custom version tag was configured, use it
             setupmeta.trace("Using configured version_tag: %s" % version_tag)
-            return self.git_output(*cmd, version_tag)
 
-        # No overrides, try v*.* first, then fall back to '*.*' if need be
-        text = self.git_output(*cmd, "v*.*")
-        if not text:
-            # TODO(zsimic): Remove this for setupmeta v4.0
-            text = self.git_output(*cmd, "*.*")
+        else:
+            version_tag = "v*.*"
 
-        return text
+        return self.git_output("describe", "--dirty", "--tags", "--long", "--first-parent", "--match", version_tag)
 
     def get_version(self):
         text = self.git_describe_output()
