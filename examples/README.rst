@@ -11,16 +11,20 @@ See each subfolder's README for more info on each example:
 
 * single_: an example python module laid out as a ``single.py`` file
 
+* via-cfg_: metadata stated in ``setup.cfg``, with a version read from a ``VERSION`` file
+
 
 Test cases
 ==========
 
-These examples are also used as test case scenarios, see `test scenarios`_
+These examples are also replayed as test scenarios, see contributing_
 
-.. _test scenarios: https://github.com/codrsquad/setupmeta/blob/main/tests/scenarios
+.. _contributing: https://github.com/codrsquad/setupmeta/blob/main/docs/contributing.md
 
 .. _direct: https://github.com/codrsquad/setupmeta/tree/main/examples/direct
 
 .. _hierarchical: https://github.com/codrsquad/setupmeta/tree/main/examples/hierarchical
 
 .. _single: https://github.com/codrsquad/setupmeta/tree/main/examples/single
+
+.. _via-cfg: https://github.com/codrsquad/setupmeta/tree/main/examples/via-cfg

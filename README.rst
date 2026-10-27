@@ -23,205 +23,217 @@ Simplify your setup.py
 
 ----
 
-Writing a ``setup.py`` typically involves lots of boilerplate and copy-pasting from project to project.
-
-This package aims to simplify that and bring some DRY_ principle to python packaging_.
-Here's what your (complete, and ready to ship to pypi) ``setup.py`` could look like with setupmeta_::
+setupmeta_ derives your project's version from git tags, bumps it for you, and fills in the
+rest of your ``setup.py`` metadata from the files your project already has.
+A complete, ready to publish ``setup.py`` can look like this::
 
     from setuptools import setup
 
     setup(
         name="myproject",
-        versioning="distance",          # Optional, would activate tag-based versioning
-        setup_requires="setupmeta"      # This is where setupmeta comes in
+        versioning="distance",      # Optional: activates git-tag-based versioning
+        setup_requires="setupmeta",  # This is what activates setupmeta
     )
 
-And that should be it - setupmeta_ will take it from there, extracting everything else from the rest of your project
-(following typical conventions commonly used).
+Run ``python setup.py explain`` to see every setting setupmeta determined, along with the
+file and line each value came from. Anything you pass explicitly to ``setup()`` (or state in
+``setup.cfg``) is used as-is, so you can always override what setupmeta deduces.
 
-You can use the **explain** command (see commands_) to see what setupmeta_ deduced from your project,
-for the above it would look something like this (you can see which file and which line each setting came from,
-note that a lot of info is typically extracted from your project, if you follow usual conventions)::
 
-    ~/myproject: python setup.py explain
+Versioning
+==========
 
-              author: (auto-adjust     ) Your Name
-                  \_: (myproject.py:7  ) Your Name<your@email.com>
-        author_email: (auto-adjust     ) your@email.com
-         description: (README.rst:1    ) First line of your README
-        entry_points: (entry_points.ini) [console_scripts] ...
-    install_requires: (requirements.txt) ["click", ...
-             license: (auto-fill       ) MIT
-    long_description: (README.rst      ) Long description would be your inlined README
-                name: (explicit        ) myproject
-          py_modules: (auto-fill       ) ["myproject"]
-      setup_requires: (explicit        ) ["setupmeta"]
-             version: (git             ) 1.2.3.post2
-          versioning: (explicit        ) distance
-
-See examples_ for more.
-
-**Note**: ``setupmeta``'s versioning is based on::
+Versioning is opt-in: pass a ``versioning=`` strategy to ``setup()`` (or state it like any
+other auto-filled value, see below). The version then comes from::
 
     git describe --dirty --tags --long --first-parent --match 'v*.*'
 
-you will need **git version >= 1.8.4** if you wish to use ``setupmeta``'s versioning capabilities.
+which requires git 1.8.4 or later. Without any version tag, the version starts from ``0.0.0``.
+
+The preconfigured strategies yield PEP-440_ compliant versions:
+
+=========================  =====================  ====================  ===============
+State of the checkout      ``post``               ``dev``               ``distance``
+=========================  =====================  ====================  ===============
+No commit yet              ``0.0.0``              ``0.0.0``             ``0.0.0``
+1 commit, no tag yet       ``0.0.0.post1``        ``0.0.1.dev1``        ``0.0.1``
+Same, with pending change  ``0.0.0.post1+dirty``  ``0.0.1.dev1+dirty``  ``0.0.1+dirty``
+Exactly on tag ``v0.1.0``  ``0.1.0``              ``0.1.0``             ``0.1.0``
+Same, with pending change  ``0.1.0+dirty``        ``0.1.1.dev0+dirty``  ``0.1.0+dirty``
+2 commits after the tag    ``0.1.0.post2``        ``0.1.1.dev2``        ``0.1.2``
+=========================  =====================  ====================  ===============
+
+- ``post`` suits projects that tag each release and publish occasionally.
+
+- ``dev`` makes untagged versions pre-releases (``pip install --pre`` to get them),
+  assuming the next bump will be a ``patch``.
+
+- ``distance`` suits publishing at every commit: the patch number is the count of commits
+  since the latest ``v{major}.{minor}.0`` tag, so only ``major`` and ``minor`` can be bumped.
+
+- ``devcommit`` is ``dev`` plus the commit id when not exactly on a tag:
+  ``0.1.1.dev2+g2cff0a6``.
+
+- ``build-id`` is ``distance`` plus a local part that is always shown, made of the first env
+  var whose name ends with ``BUILD_ID`` (or ``local``) and the commit id:
+  ``0.1.2+h12.g2cff0a6`` on a CI server, ``0.1.2+hlocal.g2cff0a6`` locally.
 
 
-Goal
-====
+Bumping
+-------
 
-The goal of this project is to:
+``python setup.py version`` shows the current version, ``--show-next minor`` the next one.
+``--bump major|minor|patch`` does a dry run of a bump; add ``--commit`` to apply the
+``v<version>`` git tag, and ``--push`` to also push it. A bump is refused when:
 
-* Allow to write very short (yet complete) ``setup.py``-s, without boilerplate, and encourage good common packaging_ practices
+- the current branch isn't allowed (``main`` or ``master`` by default),
+- ``--commit`` is given while the checkout has pending changes,
+- the remote has tags missing locally, or the local branch is behind its remote.
 
-* Point out missing important info (example: version) in ``setup.py explain``
-
-* Support tag-based versioning_ (like setuptools_scm_, but with super simple configuration/defaults and automated ``bump`` capability)
-
-* Provide useful Commands_ to see the metadata (**explain**), **version** (including support for bumping versions),
-  and **check**
-
-
-How it works?
-=============
-
-* Everything that you explicitly provide in your original ``setuptools.setup()`` call is taken as-is (never changed),
-  and internally labelled as ``explicit``.
-  So if you don't like something that setupmeta_ deduces, you can always explicitly state it.
-
-* ``name`` is auto-filled from your setup.py's ``__title__`` (if there is one, sometimes having a constant is quite handy...)
-
-* ``packages`` and ``package_dir`` is auto-filled accordingly if you have a ``<name>/__init__.py`` or ``src/<name>/__init__.py`` file
-
-* ``py_modules`` is auto-filled if you have a ``<name>.py`` file
-
-* ``entry_points`` is auto-filled from file ``entry_points.ini`` (bonus: tools like PyCharm have a nice syntax highlighter for those)
-
-* ``install_requires`` is auto-filled from ``requirements.in`` (preferred), then ``requirements.txt``
-  (or ``pinned.txt`` for older projects),
-  pinning is abstracted away by default as per `community recommendation`_, see requirements_ for more info.
-
-* ``description`` will be the 1st line of your README (unless that 1st line is too short, or is just the project's name),
-  or the 1st line of the first docstring found in the scanned files (see list below)
-
-* ``long_description`` is auto-filled from your README file (looking for ``README.rst``, ``README.md``,
-  then ``README*``, first one found wins).
-  Special tokens can be used (notation aimed at them easily being `rst comments`_):
-
-    * ``.. [[end long_description]]`` as end marker, so you don't have to use the entire file as long description
-
-    * ``.. [[include <relative-path>]]`` if you want another file included as well (for example, people like to add ``HISTORY.txt`` as well)
-
-    * these tokens must appear either at beginning/end of line, or be after/before at least one space character
-
-* ``version`` can be stated explicitly, or be computed from git tags using ``versioning=...`` (see versioning_ for more info):
-
-    * With ``versioning="distance"``, your git tags will be of the form ``v{major}.{minor}.0``,
-      the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
-
-        * tag "v1.0.0", no commits since tag -> version is "1.0.0"
-
-        * tag "v1.0.0", 5 commits since tag -> version is "1.0.5"
-
-        * if checkout is dirty, a marker is added -> version would be "1.0.5+dirty"
-
-    * With ``versioning="post"``, your git tags will be of the form ``v{major}.{minor}.{patch}``,
-      a "post" addendum will be present if there are commits since latest version tag:
-
-        * tag "v1.0.0", no commits since tag -> version is "1.0.0"
-
-        * tag "v1.0.0", 5 commits since tag -> version is "1.0.0.post5"
-
-        * if checkout is dirty, a marker is added -> version would be "1.0.0.post5+dirty"
-
-    * With ``versioning="build-id"``, your git tags will be of the form ``v{major}.{minor}.0``,
-      the number of commits since latest version tag will be used to auto-fill the "patch" part of the version:
-
-        * tag "v1.0.0", no commits since tag, ``BUILD_ID=12`` -> version is "1.0.0+h12.g123"
-
-        * tag "v1.0.0", no commits since tag, ``BUILD_ID`` not defined -> version is "1.0.0+hlocal.g123"
-
-        * tag "v1.0.0", 5 commits since tag, ``BUILD_ID=12`` -> version is "1.0.5+h12.g456"
-
-        * tag "v1.0.0", 5 commits since tag, ``BUILD_ID`` not defined -> version is "1.0.5+hlocal.g456"
-
-        * if checkout is dirty, a marker is added -> version would be "1.0.5+hlocal.g456.dirty"
-
-    * Use the **version** command (see commands_) to easily bump (ie: increment major, minor or patch + apply git tag)
-
-    * Version format can be customized, see versioning_ for more info
-
-* ``version``, ``versioning``, ``url``, ``download_url``, ``bugtrack_url``, ``license``, ``keywords``, ``author``, ``contact``, ``maintainer``,
-  and ``platforms`` will be auto-filled from:
-
-    * Lines of the form ``__key__ = "value"`` in your modules (simple constants only,
-      expressions are ignored - the modules are not imported but scanned using regexes)
-
-    * Lines of the form ``key: value`` in your docstring
-
-    * Files are examined in this order (first find wins):
-
-        * ``setup.py``
-
-        * ``<package>.py`` (mccabe_ for example)
-
-        * ``<package>/__about__.py`` (cryptography_ for example)
-
-        * ``<package>/__version__.py`` (requests_ for example)
-
-        * ``<package>/__init__.py`` (changes_, arrow_ for example)
-
-        * ``src/`` is also examined (for those who like to have their packages under ``src``)
-
-    * URLs can be simplified:
-
-        * if ``url`` points to your general github repo (like: https://github.com/codrsquad),
-          the ``name`` of your project is auto-appended to it
-
-        * relative urls are auto-filled by prefixing them with ``url``
-
-        * urls may use ``{name}`` and/or ``{version}`` markers, it will be expanded appropriately
-
-    * ``author``, ``maintainer`` and ``contact`` names and emails can be combined into one line
-      (setupmeta_ will figure out the email part and auto-fill it properly)
-
-        * i.e.: ``author: Bob D bob@example.com`` will yield the proper ``author`` and ``author_email`` settings
+You don't need a ``__version__`` anywhere, but if one is stated in your ``.py`` files,
+setupmeta warns when it disagrees with the git tag, and a bump rewrites and commits it first.
 
 
-This should hopefully work nicely for the vast majority of python projects out there.
-If you need advanced stuff, you can still leverage setupmeta_ for all the usual stuff above, and go explicit wherever needed.
+Custom formats
+--------------
+
+``versioning`` also accepts a format string of the form ``branch(<branches>):<main>+<local>``,
+for example ``branch(main,release):{major}.{minor}.{patch}{post}+{commitid}{dirty}``.
+The ``branch(...):`` prefix lists the branches where bumps are allowed, and is optional.
+These can be used:
+
+- ``{major}``, ``{minor}``, ``{patch}``: components of the latest version tag
+
+- ``{distance}``: number of commits since that tag
+
+- ``{post}``, ``{dev}``: ``.postN`` or ``.devN`` when not exactly on a tag (``N`` being
+  ``{distance}``, and ``{dev}`` also bumping ``patch``)
+
+- ``{devcommit}``, ``{commitid}``, ``{dirty}``: ``.g<sha>`` when not exactly on a tag,
+  ``g<sha>`` always, and ``.dirty`` when there are pending changes
+
+- ``{$FOO}``: value of env var ``FOO``; ``{$FOO:default}`` gives a default for when it's
+  undefined (otherwise ``None`` is shown); ``$*FOO``, ``$FOO*`` and ``$*FOO*`` match the first
+  (alphabetically) env var whose name ends with, starts with or contains ``FOO``
+
+- anything else is used as-is
+
+Markers other than ``{major}``, ``{minor}``, ``{patch}``, ``{distance}``, ``{post}`` and ``{dev}``
+are moved to the local part if placed in the main part, as PEP-440 requires.
+``post+build-id`` and ``dev+devcommit`` are shortcuts for adding the local part of the
+``build-id`` or ``devcommit`` strategies to another one.
+
+For full control, pass a dict: ``main`` and ``extra`` (format strings, or callables receiving a
+``setupmeta.scm.Version``; a callable ``main`` disables bumps), ``branches`` (list or
+comma-separated string), and ``version_tag`` (glob of git tags to consider, default ``v*.*``).
 
 
-.. _DRY: https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+Environment
+-----------
 
-.. _commands: https://github.com/codrsquad/setupmeta/blob/main/docs/commands.rst
+- ``SETUPMETA_GIT_DESCRIBE_COMMAND`` replaces the ``git describe`` command above (give the
+  full command, without the leading ``git``).
 
-.. _requirements: https://github.com/codrsquad/setupmeta/blob/main/docs/requirements.rst
+- ``SCM_DESCRIBE`` takes a ``git describe``-like output (eg: ``v1.2.0-3-g1234567``) and uses it
+  instead of asking git, for builds where no git checkout is available.
 
-.. _versioning: https://github.com/codrsquad/setupmeta/blob/main/docs/versioning.rst
+- When ``setup.py`` lives in a subfolder of a git checkout, setupmeta writes the version to a
+  ``.setupmeta.version`` file next to it, and uses that file when the project is later built
+  from a copy that has no ``.git``.
 
-.. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
 
-.. _packaging: https://python-packaging.readthedocs.io/en/latest/
+Auto-filled metadata
+====================
 
-.. _setuptools_scm: https://github.com/pypa/setuptools_scm
+setupmeta fills in what you didn't state explicitly, following the usual conventions:
+
+- ``name``: from a ``__title__`` stated in ``setup.py``.
+
+- ``packages`` / ``py_modules``: when neither is given, all packages found under ``src/``
+  (setting ``package_dir`` accordingly), or else the packages whose name starts with your
+  project's name, or a ``<name>.py`` module.
+
+- Simple settings like ``version``, ``versioning``, ``url``, ``download_url``,
+  ``bugtrack_url``, ``license``, ``keywords``, ``author``, ``maintainer``, ``contact``, or
+  ``platforms``, from lines like ``__author__ = "..."`` (modules are scanned, never imported),
+  or ``author: ...`` lines in the first paragraph of a docstring. First found wins, looking in
+  ``setup.py``, then ``<name>.py``, then ``__about__.py``, ``__version__.py`` and
+  ``__init__.py`` of your top level packages (also under ``src/``).
+
+- ``author``, ``maintainer``, ``contact``: a value like ``Bob D bob@example.com`` is split
+  into name and ``*_email``.
+
+- ``url``: when pointing to a github org (like ``https://github.com/codrsquad``), your
+  project's name is appended, and ``bugtrack_url`` defaults to its ``issues`` page.
+  Relative ``download_url`` and ``bugtrack_url`` are prefixed with ``url``, and all of them can
+  use ``{name}`` and ``{version}`` markers.
+
+- ``description``: the first line of your README, unless it's too short or just your
+  project's name, in which case the first line of the docstring of a scanned module is used.
+
+- ``long_description`` (and its content type): your README (``README.rst``, ``README.md``,
+  then ``README*``). A line ``.. [[end long_description]]`` ends it early, and
+  ``.. [[include <relative-path>]]`` includes another file; both must stand alone on their line.
+
+- ``entry_points``: contents of an ``entry_points.ini`` file.
+
+- ``license``: recognized from the text of a ``LICENSE*`` file.
+
+- ``include_package_data``: ``True`` when there's a ``MANIFEST.in``.
+
+- ``install_requires``: see below.
+
+When building from an sdist, values recorded in its ``PKG-INFO`` are used.
+
+
+Requirements
+------------
+
+When ``install_requires`` isn't given, it comes from ``requirements.in`` (used as-is), else
+``requirements.txt``, where simple ``name==version`` pins are abstracted down to ``name``, as per
+this `community recommendation`_ (a library shouldn't impose pins on its users). ``-r other.txt`` references are followed. ``install_requires="@path/to/reqs.txt"`` uses a
+given file, and works for ``extras_require`` values too.
+
+A comment can mark a line, or start a section applying to all lines below it, with one of:
+
+- ``# abstract`` (the default): ``name==version`` pins become ``name``
+- ``# pinned``: kept as-is
+- ``# indirect``: left out of ``install_requires`` altogether
+
+Only plain ``==`` pins are abstracted: ``click>=7.0`` is always kept as-is. For example::
+
+    click==8.1.7
+    requests==2.31.0  # pinned
+    retry>=0.9
+
+    # indirect
+    urllib3==2.2.1
+
+yields ``install_requires=["click", "requests==2.31.0", "retry>=0.9"]``.
+
+
+Commands
+========
+
+setupmeta adds these ``setup.py`` commands, see ``python setup.py <command> --help``:
+
+- ``explain``: show all settings and where each came from; ``--dependencies`` shows how
+  requirements were auto-filled, ``--expand`` prints the equivalent ``setup.py`` without
+  setupmeta (handy if you ever want to stop using it).
+
+- ``version``: show or bump the version, see Bumping_.
+
+- ``check``: setuptools' ``check``, also reporting how many requirements were abstracted or
+  ignored, and the pending changes (useful to tell why a CI build saw a dirty checkout).
+
+Set ``SETUPMETA_DEBUG=1`` to trace what setupmeta does.
+
 
 .. _setupmeta: https://github.com/codrsquad/setupmeta
 
-.. _examples: https://github.com/codrsquad/setupmeta/tree/main/examples
+.. _PEP-440: https://peps.python.org/pep-0440/
 
-.. _rst comments: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#comments
-
-.. _requests: https://github.com/psf/requests/tree/main/src/requests
-
-.. _cryptography: https://github.com/pyca/cryptography/tree/main/src/cryptography
-
-.. _changes: https://github.com/michaeljoseph/changes/blob/main/changes/__init__.py
-
-.. _arrow: https://github.com/arrow-py/arrow/blob/master/arrow/__init__.py
-
-.. _mccabe: https://github.com/PyCQA/mccabe/blob/master/mccabe.py
+.. _community recommendation: https://packaging.python.org/discussions/install-requires-vs-requirements/
 
 .. [[end long_description]]
 
@@ -251,18 +263,8 @@ I noticed that most open-source projects out there do the same thing over and ov
 
 I didn't want to keep doing this anymore myself, so I decided to try and do something about it with this project.
 
+See examples_ for sample projects, and docs_ for how setupmeta works inside.
 
-Roadmap
-=======
+.. _examples: https://github.com/codrsquad/setupmeta/tree/main/examples
 
-* Support more SCMs, like ``hg``
-
-
-Test coverage
-=============
-
-Since setupmeta is designed to be used as ``setup_requires``, it is important it doesn't break in any edge case,
-as that would be disruptive to all clients.
-
-Test coverage is at 100%, and should remain at that at all times. If you are contributing, please craft test cases
-that exercise all possible edge cases.
+.. _docs: https://github.com/codrsquad/setupmeta/blob/main/docs/index.md
