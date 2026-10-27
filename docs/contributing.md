@@ -7,8 +7,7 @@ time, a bug breaks other people's builds: test coverage is kept at 100%.
 `tox -e venv` creates `.venv/`. The tox envs (tests, `coverage`, `docs`, `style`, `reformat`,
 `refreshscenarios`) are defined in [tox.ini](../tox.ini). The default envlist tests only the
 oldest and newest Python, and `coverage` combines both runs: that's the cheap way to get full
-coverage locally, CI covers the versions in between. Without the oldest Python at hand (common
-on macOS arm64), pair the oldest one you have with the newest, eg: `tox -e py39,py314,coverage`.
+coverage locally, CI covers the versions in between.
 
 `tox -e docs` runs `check-manifest`, and the README render check PyPI relies on. Files added to
 the repo must be covered by [MANIFEST.in](../MANIFEST.in) or ignored in `tox.ini`.

@@ -18,11 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -31,35 +31,7 @@ jobs:
         git config --global user.name "Tester"
         git config --global user.email "test@example.com"
 
-    - uses: astral-sh/setup-uv@v7
-    - run: uvx --with tox-uv tox -e py
-
-    - uses: coverallsapp/github-action@v2
-      with:
-        file: .tox/test-reports/coverage.xml
-        flag-name: python-${{ matrix.python-version }}
-        parallel: true
-
-  test-eol:
-    name: Test py${{ matrix.python-version }} (EOL)
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: ["3.7"]  # Only one ancient python needed for test coverage...
-
-    steps:
-    - uses: actions/checkout@v6
-    - uses: deadsnakes/action@v3.2.0
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Configure git
-      run: |
-        git config --global user.name "Tester"
-        git config --global user.email "test@example.com"
-
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v10.3.2
     - run: uvx --with tox-uv tox -e py
 
     - uses: coverallsapp/github-action@v2
@@ -70,7 +42,7 @@ jobs:
 
   coveralls-finish:
     name: Finish Coveralls
-    needs: [test, test-eol]
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
     - name: Finish parallel build
@@ -82,10 +54,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
       with:
-        python-version: "3.14"
+        python-version: "3.15"
 
-    - uses: astral-sh/setup-uv@v7
+    - uses: astral-sh/setup-uv@v10.3.2
     - run: uvx --with tox-uv tox -e docs,style
