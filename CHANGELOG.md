@@ -7,6 +7,9 @@
 - Require Python 3.10+ (dropped support for 3.7, 3.8 and 3.9), test with py3.15,
   publish sdist with py3.14
 
+- Only `v*.*` git tags are considered as version tags by default, tags without a leading `v`
+  are not used as a fallback anymore (use `version_tag` in `versioning` to configure this)
+
 - Docs: the README is now the complete user guide (versioning, auto-fill, requirements,
   commands), with corrected versioning examples; `docs/` now holds internal docs only.
 

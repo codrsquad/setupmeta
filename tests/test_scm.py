@@ -70,3 +70,22 @@ def test_git_describe_override(monkeypatch):
     assert v.main_text == "1.2.3"
     assert v.distance == 4
     assert v.commitid == "gabc123"
+
+
+def test_git_version_tag(tmp_path):
+    conftest.run_git("init", "--initial-branch=main", str(tmp_path))
+    conftest.run_git("commit", "--allow-empty", "-m", "Initial commit", cwd=tmp_path)
+    git = setupmeta.scm.Git(str(tmp_path))
+
+    # Tags without a leading 'v' are not considered as version tags
+    conftest.run_git("tag", "-a", "1.2.0", "-m", "Not a version tag", cwd=tmp_path)
+    assert git.get_version().main_text == "0.0.0"
+
+    conftest.run_git("tag", "-a", "v1.3.0", "-m", "Version 1.3.0", cwd=tmp_path)
+    assert git.get_version().main_text == "1.3.0"
+
+    # A configured version_tag is used as-is
+    git.version_tag = "*.*"
+    conftest.run_git("commit", "--allow-empty", "-m", "Second commit", cwd=tmp_path)
+    conftest.run_git("tag", "-a", "1.4.0", "-m", "Custom version tag", cwd=tmp_path)
+    assert git.get_version().main_text == "1.4.0"

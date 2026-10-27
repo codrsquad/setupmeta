@@ -48,7 +48,8 @@ other auto-filled value, see below). The version then comes from::
 
     git describe --dirty --tags --long --first-parent --match 'v*.*'
 
-which requires git 1.8.4 or later. Without any version tag, the version starts from ``0.0.0``.
+which requires git 1.8.4 or later. Only tags starting with ``v`` count (configurable with
+``version_tag``, see below). Without any version tag, the version starts from ``0.0.0``.
 
 The preconfigured strategies yield PEP-440_ compliant versions:
 

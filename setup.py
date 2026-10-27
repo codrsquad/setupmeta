@@ -26,7 +26,7 @@ versioning = setupmeta.hook:register_keyword
 
 def run_bootstrap(message):
     sys.stderr.write(f"--- Bootstrapping {message}\n")
-    p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)  # noqa: S603
+    p = subprocess.Popen([sys.executable, "setup.py", "egg_info"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     output, error = p.communicate()
     if p.returncode:
         print(output)

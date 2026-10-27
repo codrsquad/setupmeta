@@ -22,7 +22,7 @@ Surprises worth knowing:
   patch component is the distance, so it can't be bumped either.
 - A repo with no tag, or no commit yet, yields `0.0.0` rather than an error; `Git.get_version()`
   then counts commits itself.
-- `git describe` is tried with `--match v*.*` first, then `*.*` (slated for removal in v4).
+- Only tags matching `v*.*` count by default: a repo tagged `1.2.0` reports `0.0.0`.
 
 Bumping is `Versioning.bump()`: it checks branch, pending changes and remote tags, rewrites any
 `__version__`-style line it found in `.py` sources (`update_sources()`, by recorded file:line),

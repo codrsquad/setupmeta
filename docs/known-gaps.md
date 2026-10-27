@@ -6,8 +6,6 @@
   auto-fill. Until then, legacy `setup.py` users must keep working.
 - **Only git is supported.** Another SCM would be a new `Scm` subclass in `setupmeta/scm.py`,
   picked up by `project_scm()` in `setupmeta/versioning.py`.
-- **`*.*` tag fallback**: `git describe` falls back to tags without a `v` prefix; slated for
-  removal in v4 (`Git.git_describe_output()`).
 - **`versioning` isn't validated** when registered (TODO in `register_keyword()`), only once the
   version gets computed.
 - **`pinned.txt`** is still read for `install_requires`, as a legacy fallback to phase out.
