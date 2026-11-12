@@ -34,7 +34,7 @@ def ignore_warning(*_, **__):
 
 def print_warning(message, *_, **__):
     """Print simplified warnings for capture in testing, instead of letting warnings do its funky thing"""
-    print("WARNING: %s" % setupmeta.short(message, -60))
+    print(f"WARNING: {setupmeta.short(message, -60)}")
 
 
 def run_git(*args, cwd=None):
@@ -247,7 +247,7 @@ class MockGit(Git):
         self.describe = describe
         self.branch = branch
         self.commitid = commitid
-        self.status_message = "## %s...origin/%s" % (branch, branch)
+        self.status_message = f"## {branch}...origin/{branch}"
         self._local_tags = local_tags
         self._remote_tags = remote_tags
         Git.__init__(self, TESTS)

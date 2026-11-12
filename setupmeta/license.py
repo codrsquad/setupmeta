@@ -42,13 +42,13 @@ class License:
                 pre = "Affero "
 
             if version:
-                post = "v%s" % version[0]
+                post = f"v{version[0]}"
 
-            short = "%sGPL%s" % (pre and pre[0], post)
+            short = f"{pre and pre[0]}GPL{post}"
 
         if short == "Apache" and version:
             # Most project seem to abbreviate this to "Apache 2.0"
-            short = "%s %s" % (self.short, version)
+            short = f"{self.short} {version}"
 
         return short
 

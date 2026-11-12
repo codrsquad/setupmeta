@@ -20,7 +20,7 @@ class Scm:
         self.root = root
 
     def __repr__(self):
-        return "%s %s" % (self.name, self.root)
+        return f"{self.name} {self.root}"
 
     def is_dirty(self):
         """
@@ -143,7 +143,7 @@ class Git(Scm):
                 return Version(main=main, distance=distance, commitid=commitid, dirty=dirty, text=text)
 
         if origin:
-            setupmeta.warn("Ignoring invalid version from %s: %s" % (origin, text))
+            setupmeta.warn(f"Ignoring invalid version from {origin}: {text}")
             return Version(main="0.0.0", dirty=True)
 
     def is_dirty(self):
@@ -172,13 +172,13 @@ class Git(Scm):
         override = os.environ.get("SETUPMETA_GIT_DESCRIBE_COMMAND")
         if override:
             # Override was given, just use it as-is
-            setupmeta.trace("Using SETUPMETA_GIT_DESCRIBE_COMMAND: %s" % override)
+            setupmeta.trace(f"Using SETUPMETA_GIT_DESCRIBE_COMMAND: {override}")
             cmd = override.split(" ")
             return self.git_output(*cmd)
 
         version_tag = self.version_tag
         if version_tag:
-            setupmeta.trace("Using configured version_tag: %s" % version_tag)
+            setupmeta.trace(f"Using configured version_tag: {version_tag}")
 
         else:
             version_tag = "v*.*"
@@ -193,7 +193,7 @@ class Git(Scm):
 
         # Try harder
         commitid = self.git_output("rev-parse", "--short", "HEAD")
-        commitid = "g%s" % commitid if commitid else ""
+        commitid = f"g{commitid}" if commitid else ""
         distance = self.git_output("rev-list", "HEAD")
         distance = distance.count("\n") + 1 if distance else 0
         return Version(main=None, distance=distance, commitid=commitid, dirty=self.is_dirty())
@@ -210,7 +210,7 @@ class Git(Scm):
 
         relative_paths = sorted(set(relative_paths))
         self.run_git("add", *relative_paths, dryrun=not commit, passthrough=True)
-        self.run_git("commit", "-m", "Version %s" % next_version, "--no-verify", dryrun=not commit, passthrough=True)
+        self.run_git("commit", "-m", f"Version {next_version}", "--no-verify", dryrun=not commit, passthrough=True)
         if push:
             if self.has_origin():
                 self.run_git("push", "origin", dryrun=not commit, passthrough=True)
@@ -227,10 +227,10 @@ class Git(Scm):
                 state = m.group(6)
                 if state and ("behind" in state or "gone" in state):
                     # Example: Local branch 'main' is out of date (behind 1), can't bump
-                    setupmeta.abort("Local branch '%s' is out of date (%s), can't bump" % (branch, state))
+                    setupmeta.abort(f"Local branch '{branch}' is out of date ({state}), can't bump")
 
-        bump_msg = "Version %s" % next_version
-        tag = "v%s" % next_version
+        bump_msg = f"Version {next_version}"
+        tag = f"v{next_version}"
 
         self.run_git("tag", "-a", tag, "-m", bump_msg, dryrun=not commit, passthrough=True)
         if push:
@@ -336,7 +336,7 @@ class Version:
         self.commitid = (commitid or "g0000000").strip()
         self.dirty = ".dirty" if dirty else ""
         main = (main or "0.0.0").strip()
-        self.text = text or "v%s-%s-%s" % (main, self.distance, self.commitid)
+        self.text = text or f"v{main}-{self.distance}-{self.commitid}"
         self.major, self.minor, self.patch, self.additional, _, _ = setupmeta.version_components(main)
 
     def __repr__(self):
@@ -345,7 +345,7 @@ class Version:
     @property
     def main_text(self):
         """Main components only"""
-        return "%s.%s.%s" % (self.major, self.minor, self.patch)
+        return f"{self.major}.{self.minor}.{self.patch}"
 
     @property
     def post(self):
@@ -355,7 +355,7 @@ class Version:
         :return str: '.post{distance}' for distance > 0, empty string otherwise
         """
         if self.distance:
-            return "%s.post%s" % (self.additional, self.distance)
+            return f"{self.additional}.post{self.distance}"
 
         return self.additional
 
@@ -367,7 +367,7 @@ class Version:
         :return str: '.dev{distance}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return "%s.dev%s" % (self.additional, self.distance)
+            return f"{self.additional}.dev{self.distance}"
 
         return self.additional
 
@@ -379,6 +379,6 @@ class Version:
         :return str: '.{commitid}' for distance > 0, empty string otherwise
         """
         if self.distance or self.dirty:
-            return ".%s" % self.commitid
+            return f".{self.commitid}"
 
         return ""

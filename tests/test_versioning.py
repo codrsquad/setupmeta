@@ -286,7 +286,7 @@ def extra_version(version):
         return "extra"
 
     if version.distance:
-        return "d%s" % version.distance
+        return f"d{version.distance}"
 
     return ""
 

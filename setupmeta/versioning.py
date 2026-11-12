@@ -1,4 +1,3 @@
-import io
 import os
 import re
 
@@ -54,7 +53,7 @@ def project_scm(root):
     if os.path.isfile(version_file):
         return Snapshot(root)
 
-    setupmeta.trace("could not determine SCM for '%s'" % root)
+    setupmeta.trace(f"could not determine SCM for '{root}'")
     return None
 
 
@@ -73,7 +72,7 @@ class VersionBit:
             self.renderer = self.rendered_env_var
 
         elif not hasattr(Version, self.text):
-            self.problem = "invalid versioning part '%s'" % self.text
+            self.problem = f"invalid versioning part '{self.text}'"
 
         else:
             self.renderer = self.rendered_attr
@@ -81,11 +80,11 @@ class VersionBit:
     def __repr__(self):
         text = self.text
         if self.alternative:
-            text = "%s:%s" % (text, self.alternative)
+            text = f"{text}:{self.alternative}"
 
         text = ("'%s'" if self.constant else "{%s}") % text
         if self.problem:
-            text = " [%s]" % self.problem
+            text = f" [{self.problem}]"
 
         return text
 
@@ -155,7 +154,7 @@ class VersionBit:
 
             return None
 
-        return "%s%s" % (prefix, value)
+        return f"{prefix}{value}"
 
     def rendered(self, version):
         """
@@ -176,7 +175,7 @@ class Strategy:
         self.extra = extra
         self.version_tag = kwargs.pop("version_tag", None)
         if kwargs:
-            setupmeta.warn("Ignored fields for 'versioning': %s" % kwargs)
+            setupmeta.warn(f"Ignored fields for 'versioning': {kwargs}")
 
         self.main_bits = self.bits(main)
         if isinstance(self.main_bits, list):
@@ -219,7 +218,7 @@ class Strategy:
             result += setupmeta.stringify(extra)
 
         if branches:
-            result = "branch(%s):%s" % (branches, result)
+            result = f"branch({branches}):{result}"
 
         return result
 
@@ -280,7 +279,7 @@ class Strategy:
                 extra = "".join(extra)
 
             if extra:
-                result = "%s+%s" % (result, extra.strip("."))
+                result = f"{result}+{extra.strip('.')}"
 
         return result
 
@@ -303,12 +302,12 @@ class Strategy:
         :return str: Represented next version, with 'what' bumped
         """
         if not isinstance(self.main_bits, list):
-            setupmeta.abort("Can't bump with custom version definition: %s" % setupmeta.stringify(self.main_bits))
+            setupmeta.abort(f"Can't bump with custom version definition: {setupmeta.stringify(self.main_bits)}")
 
         if what not in self.bumpable:
-            msg = "Can't bump '%s', it's out of scope" % what
-            msg += " of main format '%s'" % self.main
-            msg += " acceptable values: %s" % ", ".join(self.bumpable)
+            msg = f"Can't bump '{what}', it's out of scope"
+            msg += f" of main format '{self.main}'"
+            msg += f" acceptable values: {', '.join(self.bumpable)}"
             setupmeta.abort(msg)
 
         major, minor, rev = current_version.major, current_version.minor, current_version.patch
@@ -321,7 +320,7 @@ class Strategy:
         elif what == "patch":
             major, minor, rev = (major, minor, rev + 1)
 
-        next_version = Version(main="%s.%s.%s" % (major, minor, rev))
+        next_version = Version(main=f"{major}.{minor}.{rev}")
         return self.rendered(next_version, extra=False)
 
     @classmethod
@@ -368,7 +367,7 @@ def _parsed_versioning(given):
 
             for bit in reversed(to_be_moved):
                 if bit not in extra:
-                    extra = "%s%s" % (bit, extra)
+                    extra = f"{bit}{extra}"
 
             main = main.strip(".")
             extra = extra.strip(".")
@@ -426,7 +425,7 @@ class Versioning:
         elif not self.scm:
             self.problem = "project not under a supported SCM"
 
-        setupmeta.trace("versioning given: '%s', strategy: [%s], problem: [%s]" % (given, self.strategy, self.problem))
+        setupmeta.trace(f"versioning given: '{given}', strategy: [{self.strategy}], problem: [{self.problem}]")
 
     def auto_fill_version(self):
         """Autofill version as defined by 'self.strategy'"""
@@ -447,18 +446,18 @@ class Versioning:
             if self.strategy:
                 setupmeta.warn(self.problem)
 
-            setupmeta.trace("not auto-filling version due to problem: [%s]" % self.problem)
+            setupmeta.trace(f"not auto-filling version due to problem: [{self.problem}]")
             return
 
         gv = self.scm.get_version()
         if self.generate_version_file:
             path = setupmeta.project_path(setupmeta.VERSION_FILE)
             with open(path, "w") as fh:
-                fh.write("%s" % gv)
+                fh.write(f"{gv}")
 
         if gv.patch and "patch" not in self.strategy.bumpable:
-            msg = "patch version component should be .0 for versioning strategy '%s', " % self.strategy
-            msg += "'.%s' from current version tag '%s' will be ignored" % (gv.patch, gv)
+            msg = f"patch version component should be .0 for versioning strategy '{self.strategy}', "
+            msg += f"'.{gv.patch}' from current version tag '{gv}' will be ignored"
             setupmeta.warn(msg)
 
         rendered = self.strategy.rendered(gv)
@@ -468,7 +467,7 @@ class Versioning:
             expected = gv.main_text
             if actual != expected:
                 source = vdef.sources[0].source
-                msg = "In %s version should be '%s', not '%s'" % (source, expected, cv)
+                msg = f"In {source} version should be '{expected}', not '{cv}'"
                 setupmeta.warn(msg)
 
         self.meta.auto_fill("version", rendered, self.scm.name, override=True)
@@ -489,10 +488,10 @@ class Versioning:
         if remote_only:
             message = "Can't bump: not all remote tags are present locally!\n"
             if local_only:
-                message += "Tags only seen locally: %s\n" % ", ".join(local_only)
+                message += f"Tags only seen locally: {', '.join(local_only)}\n"
 
             if remote_only:
-                message += "Tags only on remote: %s\n" % ", ".join(remote_only)
+                message += f"Tags only on remote: {', '.join(remote_only)}\n"
 
             setupmeta.abort(message)
 
@@ -502,7 +501,7 @@ class Versioning:
 
         branch = simulate_branch or self.scm.get_branch()
         if branch not in self.strategy.branches:
-            setupmeta.abort("Can't bump branch '%s', need one of %s" % (branch, self.strategy.branches))
+            setupmeta.abort(f"Can't bump branch '{branch}', need one of {self.strategy.branches}")
 
         gv = self.scm.get_version()
         if gv and gv.dirty:
@@ -541,7 +540,7 @@ class Versioning:
             changed = 0
             line_number = 0
             revised = None
-            with io.open(full_path, "rt") as fh:
+            with open(full_path) as fh:
                 for line in fh.readlines():
                     line_number += 1
                     if line_number == target_line:
@@ -553,16 +552,16 @@ class Versioning:
                     lines.append(line)
 
             if not changed:
-                print("%s already has the right version" % vdef.source)
+                print(f"{vdef.source} already has the right version")
 
             else:
                 modified.append(relative_path)
                 if commit:
-                    with io.open(full_path, "wt") as fh:
+                    with open(full_path, "w") as fh:
                         fh.writelines(lines)
 
                 else:
-                    print("Would update %s with: %s" % (vdef.source, revised.strip()))
+                    print(f"Would update {vdef.source} with: {revised.strip()}")
 
         if not modified:
             return
@@ -589,6 +588,6 @@ def updated_line(line, next_version):
     comment = ""
     if "#" in value:
         i = value.index("#")
-        comment = "  #%s" % value[i + 1 :]
+        comment = f"  #{value[i + 1 :]}"
 
-    return "%s%s%s%s%s%s%s\n" % (key, sep, space, quote, next_version, quote, comment)
+    return f"{key}{sep}{space}{quote}{next_version}{quote}{comment}\n"

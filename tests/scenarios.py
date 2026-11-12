@@ -1,7 +1,6 @@
 import argparse
 import contextlib
 import difflib
-import io
 import logging
 import os
 import shutil
@@ -92,7 +91,7 @@ class Scenario:
         extra_commands = os.path.join(self.folder, ".commands")
         if os.path.isfile(extra_commands):
             self.target = None
-            with io.open(extra_commands, "rt") as fh:
+            with open(extra_commands) as fh:
                 for line in fh:
                     line = line.strip()
                     if line:
@@ -149,7 +148,7 @@ class Scenario:
             result = []
             for command in self.commands:
                 output = conftest.spawn_setup_py(self.target, *command.split())
-                output = ":: %s\n%s" % (command, output)
+                output = f":: {command}\n{output}"
                 result.append(output)
 
             return "\n\n".join(result).rstrip()
@@ -171,8 +170,8 @@ class Scenario:
             print(output)
             return
 
-        with io.open(self.expected_path(), "wt") as fh:
-            fh.write("%s\n" % output)
+        with open(self.expected_path(), "w") as fh:
+            fh.write(f"{output}\n")
 
 
 def main():
