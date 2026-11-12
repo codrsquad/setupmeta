@@ -37,7 +37,6 @@ jobs:
     - uses: coverallsapp/github-action@v2
       with:
         file: .tox/test-reports/coverage.xml
-        flag-name: python-${{ matrix.python-version }}
         parallel: true
 
   coveralls-finish:

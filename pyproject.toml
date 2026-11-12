@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.check-sdist]
-git-only = [".gitignore", "AGENTS.md"]
+git-only = [".gitignore", "AGENTS.md", "docs/", "examples/", "tests/", "tox.ini"]
 
 [tool.ruff]
 cache-dir = ".tox/.ruff_cache"

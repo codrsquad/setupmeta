@@ -1,8 +1,4 @@
 include LICENSE
 include CHANGELOG.md
 include README.rst
-include tox.ini
-recursive-include docs *.md
-graft examples
-graft tests
-global-exclude __pycache__ *.py[cod]
+prune tests

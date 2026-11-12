@@ -2,6 +2,8 @@
 
 ## 4.0.1
 
+- Leaner sdist: no longer bundles `tests/`, `examples/`, `docs/` and `tox.ini`
+
 - Internal project modernizations:
 
     - Code modernized for py3.10+ (f-strings, removed py2 leftovers), enabled ruff `UP` rule
