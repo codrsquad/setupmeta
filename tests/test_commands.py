@@ -14,7 +14,7 @@ def run_setup_py(args, expected, folder=None):
         line = line.strip()
         if line:
             m = re.search(line, output)
-            assert m, "'%s' not present in output of '%s': %s" % (line, " ".join(args), output)
+            assert m, f"'{line}' not present in output of {args}: {output}"
 
 
 def test_check(sample_project):

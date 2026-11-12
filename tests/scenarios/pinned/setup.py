@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 This is a package that has setupmeta pinned to an explicit version range.
 """

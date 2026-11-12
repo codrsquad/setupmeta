@@ -9,8 +9,10 @@ time, a bug breaks other people's builds: test coverage is kept at 100%.
 oldest and newest Python, and `coverage` combines both runs: that's the cheap way to get full
 coverage locally, CI covers the versions in between.
 
-`tox -e docs` runs `check-manifest`, and the README render check PyPI relies on. Files added to
-the repo must be covered by [MANIFEST.in](../MANIFEST.in) or ignored in `tox.ini`.
+`tox -e docs` runs `check-sdist` (sdist contents must match git-tracked files), then builds the
+sdist and wheel and runs `twine check --strict` on them (the README render check PyPI relies on).
+Files added to the repo must be covered by [MANIFEST.in](../MANIFEST.in) or listed under
+`[tool.check-sdist]` in [pyproject.toml](../pyproject.toml).
 
 ## Scenario snapshots
 

@@ -2,9 +2,13 @@
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
+[tool.check-sdist]
+git-only = [".gitignore", "AGENTS.md", "docs/", "examples/", "tests/", "tox.ini"]
+
 [tool.ruff]
 cache-dir = ".tox/.ruff_cache"
 line-length = 140
+target-version = "py310"
 
 [tool.ruff.lint]
 ignore = ["RUF005", "RUF012"]
@@ -38,6 +42,7 @@ select = [
     "TCH", # flake8-type-checking
 #    "TD", # flake8-todos
     "TRY", # tryceratops
+    "UP",  # pyupgrade
     "W",   # pycodestyle warnings
 ]
 [tool.ruff.lint.per-file-ignores]

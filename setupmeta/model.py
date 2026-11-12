@@ -3,7 +3,6 @@ Model of our view on how setup.py + files in a project can come together
 """
 
 import inspect
-import io
 import os
 import re
 import sys
@@ -44,7 +43,7 @@ RE_PY_VALUE = re.compile(r'^__([a-z_]+)__\s*=\s*u?[\'"](.+?)[\'"]\s*(#.+)?$')
 RE_DOC_VALUE = re.compile(r"^([a-z_]+)\s*[:=]\s*(.+?)(\s*#.+)?$")
 
 # Match PKG-INFO metadata, of the form: Some-Key: some value
-RE_PKG_KEY_VALUE = re.compile(r"^(%s):\s?(.*)$" % PKGID)
+RE_PKG_KEY_VALUE = re.compile(rf"^({PKGID}):\s?(.*)$")
 
 # Beautify short description
 RE_DESCRIPTION = re.compile(r"^[\W\s]*((([\w\-]+)\s*[:-])?\s*(.+))$", re.IGNORECASE)
@@ -89,10 +88,10 @@ class DefinitionEntry:
         self.source = source
 
     def __repr__(self):
-        return "%s=%s from %s" % (self.key, short(self.value), self.source)
+        return f"{self.key}={short(self.value)} from {self.source}"
 
 
-class Definition(object):
+class Definition:
     """Record definitions for a given key, and where they were found"""
 
     def __init__(self, key):
@@ -104,8 +103,8 @@ class Definition(object):
         self.sources = []  # type: list[DefinitionEntry]
 
     def __repr__(self):
-        source = self.sources[0].source if len(self.sources) == 1 else "%s sources" % len(self.sources)
-        return "%s=%s from %s" % (self.key, short(self.value), source)
+        source = self.sources[0].source if len(self.sources) == 1 else f"{len(self.sources)} sources"
+        return f"{self.key}={short(self.value)} from {source}"
 
     def __eq__(self, other):
         return isinstance(other, Definition) and self.key is other.key
@@ -131,7 +130,7 @@ class Definition(object):
         for entry in sources:
             if not self.value and entry.value:
                 self.value = entry.value
-                trace("[-- %s] %s=%s" % (entry.source, self.key, entry.value))
+                trace(f"[-- {entry.source}] {self.key}={entry.value}")
 
             self.sources.append(entry)
 
@@ -151,11 +150,11 @@ class Definition(object):
         entry = DefinitionEntry(self.key, value, source)
         if override:
             self.sources.insert(0, entry)
-            trace("[<- %s] %s=%s" % (source, self.key, short(value)))
+            trace(f"[<- {source}] {self.key}={short(value)}")
 
         else:
             self.sources.append(entry)
-            trace("[-> %s] %s=%s" % (source, self.key, short(value)))
+            trace(f"[-> {source}] {self.key}={short(value)}")
 
     @property
     def is_meaningful(self):
@@ -171,7 +170,7 @@ class Settings:
 
     def __repr__(self):
         project_dir = short(MetaDefs.project_dir)
-        return "%s definitions, %s" % (len(self.definitions), project_dir)
+        return f"{len(self.definitions)} definitions, {project_dir}"
 
     def value(self, key):
         """Value currently associated to 'key', if any"""
@@ -224,7 +223,7 @@ class SimpleModule(Settings):
         self.full_path = project_path(*relative_paths)
         self.exists = os.path.isfile(self.full_path)
         if self.exists:
-            with io.open(self.full_path, "rt") as fh:
+            with open(self.full_path) as fh:
                 docstring_marker = None
                 docstring_start = None
                 docstring = []
@@ -260,7 +259,7 @@ class SimpleModule(Settings):
         if key and value:
             source = self.relative_path
             if line:
-                source = "%s:%s" % (source, line)
+                source = f"{source}:{line}"
 
             self.add_definition(key, value, source, **kwargs)
 
@@ -376,7 +375,7 @@ class PackageInfo:
                 self.info[key].append(line[8:].rstrip())
 
             elif line.strip():
-                trace("Unknown format line %s in %s: %s" % (line_number, self.path, line))
+                trace(f"Unknown format line {line_number} in {self.path}: {line}")
 
         self.name = self.info.get("name")
         self.pythonified_name = pythonified_name(self.name)
@@ -403,7 +402,7 @@ class PackageInfo:
         if not self.name or not os.path.isdir(folder) or depth <= 0:
             return False
 
-        path = os.path.join(folder, "%s.egg-info" % self.pythonified_name)
+        path = os.path.join(folder, f"{self.pythonified_name}.egg-info")
         if os.path.isdir(path):
             self.entry_points_txt = self.checked_file(path, "entry_points.txt")
             self.requires_txt = self.checked_file(path, "requires.txt")
@@ -495,9 +494,9 @@ class SetupMeta(Settings):
             name = self.pythonified_name
             src_folder = project_path("src")
             if os.path.isdir(src_folder):
-                trace("looking for src packages in %s" % src_folder)
+                trace(f"looking for src packages in {src_folder}")
                 packages = setuptools.find_packages(where=src_folder)
-                if not packages and os.path.isfile(project_path("src", "%s.py" % name)):
+                if not packages and os.path.isfile(project_path("src", f"{name}.py")):
                     py_modules = [name]
 
                 if packages or py_modules:
@@ -506,7 +505,7 @@ class SetupMeta(Settings):
             else:
                 src_folder = project_path()
                 if os.path.isdir(src_folder):
-                    trace("looking for direct packages in %s" % src_folder)
+                    trace(f"looking for direct packages in {src_folder}")
                     with current_folder(src_folder):
                         raw_packages = setuptools.find_packages()
                         if raw_packages:
@@ -514,9 +513,9 @@ class SetupMeta(Settings):
                             # For any other use-case, user must explicitly list their packages
                             packages = [p for p in raw_packages if p.startswith(name)]
                             if packages != raw_packages:
-                                trace("all packages found: %s" % raw_packages)
+                                trace(f"all packages found: {raw_packages}")
 
-                if not packages and os.path.isfile(project_path("%s.py" % name)):
+                if not packages and os.path.isfile(project_path(f"{name}.py")):
                     py_modules = [name]
 
             if packages:
@@ -527,7 +526,7 @@ class SetupMeta(Settings):
 
         # Scan the usual/conventional places
         for py_module in py_modules:
-            self.merge(SimpleModule("%s.py" % py_module))
+            self.merge(SimpleModule(f"{py_module}.py"))
 
         for package in packages:
             if package and "." not in package:
@@ -616,17 +615,17 @@ class SetupMeta(Settings):
                 module = inspect.getmodule(frame[0])
                 if module and is_setup_py_path(module.__file__):
                     setup_py_path = module.__file__
-                    trace("setup.py found from call stack: %s" % setup_py_path)
+                    trace(f"setup.py found from call stack: {setup_py_path}")
                     break
 
         if not setup_py_path and sys.argv and is_setup_py_path(sys.argv[0]):
             setup_py_path = sys.argv[0]
-            trace("setup.py found from sys.argv: %s" % setup_py_path)
+            trace(f"setup.py found from sys.argv: {setup_py_path}")
 
         if is_setup_py_path(setup_py_path):
             setup_py_path = os.path.abspath(setup_py_path)
             MetaDefs.project_dir = os.path.dirname(setup_py_path)
-            trace("project dir: %s" % MetaDefs.project_dir)
+            trace(f"project dir: {MetaDefs.project_dir}")
 
     def extract_short_description(self, contents):
         """
@@ -667,7 +666,7 @@ class SetupMeta(Settings):
                 best_long = value
 
             if short_desc:
-                self.auto_fill("description", short_desc, source="%s:1" % readme)
+                self.auto_fill("description", short_desc, source=f"{readme}:1")
                 break
 
         self.add_definition("long_description", best_long, best_readme)
@@ -677,7 +676,7 @@ class SetupMeta(Settings):
         if self.pkg_info.entry_points_txt:
             self.add_definition(key, load_contents(self.pkg_info.entry_points_txt), relative_path(self.pkg_info.entry_points_txt))
 
-        path = "%s.ini" % key
+        path = f"{key}.ini"
         self.add_definition(key, load_contents(path), path)
 
     def auto_fill_license(self):

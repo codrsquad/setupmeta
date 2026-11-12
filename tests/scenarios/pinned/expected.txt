@@ -2,7 +2,7 @@
           author: (auto-adjust) Someone
               \_: (pinned.py:5) Someone someone@example.com
     author_email: (auto-adjust) someone@example.com
-     description: (setup.py:3 ) This is a package that has setupmeta pinned to an explicit version range.
+     description: (setup.py:2 ) This is a package that has setupmeta pinned to an explicit version range.
     download_url: (missing    ) - Consider specifying 'download_url'
          license: (pinned.py:4) MIT
 long_description: (missing    ) - Consider specifying 'long_description', add a README file
@@ -25,7 +25,7 @@ __version__ = "0.1.0"
 setup(
     author="Someone",                                                 # from pinned.py:5
     author_email="someone@example.com",
-    description="This is a package that has setupmeta pinned to an explicit version range.", # from setup.py:3
+    description="This is a package that has setupmeta pinned to an explicit version range.", # from setup.py:2
     license="MIT",                                                    # from pinned.py:4
     name="pinned",
     py_modules=["pinned"],

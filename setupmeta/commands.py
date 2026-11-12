@@ -61,12 +61,8 @@ class CheckCommand(check_cmd):
         """Show how many requirements were auto-abstracted or ignored, if any"""
         reqs = self.setupmeta.requirements and self.setupmeta.requirements.install_requires
         if reqs and reqs.filled_requirements and (reqs.abstracted or reqs.ignored):
-            message = "[setupmeta] install_requires: %s abstracted, %s ignored, %s untouched" % (
-                len(reqs.abstracted),
-                len(reqs.ignored),
-                len(reqs.untouched),
-            )
-            print(message)
+            counts = f"{len(reqs.abstracted)} abstracted, {len(reqs.ignored)} ignored, {len(reqs.untouched)} untouched"
+            print(f"[setupmeta] install_requires: {counts}")
 
     def _show_git_status(self):
         if self.setupmeta.versioning:
@@ -74,7 +70,7 @@ class CheckCommand(check_cmd):
             if scm:
                 diff = scm.get_diff_report()
                 if diff:
-                    print("Pending changes:\n%s" % diff)
+                    print(f"Pending changes:\n{diff}")
 
 
 @MetaCommand
@@ -141,13 +137,13 @@ class ExplainCommand(setuptools.Command):
 
     def check_recommend(self, key, hint=None):
         if key not in self.setupmeta.definitions:
-            hint = ", %s" % hint if hint else ""
-            self.setupmeta.auto_fill(key, "- Consider specifying '%s'%s" % (key, hint), "missing")
+            hint = f", {hint}" if hint else ""
+            self.setupmeta.auto_fill(key, f"- Consider specifying '{key}'{hint}", "missing")
 
     def represented_req(self, name, source_description, align):
-        name = '"%s",' % name
+        name = f'"{name}",'
         if source_description:
-            fmt = "%%-%ss# %%s" % align
+            fmt = f"%-{align}s# %s"
             name = fmt % (name, source_description)
 
         return name
@@ -172,9 +168,10 @@ class ExplainCommand(setuptools.Command):
             for i, name in enumerate(names):
                 content.append(self.represented_req(name, source_descriptions[i], longest_name))
 
-            content = "[\n        %s\n    ]," % "\n        ".join(content).strip()
+            indent = "\n        "
+            content = f"[{indent}{indent.join(content).strip()}\n    ],"
 
-        print("    %s=%s" % (setup_key, content))
+        print(f"    {setup_key}={content}")
 
     def show_dependencies(self):
         """Copy-pastable code snippet with install_requires"""
@@ -193,7 +190,7 @@ class ExplainCommand(setuptools.Command):
 
         version = definitions.get("version")
         if version:
-            print("__version__ = %s\n\n" % setupmeta.stringify(version.value, quote=True))
+            print(f"__version__ = {setupmeta.stringify(version.value, quote=True)}\n\n")
 
         print("setup(")
 
@@ -215,13 +212,13 @@ class ExplainCommand(setuptools.Command):
             elif definition.key == "download_url":
                 if version and version.value in definition.value:
                     definition.value = definition.value.replace(version.value, "%s")
-                    definition.value = "%s %% __version__" % setupmeta.stringify(setupmeta.short(definition.value), quote=True)
+                    definition.value = f"{setupmeta.stringify(setupmeta.short(definition.value), quote=True)} % __version__"
 
                 else:
                     definition.value = setupmeta.stringify(definition.value, quote=True, indent="        ")
 
             elif definition.key == "long_description":
-                definition.value = "open(%s).read()" % setupmeta.stringify(setupmeta.short(definition.source), quote=True)
+                definition.value = f"open({setupmeta.stringify(setupmeta.short(definition.source), quote=True)}).read()"
 
             elif definition.key == "version":
                 definition.value = "__version__"
@@ -235,18 +232,18 @@ class ExplainCommand(setuptools.Command):
         longest = longest_line([d.value for d in defs])
         for definition in defs:
             if definition.key == "versioning":
-                line = "    # versioning=%s," % definition.value
+                line = f"    # versioning={definition.value},"
 
             else:
-                line = "    %s=%s," % (definition.key, definition.value)
+                line = f"    {definition.key}={definition.value},"
 
             source = definition.actual_source
             if source and source != "explicit":
-                comment = "# from %s" % setupmeta.short(source)
+                comment = f"# from {setupmeta.short(source)}"
                 rest, _, last_line = line.rpartition("\n")
                 padding = " " * max(1, longest - len(last_line))
-                last_line = "%s%s%s" % (last_line, padding, comment)
-                line = "%s\n%s" % (rest, last_line) if rest else last_line
+                last_line = f"{last_line}{padding}{comment}"
+                line = f"{rest}\n{last_line}" if rest else last_line
 
             print(line)
 
@@ -279,7 +276,7 @@ class ExplainCommand(setuptools.Command):
             longest_key = min(30, max(len(key) for key in definitions))
             sources = [s for d in definitions.values() for s in d.sources]
             longest_source = min(40, max(len(s.source) for s in sources))
-            form = "%%%ss: (%%%ss) %%s" % (longest_key, -longest_source)
+            form = f"%{longest_key}s: (%{-longest_source}s) %s"
             max_chars = max(60, self.chars - longest_key - longest_source - 5)
 
             for definition in sorted(definitions.values()):
@@ -288,7 +285,7 @@ class ExplainCommand(setuptools.Command):
                         prefix = "\\_"
 
                     elif source.key not in setupmeta.MetaDefs.all_fields:
-                        prefix = "%s*" % source.key
+                        prefix = f"{source.key}*"
 
                     else:
                         prefix = source.key

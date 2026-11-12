@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.0.1
+
+- Leaner sdist: no longer bundles `tests/`, `examples/`, `docs/` and `tox.ini`
+
+- Internal project modernizations:
+
+    - Code modernized for py3.10+ (f-strings, removed py2 leftovers), enabled ruff `UP` rule
+
+    - Using [check-sdist](https://pypi.org/project/check-sdist/) via `twine check --strict`
+
+    - Bumped GitHub actions
+
 ## 4.0.0 - 2026-10-27
 
 ### Changed

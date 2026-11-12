@@ -27,9 +27,9 @@ PLATFORM = platform.system().lower()
 PKGID = "[A-Za-z0-9][-A-Za-z0-9_.]*"
 
 # Simplistic parsing of known formats used in requirements.txt
-RE_SIMPLE_PIN = re.compile(r"^(%s)\s*==\s*([^;\s]+)\s*(;.*)?$" % PKGID)
+RE_SIMPLE_PIN = re.compile(rf"^({PKGID})\s*==\s*([^;\s]+)\s*(;.*)?$")
 RE_WORDS = re.compile(r"\W+")
-RE_PKG_NAME = re.compile(r"^(%s)$" % PKGID)
+RE_PKG_NAME = re.compile(rf"^({PKGID})$")
 
 ABSTRACT = "abstract"
 INDIRECT = "indirect"
@@ -268,11 +268,11 @@ def quoted(text):
 def _strs(value, bracket, first, sep, quote, indent):
     """Stringified iterable"""
     if isinstance(value, dict):
-        rep = sep.join("%s: %s" % (stringify(k, quote=quote), stringify(v, quote=quote, indent=indent)) for k, v in sorted(value.items()))
-        return "{%s%s%s}" % (first, rep, first[:-4])
+        rep = sep.join(f"{stringify(k, quote=quote)}: {stringify(v, quote=quote, indent=indent)}" for k, v in sorted(value.items()))
+        return f"{{{first}{rep}{first[:-4]}}}"
 
     quote = quote or quote is None
-    return "%s%s%s%s%s" % (bracket[0], first, sep.join(stringify(s, quote=quote, indent=indent) for s in value), first[:-4], bracket[1])
+    return f"{bracket[0]}{first}{sep.join(stringify(s, quote=quote, indent=indent) for s in value)}{first[:-4]}{bracket[1]}"
 
 
 def _strm(value, bracket, quote, indent, chars=80):
@@ -281,8 +281,8 @@ def _strm(value, bracket, quote, indent, chars=80):
     if len(value) <= 1 or len(result) <= chars:
         return result
 
-    sep = ",\n%s" % indent if indent else ", "
-    first = "\n%s" % indent if indent else ""
+    sep = f",\n{indent}" if indent else ", "
+    first = f"\n{indent}" if indent else ""
     return _strs(value, bracket, first, sep, quote, indent)
 
 
@@ -298,12 +298,12 @@ def stringify(value, quote=None, indent=""):
         return _strm(value, "{}", quote=quote, indent=indent)
 
     if callable(value):
-        return "function '%s'" % value.__name__
+        return f"function '{value.__name__}'"
 
     if quote:
-        return quoted("%s" % value)
+        return quoted(f"{value}")
 
-    return "%s" % value
+    return f"{value}"
 
 
 def listify(text, separator=None):
@@ -335,7 +335,7 @@ def readlines(relative_path, limit=0):
         try:
             result = []
             full_path = project_path(relative_path)
-            with open(full_path, "rt") as fh:
+            with open(full_path) as fh:
                 for line in fh:
                     limit -= 1
                     if limit == 0:
@@ -343,9 +343,9 @@ def readlines(relative_path, limit=0):
 
                     result.append(line)
 
-            trace("read %s lines from %s" % (len(result), relative_path))
+            trace(f"read {len(result)} lines from {relative_path}")
 
-        except IOError:
+        except OSError:
             return None
 
         else:
@@ -406,7 +406,7 @@ def standard_req(line):
         return line
 
 
-class ReqEntry(object):
+class ReqEntry:
     def __init__(self, parent, source_path, line_number, parent_section, line):
         """
         :param RequirementsFile parent: Requirements.txt file where this line came from
@@ -473,8 +473,8 @@ class ReqEntry(object):
                     prev = self.requirement
                     name = m.group(1)
                     spec = m.group(3)
-                    self.requirement = name if not spec else "%s%s" % (name, spec)
-                    trace("  abstracted [%s] -> [%s]" % (prev, self.requirement))
+                    self.requirement = name if not spec else f"{name}{spec}"
+                    trace(f"  abstracted [{prev}] -> [{self.requirement}]")
                     self.abstracted = True
 
     def __repr__(self):
@@ -501,13 +501,13 @@ class ReqEntry(object):
 
     @property
     def source_description(self):
-        msg = "from %s:%s" % (self.source or "adhoc", self.line_number)
+        msg = f"from {self.source or 'adhoc'}:{self.line_number}"
         if self.abstracted is not None:
             if self.local_section:
-                msg += ", '%s' stated on line" % self.local_section
+                msg += f", '{self.local_section}' stated on line"
 
             elif self.parent_section:
-                msg += ", in '%s' section" % self.parent_section
+                msg += f", in '{self.parent_section}' section"
 
             elif self.abstracted:
                 msg += ", abstracted by default"
@@ -548,11 +548,10 @@ def iterate_req_txt(seen, parent, source_path, lines):
 
                 continue
 
-            trace("  req entry: %s" % req_entry)
+            trace(f"  req entry: {req_entry}")
             if req_entry.refers and req_entry.refers not in seen:
                 seen.add(req_entry.refers)
-                for r in iterate_req_txt(seen, parent, req_entry.refers, readlines(req_entry.refers)):
-                    yield r
+                yield from iterate_req_txt(seen, parent, req_entry.refers, readlines(req_entry.refers))
 
             elif req_entry.requirement not in seen:
                 seen.add(req_entry.requirement)
@@ -632,7 +631,7 @@ def find_requirements(*relative_paths):
             path = project_path(path)
             if os.path.isfile(path):
                 do_abstract = not path.endswith(".in")
-                trace("found requirements: %s %s" % (path, " (auto-abstracted)" if do_abstract else ""))
+                trace(f"found requirements: {path} {' (auto-abstracted)' if do_abstract else ''}")
                 r = RequirementsFile.from_file(path, do_abstract=do_abstract)
                 if r is not None:
                     return r

@@ -20,7 +20,7 @@ def test_shortening():
     path = os.path.expanduser("~/foo/bar")
     assert setupmeta.short(path) == "~/foo/bar"
 
-    assert setupmeta.short("found in %s" % path) == "found in ~/foo/bar"
+    assert setupmeta.short(f"found in {path}") == "found in ~/foo/bar"
 
     assert setupmeta.short({"foo": "bar"}, c=8) == "1 keys"
 

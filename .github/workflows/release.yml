@@ -25,7 +25,7 @@ jobs:
         git config --global user.name "Tester"
         git config --global user.email "test@example.com"
 
-    - uses: astral-sh/setup-uv@v10.3.2
+    - uses: astral-sh/setup-uv@v10.3.3
     - run: uvx --with tox-uv tox -e py,docs,style
     - run: uv build
     - uses: pypa/gh-action-pypi-publish@release/v1
